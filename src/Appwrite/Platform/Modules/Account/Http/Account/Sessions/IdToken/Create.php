@@ -14,6 +14,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -38,7 +39,6 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -46,7 +46,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-class Create extends Action
+class Create extends Base
 {
     use HTTP;
 
@@ -254,7 +254,29 @@ class Create extends Action
             ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
             : null;
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
+        // The token is verified and required, so it always supersedes the stored
+        // one: its claims would otherwise go stale, and it expires within the hour.
+        $changes = ['providerIdToken' => $idToken];
+
+        // Native sign-in often carries no access token at all, so only overwrite
+        // the stored credentials when the client actually supplied one.
+        if (!empty($accessToken)) {
+            $changes['providerAccessToken'] = $accessToken;
+            $changes['providerAccessTokenExpiry'] = $accessTokenExpiresAt;
+        }
+
+        // Refresh the photo URL on every login so expired CDN links self-heal.
+        if ($photo !== '') {
+            $changes['photo'] = $photo;
+        }
+
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, [
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => null,
+            'providerAccessTokenExpiry' => $accessTokenExpiresAt,
+            'providerIdToken' => $idToken,
+            'photo' => $photo ?: null,
+        ], $changes, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -391,158 +413,6 @@ class Create extends Action
         }
     }
 
-    /**
-     * Resolve the ID token to a user: an existing identity wins, then a
-     * verified-email match adopts the account, otherwise a new user is
-     * created. Mutates `$user` in place. Mirrors the browser OAuth2 flow.
-     *
-     * @return array{?Document, ?Document} the user and email target created by
-     *     this request, if any, so they can be rolled back later
-     */
-    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): array
-    {
-        $identity = $dbForProject->findOne('identities', [
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$sub]),
-        ]);
-
-        if (!$identity->isEmpty()) {
-            $user->setAttributes($dbForProject->getDocument('users', $identity->getAttribute('userId'))->getArrayCopy());
-        }
-
-        $email = $providerEmail;
-        $emails = [$email];
-        $emailMetadata = [
-            'emailCanonical' => null,
-            'emailIsCanonical' => null,
-            'emailIsCorporate' => null,
-            'emailIsDisposable' => null,
-            'emailIsFree' => null,
-        ];
-        $canonicalize = false;
-        if ($user->isEmpty() && !empty($providerEmail)) {
-            [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
-        }
-
-        // If user is not found, check if there is a user with the same email
-        if ($user->isEmpty() && !empty($email)) {
-            $userWithEmail = $dbForProject->findOne('users', [
-                Query::equal('email', $emails),
-            ]);
-            if (!$userWithEmail->isEmpty()) {
-                if (!$isVerified) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                }
-                $user->setAttributes($userWithEmail->getArrayCopy());
-                if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
-                    $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                    try {
-                        $mqtt->revoke($project->getId(), $user->getId());
-                    } catch (\Throwable $error) {
-                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                    }
-
-                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
-                    (clone $queueForRealtime)
-                        ->reset()
-                        ->setProject($project)
-                        ->setEvent('users.[userId].sessions.delete')
-                        ->setParam('userId', $user->getId())
-                        ->trigger();
-                }
-                // The provider verified this address, or its canonical form on the same domain
-                if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
-                    $user->setAttribute('emailVerification', true);
-                }
-            }
-        }
-
-        // If user is not found, check if there is an identity with the same email
-        if ($user->isEmpty() && !empty($providerEmail)) {
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$providerEmail]),
-            ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
-                if (!$isVerified) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                }
-                $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
-            }
-        }
-
-        if (!$user->isEmpty()) {
-            return [null, null];
-        }
-
-        // Last option -> create the user
-        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-        if ($limit !== 0) {
-            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-            if ($total >= $limit) {
-                throw new Exception(Exception::USER_COUNT_EXCEEDED);
-            }
-        }
-
-        $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
-
-        try {
-            $userId = Id::unique();
-            $user->setAttributes([
-                '$id' => $userId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'email' => $email ?: null,
-                'emailVerification' => !empty($email) && $isVerified, // Trust the provider's attestation, not the mere fact an email was returned
-                'status' => true,
-                'password' => null,
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'passwordUpdate' => null,
-                'registration' => DateTime::now(),
-                'reset' => false,
-                'name' => $name,
-                'mfa' => false,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'authenticators' => null,
-                'search' => implode(' ', \array_filter([$userId, $email, $name])),
-                'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailMetadata['emailCanonical'],
-                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
-                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
-                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
-                'emailIsFree' => $emailMetadata['emailIsFree'],
-            ]);
-
-            $user->removeAttribute('$sequence');
-            $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
-            $newTarget = null;
-            if (!empty($email)) {
-                $newTarget = $dbForProject->createDocument('targets', new Document([
-                    '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userId' => $userDoc->getId(),
-                    'userInternalId' => $userDoc->getSequence(),
-                    'providerType' => MESSAGE_TYPE_EMAIL,
-                    'identifier' => $email,
-                ]));
-            }
-
-            return [$userDoc, $newTarget];
-        } catch (Duplicate) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
-        }
-    }
 
     /**
      * Attach the provider email to a user created without one (e.g. an
@@ -596,156 +466,6 @@ class Create extends Action
         }
     }
 
-    /**
-     * Create the (provider, sub) identity for the user, or refresh its stored
-     * ID token, access token and photo. Guards against attaching an email
-     * already bound to another user's identity.
-     */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
-    {
-        $identity = $dbForProject->findOne('identities', [
-            Query::equal('userInternalId', [$user->getSequence()]),
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$sub]),
-        ]);
 
-        if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                }
-            }
 
-            try {
-                $dbForProject->createDocument('identities', new Document([
-                    '$id' => Id::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $user->getId(),
-                    'provider' => $provider,
-                    'providerUid' => $sub,
-                    'providerEmail' => $providerEmail,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => null,
-                    'providerAccessTokenExpiry' => $accessTokenExpiresAt,
-                    'providerIdToken' => $idToken,
-                    'photo' => $photo ?: null,
-                ]));
-            } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
-            }
-            return;
-        }
-
-        // The token is verified and required, so it always supersedes the stored
-        // one: its claims would otherwise go stale, and it expires within the hour.
-        $changes = ['providerIdToken' => $idToken];
-
-        // Native sign-in often carries no access token at all, so only overwrite
-        // the stored credentials when the client actually supplied one.
-        if (!empty($accessToken)) {
-            $changes['providerAccessToken'] = $accessToken;
-            $changes['providerAccessTokenExpiry'] = $accessTokenExpiresAt;
-        }
-
-        // Refresh the photo URL on every login so expired CDN links self-heal.
-        if ($photo !== '') {
-            $changes['photo'] = $photo;
-        }
-
-        $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
-    }
-
-    /**
-     * Parse and optionally canonicalize the provider email, producing the
-     * email to store, the list of equivalent emails to match against, and the
-     * email metadata attributes.
-     *
-     * @return array{string, string[], array<string, mixed>, bool}
-     */
-    private function parseEmail(string $providerEmail, bool $isVerified, Document $project, array $plan): array
-    {
-        try {
-            $parsedEmail = new Email($providerEmail);
-            $canonical = $parsedEmail->getCanonical();
-            $canonicalize = (
-                $project->getId() === 'console'
-                || empty($plan)
-                || ($plan['supportsCanonicalEmailValidation'] ?? false)
-            )
-                && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
-                && $isVerified;
-            // Keep the provider domain for delivery (e.g. live.com must
-            // not become outlook.com). Still canonicalize the local part.
-            if ($canonicalize) {
-                $canonicalLocal = \explode('@', $canonical, 2)[0];
-                $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
-                $email = $canonicalLocal . '@' . $providerDomain;
-            } else {
-                $email = $providerEmail;
-            }
-            // Match existing users by the provider's own address only, never by a cross-domain canonical form
-            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, \mb_strtolower($providerEmail)])));
-            $emailMetadata = [
-                'emailCanonical' => $canonical,
-                'emailIsCanonical' => \mb_strtolower($email) === $canonical,
-                'emailIsCorporate' => $parsedEmail->isCorporate(),
-                'emailIsDisposable' => $parsedEmail->isDisposable(),
-                'emailIsFree' => $parsedEmail->isFree(),
-            ];
-
-            return [$email, $emails, $emailMetadata, $canonicalize];
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_INVALID_EMAIL);
-        }
-    }
-
-    /**
-     * Enforce the project's email policies (disposable, canonical, free,
-     * corporate), each gated on plan support.
-     */
-    private function assertEmailPolicy(array $emailMetadata, string $email, bool $canonicalize, Document $project, array $plan): void
-    {
-        if (empty($email)) {
-            return;
-        }
-
-        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
-            throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
-        }
-
-        // When $canonicalize is true we already applied delivery-safe
-        // local-part normalization while preserving the provider domain.
-        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
-            throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
-        }
-
-        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
-            throw new Exception(Exception::USER_EMAIL_FREE);
-        }
-
-        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
-            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
-        }
-    }
 }

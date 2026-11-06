@@ -2,17 +2,25 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\LDAP;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\LDAP\Client;
+use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -25,16 +33,18 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
-class Create extends Action
+class Create extends Base
 {
     use HTTP;
 
@@ -61,11 +71,7 @@ class Create extends Action
                 group: 'sessions',
                 name: 'createLDAPSession',
                 description: <<<EOT
-                Allow the user to login into their account using the credentials held by your project's LDAP directory. Appwrite verifies the credentials by binding to the directory and never stores the password. This route will create a new session for the user.
-
-                When the credentials are valid and no matching account exists yet, one is created from the directory entry. Which entries are eligible can be restricted to a group or filter in your project's LDAP settings.
-
-                A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
+                Allow the user to login into their account by providing the username and password they use in the project's LDAP directory. The directory verifies the password; on the first sign-in an account is created from the directory entry, and on later sign-ins the name, email and phone follow the directory. This endpoint requires LDAP to be configured and enabled for the project. A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -76,265 +82,99 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},username:{param-username}')
-            ->label('abuse-reset', [201])
-            ->param('username', '', new Text(256), 'Username as the directory knows it. Substituted into the configured user filter.')
-            ->param('password', '', new Text(256, 0), 'User password held by the directory.')
+            ->label('abuse', [
+                Limit::failures(['projectId', 'url', 'param.username'], 10),
+                Limit::failures(['projectId', 'url', 'ip'], 100),
+            ])
+            ->param('username', '', new Text(256), 'Directory username, matched against the username attribute of the project\'s LDAP configuration.')
+            ->param('password', '', new PasswordFormat(new Text(256, 1)), 'Directory password.')
+            ->param('duration', null, new Nullable(new Range(60, TOKEN_EXPIRATION_LOGIN_LONG)), 'Session length in seconds. Minimum is 60 seconds, and it cannot exceed the project maximum session length. Defaults to the project maximum session length.', true)
             ->inject('request')
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
             ->inject('project')
             ->inject('locale')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('queueForEvents')
             ->inject('bus')
             ->inject('store')
-            ->inject('proofForPassword')
             ->inject('proofForToken')
+            ->inject('proofForPassword')
+            ->inject('plan')
             ->inject('domainVerification')
             ->inject('cookieDomain')
             ->inject('authorization')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
     public function action(
         string $username,
         string $password,
+        ?int $duration,
         Request $request,
         Response $response,
         User $user,
         Database $dbForProject,
         Document $project,
         Locale $locale,
-        GeoRecord $geoRecord,
+        Geo $geo,
         Event $queueForEvents,
         Bus $bus,
         Store $store,
-        ProofsPassword $proofForPassword,
         ProofsToken $proofForToken,
+        ProofsPassword $proofForPassword,
+        array $plan,
         bool $domainVerification,
         ?string $cookieDomain,
-        Authorization $authorization
+        Authorization $authorization,
+        Mqtt $mqtt,
+        Realtime $queueForRealtime,
+        PublicHostname $publicHostname,
     ): void {
-        $protocol = $request->getProtocol();
+        $ldap = $project->getAttribute('ldap', []);
 
-        $auths = $project->getAttribute('auths', []);
-        $directories = \json_decode($auths['ldapDirectories'] ?? '[]', true);
-        $directory = $directories[0] ?? [];
-
-        if (empty($directory)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'LDAP directory is not configured.');
+        if (empty($ldap['hosts'] ?? []) || empty($ldap['baseDn'] ?? '')) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'LDAP is not configured for this project');
         }
 
-        $client = new Client(
-            host: $directory['host'] ?? '',
-            port: (int)($directory['port'] ?? Client::DEFAULT_PORT),
-            encryption: $directory['encryption'] ?? Client::ENCRYPTION_TLS,
-            baseDn: $directory['baseDn'] ?? '',
-            bindDn: $directory['bindDn'] ?? '',
-            bindPassword: $directory['bindPassword'] ?? '',
-            userFilter: $directory['userFilter'] ?? '(uid=' . Client::PLACEHOLDER . ')',
-            provisionGroupDn: $directory['provisionGroupDn'] ?? '',
-            emailAttribute: $directory['emailAttribute'] ?? 'mail',
-            nameAttribute: $directory['nameAttribute'] ?? 'cn',
-        );
-
-        $identity = $client->authenticate($username, $password);
-
-        if ($identity === null) {
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        $maxDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
+        if ($duration !== null && $duration > $maxDuration) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Session duration cannot exceed the project maximum session length of {$maxDuration} seconds.");
         }
+        $duration ??= $maxDuration;
 
-        $email = $identity['email'];
+        $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
 
-        // Resolve the account another concurrent request provisioned for this
-        // same directory entry. Two first-time sign-ins can race at either
-        // unique index — the email on the user, or (provider, providerUid) on
-        // the identity — and both cases resolve the same way: adopt whatever
-        // the winner created.
-        $adoptConcurrentAccount = function () use ($dbForProject, $authorization, $identity) {
-            // The winner creates the account and its identity as two writes, so
-            // a request that loses the first race can arrive between them. Look
-            // again briefly rather than failing a sign-in that is only early.
-            for ($attempt = 0; $attempt < 3; $attempt++) {
-                $winner = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-                    Query::equal('provider', [SESSION_PROVIDER_LDAP]),
-                    Query::equal('providerUid', [$identity['dn']]),
-                ]));
+        // The directory is the project's own authority on who its users are, so the address
+        // it returns is trusted the way a provider's attested email is for OAuth2.
+        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
 
-                if (!$winner->isEmpty()) {
-                    return $authorization->skip(fn () => $dbForProject->getDocument('users', $winner->getAttribute('userId')));
-                }
+        $authorization->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::users()->toString());
 
-                if ($attempt < 2) {
-                    \usleep(50000);
-                }
-            }
-
-            // Still no identity for this DN, so this was not a race for the
-            // same entry. The identity index covers only the first 128
-            // characters of a much longer value and the email index says
-            // nothing about the directory at all, so the collision was with an
-            // unrelated entry. There is nothing safe to adopt.
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS, 'This directory entry could not be linked to an account. Please try signing in again.');
-        };
-
-        // Match on the directory entry, not the email address. An email is not
-        // proof of anything on its own: a directory entry carrying the same
-        // address as an existing password account would otherwise sign straight
-        // into it. The DN is what the bind actually authenticated.
-        // Identity documents are permissioned to their owner, and there is no
-        // authenticated user yet at this point in the flow.
-        $ldapIdentity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-            Query::equal('provider', [SESSION_PROVIDER_LDAP]),
-            Query::equal('providerUid', [$identity['dn']]),
-        ]));
-
-        $profile = $ldapIdentity->isEmpty()
-            ? new Document()
-            : $authorization->skip(fn () => $dbForProject->getDocument('users', $ldapIdentity->getAttribute('userId')));
-
-        // Whether this request is the one that created the account, which is
-        // what decides if it is ours to delete when the link cannot be made.
-        $provisioned = false;
-
-        if ($profile->isEmpty()) {
-            // No account is linked to this directory entry yet. Refuse to adopt
-            // an existing account that merely shares the address: linking a
-            // local account to a directory is a deliberate act, not something
-            // a matching email should do silently.
-            $userWithEmail = $dbForProject->findOne('users', [
-                Query::equal('email', [$email]),
-            ]);
-
-            if (!$userWithEmail->isEmpty()) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS, 'An account with this email address already exists and is not linked to this LDAP directory.');
-            }
-
-            $limit = $auths['limit'] ?? 0;
-
-            if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-                if ($total >= $limit) {
-                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
-                }
-            }
-
-            // The directory just vouched for this person, so provision them.
-            // Which directory entries are eligible is governed by the
-            // provisioning filter, evaluated during the bind above.
-            $userId = ID::unique();
-
-            try {
-                $profile = $authorization->skip(fn () => $dbForProject->createDocument('users', new Document([
-                    '$id' => $userId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'email' => $email,
-                    // The directory is the authority on this address, and it
-                    // just authenticated against it.
-                    'emailVerification' => true,
-                    'status' => true,
-                    // No local password: this account can only ever be
-                    // authenticated by the directory.
-                    'password' => null,
-                    'hash' => $proofForPassword->getHash()->getName(),
-                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                    'passwordUpdate' => null,
-                    'registration' => DateTime::now(),
-                    'reset' => false,
-                    'name' => $identity['name'] ?: null,
-                    'mfa' => false,
-                    'prefs' => new \stdClass(),
-                    'sessions' => null,
-                    'tokens' => null,
-                    'memberships' => null,
-                    'authenticators' => null,
-                    'search' => \implode(' ', [$userId, $email, $identity['name']]),
-                    'accessedAt' => DateTime::now(),
-                ])));
-
-                $provisioned = true;
-            } catch (Duplicate) {
-                // Another request provisioned this person first and won the
-                // unique email index. Nothing was created here, so adopt theirs.
-                $profile = $adoptConcurrentAccount();
-            }
-        }
-
-        // Record the link between the directory entry and the account, so the
-        // next sign-in matches on the DN rather than falling back to the email.
-        //
-        // The identity carries a unique index on (provider, providerUid), which
-        // is what arbitrates two first-time sign-ins racing for the same entry.
-        // The loser deletes the account it just created and adopts the winner's,
-        // rather than leaving an orphaned duplicate behind.
-        if ($ldapIdentity->isEmpty()) {
-            try {
-                $authorization->skip(fn () => $dbForProject->createDocument('identities', new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::user($profile->getId())),
-                        Permission::update(Role::user($profile->getId())),
-                        Permission::delete(Role::user($profile->getId())),
-                    ],
-                    'userInternalId' => $profile->getSequence(),
-                    'userId' => $profile->getId(),
-                    'provider' => SESSION_PROVIDER_LDAP,
-                    'providerUid' => $identity['dn'],
-                    'providerEmail' => $email,
-                    // LDAP issues no tokens: the bind is the whole exchange.
-                    'providerAccessToken' => '',
-                    'providerRefreshToken' => '',
-                    'providerAccessTokenExpiry' => null,
-                    'secrets' => null,
-                ])));
-            } catch (Duplicate) {
-                // The identity index rejected this link. Release the account
-                // this request created before adopting the winner's, so a
-                // failed sign-in never leaves an orphan behind. Only an account
-                // created here is ever deleted, and it is deleted whether the
-                // adoption succeeds or throws.
-                if ($provisioned) {
-                    $orphan = $profile->getId();
-
-                    try {
-                        $authorization->skip(fn () => $dbForProject->deleteDocument('users', $orphan));
-                    } catch (\Throwable) {
-                        // Best effort. Failing to tidy up must not mask the
-                        // reason the sign-in could not be completed.
-                    }
-                }
-
-                $profile = $adoptConcurrentAccount();
-            }
-        }
-
-        if (false === $profile->getAttribute('status')) {
+        if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        $user->setAttributes($profile->getArrayCopy());
+        $this->upsertIdentity($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], [], ['providerEmail' => $entry['email']], $dbForProject, $authorization, $newUser, $newTarget);
 
-        $duration = $auths['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
+        $this->refresh($user, $entry, $dbForProject, $project, $plan, $authorization);
+
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
+        $geoRecord = $geo->get($request->getIP());
         $session = new Document(array_merge(
             [
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_LDAP,
-                // The DN rather than the username: it is stable when display
-                // attributes change, and unambiguous across the directory.
-                'providerUid' => $identity['dn'],
-                'secret' => $proofForToken->hash($secret),
+                'providerUid' => $entry['id'],
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
@@ -376,6 +216,7 @@ class Create extends Action
         }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $protocol = $request->getProtocol();
 
         $response
             ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
@@ -394,6 +235,7 @@ class Create extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -404,5 +246,211 @@ class Create extends Action
         ));
 
         $response->dynamic($session, Response::MODEL_SESSION);
+    }
+
+    /**
+     * Keep the account in step with the directory entry it was created from: the
+     * directory is the authority on the user's name, email and phone, so a change
+     * there is applied on the next sign-in. Mutates `$user` in place.
+     *
+     * @param array{id: string, dn: string, email: string, name: string, phone: string} $entry
+     */
+    private function refresh(User $user, array $entry, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
+    {
+        if ($entry['name'] !== '' && $entry['name'] !== $user->getAttribute('name')) {
+            $user->setAttribute('name', $entry['name']);
+            $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'name' => $entry['name'],
+            ]));
+        }
+
+        if ($entry['email'] !== '' && $entry['email'] !== $user->getAttribute('email')) {
+            $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
+        }
+
+        // A number the directory holds in another format cannot be messaged, so it is left alone
+        if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && (new Phone())->isValid($entry['phone'])) {
+            $this->refreshPhone($user, $entry['phone'], $dbForProject, $authorization);
+        }
+    }
+
+    /**
+     * Move the account to the address the directory now holds, the way updateEmail does
+     * for the user: the email target follows it, and tokens and challenges proving the
+     * old address are dropped. Another account already using the address is a conflict.
+     */
+    private function refreshEmail(User $user, string $providerEmail, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
+    {
+        [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, true, $project, $plan);
+
+        $userWithMatchingEmail = $dbForProject->find('users', [
+            Query::equal('email', $emails),
+            Query::notEqual('$id', $user->getId()),
+        ]);
+        if (!empty($userWithMatchingEmail)) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$providerEmail]),
+            Query::notEqual('userInternalId', $user->getSequence()),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+        if (!$target->isEmpty() && $target->getAttribute('userInternalId') !== $user->getSequence()) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
+
+        $changes = [
+            'email' => $email,
+            'emailVerification' => true,
+            'emailCanonical' => $emailMetadata['emailCanonical'],
+            'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+            'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+            'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+            'emailIsFree' => $emailMetadata['emailIsFree'],
+        ];
+
+        try {
+            $updated = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $email, $changes) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
+
+                $previous = $current->getAttribute('email');
+                $updated = $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+                $oldTarget = \array_find($updated->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('providerType') === MESSAGE_TYPE_EMAIL && $target->getAttribute('identifier') === $previous);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                } else {
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'providerType' => MESSAGE_TYPE_EMAIL,
+                        'identifier' => $email,
+                    ]));
+                }
+
+                $sequence = $user->getSequence();
+                if ($previous !== $email && $sequence !== '' && $sequence !== null) {
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_RECOVERY_OTP,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_VERIFICATION_OTP,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]));
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]));
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $authorization->skip(fn () => $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]));
+                }
+
+                return $updated;
+            });
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        $user->setAttributes($updated->getArrayCopy());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+    }
+
+    /**
+     * Move the account to the number the directory now holds, the way updatePhone does
+     * for the user. The number is not verified: the directory vouches for who the user
+     * is, not for who answers the phone.
+     */
+    private function refreshPhone(User $user, string $phone, Database $dbForProject, Authorization $authorization): void
+    {
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+        ]));
+        if (!$target->isEmpty() && $target->getAttribute('userInternalId') !== $user->getSequence()) {
+            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+        }
+
+        try {
+            $updated = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
+
+                $previous = $current->getAttribute('phone');
+                $updated = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'phone' => $phone,
+                    'phoneVerification' => false,
+                ]));
+
+                $oldTarget = \array_find($updated->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('providerType') === MESSAGE_TYPE_SMS && $target->getAttribute('identifier') === $previous);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                } else {
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'providerType' => MESSAGE_TYPE_SMS,
+                        'identifier' => $phone,
+                    ]));
+                }
+
+                $sequence = $user->getSequence();
+                if ($previous !== $phone && $sequence !== '' && $sequence !== null) {
+                    $authorization->skip(function () use ($dbForProject, $sequence) {
+                        $dbForProject->deleteDocuments('tokens', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [TOKEN_TYPE_PHONE]),
+                        ]);
+                        $dbForProject->deleteDocuments('challenges', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [Type::PHONE]),
+                        ]);
+                        // A pending invite was sent to the old number, so it must not prove the new one
+                        $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('confirm', [false]),
+                        ]);
+                    });
+                }
+
+                return $updated;
+            });
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+        }
+
+        $user->setAttributes($updated->getArrayCopy());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
     }
 }
