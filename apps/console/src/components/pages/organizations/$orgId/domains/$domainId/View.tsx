@@ -300,7 +300,7 @@ export function View({ initialData }: ViewProps = {}) {
     return {
       isVerified,
       icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Appwrite DNS' : 'External DNS',
+      label: isVerified ? 'Active' : 'Pending',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',

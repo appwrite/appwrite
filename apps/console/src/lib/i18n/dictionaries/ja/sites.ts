@@ -224,6 +224,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'ドメイン所有権の検証',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',

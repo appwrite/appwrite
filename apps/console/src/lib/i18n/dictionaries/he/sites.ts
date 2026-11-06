@@ -411,6 +411,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'אימות בעלות על הדומיין',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',

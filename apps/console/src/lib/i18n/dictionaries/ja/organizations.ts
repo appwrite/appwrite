@@ -1329,7 +1329,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'ネームサーバーが Appwrite を指していません',
   'Appwrite nameservers': 'Appwrite のネームサーバー',
   'External nameservers': '外部のネームサーバー',
-  'External DNS': '外部 DNS',
   Network: 'ネットワーク',
   Next: '次へ',
   No: 'いいえ',
