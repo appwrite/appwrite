@@ -12,9 +12,18 @@ describe('ensureApexDomainInOrganization', () => {
     mock.module('@/lib/appwrite/sdk', () => realSdk)
   })
 
-  function mockCloud(variables?: () => Promise<object>) {
+  function mockCloud(
+    variables?: () => Promise<object>,
+    regional?: Record<string, () => Promise<object>>,
+  ) {
     queryClient.removeQueries({ queryKey: ['console-variables'] })
     const created: string[] = []
+    const domains = {
+      list: async () => ({ domains: [] }),
+      create: async ({ domain }: { domain: string }) => {
+        created.push(domain)
+      },
+    }
     const console = {
       console: {
         variables:
@@ -24,17 +33,18 @@ describe('ensureApexDomainInOrganization', () => {
             _APP_DOMAIN_FUNCTIONS: 'fra.appwrite.run',
           })),
       },
-      domains: {
-        list: async () => ({ domains: [] }),
-        create: async ({ domain }: { domain: string }) => {
-          created.push(domain)
-        },
-      },
+      domains,
     }
     mock.module('@/lib/appwrite/sdk', () => ({
       ...actualSdk,
       getBaseEndpoint: () => 'https://cloud.appwrite.io/v1',
-      sdk: { forConsole: console, forConsoleIn: () => console },
+      sdk: {
+        forConsole: console,
+        forConsoleIn: (region: string) =>
+          regional?.[region]
+            ? { console: { variables: regional[region] }, domains }
+            : console,
+      },
     }))
     return created
   }
@@ -45,6 +55,25 @@ describe('ensureApexDomainInOrganization', () => {
       skipForSites: true,
     })
     await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run')
+    expect(created).toEqual([])
+  })
+
+  test("reads the zones of the project's region", async () => {
+    const created = mockCloud(undefined, {
+      sfo: async () => ({
+        _APP_DOMAIN_SITES: 'appwrite.network',
+        _APP_DOMAIN_FUNCTIONS: 'sfo.appwrite.run',
+      }),
+    })
+    await ensureApexDomainInOrganization('team1', 'fn.sfo.appwrite.run', {
+      region: 'sfo',
+    })
+    expect(created).toEqual([])
+  })
+
+  test('does not register appwrite.site, a later sites zone', async () => {
+    const created = mockCloud()
+    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.site')
     expect(created).toEqual([])
   })
 

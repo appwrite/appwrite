@@ -149,17 +149,19 @@ export function isBuiltInSiteSubdomain(domain: string): boolean {
 export async function ensureApexDomainInOrganization(
   teamId: string,
   domain: string,
-  options?: { skipForSites?: boolean },
+  options?: { skipForSites?: boolean; region?: string },
 ): Promise<void> {
   if (!isCloud() || !teamId || !domain?.trim()) return
   if (options?.skipForSites && isBuiltInSiteSubdomain(domain)) return
 
   // A zone Appwrite serves is not the organization's to register, as the
-  // server's isAppwriteOwned holds, so an appwrite.network subdomain is skipped.
-  const owned: string[] = []
+  // server's isAppwriteOwned holds. The variables carry only the first sites
+  // and functions zone of the project's region, so appwrite.site, a later
+  // sites zone, is listed here.
+  const owned = ['appwrite.site']
   try {
     const variables = await queryClient.fetchQuery(
-      consoleVariablesQueryOptions(),
+      consoleVariablesQueryOptions(options?.region),
     )
     owned.push(
       variables._APP_DOMAIN_SITES ?? '',
