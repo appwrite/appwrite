@@ -52,7 +52,7 @@ final class ConnectionTest extends TestCase
 
             public function find(string $tenant, array $queries = [], ?string $type = null): array
             {
-                $this->probes[] = (string) $type;
+                $this->probes[] = $tenant . ':' . $type;
 
                 return [];
             }
@@ -64,7 +64,7 @@ final class ConnectionTest extends TestCase
 
             public function findDaily(string $tenant, array $queries = []): array
             {
-                $this->probes[] = 'daily';
+                $this->probes[] = $tenant . ':daily';
 
                 return [];
             }
@@ -73,6 +73,10 @@ final class ConnectionTest extends TestCase
         $health = Connection::fromUsage($usage)->healthCheck();
 
         $this->assertTrue($health['schemaReady']);
-        $this->assertEqualsCanonicalizing([Usage::TYPE_EVENT, Usage::TYPE_GAUGE, 'daily'], $usage->probes);
+        $this->assertEqualsCanonicalizing([
+            '__health__:' . Usage::TYPE_EVENT,
+            '__health__:' . Usage::TYPE_GAUGE,
+            '__health__:daily',
+        ], $usage->probes);
     }
 }
