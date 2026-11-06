@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Utopia\Database\Documents\Project;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -150,7 +151,7 @@ class AuthDevice
      * device for as long as the server does. A device created in this request already had its
      * cookie written by the create action and carries no transient cookie value, so it is skipped.
      */
-    public static function refreshCookie(Response $response, Document $project, Document $device, string $protocol, bool $domainVerification, ?string $cookieDomain): void
+    public static function refreshCookie(Request $request, Response $response, Document $project, Document $device, string $protocol, bool $domainVerification, ?string $cookieDomain): void
     {
         $encoded = $device->getAttribute(self::ATTRIBUTE_COOKIE, '');
         if (empty($encoded) || empty($device->getAttribute('expire'))) {
@@ -161,8 +162,14 @@ class AuthDevice
         $expire = (new \DateTime($device->getAttribute('expire')))->getTimestamp();
 
         if (!$domainVerification) {
-            // The session cookie's fallback entry was already added by the caller; merge rather than replace it.
+            // A client on fallback cookies replaces its whole set with this header, so it must keep
+            // carrying what the client already holds (its session entry, when this response sets
+            // none) plus whatever the caller added to the response, with the device entry on top.
             $fallback = [];
+            $incoming = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
+            if (\is_array($incoming)) {
+                $fallback = $incoming;
+            }
             foreach ($response->getHeaders()['x-fallback-cookies'] ?? [] as $value) {
                 $decoded = \json_decode($value, true);
                 if (\is_array($decoded)) {

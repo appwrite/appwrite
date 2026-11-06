@@ -161,7 +161,7 @@ class Update extends Action
         // so the extended expiry carries over to it, and to its cookie when this browser holds it
         $device = AuthDevice::extend($dbForProject, $authorization, $session, $authDevice);
         if ($device !== null) {
-            AuthDevice::refreshCookie($response, $project, $device, $request->getProtocol(), $domainVerification, $cookieDomain);
+            AuthDevice::refreshCookie($request, $response, $project, $device, $request->getProtocol(), $domainVerification, $cookieDomain);
         }
 
         $session->setAttribute('userName', $user->getAttribute('name', ''));

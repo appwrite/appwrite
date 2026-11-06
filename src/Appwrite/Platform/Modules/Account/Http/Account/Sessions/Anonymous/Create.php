@@ -224,7 +224,7 @@ class Create extends Action
         // response goes out so the device reads consistently on the client's next request
         if ($authDevice !== null) {
             $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
-            AuthDevice::refreshCookie($response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+            AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
         }
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
