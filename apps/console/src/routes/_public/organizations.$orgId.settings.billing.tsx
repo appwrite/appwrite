@@ -7,6 +7,7 @@ import {
   organizationQueryOptions,
   organizationPlanQueryOptions,
   organizationInvoiceQueryOptions,
+  organizationBillingAggregationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
   billingAddressesQueryOptions,
@@ -59,6 +60,16 @@ export const Route = createFileRoute(
     const canFetchBillingInvoices = canSeeOrganizationBilling(billingAccess)
 
     await Promise.all([
+      ...(canFetchBillingInvoices && orgData?.billingAggregationId
+        ? [
+            queryClient.ensureQueryData(
+              organizationBillingAggregationQueryOptions(
+                orgId,
+                orgData.billingAggregationId,
+              ),
+            ),
+          ]
+        : []),
       queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
       ...(canFetchBillingInvoices
         ? [

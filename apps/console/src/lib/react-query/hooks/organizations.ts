@@ -568,6 +568,53 @@ export function organizationInvoiceQueryOptions(
   })
 }
 
+/** Aggregation supplies usage and project names, never invoice prices. */
+export function organizationBillingAggregationQueryOptions(
+  organizationId: string | null | undefined,
+  aggregationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'billing-aggregation',
+      'organization',
+      organizationId,
+      aggregationId,
+    ],
+    queryFn: async () => {
+      if (!organizationId || !aggregationId) return null
+      try {
+        const first = await sdk.forConsole.organizations.getAggregation({
+          organizationId,
+          aggregationId,
+          limit: 100,
+          offset: 0,
+        })
+        const breakdown = [...first.breakdown]
+        let page = first
+        while (page.breakdown.length === 100) {
+          page = await sdk.forConsole.organizations.getAggregation({
+            organizationId,
+            aggregationId,
+            limit: 100,
+            offset: breakdown.length,
+          })
+          breakdown.push(...page.breakdown)
+        }
+        return { ...first, breakdown }
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 404)
+          return null
+        throw error
+      }
+    },
+    enabled: !!organizationId && !!aggregationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  })
+}
+
 /**
  * Query function to fetch credits for an organization
  *
@@ -2402,6 +2449,13 @@ export function useUpdateOrganizationBudget() {
       })
       await queryClient.refetchQueries({
         queryKey: ['invoices', 'organization', variables.organizationId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: [
+          'billing-aggregation',
+          'organization',
+          variables.organizationId,
+        ],
       })
       // Projects also carry billingLimits; refresh so project curtains clear
       await queryClient.refetchQueries({

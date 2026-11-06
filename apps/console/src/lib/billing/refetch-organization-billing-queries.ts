@@ -9,6 +9,10 @@ export async function refetchOrganizationBillingQueries(
 ): Promise<void> {
   await Promise.all([
     queryClient.refetchQueries({
+      queryKey: ['billing-aggregation', 'organization', organizationId],
+      type: 'all',
+    }),
+    queryClient.refetchQueries({
       queryKey: ['invoices', 'organization', organizationId],
       type: 'all',
     }),

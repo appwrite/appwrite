@@ -27,6 +27,8 @@ const invoice = {
       description: 'Recorded project bandwidth',
       amount: 1001,
       projectId: 'project-a',
+      resourceId: 'bandwidth',
+      quantity: 1500000000,
       from: '2026-10-01T00:00:00.000+00:00',
       to: '2026-11-01T00:00:00.000+00:00',
     },
@@ -36,10 +38,30 @@ const invoice = {
   ],
 }
 
+// Deliberately conflicting amounts: aggregation is usage context, not a price source.
+const aggregation = {
+  $id: 'mutable-aggregation',
+  $updatedAt: invoice.$updatedAt,
+  amount: 6543,
+  resources: [],
+  breakdown: [
+    {
+      $id: 'project-a',
+      name: 'Production API',
+      amount: 888,
+      resources: [
+        { resourceId: 'bandwidth', value: 1500000000, amount: 777 },
+        { resourceId: 'storage', value: 600000000, amount: 666 },
+      ],
+    },
+  ],
+}
+
 async function mockBilling(
   page: Page,
   currentInvoice: unknown,
   historyInvoice?: object,
+  usage: object | null = aggregation,
 ) {
   await page.context().addCookies([
     {
@@ -99,7 +121,11 @@ async function mockBilling(
         name: 'Pro',
         price: 999,
         selfService: true,
+        usagePerProject: true,
+        bandwidth: 1,
+        storage: 2,
       },
+      [`/organizations/${orgId}/aggregations/mutable-aggregation`]: usage,
       [`/organizations/${orgId}/invoices`]: {
         total: historyInvoice ? 1 : 0,
         invoices: historyInvoice ? [historyInvoice] : [],
@@ -128,26 +154,31 @@ async function mockBilling(
   return page.locator('#current-cycle-usage')
 }
 
-test('shows saved lines and zero total without repricing or fetching aggregations', async ({
+test('keeps project expanders and usage bars while showing only saved charges', async ({
   page,
 }) => {
-  const aggregationRequests: string[] = []
-  page.on('request', (request) => {
-    if (request.url().includes('/aggregations/'))
-      aggregationRequests.push(request.url())
-  })
   const summary = await mockBilling(page, invoice)
   await expect(summary.getByText('Historical plan price')).toBeVisible()
+  const projectButton = summary.getByRole('button', { name: /Production API/ })
+  await expect(projectButton).toHaveAttribute('aria-expanded', 'false')
+  await projectButton.click()
+  await expect(projectButton).toHaveAttribute('aria-expanded', 'true')
+  const project = projectButton.locator('..')
+  await expect(project.getByRole('progressbar').first()).toBeVisible()
+  await expect(project.getByText('1.5 GB / 1 GB')).toBeVisible()
   await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
   await expect(
     summary
       .getByText('Recorded project bandwidth')
+      .locator('..')
+      .locator('..')
       .locator('..')
       .getByText(/Oct 1, 2026/),
   ).toBeVisible()
   await expect(
     summary
       .getByText('Historical plan price')
+      .locator('..')
       .locator('..')
       .getByText(/Dec 1, 2026/),
   ).toBeVisible()
@@ -157,11 +188,13 @@ test('shows saved lines and zero total without repricing or fetching aggregation
   await expect(summary.getByText('-$10.00', { exact: true })).toBeVisible()
   await expect(summary.getByText('-$0.01', { exact: true })).toBeVisible()
   await expect(
-    summary.getByRole('link', { name: 'project-a' }),
+    project.getByRole('link', { name: 'Usage details' }),
   ).toHaveAttribute('href', '/projects/project-a/usage')
   await expect(summary.getByText('$0.00', { exact: true })).toBeVisible()
   await expect(summary.getByText('$999.00')).toHaveCount(0)
-  expect(aggregationRequests).toEqual([])
+  await expect(summary.getByText('$777.00', { exact: true })).toHaveCount(0)
+  await expect(summary.getByText('$888.00', { exact: true })).toHaveCount(0)
+  await expect(summary.getByText('$6,543.00', { exact: true })).toHaveCount(0)
   await summary.screenshot({
     path: test.info().outputPath('recorded-lines.png'),
   })
@@ -231,4 +264,41 @@ test('preserves a paid zero invoice total in payment history', async ({
   const history = page.locator('#payment-history')
   await expect(history.getByText('$0.00', { exact: true })).toBeVisible()
   await expect(history.getByText('$999.00')).toHaveCount(0)
+})
+
+test('keeps saved project charges and usage quantities when aggregation is unavailable', async ({
+  page,
+}) => {
+  const summary = await mockBilling(page, invoice, undefined, null)
+  await summary.getByRole('button', { name: /project-a/ }).click()
+  await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
+  await expect(summary.getByText('1.5 GB / 1 GB')).toBeVisible()
+  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(2)
+})
+
+test('keeps unmapped project line items in the project subtotal and details', async ({
+  page,
+}) => {
+  const summary = await mockBilling(page, {
+    ...invoice,
+    items: [
+      ...invoice.items,
+      {
+        type: 'addon',
+        projectId: 'project-a',
+        description: 'Recorded custom charge',
+        amount: 123,
+      },
+    ],
+  })
+  const button = summary.getByRole('button', { name: /Production API/ })
+  await expect(button).toContainText('$11.24')
+  await button.click()
+  await expect(summary.getByText('Recorded custom charge')).toBeVisible()
+  await expect(
+    summary
+      .getByText('Recorded custom charge')
+      .locator('..')
+      .getByText('$1.23'),
+  ).toBeVisible()
 })
