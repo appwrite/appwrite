@@ -165,7 +165,12 @@ class Create extends Action
 
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
-                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId, pending: $staged);
+                $read = fn (): Document => $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId, pending: $staged);
+
+                // Read permission is not required to upsert, so its row is read without the
+                // caller's permissions, as the upsert endpoint reads it. The staged operation
+                // records the version it read, and the commit checks it for conflicts.
+                $document = $operation['action'] === 'upsert' ? $authorization->skip($read) : $read();
                 if ($document->isEmpty() && $operation['action'] !== 'upsert') {
                     throw new Exception($this->getNotFoundException(), params: [$documentId]);
                 }
@@ -251,9 +256,9 @@ class Create extends Action
                 // still need aggregates expanded so the committed rows match what the direct
                 // bulk endpoints persist (the commit handler writes the staged data verbatim).
                 if (\in_array($operation['action'], ['bulkCreate', 'bulkUpsert']) && \is_array($operation['data'] ?? null)) {
-                    foreach ($operation['data'] as $index => $document) {
-                        if (\is_array($document) && isset($document['$permissions'])) {
-                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($document['$permissions']);
+                    foreach ($operation['data'] as $index => $item) {
+                        if (\is_array($item) && isset($item['$permissions'])) {
+                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($item['$permissions']);
                         }
                     }
                 } elseif ($operation['action'] === 'bulkUpdate' && isset($operation['data']['data']['$permissions'])) {
@@ -267,6 +272,7 @@ class Create extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $operation[$this->getResourceId()] ?? null,
+                'documentUpdatedAt' => $document?->getUpdatedAt(),
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
