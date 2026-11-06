@@ -37,8 +37,8 @@ You will need to provide the following information from your **MSG91 dashboard**
 * Sender ID
 * Head to MSG91 dashboard > **SMS** > **Sender ID** > **Create sender ID**.
 ---
-* Sender number
-*
+* Template ID
+* The ID of an SMS template in your MSG91 dashboard. Appwrite passes the message text to the template's `content` and `otp` variables, so the template must use one of them where the text should appear.
 {% /table %}
 
 After adding the following details, click **Save and continue** to enable the provider.
