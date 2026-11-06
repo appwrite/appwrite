@@ -39,6 +39,8 @@ Coroutine\run(function () {
 
 Construct once at worker start, share across requests, `disconnect()` on
 `WorkerStop`. The adapter must be constructed inside a Swoole coroutine.
+Construction connects, but an unreachable server does not make it throw: the
+first command connects instead. A failed AUTH or SELECT still throws.
 
 ## Constructor
 
