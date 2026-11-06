@@ -1630,6 +1630,8 @@ Http::get('/robots.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
@@ -1664,6 +1666,8 @@ Http::get('/humans.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
