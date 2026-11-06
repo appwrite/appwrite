@@ -1503,7 +1503,7 @@ return [
             [
                 'name' => '_APP_EXECUTOR_MEMORY_LIMIT',
                 'description' => 'PHP memory limit of the Open Runtimes executor. The executor holds every function and site response in memory while it passes it on, about 2.5 times the response size, so raise this on nodes that serve many large responses at once. Defaults to `1024M`.',
-                'introduction' => '2.7.0',
+                'introduction' => '2.7.2',
                 'default' => '1024M',
                 'required' => false,
                 'question' => '',
