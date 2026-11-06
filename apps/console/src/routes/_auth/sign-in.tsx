@@ -57,6 +57,10 @@ const searchSchema = z.object({
     .refine((val) => !val || isValidRelativeRedirect(val), {
       message: 'Redirect must be a relative URL',
     }),
+  // Operator account switching: when an operator is already signed in, this keeps
+  // the sign-in form (instead of bouncing to the console) so a second account can
+  // join the account switching device. See ConsoleAccountSwitcherDialog.
+  addAccount: z.string().optional(),
 })
 
 export const Route = createFileRoute('/_auth/sign-in')({
@@ -68,6 +72,11 @@ export const Route = createFileRoute('/_auth/sign-in')({
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (account) {
+      // Operator adding another account to the switcher: keep the sign-in form
+      // rather than bouncing the already-signed-in operator back to the console.
+      if ((location.search as { addAccount?: string }).addAccount === '1') {
+        return
+      }
       if (requiresConsoleEmailVerification(account)) {
         const pendingRedirect = (location.search as { redirect?: string })
           .redirect

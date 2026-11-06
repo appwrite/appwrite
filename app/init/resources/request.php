@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
@@ -720,6 +721,69 @@ return function (Container $context): void {
 
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
+
+    $context->set('authDevice', function (Project $project, Request $request, Database $dbForProject, Token $proofForToken, $authorization): ?Document {
+        /**
+         * Resolves the account-switching device from the request, or null when there is none.
+         *
+         * Named `authDevice` to keep clear of the storage devices (`deviceForFiles` and friends).
+         *
+         * Mirrors the session cookie flow: the device secret arrives in the a_device_<projectId>
+         * cookie (or its _legacy twin), the x-appwrite-device header for SSR clients, or the
+         * x-fallback-cookies header for clients that block third-party cookies. The device
+         * document is looked up by id and gated by verifying the secret, like a session.
+         *
+         * Keyed and stored by the request's project, the same as the create/update/delete
+         * actions and the session endpoints that attach to it, so a device resolves in every
+         * mode (dbForProject already maps the console project to the platform database).
+         */
+        $authorization->setStatus(true);
+
+        $key = $project->getDeviceKey();
+
+        $store = new Store();
+        $store->setKey($key);
+
+        $store->decode(
+            $request->getCookie($key, $request->getCookie($key . '_legacy', ''))
+        );
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $deviceHeader = $request->getHeaderLine('x-appwrite-device', '');
+            if (! empty($deviceHeader)) {
+                $store->decode($deviceHeader);
+            }
+        }
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
+            $store->decode((\is_array($fallback) && isset($fallback[$key])) ? $fallback[$key] : '');
+        }
+
+        $deviceId = $store->getProperty('id', '');
+        $deviceSecret = $store->getProperty('secret', '');
+
+        if (empty($deviceId) || empty($deviceSecret)) {
+            return null;
+        }
+
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
+        if (
+            $device->isEmpty()
+            || ! $device->isSet('secret')
+            || ! $device->isSet('expire')
+            || ! $proofForToken->verify($deviceSecret, $device->getAttribute('secret'))
+            || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($device->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+        ) {
+            return null;
+        }
+
+        // The cookie value as received, so an endpoint that extends the device can re-issue it. Never persisted.
+        $device->setAttribute(AuthDevice::ATTRIBUTE_COOKIE, $store->encode());
+
+        return $device;
+    }, ['project', 'request', 'dbForProject', 'proofForToken', 'authorization']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
