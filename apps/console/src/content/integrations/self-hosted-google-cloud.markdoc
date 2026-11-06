@@ -37,18 +37,7 @@ Add firewall rules that allow inbound HTTP (80) and HTTPS (443) traffic to the i
 
 ## Step 3: Install Docker and run the Appwrite installer
 
-Connect to the instance over SSH and [install Docker Engine](https://docs.docker.com/engine/install/) with Docker Compose version 2. Then run the Appwrite installer:
-
-```bash
-docker run -it --rm \
-    --publish 20080:20080 \
-    --volume /var/run/docker.sock:/var/run/docker.sock \
-    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
-    --entrypoint="install" \
-    appwrite/appwrite:2.7.1
-```
-
-The [installation guide](/docs/advanced/self-hosting/installation) always shows the command for the latest release.
+Connect to the instance over SSH and [install Docker Engine](https://docs.docker.com/engine/install/) with Docker Compose version 2. Then run the macOS and Linux [installation command](/docs/advanced/self-hosting/installation#installation-commands) from the installation guide, which always installs the latest release.
 
 ## Step 4: Complete the setup wizard
 
