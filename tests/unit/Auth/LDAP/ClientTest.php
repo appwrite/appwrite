@@ -147,6 +147,26 @@ final class ClientTest extends TestCase
         ];
     }
 
+    public function testVerifiedTlsRefusesAddressLiterals(): void
+    {
+        // Nothing listens on loopback, so a refusal naming the certificate rather than
+        // the connection proves the host was turned away before dialling.
+        $client = $this->client([
+            'hosts' => ['127.0.0.1'],
+            'port' => 1,
+            'encryption' => 'ldaps',
+            'tls' => true,
+        ]);
+
+        try {
+            $client->test();
+            $this->fail('An address literal was accepted for a verified connection.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::PROJECT_LDAP_CONFIG_INVALID, $error->getType());
+            $this->assertStringContainsString('IP address', $error->getMessage());
+        }
+    }
+
     public function testAuthenticateRefusesEmptyCredentialsWithoutConnecting(): void
     {
         // RFC 4513 lets a directory treat an empty password as an anonymous bind

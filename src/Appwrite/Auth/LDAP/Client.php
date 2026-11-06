@@ -338,6 +338,13 @@ class Client
         $failure = 'No LDAP host is configured.';
 
         foreach ($this->hosts as $host) {
+            // The certificate is checked against the name it was issued to; an address
+            // literal has no name to check, so verification cannot succeed.
+            if ($this->tls && $this->encryption !== self::ENCRYPTION_NONE && \filter_var($host, FILTER_VALIDATE_IP) !== false) {
+                $failure = "LDAP host {$host} is an IP address, which cannot be checked against a certificate. Use the hostname on the directory's certificate, or turn certificate verification off.";
+                continue;
+            }
+
             try {
                 $address = $this->hostname->address($host);
             } catch (InvalidArgumentException $error) {
