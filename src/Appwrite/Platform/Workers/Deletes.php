@@ -878,6 +878,24 @@ class Deletes extends Action
     }
 
     /**
+     * The row is gone by the time this runs, so an entry left behind is never served. A store
+     * that fails is dropped for the rest of the run: each attempt can wait out a client timeout.
+     *
+     * @param array<int, Cache> $caches
+     */
+    private function purgeResponseCaches(array &$caches, string $key): void
+    {
+        foreach ($caches as $index => $cache) {
+            try {
+                $cache->purge($key);
+            } catch (Throwable $th) {
+                unset($caches[$index]);
+                Console::error('Failed to purge cache file ' . $key . ': ' . $th->getMessage());
+            }
+        }
+    }
+
+    /**
      * @param Document $project
      * @param callable $getProjectDB
      * @param string $resource
@@ -907,10 +925,8 @@ class Deletes extends Action
             'cache',
             $queries,
             $dbForProject,
-            function (Document $document) use ($caches, $projectId) {
-                foreach ($caches as $cache) {
-                    $cache->purge($document->getId());
-                }
+            function (Document $document) use (&$caches, $projectId) {
+                $this->purgeResponseCaches($caches, $document->getId());
 
                 Console::success('Deleted cache file: ' . APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId());
             }
@@ -943,10 +959,8 @@ class Deletes extends Action
             'cache',
             $queries,
             $dbForProject,
-            function (Document $document) use ($caches, $projectId) {
-                foreach ($caches as $cache) {
-                    $cache->purge($document->getId());
-                }
+            function (Document $document) use (&$caches, $projectId) {
+                $this->purgeResponseCaches($caches, $document->getId());
 
                 Console::success('Deleted cache file: ' . APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId());
             }
