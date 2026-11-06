@@ -168,4 +168,29 @@ export const heReviewsDictionary: Record<string, string> = {
   '{count} step': 'שלב {count}',
   '{count} steps': '{count} שלבים',
   running: 'פועל',
+
+  // Repositories tab
+  repositories: 'מאגרים',
+  Reviewed: 'בסקירה',
+  'All repositories': 'כל המאגרים',
+  'Reviewed since': 'בסקירה מאז',
+  'Review all': 'סקירת הכל',
+  'Review all repositories': 'סקירת כל המאגרים',
+  'Choose repositories': 'בחירת מאגרים',
+  'Browse repositories': 'עיון במאגרים',
+  'Search GitHub repositories...': 'חיפוש מאגרים ב-GitHub...',
+  'No repositories match your search': 'אין מאגרים שתואמים לחיפוש',
+  'No repositories reviewed yet': 'עדיין אין מאגרים בסקירה',
+  'No GitHub installation': 'אין התקנת GitHub',
+  'Connect GitHub to review pull requests':
+    'חברו את GitHub כדי לסקור Pull requests',
+  'Install the GitHub app on your account or organization, then pick the repositories to review.':
+    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז בחרו את המאגרים לסקירה.',
+  'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
+    'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
+  'Turn on code review for every repository in {organization} ({count}).':
+    'הפעלת סקירת קוד לכל המאגרים ב-{organization} ({count}).',
+  'Repositories added to the installation later are not included.':
+    'מאגרים שיתווספו להתקנה בהמשך לא ייכללו.',
+  'Review pull requests in {name}': 'סקירת Pull requests ב-{name}',
 }

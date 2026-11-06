@@ -315,7 +315,7 @@ export function useReviewRepositories(
   page: number = 0,
   limit: number = REVIEW_REPOSITORIES_PAGE_SIZE,
 ) {
-  const { data, isLoading, isFetching, error } = useQuery(
+  const { data, isLoading, isFetching, isPlaceholderData, error } = useQuery(
     reviewRepositoriesQueryOptions(projectId, page, limit),
   )
 
@@ -324,6 +324,7 @@ export function useReviewRepositories(
     total: data?.total ?? 0,
     isLoading,
     isFetching,
+    isPlaceholderData,
     error,
   }
 }

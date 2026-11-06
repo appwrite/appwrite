@@ -170,4 +170,29 @@ export const jaReviewsDictionary: Record<string, string> = {
   '{count} step': '{count} ステップ',
   '{count} steps': '{count} ステップ',
   running: '実行中',
+
+  // Repositories tab
+  repositories: 'リポジトリ',
+  Reviewed: 'レビュー対象',
+  'All repositories': 'すべてのリポジトリ',
+  'Reviewed since': 'レビュー開始日',
+  'Review all': 'すべてレビュー',
+  'Review all repositories': 'すべてのリポジトリをレビュー',
+  'Choose repositories': 'リポジトリを選択',
+  'Browse repositories': 'リポジトリを参照',
+  'Search GitHub repositories...': 'GitHub リポジトリを検索...',
+  'No repositories match your search': '検索に一致するリポジトリはありません',
+  'No repositories reviewed yet': 'レビュー対象のリポジトリはまだありません',
+  'No GitHub installation': 'GitHub のインストールがありません',
+  'Connect GitHub to review pull requests':
+    'GitHub を接続してプルリクエストをレビュー',
+  'Install the GitHub app on your account or organization, then pick the repositories to review.':
+    'アカウントまたは組織に GitHub アプリをインストールし、レビューするリポジトリを選択してください。',
+  'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
+    'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
+  'Turn on code review for every repository in {organization} ({count}).':
+    '{organization} のすべてのリポジトリ（{count} 件）でコードレビューを有効にします。',
+  'Repositories added to the installation later are not included.':
+    '後からインストールに追加されたリポジトリは含まれません。',
+  'Review pull requests in {name}': '{name} のプルリクエストをレビュー',
 }

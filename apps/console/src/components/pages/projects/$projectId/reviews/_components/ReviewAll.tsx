@@ -104,7 +104,7 @@ export function ReviewAll({
           <DialogDescription className="text-[13px] mt-2">
             {total === undefined
               ? t('Counting repositories...')
-              : `${t('Turn on code review for every repository in')} ${organization} (${total}). ${t('Repositories added to the installation later are not included.')}`}
+              : `${t('Turn on code review for every repository in {organization} ({count}).').replace('{organization}', organization).replace('{count}', String(total))} ${t('Repositories added to the installation later are not included.')}`}
           </DialogDescription>
         </DialogHeader>
         {running && (

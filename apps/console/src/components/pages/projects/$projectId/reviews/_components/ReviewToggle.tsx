@@ -77,7 +77,7 @@ export function ReviewToggle({
     <Switch
       checked={checked}
       disabled={disabled || pending}
-      aria-label={`${t('Review pull requests in')} ${name}`}
+      aria-label={t('Review pull requests in {name}').replace('{name}', name)}
       onCheckedChange={(next) => {
         if (next) {
           turnOn()

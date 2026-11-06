@@ -285,18 +285,31 @@ function ReviewedRepositories({
   const t = useT()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(REVIEW_REPOSITORIES_PAGE_SIZE)
-  const { repositories, total, isLoading } = useReviewRepositories(
-    projectId,
-    page - 1,
-    pageSize,
-  )
+  const { repositories, total, isLoading, isPlaceholderData, error } =
+    useReviewRepositories(projectId, page - 1, pageSize)
 
-  // Turning off the last repository on a page leaves it empty: step back.
+  // Turning off the last repository on a page leaves it empty: step back to
+  // the last page that has any. Only a loaded page counts, not the previous
+  // page kept on screen while it loads or a failed load.
   useEffect(() => {
-    if (!isLoading && repositories.length === 0 && page > 1) {
-      setPage(page - 1)
+    if (
+      !isLoading &&
+      !isPlaceholderData &&
+      !error &&
+      repositories.length === 0 &&
+      page > 1
+    ) {
+      setPage(Math.max(1, Math.ceil(total / pageSize)))
     }
-  }, [isLoading, repositories.length, page, setPage])
+  }, [
+    isLoading,
+    isPlaceholderData,
+    error,
+    repositories.length,
+    total,
+    pageSize,
+    page,
+  ])
 
   // A row stores GitHub's repository ID only; its name comes from GitHub.
   const names = useQueries({
