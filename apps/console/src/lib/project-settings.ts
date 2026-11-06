@@ -29,6 +29,9 @@ export const AuthEmailPolicyId = {
   DenyCorporateEmail: 'deny-corporate-email',
 } as const
 
+/** Account switching (devices) policy ID (not yet on ProjectPolicyId in all SDK builds). */
+export const AuthAccountDevicesPolicyId = 'account-devices'
+
 export type PasswordPwnedPolicy = {
   /** Check passwords against known breaches and record the result on the user. */
   enabled: boolean
@@ -62,6 +65,8 @@ export type ProjectAuthSecuritySnapshot = {
   authDenyDisposableEmail: boolean
   authDenyCorporateEmail: boolean
   authDenyRealtimeGuests: boolean
+  /** Account switching: a browser may hold several sessions and switch between them. */
+  authAccountDevices: boolean
   authPasskey: PasskeyPolicy
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
@@ -97,6 +102,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDenyDisposableEmail: false,
   authDenyCorporateEmail: false,
   authDenyRealtimeGuests: false,
+  authAccountDevices: true,
   authPasskey: DEFAULT_PASSKEY_POLICY,
   authMockNumbers: [],
   membershipsPrivacy: {
@@ -205,6 +211,7 @@ export function parseProjectAuthSecurity(
     policies,
     ProjectPolicyId.Denyrealtimeguests,
   )
+  const accountDevices = policyById(policies, AuthAccountDevicesPolicyId)
   const passkey = policyById(policies, ProjectPolicyId.Passkey) as
     | Models.PolicyPasskey
     | undefined
@@ -255,6 +262,7 @@ export function parseProjectAuthSecurity(
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
     authDenyRealtimeGuests: parsePolicyEnabled(denyRealtimeGuests, false),
+    authAccountDevices: parsePolicyEnabled(accountDevices, true),
     authPasskey: parsePasskeyPolicy(passkey),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,
