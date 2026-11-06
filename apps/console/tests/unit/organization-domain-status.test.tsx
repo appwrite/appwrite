@@ -94,7 +94,7 @@ afterAll(async () => {
 })
 
 describe('organization domain nameservers', () => {
-  test('shows Appwrite nameservers without a Status or Verify', () => {
+  test('shows Appwrite nameservers without a Status', () => {
     const view = renderView('Appwrite')
 
     expect(view.getByText('Appwrite')).toBeTruthy()
@@ -102,12 +102,13 @@ describe('organization domain nameservers', () => {
     expect(view.queryByText('Verify')).toBeNull()
   })
 
-  test('shows external nameservers with Verify, not a pending Status', () => {
+  test('shows external nameservers, not a pending Status', () => {
     // The server sends "Appwrite" or an empty string
     const view = renderView('')
 
     expect(view.getAllByText('3rd party').length).toBeGreaterThan(0)
-    expect(view.getByText('Verify')).toBeTruthy()
+    // The banner's Retry Verification checks them; the field adds no second button
+    expect(view.queryByText('Verify')).toBeNull()
     expect(view.queryByText('Status')).toBeNull()
     expect(view.queryByText('Pending')).toBeNull()
   })

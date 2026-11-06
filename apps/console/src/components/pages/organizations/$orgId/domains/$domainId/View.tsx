@@ -1004,7 +1004,8 @@ export function View({ initialData }: ViewProps = {}) {
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         {t('Nameservers')}
                       </p>
-                      <div className="min-h-[1.25rem] flex items-center gap-1.5 min-w-0">
+                      {/* The banner above offers Retry Verification */}
+                      <div className="min-h-[1.25rem] flex items-center min-w-0">
                         <code
                           className={cn(
                             'text-[12px] font-mono font-medium truncate',
@@ -1013,17 +1014,6 @@ export function View({ initialData }: ViewProps = {}) {
                         >
                           {domain.nameservers || t('3rd party')}
                         </code>
-                        {verificationStatus &&
-                          !verificationStatus.isVerified && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              onClick={() => setRetryDialogOpen(true)}
-                              className={metadataActionClassName}
-                            >
-                              {t('Verify')}
-                            </Button>
-                          )}
                       </div>
                     </div>
 
