@@ -56,6 +56,7 @@ use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
 use Appwrite\Utopia\Response\Filters\V29 as ResponseV29;
+use Appwrite\Utopia\Response\Filters\V30 as ResponseV30;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -1124,6 +1125,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.8.0', '<')) {
+                $response->addFilter(new ResponseV30());
+            }
             if (version_compare($responseFormat, '2.4.0', '<')) {
                 $response->addFilter(new ResponseV29());
             }
