@@ -420,10 +420,14 @@ class Certificates extends Action
             ]);
         } catch (Throwable $e) {
             $date = \date('H:i:s');
-            $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
-
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
+            $waiting = $awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS;
+
+            // A provider waiting on the domain owner is not a failure while attempts remain
+            $logs .= $waiting && $e instanceof CertificateException && $e->isBlocked()
+                ? "\033[90m[{$date}] \033[33mSSL certificate is waiting on domain verification: \033[0m\n"
+                : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
+            $logs .= \mb_strcut($e->getMessage(), 0, 500000) . "\n"; // Limit to 500kb
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -437,7 +441,7 @@ class Certificates extends Action
                 $certificate->setAttribute('status', $e->getStatus());
             }
 
-            if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
+            if ($waiting) {
                 // Nothing retries 'unverified', so keep the rule generating while attempts remain, for the
                 // interval to retry. A renewal stays verified, since its certificate still serves, for
                 // maintenance to retry. This is a wait, not a worker error.
