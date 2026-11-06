@@ -280,11 +280,11 @@ final class StorageCustomServerTest extends Scope
             $this->assertSame($entry['image'], $this->getImageSignature($preview['body']));
         }
 
-        // Copied across with the same image, and the original kept so lowering the percentage finds it warm.
+        // Copied across with the same bytes, and the original kept so lowering the percentage finds it warm.
         $this->assertSame($onDevice, $this->getCacheKeys($device));
         $this->assertCount(\count($entries), $this->getCacheKeys($filesystem));
         foreach ($onDevice as $key) {
-            $this->assertSame($this->getImageSignature((string) \file_get_contents($filesystem->getPath($key))), $this->getImageSignature((string) $device->read($device->getPath($key))));
+            $this->assertSame(\md5_file($filesystem->getPath($key)), \md5((string) $device->read($device->getPath($key))));
         }
 
         // The copy answers once the original is gone.

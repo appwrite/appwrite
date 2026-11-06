@@ -54,9 +54,7 @@ use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Cache\Adapter\Bounded;
 use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Adapter\Layered;
 use Utopia\Cache\Adapter\Storage;
 use Utopia\Cache\Cache;
 use Utopia\Client\Pool as HttpClientPool;
@@ -1252,7 +1250,7 @@ return function (Container $context): void {
     // Where a route's cached response lives: [the cache for this key, what to read on its miss].
     // Without a connection, or at the default 0 percent, every key stays on the filesystem.
     // The hash keeps a key on one side, so raising the percentage moves keys gradually.
-    $context->set('responseCache', fn (Document $project, HttpClientPool $cacheClient, Bounded $cacheMemory) => function (string $key) use ($project, $cacheClient, $cacheMemory): array {
+    $context->set('responseCache', fn (Document $project, HttpClientPool $cacheClient) => function (string $key) use ($project, $cacheClient): array {
         $root = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId();
         $filesystem = new Cache(new Filesystem($root));
         $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
@@ -1261,11 +1259,8 @@ return function (Container $context): void {
             return [$filesystem, null];
         }
 
-        // Another process can purge or replace an entry, so memory answers for one minute at most.
-        $device = new Storage(getDevice($root, $connection, $cacheClient));
-
-        return [new Cache((int) System::getEnv('_APP_STORAGE_CACHE_MEMORY', '0') > 0 ? new Layered($cacheMemory, $device, $project->getId(), 60) : $device), $filesystem];
-    }, ['project', 'cacheClient', 'cacheMemory']);
+        return [new Cache(new Storage(getDevice($root, $connection, $cacheClient))), $filesystem];
+    }, ['project', 'cacheClient']);
 
     $context->set('embedder', fn () => new AppwriteAdapter(
         endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),
