@@ -78,6 +78,8 @@ export type ConsoleProfileFeatures = {
   projectEnvironments: boolean
   /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
+  /** Project settings › Identity servers tab: LDAP directory sign-in, with more identity servers to follow. Preview, switched on from the Previews menu or the debug menu. */
+  identityServers: boolean
   /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -149,6 +151,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   reviews: 'Review',
   projectEnvironments: 'Project environments',
   projectTransfers: 'Project transfers',
+  identityServers: 'Identity servers',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -206,6 +209,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
+      identityServers: false,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -252,6 +256,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
+      identityServers: false,
       alerts: false,
       multiRegion: false,
       edgeNetwork: false,

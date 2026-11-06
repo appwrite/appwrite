@@ -258,6 +258,7 @@ import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './ro
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
+import { Route as PublicProjectsProjectIdSettingsIdentityServersRouteImport } from './routes/_public/projects.$projectId.settings.identity-servers'
 import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
 import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
 import { Route as PublicProjectsProjectIdSettingsVariablesRouteImport } from './routes/_public/projects.$projectId.settings.variables'
@@ -1855,6 +1856,12 @@ const PublicProjectsProjectIdSettingsDomainsRoute =
   PublicProjectsProjectIdSettingsDomainsRouteImport.update({
     id: '/domains',
     path: '/domains',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsIdentityServersRoute =
+  PublicProjectsProjectIdSettingsIdentityServersRouteImport.update({
+    id: '/identity-servers',
+    path: '/identity-servers',
     getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
   } as any)
 const PublicProjectsProjectIdSettingsMigrationsRoute =
@@ -3683,6 +3690,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -4124,6 +4132,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
@@ -4582,6 +4591,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
+  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/_public/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -5058,6 +5068,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
+    | '/projects/$projectId/settings/identity-servers'
     | '/projects/$projectId/settings/migrations'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
@@ -5499,6 +5510,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/repositories'
+    | '/projects/$projectId/settings/identity-servers'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
@@ -5956,6 +5968,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/reviews/$reviewId'
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
+    | '/_public/projects/$projectId/settings/identity-servers'
     | '/_public/projects/$projectId/settings/migrations'
     | '/_public/projects/$projectId/settings/smtp'
     | '/_public/projects/$projectId/settings/variables'
@@ -7988,6 +8001,13 @@ declare module '@tanstack/react-router' {
       path: '/domains'
       fullPath: '/projects/$projectId/settings/domains'
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/identity-servers': {
+      id: '/_public/projects/$projectId/settings/identity-servers'
+      path: '/identity-servers'
+      fullPath: '/projects/$projectId/settings/identity-servers'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsRoute
     }
     '/_public/projects/$projectId/settings/migrations': {
@@ -11034,6 +11054,7 @@ const PublicProjectsProjectIdSettingsMigrationsRouteWithChildren =
 
 interface PublicProjectsProjectIdSettingsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
+  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
   PublicProjectsProjectIdSettingsVariablesRoute: typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -11045,6 +11066,8 @@ const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSetti
   {
     PublicProjectsProjectIdSettingsDomainsRoute:
       PublicProjectsProjectIdSettingsDomainsRouteWithChildren,
+    PublicProjectsProjectIdSettingsIdentityServersRoute:
+      PublicProjectsProjectIdSettingsIdentityServersRoute,
     PublicProjectsProjectIdSettingsMigrationsRoute:
       PublicProjectsProjectIdSettingsMigrationsRouteWithChildren,
     PublicProjectsProjectIdSettingsSmtpRoute:

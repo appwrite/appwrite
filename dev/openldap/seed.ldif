@@ -1,0 +1,142 @@
+# Fixtures for developing and testing LDAP authentication.
+#
+# Loaded by the openldap-seed service in docker-compose.override.yml, and
+# depended on by tests/e2e/Services/Project/LDAPSessionIntegrationTest.php.
+# Enough entries to exercise sign-in, provisioning, the required group in each
+# way a directory can record membership, ambiguous usernames, entries with a
+# missing or malformed email address, and the account following the directory.
+
+dn: ou=people,dc=appwrite,dc=test
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=appwrite,dc=test
+objectClass: organizationalUnit
+ou: groups
+
+# In every group, so a required group admits her. The description holds a
+# second address and the phones two formats, so a different attribute mapping
+# can stand in for the entry changing.
+dn: uid=alice,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: alice
+cn: Alice Smith
+sn: Smith
+givenName: Alice
+mail: alice@appwrite.test
+description: alice.alt@appwrite.test
+mobile: +15550000001
+telephoneNumber: 555-0002
+userPassword: alicepass
+
+# Valid credentials but in no group, so a required group refuses him.
+dn: uid=bob,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: bob
+cn: Bob Jones
+sn: Jones
+givenName: Bob
+mail: bob@appwrite.test
+userPassword: bobpass
+
+# No mail attribute: the account is created without an email address.
+dn: uid=noemail,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: noemail
+cn: No Email
+sn: Email
+userPassword: noemailpass
+
+# The mail attribute holds a value that is not an email address.
+dn: uid=bademail,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: bademail
+cn: Bad Email
+sn: Email
+mail: not-an-email
+userPassword: bademailpass
+
+# Used to prove an existing account that owns the verified address is adopted.
+dn: uid=carol,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: carol
+cn: Carol White
+sn: White
+givenName: Carol
+mail: carol@appwrite.test
+userPassword: carolpass
+
+# Used to prove a blocked account cannot keep signing in with valid
+# directory credentials.
+dn: uid=dave,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: dave
+cn: Dave Green
+sn: Green
+givenName: Dave
+mail: dave@appwrite.test
+userPassword: davepass
+
+# A disposable address, refused when the project denies them.
+dn: uid=erin,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: erin
+cn: Erin Gray
+sn: Gray
+givenName: Erin
+mail: erin@mailinator.com
+userPassword: erinpass
+
+# Never signed in before the user limit test, so the limit refuses him.
+dn: uid=frank,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: frank
+cn: Frank Hill
+sn: Hill
+givenName: Frank
+mail: frank@appwrite.test
+userPassword: frankpass
+
+# Two entries sharing a cn: matching on it is ambiguous and refused.
+dn: uid=twin1,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: twin1
+cn: Twin
+sn: One
+mail: twin1@appwrite.test
+userPassword: twinpass
+
+dn: uid=twin2,ou=people,dc=appwrite,dc=test
+objectClass: inetOrgPerson
+uid: twin2
+cn: Twin
+sn: Two
+mail: twin2@appwrite.test
+userPassword: twinpass
+
+# Membership recorded on the group with member, the groupOfNames convention.
+dn: cn=appwrite-users,ou=groups,dc=appwrite,dc=test
+objectClass: groupOfNames
+cn: appwrite-users
+member: uid=alice,ou=people,dc=appwrite,dc=test
+
+# Alice's DN recorded with different case and spacing than her entry. The
+# directory treats both as the same entry, and so must the membership check.
+dn: cn=appwrite-users-cased,ou=groups,dc=appwrite,dc=test
+objectClass: groupOfNames
+cn: appwrite-users-cased
+member: uid=Alice, OU=People, DC=appwrite, DC=test
+
+# Membership recorded with uniqueMember. The fixture's memberOf overlay mirrors
+# this class onto the member's entry, which is how Active Directory records it.
+dn: cn=appwrite-unique,ou=groups,dc=appwrite,dc=test
+objectClass: groupOfUniqueNames
+cn: appwrite-unique
+uniqueMember: uid=alice,ou=people,dc=appwrite,dc=test
+
+# Membership recorded by username rather than DN, the posixGroup convention.
+dn: cn=appwrite-posix,ou=groups,dc=appwrite,dc=test
+objectClass: posixGroup
+cn: appwrite-posix
+gidNumber: 10000
+memberUid: alice

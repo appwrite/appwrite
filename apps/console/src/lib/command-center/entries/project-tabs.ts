@@ -405,6 +405,20 @@ const PROJECT_TABS: CommandEntry[] = [
     available: (ctx) => canShowProjectSettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/settings/smtp`,
   },
+  {
+    id: 'project.tab.settings.identity-servers',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Settings',
+    label: 'Settings · Identity servers',
+    description: 'LDAP directory sign-in',
+    icon: Server,
+    keywords: ['identity', 'ldap', 'directory', 'active directory', 'sso'],
+    available: (ctx) =>
+      Boolean(ctx.features.identityServers) &&
+      canShowProjectSettings(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/settings/identity-servers`,
+  },
 
   // ── Security ────────────────────────────────────────────────────────────
   {

@@ -176,7 +176,8 @@
         "psr/container": "^2.0",
         "appwrite/appwrite": "^32.2.0",
         "halaxa/json-machine": "^1.2",
-        "web-auth/webauthn-lib": "^5.3"
+        "web-auth/webauthn-lib": "^5.3",
+        "freedsx/ldap": "^0.9"
     },
     "require-dev": {
         "ext-fileinfo": "*",

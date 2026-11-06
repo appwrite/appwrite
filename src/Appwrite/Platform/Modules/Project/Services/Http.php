@@ -111,6 +111,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Update as UpdatePrefs;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Tests\Create as CreateLDAPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Update as UpdateLDAP;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Update as UpdateSMTP;
 use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\Get as GetTemplate;
@@ -149,6 +151,10 @@ class Http extends Service
         // SMTP
         $this->addAction('updateProjectSMTP', UpdateSMTP::class);
         $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
+
+        // LDAP
+        $this->addAction('updateProjectLDAP', UpdateLDAP::class);
+        $this->addAction('createProjectLDAPTest', CreateLDAPTest::class);
 
         // Templates
         $this->addAction('listProjectEmailTemplates', ListTemplates::class);

@@ -10,7 +10,11 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments' | 'projectTransfers'
+  flag:
+    | 'analytics'
+    | 'projectEnvironments'
+    | 'projectTransfers'
+    | 'identityServers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -39,6 +43,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Project transfers',
     description: 'Move a project to another organization.',
     introducedAt: '2026-10-29',
+  },
+  {
+    flag: 'identityServers',
+    name: 'Identity servers',
+    description: 'LDAP directory sign-in for a project.',
+    introducedAt: '2026-11-06',
   },
 ]
 

@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Fingerprint,
   FlaskConical,
   Layers,
   type LucideIcon,
@@ -33,6 +34,7 @@ const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   projectTransfers: ArrowLeftRight,
+  identityServers: Fingerprint,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {

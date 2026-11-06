@@ -14,6 +14,7 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { IdentityServers } from './IdentityServers'
 import { Variables } from './Variables'
 import type { Models } from '@appwrite.io/console'
 
@@ -61,9 +62,14 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
       if (pathParts[settingsIndex + 1]) {
         const tabFromPath = pathParts[settingsIndex + 1]
         if (
-          ['domains', 'webhooks', 'migrations', 'smtp', 'variables'].includes(
-            tabFromPath,
-          )
+          [
+            'domains',
+            'webhooks',
+            'migrations',
+            'smtp',
+            'variables',
+            'identity-servers',
+          ].includes(tabFromPath)
         ) {
           return tabFromPath
         }
@@ -73,6 +79,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     // Default to overview for index route (/projects/:projectId/settings or /projects/:projectId/settings/)
     return 'overview'
   }, [location.pathname])
+
+  const { features } = useConsoleProfile()
 
   // Update tabs with route paths
   const tabs: Tab[] = useMemo(
@@ -113,12 +121,22 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
+      // Preview: the route redirects to the overview while the flag is off.
+      ...(features.identityServers
+        ? [
+            {
+              id: 'identity-servers',
+              label: t('Identity servers'),
+              to: '/projects/$projectId/settings/identity-servers',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
     ],
-    [projectId, t],
+    [projectId, t, features.identityServers],
   )
 
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const noDomainsPermission = !canWriteProjectDomains(access, features)
   const noWebhooksPermission = !canWriteWebhooks(access, features)
@@ -140,7 +158,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const hasSearch =
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
-    activeTab !== 'variables'
+    activeTab !== 'variables' &&
+    activeTab !== 'identity-servers'
   const searchPlaceholder = hasSearch
     ? activeTab === 'domains'
       ? t('Search domains...')
@@ -241,6 +260,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'identity-servers' && features.identityServers && (
+          <IdentityServers projectId={projectId} />
+        )}
         {activeTab === 'variables' && <Variables />}
       </div>
     </div>

@@ -483,6 +483,58 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  # LDAP directory the Project suite signs in against (seeded by openldap-seed).
+  # Run dev/openldap/certs.sh first so it serves the certificates the TLS tests trust.
+  openldap:
+    profiles:
+      - openldap
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 3389:389
+      - 3636:636
+    volumes:
+      - ./dev/openldap/certs:/certs:ro
+    environment:
+      - LDAP_ORGANISATION=Appwrite Test
+      - LDAP_DOMAIN=appwrite.test
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+      - LDAP_TLS=true
+      - LDAP_TLS_VERIFY_CLIENT=never
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CRT_FILE=/certs/ldap.crt
+      - LDAP_SEED_INTERNAL_LDAP_TLS_KEY_FILE=/certs/ldap.key
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CA_CRT_FILE=/certs/ca.crt
+
+  # One-shot loader of dev/openldap/seed.ldif, on its own profile so that
+  # `up --wait` never waits on it: run it with `run --rm openldap-seed`.
+  openldap-seed:
+    profiles:
+      - openldap-seed
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap-seed
+    networks:
+      - appwrite
+    volumes:
+      - ./dev/openldap/seed.ldif:/seed.ldif:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        until ldapsearch -x -H ldap://openldap -b dc=appwrite,dc=test \
+          -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; do sleep 2; done
+        ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
+          -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif || true
+        echo "LDAP fixtures loaded."
+    environment:
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+
   gitea:
     profiles:
       - gitea

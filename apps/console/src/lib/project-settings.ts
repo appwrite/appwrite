@@ -402,6 +402,8 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Jwt]: false,
     // Response formats before 2.4.0 omit passkey from authMethods
     [ProjectAuthMethodId.Passkey]: false,
+    // Older response formats omit ldap from authMethods; it is configured under Settings > Identity servers
+    [ProjectAuthMethodId.Ldap]: false,
   }
   if (!project?.authMethods?.length) {
     return defaults
