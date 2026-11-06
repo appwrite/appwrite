@@ -398,13 +398,13 @@ final class StorageCustomServerTest extends Scope
         $width = \array_key_first(\array_filter($entries, fn (array $entry): bool => ! $entry['onDevice']));
         [$preview, $elapsed] = $request($width);
         $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
-        $this->assertSame($entries[$width]['body'], \md5($preview['body']));
+        $this->assertSame($entries[$width]['image'], $this->getImageSignature($preview['body']));
         $this->assertLessThan(2, $elapsed);
 
         // On the device side a copy on the filesystem answers once the read has failed.
         [$preview, $elapsed] = $request($copied);
         $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
-        $this->assertSame($entries[$copied]['body'], \md5($preview['body']));
+        $this->assertSame($entries[$copied]['image'], $this->getImageSignature($preview['body']));
         $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
 
         // With no copy the route regenerates.
