@@ -20,6 +20,8 @@ const consoleProfilePath = join(consoleRoot, 'src/hooks/use-console-profile.ts')
 const consoleProfilesPath = join(consoleRoot, 'src/lib/console-profiles.ts')
 const hooksPath = join(consoleRoot, 'src/lib/react-query/hooks/index.ts')
 const proxyDomainsPath = join(consoleRoot, 'src/lib/utils/proxy-domains.ts')
+// Copy the real module now: the namespace import is live and points at the mock once it is set.
+const realProxyDomains = { ...actualProxyDomains }
 const inputPath = join(consoleRoot, 'src/components/ui/input.tsx')
 const docsRouteLinkPath = join(
   consoleRoot,
@@ -103,6 +105,8 @@ installMocks()
 afterAll(async () => {
   cleanup()
   mock.restore()
+  // mock.restore leaves module mocks in place
+  mock.module(proxyDomainsPath, () => realProxyDomains)
   await GlobalRegistrator.unregister()
 })
 

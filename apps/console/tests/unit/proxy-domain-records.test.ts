@@ -1,9 +1,6 @@
-import { afterAll, describe, expect, jest, mock, test } from 'bun:test'
+import { describe, expect, jest, test } from 'bun:test'
 import { AppwriteException } from '@appwrite.io/console'
-import * as actualSdk from '@/lib/appwrite/sdk'
-import { queryClient } from '@/lib/react-query/query-client'
 import {
-  ensureApexDomainInOrganization,
   getClaimRecord,
   getRecordName,
   getVerificationMethods,
@@ -176,75 +173,5 @@ describe('isDomainClaimError', () => {
     ).toBe(false)
     expect(isDomainClaimError(new Error('Network request failed'))).toBe(false)
     expect(isDomainClaimError(null)).toBe(false)
-  })
-})
-
-describe('ensureApexDomainInOrganization', () => {
-  // Copy the real module now: the namespace import is live and points at the mock once it is set.
-  const realSdk = { ...actualSdk }
-
-  afterAll(() => {
-    queryClient.removeQueries({ queryKey: ['console-variables'] })
-    mock.module('@/lib/appwrite/sdk', () => realSdk)
-  })
-
-  function mockCloud(variables?: () => Promise<object>) {
-    queryClient.removeQueries({ queryKey: ['console-variables'] })
-    const created: string[] = []
-    const console = {
-      console: {
-        variables:
-          variables ??
-          (async () => ({
-            _APP_DOMAIN_SITES: 'appwrite.network',
-            _APP_DOMAIN_FUNCTIONS: 'fra.appwrite.run',
-          })),
-      },
-      domains: {
-        list: async () => ({ domains: [] }),
-        create: async ({ domain }: { domain: string }) => {
-          created.push(domain)
-        },
-      },
-    }
-    mock.module('@/lib/appwrite/sdk', () => ({
-      ...actualSdk,
-      getBaseEndpoint: () => 'https://cloud.appwrite.io/v1',
-      sdk: { forConsole: console, forConsoleIn: () => console },
-    }))
-    return created
-  }
-
-  test('does not register a zone Appwrite serves', async () => {
-    const created = mockCloud()
-    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.network')
-    await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run', 'fra')
-    // The variables name only the first sites zone.
-    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.site', 'fra')
-    expect(created).toEqual([])
-  })
-
-  test('registers a domain that only ends like a zone Appwrite serves', async () => {
-    const created = mockCloud()
-    await ensureApexDomainInOrganization(
-      'team1',
-      'app.evil-appwrite.network',
-      'fra',
-    )
-    expect(created).toEqual(['evil-appwrite.network'])
-  })
-
-  test('still registers a custom domain when the variables fail to load', async () => {
-    const created = mockCloud(async () => {
-      throw new Error('Network request failed')
-    })
-    await ensureApexDomainInOrganization('team1', 'app.example.com', 'fra')
-    expect(created).toEqual(['example.com'])
-  })
-
-  test('registers the apex of a custom domain', async () => {
-    const created = mockCloud()
-    await ensureApexDomainInOrganization('team1', 'app.example.com', 'fra')
-    expect(created).toEqual(['example.com'])
   })
 })

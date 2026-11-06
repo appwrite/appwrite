@@ -190,6 +190,15 @@ trait ProxyBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
 
+        // A real Host header: in development x-appwrite-hostname makes these routes answer as the platform.
+        $hostClient = new Client();
+        $hostClient->setEndpoint('http://appwrite.test');
+        $hostClient->addHeader('host', $domain);
+        foreach (['/robots.txt', '/humans.txt'] as $path) {
+            $response = $hostClient->call(Client::METHOD_GET, $path);
+            $this->assertSame(404, $response['headers']['status-code'], $path);
+        }
+
         $this->cleanupRule($ruleId);
 
         $rule = $this->createAPIRule('http://' . $domain);

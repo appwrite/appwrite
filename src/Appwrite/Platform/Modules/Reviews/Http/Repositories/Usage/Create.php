@@ -3,11 +3,13 @@
 namespace Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -50,6 +52,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('authorization')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -64,6 +67,7 @@ class Create extends Base
         Database $dbForPlatform,
         callable $getProjectDB,
         Authorization $authorization,
+        UsagePublisher $publisherForUsage,
     ): void {
         $this->authenticate($request);
 
@@ -83,7 +87,27 @@ class Create extends Base
         $documents = $this->prepareUsage($usage, 'reviewChats', $chat);
 
         if (!empty($documents)) {
-            $authorization->skip(fn () => $dbForProject->createDocuments('reviewUsage', $documents));
+            // A chat is counted once, with its first usage: the service reports it only once a
+            // model ran, so a comment it chose not to answer without asking one costs nothing.
+            // The chat row is locked so concurrent reports for it cannot both count it.
+            $answered = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $chat, $documents) {
+                $dbForProject->getDocument('reviewChats', $chat->getId(), forUpdate: true);
+
+                $answered = !$dbForProject->findOne('reviewUsage', [
+                    Query::equal('resourceType', ['reviewChats']),
+                    Query::equal('resourceInternalId', [(string) $chat->getSequence()]),
+                ])->isEmpty();
+
+                $dbForProject->createDocuments('reviewUsage', $documents);
+
+                return $answered;
+            }));
+
+            $this->publishTokens($project, $chat, $documents, $publisherForUsage);
+
+            if (!$answered) {
+                $this->publishUsage($project, $this->getRepositoryUsage($chat)->addMetric(METRIC_REVIEWS_CHATS, 1), $publisherForUsage);
+            }
         }
 
         $response->noContent();

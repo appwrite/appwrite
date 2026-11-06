@@ -206,17 +206,23 @@ export function isCloud(): boolean {
 export async function ensureApexDomainInOrganization(
   teamId: string,
   domain: string,
-  region?: string,
+  options?: { region?: string },
 ): Promise<void> {
   if (!isCloud() || !teamId || !domain?.trim()) return
 
   // A zone Appwrite serves is not the organization's to register, as the
-  // server's isAppwriteOwned holds. The variables carry only the first sites
-  // and functions zone, so appwrite.site, a later sites zone, is listed here.
-  const owned = ['appwrite.site']
+  // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds
+  // when the variables fail to load, and the variables, which carry only the
+  // first sites and functions zone of the project's region, add any other.
+  const owned = [
+    'appwrite.network',
+    'appwrite.run',
+    'appwrite.site',
+    'appwrite.global',
+  ]
   try {
     const variables = await queryClient.fetchQuery(
-      consoleVariablesQueryOptions(region),
+      consoleVariablesQueryOptions(options?.region),
     )
     owned.push(
       variables._APP_DOMAIN_SITES ?? '',

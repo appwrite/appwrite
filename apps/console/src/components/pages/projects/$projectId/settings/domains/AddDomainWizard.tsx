@@ -105,7 +105,9 @@ export function AddDomainWizard({
     setRegistering(true)
     try {
       if (project?.teamId) {
-        await ensureApexDomainInOrganization(project.teamId, d, region)
+        await ensureApexDomainInOrganization(project.teamId, d, {
+          region: project.region,
+        })
       }
     } catch (err: unknown) {
       const e = err as { type?: string }
