@@ -272,10 +272,10 @@ export function useVerifyDomain(
     },
     // A failed check saves its logs too.
     onSettled: async () => {
-      // Every proxy rule list of this project: project, site, function and deployment keys hold projectId third
+      // Every proxy rule list of this project. Function deployment keys hold projectId fourth, the others third.
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
-        predicate: (query) => query.queryKey[2] === projectId,
+        predicate: (query) => query.queryKey.includes(projectId),
       })
     },
   })
