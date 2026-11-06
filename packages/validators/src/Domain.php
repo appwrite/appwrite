@@ -93,8 +93,8 @@ class Domain extends Validator
             $levels = $restriction['levels'];
             $prefixDenyList = $restriction['prefixDenyList'];
 
-            // Only apply restriction rules to relevant domains, on a label boundary so 'myappwrite.network' is not matched by 'appwrite.network'
-            if ($value !== $hostname && !str_ends_with($value, '.' . (string) $hostname)) {
+            // Only apply restriction rules to relevant domains
+            if (!str_ends_with($value, (string) $hostname)) {
                 continue;
             }
 

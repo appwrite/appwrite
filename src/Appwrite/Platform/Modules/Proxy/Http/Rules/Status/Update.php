@@ -131,22 +131,10 @@ class Update extends Action
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset));
             }
         } catch (Exception $err) {
-            // Record why DNS verification failed, so the logs do not keep showing an older reason.
-            // Other errors, such as a platform misconfiguration, are not the domain owner's to fix.
-            $failed = $err->getType() === Exception::RULE_VERIFICATION_FAILED;
-            $update = new Document(['$updatedAt' => DateTime::now()]);
-            if ($failed) {
-                $update->setAttribute('logs', $err->getMessage());
-            }
-            $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $update));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                '$updatedAt' => DateTime::now(),
+            ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-
-            // Certificate logs take precedence when a rule is read, so overwrite them too
-            if ($failed && !empty($certificate->getAttribute('logs', ''))) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
-                    'logs' => $err->getMessage(),
-                ])));
-            }
             throw $err;
         }
 

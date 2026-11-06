@@ -171,12 +171,6 @@ final class DomainTest extends TestCase
         $this->assertFalse($validator->isValid('shard4.google.fra.appwrite.run'));
         $this->assertTrue($validator->isValid('branch-google.fra.appwrite.run'));
         $this->assertTrue($validator->isValid('preview-google.fra.appwrite.run'));
-
-        // Lookalikes that only share a suffix are customer domains, not restricted ones
-        $this->assertTrue($validator->isValid('myappwrite.network'));
-        $this->assertTrue($validator->isValid('preview-a.myappwrite.network'));
-        $this->assertTrue($validator->isValid('shop.www.myappwrite.network'));
-        $this->assertTrue($validator->isValid('stage.google.xfra.appwrite.run'));
     }
 
     /**

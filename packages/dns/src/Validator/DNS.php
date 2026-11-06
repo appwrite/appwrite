@@ -107,16 +107,6 @@ class DNS extends Validator
             return false;
         }
 
-        if ($this->type === Record::TYPE_CAA) {
-            // Only issue records restrict issuance for a host name (RFC 8659); an issuewild neither allows nor blocks it.
-            // Records without one still stop the climb to the parent: any CA may issue.
-            $issue = \array_filter($query, fn (Record $record): bool => \strtolower(\explode(' ', $record->rdata, 3)[1] ?? '') === 'issue');
-            if ($query !== [] && $issue === []) {
-                return true;
-            }
-            $query = $issue;
-        }
-
         $this->count = \count($query);
 
         if ($query === []) {
@@ -153,23 +143,11 @@ class DNS extends Validator
                 $rdata = explode(';', $rdata, 2)[0]; // certainly.com
 
                 $this->records[] = $rdata;
-                // Issuer domains and tags are case-insensitive
-                if (\strtolower($rdata) === \strtolower($this->target) || \strtolower($record->rdata) === \strtolower($this->target)) {
+                if ($rdata === $this->target) {
                     return true;
                 }
-
-                continue;
-            }
-
-            $this->records[] = $record->rdata;
-
-            // Host names are case-insensitive and may be fully qualified; TXT stays exact
-            if (\in_array($this->type, [Record::TYPE_CNAME, Record::TYPE_NS, Record::TYPE_MX], true)) {
-                if (\strtolower(\rtrim($record->rdata, '.')) === \strtolower(\rtrim($this->target, '.'))) {
-                    return true;
-                }
-
-                continue;
+            } else {
+                $this->records[] = $record->rdata;
             }
 
             if ($record->rdata === $this->target) {
