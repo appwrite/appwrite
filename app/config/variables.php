@@ -1356,6 +1356,14 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_STORAGE_CACHE_MEMORY',
+                'description' => 'Bytes of memory each worker keeps in front of the _APP_CONNECTIONS_STORAGE_CACHE device, for responses up to 64 KiB. An entry is served from memory for at most one minute, so a purge or replacement elsewhere can take that long to show. The default is 0, which keeps nothing in memory.',
+                'introduction' => '2.8.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [

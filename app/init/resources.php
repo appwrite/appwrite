@@ -44,6 +44,7 @@ use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Cache\Adapter\Bounded;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
@@ -516,6 +517,9 @@ function getDevice(string $root, string $connection = '', (ClientInterface&Strea
             return new Local($root);
     }
 }
+
+// One per worker, in front of the response cache's device. Holds the small entries, which are most of them.
+$container->set('cacheMemory', fn () => new Bounded((int) System::getEnv('_APP_STORAGE_CACHE_MEMORY', '0'), 64 * 1024), []);
 
 // Read by the response cache only. Reused connections keep a read near the cost of a
 // local file, and the short timeouts turn an outage into a quick miss. A small pool, since

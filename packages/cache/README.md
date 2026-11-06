@@ -48,6 +48,8 @@ echo $data;
 | --- | --- |
 | `Filesystem` | Files on disk, with optional streaming reads. |
 | `Storage` | One object per entry on a `utopia-php/storage` device, such as S3. Age comes from the object's last modified time, and a load is one conditional GET on S3. A failed load or save reads as a miss. `flush` lists every object under the root and `getSize` returns 0. |
+| `Bounded` | This process's memory, up to a total size, dropping the least recently used. Keeps strings only. |
+| `Layered` | A front adapter over a back adapter: reads remember what they find in the front, which answers for a short TTL. Typically `Bounded` over `Storage`. |
 | `Memory` | In-process array, useful in tests. |
 | `None` | Stores nothing, for turning caching off. |
 | `Redis` | phpredis, with reconnect and leases. |
