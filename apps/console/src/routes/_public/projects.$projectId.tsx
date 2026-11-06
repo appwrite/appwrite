@@ -649,17 +649,14 @@ function ProjectLayout() {
         loaderData?.projectBlocked === true ||
         hasActiveProjectBlock(projectData, projectId)),
   )
-  const planUsageBillingLimits =
-    billingOrganization?.billingLimits &&
-    isPlanUsageLimitReached(billingOrganization)
-      ? billingOrganization.billingLimits
-      : project?.billingLimits
+  // Only the organization's limits suspend anything: a project's own limits
+  // come from plans that bill overage (see isProjectLockedByProjectUsage).
+  const planUsageBillingLimits = billingOrganization?.billingLimits
   const showPlanUsageLimitBanner =
     !budgetLimitReached &&
     !planUsageLimitReached &&
     features.billing &&
-    (isPlanUsageLimitReached(billingOrganization) ||
-      isPlanUsageLimitReached(project))
+    isPlanUsageLimitReached(billingOrganization)
 
   const skipInvoiceBanners =
     budgetLimitReached || planUsageLimitReached || projectBlocked
