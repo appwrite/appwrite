@@ -181,30 +181,6 @@ describe('getRuleStatusBadgeConfig', () => {
 })
 
 describe('canViewRuleLogs', () => {
-  test('hides logs on an SMTP rule whose verification wrote none', () => {
-    for (const status of ['created', 'unverified', 'verifying', 'verified']) {
-      expect(canViewRuleLogs({ status, logs: '', protocol: 'smtp' })).toBe(
-        false,
-      )
-      expect(canViewRuleLogs({ status, protocol: 'smtp' })).toBe(false)
-    }
-    expect(canViewRuleLogs({ status: 'unverified', protocol: 'http' })).toBe(
-      true,
-    )
-  })
-
-  test('shows logs on an SMTP rule once its verification wrote a reason', () => {
-    for (const status of ['unverified', 'verified']) {
-      expect(
-        canViewRuleLogs({
-          status,
-          logs: 'MX record not found.',
-          protocol: 'smtp',
-        }),
-      ).toBe(true)
-    }
-  })
-
   test('hides logs on a verified rule no certificate check has written', () => {
     expect(canViewRuleLogs({ status: 'verified', logs: '' })).toBe(false)
     expect(canViewRuleLogs({ status: 'verified', logs: [] })).toBe(false)

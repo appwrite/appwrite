@@ -410,8 +410,6 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'הסרת הדומיין נכשלה',
   'Failed to add domain': 'הוספת הדומיין נכשלה',
   'Failed to register domain': 'רישום הדומיין נכשל',
-  "Verification is taking longer than expected. Check the domain's logs.":
-    'האימות נמשך זמן רב מהצפוי. בדקו את היומנים של הדומיין.',
   'Verify domain ownership': 'אימות בעלות על הדומיין',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',

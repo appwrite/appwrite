@@ -1,11 +1,10 @@
-import { describe, expect, jest, test } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { AppwriteException } from '@appwrite.io/console'
 import {
   getClaimRecord,
   getRecordName,
   getVerificationMethods,
   isDomainClaimError,
-  withVerificationTimeout,
 } from '@/lib/utils/proxy-domains'
 
 describe('getRecordName', () => {
@@ -69,56 +68,6 @@ describe('getVerificationMethods', () => {
         nameservers: [],
       }),
     ).toEqual(['cname'])
-  })
-})
-
-describe('withVerificationTimeout', () => {
-  test('stops waiting on a request that runs past 30 seconds', async () => {
-    jest.useFakeTimers()
-    try {
-      const pending = withVerificationTimeout(new Promise(() => {}))
-      jest.advanceTimersByTime(30_000)
-      await expect(pending).rejects.toThrow(
-        "Verification is taking longer than expected. Check the domain's logs.",
-      )
-    } finally {
-      jest.useRealTimers()
-    }
-  })
-
-  test('returns the result of a request that answers in time', async () => {
-    await expect(
-      withVerificationTimeout(Promise.resolve('rule1')),
-    ).resolves.toBe('rule1')
-  })
-
-  test('reports a timed out request once it ends, so the list can refresh', async () => {
-    jest.useFakeTimers()
-    try {
-      let finish: (rule: string) => void = () => {}
-      const request = new Promise<string>((resolve) => (finish = resolve))
-      let lates = 0
-      const pending = withVerificationTimeout(request, () => lates++)
-      jest.advanceTimersByTime(30_000)
-      await expect(pending).rejects.toThrow()
-      expect(lates).toBe(0)
-
-      finish('rule1')
-      await request
-      expect(lates).toBe(1)
-    } finally {
-      jest.useRealTimers()
-    }
-  })
-
-  test('does not report a request that answers in time', async () => {
-    let lates = 0
-    await withVerificationTimeout(Promise.resolve('rule1'), () => lates++)
-    await withVerificationTimeout(
-      Promise.reject(new Error('x')),
-      () => lates++,
-    ).catch(() => {})
-    expect(lates).toBe(0)
   })
 })
 

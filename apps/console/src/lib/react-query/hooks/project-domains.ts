@@ -16,7 +16,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME, DOMAINS_DEFAULT_PAGE_SIZE } from './constants'
 import { getActiveProfileId } from '@/lib/console-profiles'
-import { withVerificationTimeout } from '@/lib/utils/proxy-domains'
 
 type VerifyDomainInput =
   | string
@@ -198,12 +197,6 @@ export function useCreateDomain(
   region?: string,
 ) {
   const queryClient = useQueryClient()
-  // A create that timed out may still save the rule, after the timeout.
-  const refresh = () =>
-    void queryClient.refetchQueries({
-      queryKey: ['proxy-rules'],
-      predicate: (query) => query.queryKey[2] === projectId,
-    })
 
   return useMutation({
     mutationFn: async (domain: string) => {
@@ -215,12 +208,9 @@ export function useCreateDomain(
       }
 
       const projectSdk = sdk.forProject(projectId, region)
-      return await withVerificationTimeout(
-        projectSdk.proxy.createAPIRule({
-          domain: domain.toLowerCase().trim(),
-        }),
-        refresh,
-      )
+      return await projectSdk.proxy.createAPIRule({
+        domain: domain.toLowerCase().trim(),
+      })
     },
     onSuccess: async () => {
       // Refetch, not invalidate: the domains list is unmounted behind the
@@ -247,12 +237,6 @@ export function useVerifyDomain(
   region?: string,
 ) {
   const queryClient = useQueryClient()
-  // A check that timed out still saves its result, after the timeout.
-  const refresh = () =>
-    void queryClient.refetchQueries({
-      queryKey: ['proxy-rules'],
-      predicate: (query) => query.queryKey[2] === projectId,
-    })
 
   return useMutation({
     mutationFn: async (input: VerifyDomainInput) => {
@@ -284,10 +268,7 @@ export function useVerifyDomain(
       }
 
       const projectSdk = sdk.forProject(projectId, region)
-      return await withVerificationTimeout(
-        projectSdk.proxy.updateRuleStatus({ ruleId }),
-        refresh,
-      )
+      return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
     // A failed check saves its logs too.
     onSettled: async () => {

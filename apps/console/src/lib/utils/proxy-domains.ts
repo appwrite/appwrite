@@ -3,22 +3,16 @@
  */
 
 import { parse } from 'tldts'
-import { ProxyRuleProtocol, type Models } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 
 /**
  * Whether a rule offers its logs. A rule that is not verified always does. A
- * verified rule offers them once a certificate check has written any. An SMTP
- * rule offers them only once its verification has written a reason: older
- * servers write none, and Retry shows the reason there.
+ * verified rule offers them once a certificate check has written any.
  */
 export function canViewRuleLogs(rule: {
   status: string
   logs?: unknown
-  protocol?: string
 }): boolean {
-  if (rule.protocol === ProxyRuleProtocol.Smtp) {
-    return typeof rule.logs === 'string' && rule.logs.length > 0
-  }
   if (rule.status !== 'verified') return true
   if (typeof rule.logs === 'string') return rule.logs.length > 0
   if (Array.isArray(rule.logs)) return rule.logs.length > 0
@@ -65,7 +59,6 @@ import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { queryClient } from '@/lib/react-query/query-client'
-import { translate } from '@/lib/i18n/translate'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -151,40 +144,6 @@ export function getClaimRecord(domain: string, projectId: string) {
 export function isDomainClaimError(error: unknown): boolean {
   const { type } = getAppwriteErrorInfo(error)
   return type === 'rule_verification_failed' || type === 'rule_claim_required'
-}
-
-/** How long the Console waits on a rule request that runs DNS lookups. */
-const VERIFICATION_TIMEOUT_MS = 30_000
-
-/**
- * Rejects once a rule create or verify runs past the timeout, so the form
- * stops spinning. The request itself keeps running: the server still saves
- * its result, which then shows in the domain's logs. `onLate` runs when a
- * timed out request ends, so the domains list can pick up that result.
- */
-export function withVerificationTimeout<T>(
-  request: Promise<T>,
-  onLate?: () => void,
-): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined
-  let late = false
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      late = true
-      reject(
-        new Error(
-          translate(
-            "Verification is taking longer than expected. Check the domain's logs.",
-          ),
-        ),
-      )
-    }, VERIFICATION_TIMEOUT_MS)
-  })
-  request.then(
-    () => late && onLate?.(),
-    () => late && onLate?.(),
-  )
-  return Promise.race([request, timeout]).finally(() => clearTimeout(timer))
 }
 
 /**
