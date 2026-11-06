@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 25
+    "readingTimeMinutes": 26
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -3105,7 +3105,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 8
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "layout": "article",
+    "readingTimeMinutes": 17
   },
   {
     "slug": "products/messaging/fcm",
@@ -3161,7 +3168,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/messaging/send-sms-messages",
@@ -3217,7 +3224,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/twilio",
