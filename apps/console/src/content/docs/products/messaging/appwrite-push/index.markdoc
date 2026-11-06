@@ -59,25 +59,6 @@ const provider = await messaging.createAppwriteProvider({
     expiry: 86400    // optional
 });
 ```
-```server-python
-from appwrite.client import Client
-from appwrite.services.messaging import Messaging
-from appwrite.id import ID
-
-client = Client()
-client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
-client.set_project('<PROJECT_ID>')                           # Your project ID
-client.set_key('<API_KEY>')                                  # Your secret API key
-
-messaging = Messaging(client)
-
-provider = messaging.create_appwrite_provider(
-    provider_id = ID.unique(),
-    name = 'Appwrite Push',
-    qos = 1,         # optional
-    expiry = 86400   # optional
-)
-```
 ```server-php
 <?php
 
@@ -99,12 +80,203 @@ $provider = $messaging->createAppwriteProvider(
     expiry: 86400   // optional
 );
 ```
+```server-python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+from appwrite.id import ID
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>')                           # Your project ID
+client.set_key('<API_KEY>')                                  # Your secret API key
+
+messaging = Messaging(client)
+
+provider = messaging.create_appwrite_provider(
+    provider_id = ID.unique(),
+    name = 'Appwrite Push',
+    qos = 1,         # optional
+    expiry = 86400   # optional
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>')                           # Your project ID
+    .set_key('<API_KEY>')                                  # Your secret API key
+
+messaging = Messaging.new(client)
+
+provider = messaging.create_appwrite_provider(
+    provider_id: ID.unique,
+    name: 'Appwrite Push',
+    qos: 1,         # optional
+    expiry: 86400   # optional
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                           // Your project ID
+    .SetKey("<API_KEY>");                                 // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+var provider = await messaging.CreateAppwriteProvider(
+    providerId: ID.Unique(),
+    name: "Appwrite Push",
+    qos: 1,         // optional
+    expiry: 86400   // optional
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')                           // Your project ID
+    .setKey('<API_KEY>');                                 // Your secret API key
+
+Messaging messaging = Messaging(client);
+
+final provider = await messaging.createAppwriteProvider(
+    providerId: ID.unique(),
+    name: 'Appwrite Push',
+    qos: 1,         // optional
+    expiry: 86400,  // optional
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.Messaging
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                           // Your project ID
+    .setKey("<API_KEY>")                                  // Your secret API key
+
+val messaging = Messaging(client)
+
+val provider = messaging.createAppwriteProvider(
+    providerId = ID.unique(),
+    name = "Appwrite Push",
+    qos = 1,         // optional
+    expiry = 86400   // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                           // Your project ID
+    .setKey("<API_KEY>");                                 // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.createAppwriteProvider(
+    ID.unique(),     // providerId
+    "Appwrite Push", // name
+    null,            // enabled (optional)
+    1L,              // qos (optional)
+    86400L,          // expiry (optional)
+    new CoroutineCallback<>((provider, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(provider);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                           // Your project ID
+    .setKey("<API_KEY>")                                  // Your secret API key
+
+let messaging = Messaging(client)
+
+let provider = try await messaging.createAppwriteProvider(
+    providerId: ID.unique(),
+    name: "Appwrite Push",
+    qos: 1,         // optional
+    expiry: 86400   // optional
+)
+```
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/id"
+	"github.com/appwrite/sdk-for-go/v7/messaging"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"), // Your API Endpoint
+		appwrite.WithProject("<PROJECT_ID>"),                           // Your project ID
+		appwrite.WithKey("<API_KEY>"),                                  // Your secret API key
+	)
+
+	service := messaging.New(client)
+
+	provider, err := service.CreateAppwriteProvider(
+		id.Unique(),
+		"Appwrite Push",
+		service.WithCreateAppwriteProviderQos(1),        // optional
+		service.WithCreateAppwriteProviderExpiry(86400), // optional
+	)
+	fmt.Println(provider, err)
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::id::ID;
+use appwrite::services::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>")                           // Your project ID
+        .set_key("<API_KEY>");                                 // Your secret API key
+
+    let messaging = Messaging::new(&client);
+
+    let provider = messaging.create_appwrite_provider(
+        ID::unique(),
+        "Appwrite Push",
+        None,        // enabled (optional)
+        Some(1),     // qos (optional)
+        Some(86400), // expiry (optional)
+    ).await?;
+
+    println!("{}", provider.id);
+    Ok(())
+}
+```
 {% /multicode %}
 {% /section %}
 
 {% section #install-sdk step=2 title="Install the SDK" %}
-
-Appwrite Push is in the Web SDK 29.0.0, Flutter SDK 28.0.0, React Native SDK 2.0.0, Android SDK 30.0.0, and Apple SDK 21.0.0, and in later versions. Use Web SDK 29.2.0 and React Native SDK 3.1.0 or later, which keep reconnecting after the broker refuses a connection.
 
 Install the SDK for your platform. Some platforms need extra setup:
 
@@ -127,7 +299,7 @@ dependencies {
 }
 ```
 
-The `appwrite` 28.0.0 package needs Dart 3.10 and Flutter 3.38.1 or later.
+The `appwrite` package needs Dart 3.10 and Flutter 3.38.1 or later.
 {% /tabsitem %}
 
 {% tabsitem #setup-react-native title="React Native" %}
@@ -262,13 +434,27 @@ let subscription = try await push.subscribe { message in
 ```
 {% /multicode %}
 
-`subscribe` returns once the broker has accepted the subscription. On Android, a background subscription returns once the SDK's background service has taken it. Each message has `topic`, `data` (the payload as text), `payload` (the raw bytes), and `qos`.
+`subscribe` returns once the subscription is active. On Android, a background subscription returns once the SDK's background service has taken it over.
 
-`Push` connects with the session the app signed in with through this client, or a JWT or session you set on the client. Background delivery reconnects with the same credential, so prefer a session over a short-lived JWT.
+Each message has four fields:
 
-On the web, the SDK can read the session only when your app and your Appwrite API are on different domains, such as your site and `<REGION>.cloud.appwrite.io`. If they share a domain, for example through a custom API domain, set a JWT on the client before you subscribe: `client.setJWT((await account.createJWT()).jwt)`.
+- `topic`: the topic the message arrived on.
+- `data`: the payload as text.
+- `payload`: the payload as raw bytes.
+- `qos`: the delivery guarantee the message arrived with, `0` or `1`.
 
-To follow the connection, register callbacks. Each holds one callback, and a later call replaces it.
+`Push` signs in with the same credential as the client you created it from:
+
+- the session your app created through that client, or
+- a JWT or session you set on the client.
+
+Background delivery reconnects later with that credential. A JWT expires, so use a session where you can.
+
+{% info title="Web apps on the same domain as Appwrite" %}
+The Web SDK can read the session only when your app and your Appwrite API are on different domains, such as `example.com` and `<REGION>.cloud.appwrite.io`. If they share a domain, for example through a custom API domain, set a JWT before you subscribe: `client.setJWT((await account.createJWT()).jwt)`.
+{% /info %}
+
+To know when the connection opens, closes, or fails, register these callbacks. Calling one again replaces the earlier callback.
 
 ```ts
 push
@@ -294,6 +480,15 @@ const message = await messaging.createPush({
     data: { orderId: '<ORDER_ID>' }
 });
 ```
+```server-php
+$message = $messaging->createPush(
+    messageId: ID::unique(),
+    title: 'Your order has shipped',
+    body: 'Track it from the Orders tab.',
+    users: ['<USER_ID>'],
+    data: ['orderId' => '<ORDER_ID>']
+);
+```
 ```server-python
 message = messaging.create_push(
     message_id = ID.unique(),
@@ -303,14 +498,90 @@ message = messaging.create_push(
     data = { 'orderId': '<ORDER_ID>' }
 )
 ```
-```server-php
-$message = $messaging->createPush(
-    messageId: ID::unique(),
+```server-ruby
+message = messaging.create_push(
+    message_id: ID.unique,
     title: 'Your order has shipped',
     body: 'Track it from the Orders tab.',
     users: ['<USER_ID>'],
-    data: ['orderId' => '<ORDER_ID>']
+    data: { 'orderId' => '<ORDER_ID>' }
+)
+```
+```server-dotnet
+var message = await messaging.CreatePush(
+    messageId: ID.Unique(),
+    title: "Your order has shipped",
+    body: "Track it from the Orders tab.",
+    users: new List<string> { "<USER_ID>" },
+    data: new Dictionary<string, object> { { "orderId", "<ORDER_ID>" } }
 );
+```
+```server-dart
+final message = await messaging.createPush(
+    messageId: ID.unique(),
+    title: 'Your order has shipped',
+    body: 'Track it from the Orders tab.',
+    users: ['<USER_ID>'],
+    data: {'orderId': '<ORDER_ID>'},
+);
+```
+```server-kotlin
+val message = messaging.createPush(
+    messageId = ID.unique(),
+    title = "Your order has shipped",
+    body = "Track it from the Orders tab.",
+    users = listOf("<USER_ID>"),
+    data = mapOf("orderId" to "<ORDER_ID>")
+)
+```
+```server-java
+messaging.createPush(
+    ID.unique(),                     // messageId
+    "Your order has shipped",        // title
+    "Track it from the Orders tab.", // body
+    null,                            // topics
+    List.of("<USER_ID>"),            // users
+    null,                            // targets
+    Map.of("orderId", "<ORDER_ID>"), // data
+    new CoroutineCallback<>((message, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(message);
+    })
+);
+```
+```server-swift
+let message = try await messaging.createPush(
+    messageId: ID.unique(),
+    title: "Your order has shipped",
+    body: "Track it from the Orders tab.",
+    users: ["<USER_ID>"],
+    data: ["orderId": "<ORDER_ID>"]
+)
+```
+```server-go
+message, err := service.CreatePush(
+	id.Unique(),
+	service.WithCreatePushTitle("Your order has shipped"),
+	service.WithCreatePushBody("Track it from the Orders tab."),
+	service.WithCreatePushUsers([]string{"<USER_ID>"}),
+	service.WithCreatePushData(map[string]interface{}{"orderId": "<ORDER_ID>"}),
+)
+```
+```server-rust
+let message = messaging.create_push(
+    ID::unique(),
+    Some("Your order has shipped"),                         // title
+    Some("Track it from the Orders tab."),                  // body
+    None,                                                   // topics
+    Some(vec!["<USER_ID>".to_string()]),                    // users
+    None,                                                   // targets
+    Some(serde_json::json!({ "orderId": "<ORDER_ID>" })),   // data
+    None, None, None, None, None, None, None, None, None, None, None, None, None, // other options
+).await?;
 ```
 {% /multicode %}
 
