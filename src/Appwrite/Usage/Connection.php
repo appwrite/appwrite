@@ -20,6 +20,8 @@ class Connection
 {
     private const int READY_TTL_SECONDS = 15;
 
+    private const string HEALTH_TENANT = '__health__';
+
     private ?Usage $usage = null;
     private bool $ready = false;
     private float $checkedAt = 0.0;
@@ -107,9 +109,10 @@ class Connection
         }
 
         try {
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_EVENT);
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_GAUGE);
-            $usage->findDaily('__health__', [Query::limit(1)]);
+            // A tenant with no rows lets ClickHouse skip purged rows through the primary key.
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_EVENT);
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_GAUGE);
+            $usage->findDaily(self::HEALTH_TENANT, [Query::limit(1)]);
         } catch (\Throwable $th) {
             return [
                 'enabled' => true,
@@ -128,11 +131,8 @@ class Connection
             return true;
         }
 
-        if (
-            $this->ready
-            && (microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS
-        ) {
-            return true;
+        if ((microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
+            return $this->ready;
         }
 
         $this->ready = ($this->healthCheck()['schemaReady'] ?? false) === true;
