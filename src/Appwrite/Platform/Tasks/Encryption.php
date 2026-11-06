@@ -101,6 +101,11 @@ class Encryption extends Action
                     continue;
                 }
 
+                // A database row can outlive its `database_<sequence>` collection, and then has no tables to walk
+                if ($dbForProject->findCollection('database_' . $database->getSequence()) === null) {
+                    continue;
+                }
+
                 $dbForDatabase = $databaseFactory->tenant($databaseFactory->overlayLiveDedicatedDsn($database, $project), $project, preserveDates: true);
 
                 foreach ($dbForProject->cursor('database_' . $database->getSequence(), batchSize: $batch) as $table) {
