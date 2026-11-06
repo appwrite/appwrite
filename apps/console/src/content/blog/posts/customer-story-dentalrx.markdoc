@@ -17,7 +17,7 @@ faqs:
   - question: "Why did DentalRx move its drug database from Firebase to Postgres?"
     answer: "Drug databases are relational. Each drug starts as a drug concept, with brand names, generic names, and drug classes attached to it. In Firebase's document model, each drug became a static document with subdocuments, and searching a large drug database was expensive enough that DentalRx synced its data to Algolia. Postgres models those relationships directly and handles search itself, which let DentalRx drop Algolia entirely."
   - question: "Can Postgres replace Algolia for search in an app?"
-    answer: "For many apps, yes. DentalRx replaced Algolia with a Postgres search extension, and its founder has not noticed any lag, even though Postgres is slower on paper than Algolia's few-millisecond responses. [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) supports [extensions](/docs/products/databases/postgresql/extensions) such as `pg_trgm` for fuzzy search at no extra cost. A dedicated search service can still be worth it at very large scale, or when search relevance tuning is a product in itself."
+    answer: "For many apps, yes. DentalRx replaced Algolia with a Postgres search extension, and the speed difference was a non-issue in its usability testing, even though Postgres is slower on paper than Algolia's few-millisecond responses. [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) supports [extensions](/docs/products/databases/postgresql/extensions) such as `pg_trgm` for fuzzy search at no extra cost. A dedicated search service can still be worth it at very large scale, or when search relevance tuning is a product in itself."
   - question: "How do I migrate from Firebase to Appwrite?"
     answer: "Appwrite includes a Firebase migration that imports Firestore data, users, and storage files using a Firebase service account. You run it from the migration wizard in the Appwrite Console. Functions are not migrated automatically, and only top-level Firestore data is imported, so review the [Firebase migration guide](/docs/advanced/migrations/firebase) and its limitations before you start."
   - question: "Can I host a Flutter web app on Appwrite Sites?"
@@ -98,7 +98,7 @@ That structure shows up in every search. Typing "amoxic" returns each matching d
 
 Search used to need its own service. On Firebase, searching a large drug database document by document was cost-prohibitive, so the team paid for Algolia and kept it in sync with the database.
 
-With Postgres, search moved into the database. Nickolas added a Postgres search [extension](/docs/products/databases/postgresql/extensions) and removed Algolia from the stack completely. The only concern was speed: Algolia answers in a few milliseconds, and Postgres is slower on paper.
+With Postgres, search moved into the database. Nickolas added a Postgres search [extension](/docs/products/databases/postgresql/extensions) and removed Algolia from the stack completely. The only concern was speed: Algolia answers in a few milliseconds, and Postgres is slower on paper. In usability testing, that difference turned out to be a non-issue.
 
 > "At first I was actually worried that you would be able to notice the lag for Postgres versus Algolia. But honestly, I don't notice at all. It literally is everything that I wanted for the database."
 
