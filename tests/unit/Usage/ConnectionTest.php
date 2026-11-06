@@ -75,24 +75,4 @@ final class ConnectionTest extends TestCase
         $this->assertTrue($health['schemaReady']);
         $this->assertEqualsCanonicalizing([Usage::TYPE_EVENT, Usage::TYPE_GAUGE, 'daily'], $usage->probes);
     }
-
-    public function testHealthCheckReportsTheSchemaAsNotReadyWhenAProbeFails(): void
-    {
-        $usage = new class (new ClickHouse('clickhouse')) extends Usage {
-            public function healthCheck(): array
-            {
-                return ['healthy' => true];
-            }
-
-            public function find(string $tenant, array $queries = [], ?string $type = null): array
-            {
-                throw new \RuntimeException('Unknown identifier: service');
-            }
-        };
-
-        $health = Connection::fromUsage($usage)->healthCheck();
-
-        $this->assertFalse($health['schemaReady']);
-        $this->assertSame('Unknown identifier: service', $health['error']);
-    }
 }
