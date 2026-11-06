@@ -120,6 +120,7 @@ class Delete extends Action
 
             $session
                 ->setAttribute('current', false)
+                ->setAttribute('userName', $user->getAttribute('name', ''))
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {

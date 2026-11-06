@@ -185,7 +185,8 @@ class Update extends Action
 
         $session
             ->setAttribute('factors', $factors)
-            ->setAttribute('mfaUpdatedAt', $mfaUpdatedAt);
+            ->setAttribute('mfaUpdatedAt', $mfaUpdatedAt)
+            ->setAttribute('userName', $user->getAttribute('name', ''));
 
         $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors, 'mfaUpdatedAt' => $mfaUpdatedAt]));
 

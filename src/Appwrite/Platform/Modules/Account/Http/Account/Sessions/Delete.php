@@ -114,9 +114,25 @@ class Delete extends Action
 
             $dbForProject->deleteDocument('sessions', $session->getId());
 
+            // If the session was the active one on an account switching device, the device is
+            // left with no active session. The caller picks one again with updateDeviceSession.
+            $deviceId = $session->getAttribute('deviceId', '');
+            if (!empty($deviceId)) {
+                $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $deviceId, $session) {
+                    $device = $dbForProject->getDocument('devices', $deviceId);
+                    if (!$device->isEmpty() && $device->getAttribute('activeSessionId') === $session->getId()) {
+                        $dbForProject->updateDocument('devices', $deviceId, new Document([
+                            'activeSessionId' => '',
+                            'activeSessionInternalId' => '',
+                        ]));
+                    }
+                });
+            }
+
             unset($sessions[$key]);
 
             $session->setAttribute('current', $session->getId() === $current?->getId());
+            $session->setAttribute('userName', $user->getAttribute('name', ''));
 
             if ($session->getAttribute('current')) {
                 $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));

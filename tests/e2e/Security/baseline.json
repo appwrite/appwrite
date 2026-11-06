@@ -755,7 +755,12 @@
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents/:documentId",
-        "PUT /v1/webhooks/:webhookId"
+        "PUT /v1/webhooks/:webhookId",
+        "DELETE /v1/account/devices/:deviceId",
+        "GET /v1/account/devices/:deviceId",
+        "PATCH /v1/account/devices/:deviceId/session",
+        "PATCH /v1/project/policies/account-devices",
+        "POST /v1/account/devices"
     ],
     "findings": [
         {
