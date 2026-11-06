@@ -156,9 +156,12 @@ class Upsert extends Action
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
+        // Read permission is not required to upsert, so the row is read without the caller's
+        // permissions. A staged upsert records the version it read, and the commit checks it
+        // for conflicts.
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
+            $oldDocument = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId));
         } elseif (\is_null($permissions)) {
             $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         } else {
