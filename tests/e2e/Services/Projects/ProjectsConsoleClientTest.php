@@ -2739,9 +2739,8 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(501, $response['headers']['status-code']);
 
-        // Enabling LDAP through the generic auth method endpoint is honored
-        // by the auth gate: the sign-in now fails on the missing directory
-        // configuration instead of the method being disabled.
+        // LDAP cannot be switched on through the generic auth method endpoint
+        // until a directory is configured: nothing could sign anyone in.
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2749,29 +2748,8 @@ final class ProjectsConsoleClientTest extends Scope
             'enabled' => true,
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ]), [
-            'username' => 'user',
-            'password' => 'password',
-        ]);
-
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('general_argument_invalid', $response['body']['type']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'enabled' => false,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('project_ldap_config_invalid', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
             'origin' => 'http://localhost',
@@ -2783,6 +2761,7 @@ final class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
 
         // Cleanup
 

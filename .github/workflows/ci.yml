@@ -739,6 +739,11 @@ jobs:
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 
+          # OpenLDAP runs alongside Appwrite only where the Project suite signs in against it.
+          if [ "$SERVICE" = "Project" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap"
+          fi
+
           # The embedding container is resource-heavy and off by default, so start it and
           # enable the API only for the suites that exercise the embeddings routes.
           if [ "$EMBEDDING" = "true" ]; then
@@ -769,13 +774,14 @@ jobs:
 
       # The seeder is a one-shot container, so it runs here explicitly rather
       # than through COMPOSE_PROFILES, where `up --wait` would treat its exit
-      # as a failure.
+      # as a failure. The certificates come first so the directory serves them.
       - name: Provision OpenLDAP
         if: matrix.service.name == 'Project'
         timeout-minutes: 5
         run: |
-          docker compose --profile openldap up -d --wait openldap
-          docker compose --profile openldap run --rm openldap-seed
+          ./dev/openldap/certs.sh
+          docker compose up -d --wait openldap
+          docker compose --profile openldap-seed run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
