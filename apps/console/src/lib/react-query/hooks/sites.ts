@@ -37,6 +37,7 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
+import { withVerificationTimeout } from '@/lib/utils/proxy-domains'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -1611,6 +1612,12 @@ export function useCreateSiteDomain(projectId: string | null | undefined) {
  */
 export function useCreateSiteDomainRule(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
+  // A create that timed out may still save the rule, after the timeout.
+  const refresh = () =>
+    void queryClient.refetchQueries({
+      queryKey: ['proxy-rules'],
+      predicate: (query) => query.queryKey[2] === projectId,
+    })
 
   return useMutation({
     mutationFn: async (params: {
@@ -1645,27 +1652,36 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
           '307': StatusCode.TemporaryRedirect,
           '308': StatusCode.PermanentRedirect,
         }
-        return await projectSdk.proxy.createRedirectRule({
-          domain: domainNorm,
-          url: redirectUrl.trim(),
-          statusCode: codeMap[statusCode] ?? StatusCode.Found,
-          resourceId: siteId,
-          resourceType: ProxyResourceType.Site,
-        })
+        return await withVerificationTimeout(
+          projectSdk.proxy.createRedirectRule({
+            domain: domainNorm,
+            url: redirectUrl.trim(),
+            statusCode: codeMap[statusCode] ?? StatusCode.Found,
+            resourceId: siteId,
+            resourceType: ProxyResourceType.Site,
+          }),
+          refresh,
+        )
       }
 
       if (behaviour === 'branch' && branch) {
-        return await projectSdk.proxy.createSiteRule({
-          domain: domainNorm,
-          siteId,
-          branch,
-        })
+        return await withVerificationTimeout(
+          projectSdk.proxy.createSiteRule({
+            domain: domainNorm,
+            siteId,
+            branch,
+          }),
+          refresh,
+        )
       }
 
-      return await projectSdk.proxy.createSiteRule({
-        domain: domainNorm,
-        siteId,
-      })
+      return await withVerificationTimeout(
+        projectSdk.proxy.createSiteRule({
+          domain: domainNorm,
+          siteId,
+        }),
+        refresh,
+      )
     },
     onSuccess: async (_rule, { siteId }) => {
       // Refetch, not invalidate: the domains list is unmounted behind the

@@ -39,6 +39,7 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
+import { withVerificationTimeout } from '@/lib/utils/proxy-domains'
 import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
@@ -1485,6 +1486,12 @@ export function useCreateFunctionDomainRule(
   projectId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
+  // A create that timed out may still save the rule, after the timeout.
+  const refresh = () =>
+    void queryClient.refetchQueries({
+      queryKey: ['proxy-rules'],
+      predicate: (query) => query.queryKey[2] === projectId,
+    })
 
   return useMutation({
     mutationFn: async (params: {
@@ -1519,27 +1526,36 @@ export function useCreateFunctionDomainRule(
           '307': StatusCode.TemporaryRedirect,
           '308': StatusCode.PermanentRedirect,
         }
-        return await projectSdk.proxy.createRedirectRule({
-          domain: domainNorm,
-          url: redirectUrl.trim(),
-          statusCode: codeMap[statusCode] ?? StatusCode.Found,
-          resourceId: functionId,
-          resourceType: ProxyResourceType.Function,
-        })
+        return await withVerificationTimeout(
+          projectSdk.proxy.createRedirectRule({
+            domain: domainNorm,
+            url: redirectUrl.trim(),
+            statusCode: codeMap[statusCode] ?? StatusCode.Found,
+            resourceId: functionId,
+            resourceType: ProxyResourceType.Function,
+          }),
+          refresh,
+        )
       }
 
       if (behaviour === 'branch' && branch) {
-        return await projectSdk.proxy.createFunctionRule({
-          domain: domainNorm,
-          functionId,
-          branch,
-        })
+        return await withVerificationTimeout(
+          projectSdk.proxy.createFunctionRule({
+            domain: domainNorm,
+            functionId,
+            branch,
+          }),
+          refresh,
+        )
       }
 
-      return await projectSdk.proxy.createFunctionRule({
-        domain: domainNorm,
-        functionId,
-      })
+      return await withVerificationTimeout(
+        projectSdk.proxy.createFunctionRule({
+          domain: domainNorm,
+          functionId,
+        }),
+        refresh,
+      )
     },
     onSuccess: async (_rule, { functionId }) => {
       // Refetch, not invalidate: the domains list is unmounted behind the
@@ -1598,6 +1614,12 @@ export async function createSmtpDomainRule(
  */
 export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
+  // A create that timed out may still save the rule, after the timeout.
+  const refresh = () =>
+    void queryClient.refetchQueries({
+      queryKey: ['proxy-rules'],
+      predicate: (query) => query.queryKey[2] === projectId,
+    })
 
   return useMutation({
     mutationFn: async (params: {
@@ -1608,7 +1630,10 @@ export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await createSmtpDomainRule(projectId, params)
+      return await withVerificationTimeout(
+        createSmtpDomainRule(projectId, params),
+        refresh,
+      )
     },
     onSuccess: async (_rule, { functionId }) => {
       // Refetch, not invalidate: the domains list is unmounted behind the

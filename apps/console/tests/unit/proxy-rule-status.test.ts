@@ -140,12 +140,28 @@ describe('getRuleStatusBadgeConfig', () => {
   })
 
   test('keeps the issuing badge while a blocked certificate is retried', () => {
+    // A retry clears the logs but leaves the certificate status from before.
     expect(
       getRuleStatusBadgeConfig(
-        { status: 'verifying', certificateStatus: 'blocked' },
+        { status: 'verifying', certificateStatus: 'blocked', logs: '' },
         NOW,
       ),
     ).toEqual(getDomainStatusBadgeConfig('verifying'))
+  })
+
+  test('tells a verifying rule blocked on a DNS record to add it, without Retry', () => {
+    const rule = {
+      status: 'verifying',
+      certificateStatus: 'blocked',
+      logs: 'Add a CNAME record for _acme-challenge.app.example.com.',
+    }
+    expect(getRuleStatusBadgeConfig(rule, NOW)).toEqual({
+      variant: 'warning',
+      label: 'Certificate blocked',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs.',
+    })
+    expect(canRetryRule(rule, NOW)).toBe(false)
+    expect(canViewRuleLogs(rule)).toBe(true)
   })
 
   test('keeps the domain status badge for a rule that is not verified', () => {
@@ -165,6 +181,30 @@ describe('getRuleStatusBadgeConfig', () => {
 })
 
 describe('canViewRuleLogs', () => {
+  test('hides logs on an SMTP rule whose verification wrote none', () => {
+    for (const status of ['created', 'unverified', 'verifying', 'verified']) {
+      expect(canViewRuleLogs({ status, logs: '', protocol: 'smtp' })).toBe(
+        false,
+      )
+      expect(canViewRuleLogs({ status, protocol: 'smtp' })).toBe(false)
+    }
+    expect(canViewRuleLogs({ status: 'unverified', protocol: 'http' })).toBe(
+      true,
+    )
+  })
+
+  test('shows logs on an SMTP rule once its verification wrote a reason', () => {
+    for (const status of ['unverified', 'verified']) {
+      expect(
+        canViewRuleLogs({
+          status,
+          logs: 'MX record not found.',
+          protocol: 'smtp',
+        }),
+      ).toBe(true)
+    }
+  })
+
   test('hides logs on a verified rule no certificate check has written', () => {
     expect(canViewRuleLogs({ status: 'verified', logs: '' })).toBe(false)
     expect(canViewRuleLogs({ status: 'verified', logs: [] })).toBe(false)

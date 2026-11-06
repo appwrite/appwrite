@@ -27,6 +27,7 @@ export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
     ? ` ${t('Certificate expires on {date}.').replace('{date}', formatDateShort(config.expireAt))}`
     : ''
   const hint = config.hint ? `${t(config.hint)}${expiry}` : undefined
+  const issuing = rule.status === 'verifying' && config.variant !== 'warning'
 
   return (
     <Tooltip>
@@ -36,16 +37,14 @@ export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
           className="text-[10px] shrink-0 gap-1.5"
           tabIndex={hint ? 0 : undefined}
           title={
-            rule.status === 'verifying'
+            issuing
               ? t(
                   'SSL certificate is being issued. This usually takes a couple of minutes.',
                 )
               : undefined
           }
         >
-          {rule.status === 'verifying' && (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          )}
+          {issuing && <Loader2 className="h-3 w-3 animate-spin" />}
           {t(config.label)}
         </Badge>
       </TooltipTrigger>

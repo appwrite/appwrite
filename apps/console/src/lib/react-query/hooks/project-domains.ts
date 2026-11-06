@@ -16,6 +16,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME, DOMAINS_DEFAULT_PAGE_SIZE } from './constants'
 import { getActiveProfileId } from '@/lib/console-profiles'
+import { withVerificationTimeout } from '@/lib/utils/proxy-domains'
 
 type VerifyDomainInput =
   | string
@@ -197,6 +198,12 @@ export function useCreateDomain(
   region?: string,
 ) {
   const queryClient = useQueryClient()
+  // A create that timed out may still save the rule, after the timeout.
+  const refresh = () =>
+    void queryClient.refetchQueries({
+      queryKey: ['proxy-rules'],
+      predicate: (query) => query.queryKey[2] === projectId,
+    })
 
   return useMutation({
     mutationFn: async (domain: string) => {
@@ -208,9 +215,12 @@ export function useCreateDomain(
       }
 
       const projectSdk = sdk.forProject(projectId, region)
-      return await projectSdk.proxy.createAPIRule({
-        domain: domain.toLowerCase().trim(),
-      })
+      return await withVerificationTimeout(
+        projectSdk.proxy.createAPIRule({
+          domain: domain.toLowerCase().trim(),
+        }),
+        refresh,
+      )
     },
     onSuccess: async () => {
       // Refetch, not invalidate: the domains list is unmounted behind the
@@ -237,6 +247,12 @@ export function useVerifyDomain(
   region?: string,
 ) {
   const queryClient = useQueryClient()
+  // A check that timed out still saves its result, after the timeout.
+  const refresh = () =>
+    void queryClient.refetchQueries({
+      queryKey: ['proxy-rules'],
+      predicate: (query) => query.queryKey[2] === projectId,
+    })
 
   return useMutation({
     mutationFn: async (input: VerifyDomainInput) => {
@@ -252,37 +268,33 @@ export function useVerifyDomain(
       }
 
       if (getActiveProfileId() === 'cloud' && organizationDomainId) {
-        try {
-          await sdk.forConsole.domains.verifyNameservers({
-            domainId: organizationDomainId,
+        // Best-effort and not awaited: its NS lookup must not hold up the
+        // rule check. The organization domain can change either way.
+        void sdk.forConsole.domains
+          .verifyNameservers({ domainId: organizationDomainId })
+          .catch(() => {})
+          .finally(() => {
+            void queryClient.refetchQueries({
+              queryKey: ['domain', organizationDomainId],
+            })
+            void queryClient.refetchQueries({
+              queryKey: ['domains', 'organization'],
+            })
           })
-        } catch {
-          // Nameserver verification is best-effort before proxy rule
-          // verification, but should not block verification.
-        }
       }
 
       const projectSdk = sdk.forProject(projectId, region)
-      return await projectSdk.proxy.updateRuleStatus({ ruleId })
+      return await withVerificationTimeout(
+        projectSdk.proxy.updateRuleStatus({ ruleId }),
+        refresh,
+      )
     },
-    onSuccess: async () => {
+    // A failed check saves its logs too.
+    onSettled: async () => {
       // Every proxy rule list of this project: project, site, function and deployment keys hold projectId third
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
         predicate: (query) => query.queryKey[2] === projectId,
-      })
-    },
-    // The nameserver check runs even when the rule check fails, so the
-    // organization domain can change either way.
-    onSettled: (_data, _error, input) => {
-      const organizationDomainId =
-        typeof input === 'string' ? undefined : input.organizationDomainId
-      if (!organizationDomainId) return
-      void queryClient.refetchQueries({
-        queryKey: ['domain', organizationDomainId],
-      })
-      void queryClient.refetchQueries({
-        queryKey: ['domains', 'organization'],
       })
     },
   })
