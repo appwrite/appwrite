@@ -452,6 +452,15 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.totalDuration';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
+const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_FAILED = 'reviews.failed';
+const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
+const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
+const METRIC_REVIEWS_TOKENS_OUTPUT = 'reviews.tokens.output';
+const METRIC_REVIEWS_TOKENS_CACHED_INPUT = 'reviews.tokens.cachedInput';
+const METRIC_REVIEWS_TOKENS_REASONING = 'reviews.tokens.reasoning';
+const METRIC_REVIEWS_MODEL_TOKENS_INPUT = 'reviews.tokens.{model}.input';
+const METRIC_REVIEWS_MODEL_TOKENS_OUTPUT = 'reviews.tokens.{model}.output';
 
 const METRIC_BUCKETS = 'buckets';
 const METRIC_STORAGE = 'storage';
