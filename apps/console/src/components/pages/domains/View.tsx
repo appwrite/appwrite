@@ -13,7 +13,7 @@ import {
   buildSignUpForDomainPath,
 } from '@/lib/domains/buy-wizard'
 import { domainsHero } from '@/lib/domains/marketing-content'
-import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import { ensurePersonalOrg } from '@/lib/ensure-personal-org'
 import { trackEvent } from '@/lib/analytics'
 import { useT } from '@/lib/i18n/translate'
 
@@ -77,7 +77,7 @@ export function View({
       }
 
       try {
-        const resolvedOrgId = await ensurePersonalOrgAndFirstProject()
+        const resolvedOrgId = await ensurePersonalOrg()
         navigate({
           to: '/organizations/$orgId/domains/buy',
           params: { orgId: resolvedOrgId },

@@ -297,6 +297,85 @@ final class PresenceRealtimeClientTest extends Scope
         ];
     }
 
+    /**
+     * @param array<string, string> $headers
+     * @param array<string> $query
+     * @return array<string, mixed>
+     */
+    private function listPresencesCached(array $headers, array $query): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            $headers,
+            [
+                'queries' => $query,
+                'ttl' => 3600,
+            ]
+        );
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function presenceStatusFor(array $response, string $presenceId): ?string
+    {
+        foreach ($response['body']['presences'] ?? [] as $presence) {
+            if (($presence['$id'] ?? null) === $presenceId) {
+                return $presence['status'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    public function testRealtimePermissionChangeInvalidatesListCache(): void
+    {
+        // A realtime upsert narrows permissions through the same State::setPermissions as the REST
+        // paths, so it must purge the list cache too. The server key always sees the row (API keys
+        // bypass document permissions), so staleness is anchored on the cached status: a heartbeat
+        // that only changes status must not purge, a permission change must.
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = Id::unique();
+        $metadata = ['case' => 'cache-invalidation'];
+        $serverHeaders = $this->getServerHeaders($project);
+        $query = [Query::equal('userId', [$user['$id']])->toString()];
+
+        $publisher = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
+        );
+
+        try {
+            $this->sendPresenceMessage($publisher, $presenceId, 'online', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+
+            $cached = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($cached, $presenceId));
+
+            // Status-only heartbeat keeps the same permissions, so the hash is unchanged and the
+            // cache is not purged: the cached page still reads 'online', proving it is serving.
+            $this->sendPresenceMessage($publisher, $presenceId, 'away', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'away', $metadata, $user['$id']);
+            $stale = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($stale, $presenceId));
+
+            // Narrowing the read role changes the permissionsHash, which must purge the cache; the
+            // fresh list then reflects the latest status.
+            $this->sendPresenceMessage($publisher, $presenceId, 'busy', $metadata, $this->getPresencePermissions(Role::user($user['$id'])));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'busy', $metadata, $user['$id']);
+            $fresh = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('busy', $this->presenceStatusFor($fresh, $presenceId));
+        } finally {
+            $publisher->close();
+        }
+    }
+
     public function testPresenceUpsertSenderGetsResponseAndEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
@@ -430,6 +509,32 @@ final class PresenceRealtimeClientTest extends Scope
             ]));
             $invalidPermissions = $this->receiveErrorMessage($client);
             $this->assertStringContainsString('permissions: Permissions must be an array of strings', (string) ($invalidPermissions['data']['message'] ?? ''));
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => 'invalid id!',
+                    'status' => 'online',
+                ],
+            ]));
+            $invalidId = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('presenceId: ', (string) ($invalidId['data']['message'] ?? ''));
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => ['not', 'an', 'object'],
+                ],
+            ]));
+            $invalidMetadata = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('metadata: Value must be a valid JSON object', (string) ($invalidMetadata['data']['message'] ?? ''));
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
@@ -657,6 +762,58 @@ final class PresenceRealtimeClientTest extends Scope
         } finally {
             // Publisher is closed mid-body to trigger onClose; guard against a double close
             // and still tear it down if an earlier assertion threw first.
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
+    public function testPresenceReauthToDifferentUserRemovesPreviousRow(): void
+    {
+        [$project, $userA, $headers] = $this->bootstrapIsolatedProject();
+        $userB = $this->getUser(true);
+
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'reauth-switch'];
+        $channels = ['presences', 'presences.' . $presenceId];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $userA['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $userA['$id']);
+
+            // Re-authenticate the connection as a different user: its hold on the previous user
+            // must be released and that row deleted with an offline event.
+            $publisher->send(\json_encode([
+                'type' => 'authentication',
+                'data' => ['session' => $userB['session']],
+            ]));
+            $auth = \json_decode($publisher->receive(), true);
+            $this->assertEquals('authentication', $auth['data']['to']);
+            $this->assertTrue($auth['data']['success']);
+            $this->assertEquals($userB['$id'], $auth['data']['user']['$id']);
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $userA['$id'], timeoutMs: 5000);
+
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code']);
+        } finally {
             try {
                 $publisher->close();
             } catch (\Throwable) {

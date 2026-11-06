@@ -56,12 +56,14 @@ final class AppwritePoliciesTest extends TestCase
             passwordPwned: ['enabled' => true, 'sessions' => true, 'users' => false],
             passwordRotation: ['enabled' => true, 'maxAge' => 7776000],
             passkeyRpId: 'example.com',
+            denyRealtimeGuests: true,
         ));
 
         $auths = $this->auths();
         $this->assertSame(['enabled' => true, 'sessions' => true, 'users' => false], $auths['passwordPwned']);
         $this->assertSame(['enabled' => true, 'maxAge' => 7776000], $auths['passwordRotation']);
         $this->assertSame('example.com', $auths['passkeyRpId']);
+        $this->assertTrue($auths['realtimeGuests']);
     }
 
     public function testUnreportedPoliciesKeepTheDestinationValues(): void
@@ -70,6 +72,7 @@ final class AppwritePoliciesTest extends TestCase
             'passwordPwned' => ['enabled' => false, 'sessions' => false, 'users' => true],
             'passwordRotation' => ['enabled' => true, 'maxAge' => 86400],
             'passkeyRpId' => 'destination.example.com',
+            'realtimeGuests' => true,
         ]);
 
         $this->import(new Policies(self::PROJECT));
@@ -78,6 +81,7 @@ final class AppwritePoliciesTest extends TestCase
         $this->assertSame(['enabled' => false, 'sessions' => false, 'users' => true], $auths['passwordPwned']);
         $this->assertSame(['enabled' => true, 'maxAge' => 86400], $auths['passwordRotation']);
         $this->assertSame('destination.example.com', $auths['passkeyRpId']);
+        $this->assertTrue($auths['realtimeGuests']);
     }
 
     public function testPasskeyRpIdChangesWhileNoUserHasAPasskey(): void

@@ -65,6 +65,12 @@ class Factory
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
         }
 
+        // The identity a provider registered for this server (Entire's plugin issuer)
+        $issuer = $this->registry[$key]['issuer'] ?? $this->getEnv($key, 'issuer');
+        if (!empty($issuer) && \method_exists($adapter, 'setIssuer')) {
+            $adapter->setIssuer($issuer);
+        }
+
         return $adapter;
     }
 

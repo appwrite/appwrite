@@ -55,6 +55,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
         $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
+        $this->assertArrayHasKey('appwrite-exiftool', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
     }
@@ -79,6 +80,23 @@ final class GeneratorTest extends TestCase
             $this->assertArrayNotHasKey('extends', $compose['services'][$name]);
             $this->assertArrayNotHasKey('profiles', $compose['services'][$name]);
         }
+    }
+
+    public function testLeavesOutReviewsByDefault(): void
+    {
+        $compose = $this->render();
+
+        $this->assertArrayNotHasKey('appwrite-hansi', $compose['services']);
+    }
+
+    public function testAddsReviewsWhenEnabled(): void
+    {
+        $compose = $this->render([
+            'reviews' => true,
+        ]);
+
+        $this->assertArrayHasKey('appwrite-hansi', $compose['services']);
+        $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-hansi']);
     }
 
     public function testKeepsMongoInitFiles(): void
@@ -154,7 +172,7 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
+        $this->assertSame(['postgres', '-c', 'max_connections=${_APP_DB_MAX_CONNECTIONS:-500}'], $postgresql['services']['postgresql']['command']);
         $this->assertSame([
             'redis-server',
             '--maxmemory',

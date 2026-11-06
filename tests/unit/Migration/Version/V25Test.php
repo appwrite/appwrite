@@ -13,7 +13,9 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
@@ -172,6 +174,323 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testAddsSessionGeoAndFileFolderToProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 1.9.x stores no GeoIP record on sessions and no folder on files.
+        $geo = [
+            'continentCode',
+            'latitude',
+            'longitude',
+            'timeZone',
+            'weatherCode',
+            'postalCode',
+            'autonomousSystemNumber',
+            'autonomousSystemOrganization',
+            'connectionType',
+            'connectionUsageType',
+            'connectionOrganization',
+            'isp',
+        ];
+        $collections = Config::getParam('collections', []);
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'sessions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $geo, true))
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $bucket = $authorization->skip(fn () => $database->createDocument('buckets', new Document([
+            '$id' => 'bucket',
+            'name' => 'Bucket',
+            'enabled' => true,
+            'maximumFileSize' => 0,
+            'allowedFileExtensions' => [],
+            'compression' => 'none',
+            'encryption' => false,
+            'antivirus' => false,
+        ])));
+        $files = $collections['buckets']['files'];
+        $table = 'bucket_' . $bucket->getSequence();
+        $database->createCollection(Collection::create(
+            id: $table,
+            attributes: \array_values(\array_filter($files['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'folder')),
+            indexes: \array_values(\array_filter($files['indexes'], static fn (Index $index): bool => $index->key !== '_key_folder')),
+        ));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $sessions = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('sessions')->getAttribute('attributes', [])
+        );
+        foreach ($geo as $attribute) {
+            $this->assertContains($attribute, $sessions);
+        }
+
+        $files = $database->getCollection($table);
+        $this->assertContains('folder', \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $files->getAttribute('attributes', [])
+        ));
+        $this->assertContains('_key_folder', \array_map(
+            fn (Document $index) => $index->getId(),
+            $files->getAttribute('indexes', [])
+        ));
+    }
+
+    public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // These collections did not exist on 2.5.0. Seed its schema before running the upgrade.
+        $added = ['videos', 'videosTimelines', 'videosRenditions', 'videosRenditionsSegments', 'videosProfiles', 'videosCaptions', 'videosCaptionsSegments'];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (\in_array($id, $added, true) || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $authorization->skip(fn () => $database->createDocument('videos', new Document([
+            '$id' => 'uploaded-video',
+            'bucketId' => 'bucket',
+            'fileId' => 'file',
+            'name' => 'Preserved upload',
+        ])));
+        $migration->execute();
+
+        $video = $authorization->skip(fn () => $database->getDocument('videos', 'uploaded-video'));
+        $this->assertSame('Preserved upload', $video->getAttribute('name'));
+        $this->assertSame('file', $video->getAttribute('fileId'));
+        foreach ($added as $collection) {
+            $rows = $authorization->skip(fn () => $database->find($collection));
+            $this->assertCount($collection === 'videos' ? 1 : 0, $rows);
+        }
+    }
+
+    public function testCreatesPresenceLogsWithConnectionsForLegacyProject(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A legacy project that never ran V24 has no presenceLogs collection at all.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if ($id === 'presenceLogs' || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $this->assertInstanceOf(Collection::class, $database->findCollection('presenceLogs'));
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
+    public function testAddsConnectionsToExistingPresenceLogs(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created before this change has presenceLogs but no connections column.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'presenceLogs'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'connections')
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
+    public function testBindsExistingPushLedgerToTopicInstances(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.3.0 keys its pushLedger by topic id only.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $collection['attributes'];
+            $indexes = $collection['indexes'];
+            if ($id === 'pushLedger') {
+                $attributes = \array_filter($attributes, static fn (Attribute $attribute): bool => $attribute->key !== 'topicInternalId');
+                $indexes = \array_filter($indexes, static fn (Index $index): bool => !\in_array($index->key, ['_key_topicInternalId_sequence', '_key_message_topicInternalId'], true));
+                $indexes[] = Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence']);
+                $indexes[] = Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic']);
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+        $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'data' => ['body' => 'before upgrade'],
+            'messageId' => 'message',
+            'sequence' => 1,
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $ledger = $database->getCollection('pushLedger');
+        $attributes = \array_map(fn (Document $attribute) => $attribute->getId(), $ledger->getAttribute('attributes', []));
+        $indexes = \array_map(fn (Document $index) => $index->getId(), $ledger->getAttribute('indexes', []));
+        $this->assertContains('topicInternalId', $attributes);
+        $this->assertContains('_key_topicInternalId_sequence', $indexes);
+        $this->assertNotContains('_key_topic_sequence', $indexes, 'replay no longer reads by topic id, so its index must go');
+        $this->assertContains('_key_message_topicInternalId', $indexes);
+        $this->assertNotContains('_key_message_topic', $indexes, 'deduplication keys on the topic instance, so the topic id unique index must go');
+
+        $published = $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'topicInternalId' => '7',
+            'data' => ['body' => 'after upgrade'],
+            'messageId' => 'message',
+            'sequence' => 2,
+        ])));
+        $this->assertSame('7', $published->getAttribute('topicInternalId'), 'a row written before the upgrade must not block the same message on a topic instance');
+    }
+
+    public function testBackfillsLegacyTypeOnExistingTransactions(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'transactions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'type')
+                : $collection['attributes'];
+            $indexes = $id === 'transactions'
+                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== '_key_type')
+                : $collection['indexes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $authorization->skip(fn () => $database->createDocument('transactions', new Document([
+            '$id' => 'pre-type-transaction',
+            'status' => 'pending',
+            'operations' => 1,
+            'expiresAt' => DateTime::now(),
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('transactions')->getAttribute('attributes', [])
+        );
+        $this->assertContains('type', $attributes);
+
+        $transaction = $authorization->skip(fn () => $database->getDocument('transactions', 'pre-type-transaction'));
+        $this->assertSame(DATABASE_TYPE_LEGACY, $transaction->getAttribute('type'));
+    }
+
     public function testRejectsResourcesCreatedAfterMigration(): void
     {
         $migration = new class () extends V25 {
@@ -237,5 +556,67 @@ final class V25Test extends TestCase
             fn (Attribute $attribute): string => $attribute->key,
             $database->getCollection('projects')->attributes()
         ));
+    }
+
+    public function testReadsTheExpiryOfCertificatesIssuedBeforeTheRelease(): void
+    {
+        if (!\is_dir(APP_STORAGE_CERTIFICATES) || !\is_writable(APP_STORAGE_CERTIFICATES)) {
+            $this->markTestSkipped(APP_STORAGE_CERTIFICATES . ' is not writable.');
+        }
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A certificates collection from the previous release: no expireDate and no status.
+        $certificates = Config::getParam('collections', [])['console']['certificates'];
+        $database->createCollection(Collection::create(
+            id: 'certificates',
+            attributes: \array_values(\array_filter(
+                $certificates['attributes'],
+                static fn (Attribute $attribute): bool => !\in_array($attribute->key, ['expireDate', 'status'], true)
+            )),
+            indexes: \array_values($certificates['indexes']),
+        ));
+
+        // One certificate is still in storage, the other one is gone.
+        $served = \uniqid() . '.v25.test';
+        $gone = \uniqid() . '.v25.test';
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_x509_export(\openssl_csr_sign(\openssl_csr_new(['commonName' => $served], $key), null, $key, 20), $pem);
+        \mkdir(APP_STORAGE_CERTIFICATES . '/' . $served, 0755, true);
+        \file_put_contents(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem', $pem);
+        foreach ([$served, $gone] as $domain) {
+            $database->createDocument('certificates', new Document(['$id' => \md5($domain), 'domain' => $domain, 'attempts' => 5, 'logs' => '']));
+        }
+
+        $migration = new class ($database, $certificates) extends V25 {
+            public function __construct(Database $database, array $certificates)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => ['certificates' => $certificates]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+            \unlink(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem');
+            \rmdir(APP_STORAGE_CERTIFICATES . '/' . $served);
+        }
+
+        $expiry = $database->getDocument('certificates', \md5($served))->getAttribute('expireDate');
+        $this->assertNotEmpty($expiry);
+        $this->assertEqualsWithDelta(\time() + 20 * 24 * 60 * 60, \strtotime($expiry), 120);
+        $this->assertEmpty($database->getDocument('certificates', \md5($gone))->getAttribute('expireDate'));
     }
 }

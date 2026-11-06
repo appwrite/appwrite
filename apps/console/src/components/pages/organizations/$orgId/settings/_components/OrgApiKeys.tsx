@@ -235,6 +235,7 @@ export function OrgKeysCard() {
             onDelete={handleDelete}
             onCopy={handleCopy}
             copiedField={copiedField}
+            actionsDisabled={noCreatePermission}
             showActions={true}
             organizationId={orgId}
             embedded

@@ -10,8 +10,13 @@ use OpenTelemetry\SDK\Common\Export\TransportInterface;
 use OpenTelemetry\SDK\Common\Future\CancellationInterface;
 use OpenTelemetry\SDK\Common\Future\CompletedFuture;
 use OpenTelemetry\SDK\Common\Future\FutureInterface;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 use Utopia\Telemetry\Adapter\OpenTelemetry;
+
+use function Swoole\Coroutine\run;
 
 final class OpenTelemetryTest extends TestCase
 {
@@ -72,6 +77,60 @@ final class OpenTelemetryTest extends TestCase
 
         $this->assertTrue($telemetry->collect());
         $this->assertSame([], $payloads);
+    }
+
+    #[RequiresPhpExtension('swoole')]
+    #[RunInSeparateProcess]
+    public function testOverlappingCollectsExportOneAtATime(): void
+    {
+        $transport = new class () implements TransportInterface {
+            public int $sending = 0;
+
+            public int $overlapping = 0;
+
+            public int $sent = 0;
+
+            public function contentType(): string
+            {
+                return ContentTypes::PROTOBUF;
+            }
+
+            public function send(string $payload, ?CancellationInterface $cancellation = null): FutureInterface
+            {
+                $this->sending++;
+                $this->overlapping = max($this->overlapping, $this->sending);
+                Coroutine::sleep(0.05);
+                $this->sending--;
+                $this->sent++;
+
+                return new CompletedFuture(null);
+            }
+
+            public function shutdown(?CancellationInterface $cancellation = null): bool
+            {
+                return true;
+            }
+
+            public function forceFlush(?CancellationInterface $cancellation = null): bool
+            {
+                return true;
+            }
+        };
+        $telemetry = new OpenTelemetry('http://localhost:4318/v1/metrics', 'namespace', 'service', 'instance', $transport);
+        $telemetry->createCounter('counter')->add(1);
+
+        $results = [];
+        run(function () use ($telemetry, &$results): void {
+            foreach ([0, 1] as $index) {
+                Coroutine::create(function () use ($telemetry, &$results, $index): void {
+                    $results[$index] = $telemetry->collect();
+                });
+            }
+        });
+
+        $this->assertSame([true, true], $results);
+        $this->assertSame(2, $transport->sent);
+        $this->assertSame(1, $transport->overlapping);
     }
 
     /**
@@ -147,7 +206,7 @@ final class OpenTelemetryTest extends TestCase
             $payloads[] = $payload;
         };
 
-        return new class ($capture) implements TransportInterface {
+        return new readonly class ($capture) implements TransportInterface {
             public function __construct(private \Closure $capture)
             {
             }

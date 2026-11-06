@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
+use Utopia\NATS\Exception\TlsException;
+use Utopia\NATS\Transport\TlsTransport;
 
 /**
  * End-to-end TLS / mTLS tests against a server that requires client certificates
@@ -66,5 +68,32 @@ final class TlsTest extends TestCase
             servers: $this->url,
             tlsCaFile: "{$this->certs}/ca.pem",
         ));
+    }
+
+    public function testUntrustedServerCertificateIsNotRetried(): void
+    {
+        // No CA, so the server's certificate is untrusted.
+        $connects = 0;
+
+        try {
+            Connection::connect(new ConnectionOptions(
+                servers: $this->url,
+                connectAttempts: 3,
+                transportFactory: function () use (&$connects): TlsTransport {
+                    $connects++;
+
+                    return new TlsTransport([
+                        'local_cert' => "{$this->certs}/client-cert.pem",
+                        'local_pk' => "{$this->certs}/client-key.pem",
+                    ]);
+                },
+            ));
+            $this->fail('A server certificate the client does not trust must fail the connect');
+        } catch (ConnectionException $error) {
+            $this->assertInstanceOf(TlsException::class, $error->getPrevious());
+            $this->assertStringContainsString('certificate verify failed', $error->getPrevious()->getMessage());
+        }
+
+        $this->assertSame(1, $connects);
     }
 }

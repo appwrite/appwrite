@@ -503,6 +503,7 @@ Checklist (in this order):
 - **Service avatars**: Always neutral (`bg-muted text-muted-foreground`), never colored
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
+- **Wizard headers are title-only**: Never pass a description, subtitle, or helper line to `WizardLayout`. The header is the title (and close/back). Put explanation in the page body, on a field, or omit it.
 
 ### Date and time (Appwrite datetimes)
 
@@ -575,6 +576,7 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `users` - User management, identities, sessions, MFA → `services/users.ts`
 - `messaging` - Email, push, SMS, providers, topics → `services/messaging.ts`
 - `sites`, `migrations`, `proxy`, `tokens`, `graphql`, `realtime`, `health`, `locale`, `project` → See service files
+- `reviews` - AI code review of GitHub pull requests: reviews with their findings, and the repositories they run for → **not** from the SDK yet. `sdk.forProject(id).reviews` is the hand-written client in `@/lib/appwrite/reviews`. Keep it in step with `src/Appwrite/Platform/Modules/Reviews`, and delete it for the generated service once a Console SDK release carries it. The Review section shows only when `features.reviews` is on and console variables report `_APP_REVIEWS_ENABLED` (`isReviewsEnabled`), because self-hosted instances run the review service only when they opt in.
 
 **Usage**: Always check service files for exact method signatures. Methods support object/positional args. List methods support `queries`, `search`, `total`.
 
@@ -1172,6 +1174,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
 - `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
+- `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
 
@@ -1379,6 +1382,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Error Shown`
 - `Wizard Opened`
 - `Wizard Option Selected`
+- `Overview Quick Start Clicked`, `Overview Resource Create Clicked`, `Overview Resource Opened`, `Overview Resource View All Clicked`: project dashboard cards. Props: `resource` (service id), `placement` (`header`, `filler`, `empty-card`), `action`, `option` (quick start id such as `postgres`, `git-import`, `node`)
 
 If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 
@@ -1717,7 +1721,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **Runtime/package manager**: This project uses **Bun** (not npm/pnpm). `bun.lock` is the only lockfile, and `lint:sdk-pins` scans every lockfile it finds. Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
-- **Pre-existing lint/type issues**: `bun run lint` reports many pre-existing errors, and `bun run check` reports the type errors recorded in `types-baseline.json`. CI runs `bun run lint:types`, which fails when any file has more type errors than its baseline, and when it has fewer: after fixing type errors, run `bun run lint:types --update` and commit the smaller baseline. CI also fails when the baseline allows an error the base commit's did not, so `--update` cannot absorb new errors.
+- **Pre-existing lint/type issues**: `bun run lint` reports many pre-existing errors, and `bun run check` reports the type errors recorded in `types-baseline.json`. CI runs `bun run lint:types`, which fails when any file has more type errors than its baseline, and when it has fewer: after fixing type errors, run `bun run lint:types --update` and commit the smaller baseline. CI also fails when the baseline allows an error the base commit's did not, so `--update` cannot absorb new errors. Reproduce that check locally with `git fetch origin main && bun run lint:types --against origin/main` before pushing. Baseline entries match by message text, so an error whose message spells out a type (such as the union of reference versions) counts as new when that type changes, even if the code that raises it did not. Fix that error instead of rewriting the baseline.
 - **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env, unset or set `VITE_CONSOLE_PRE_LAUNCH=false` before testing the full site. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
 

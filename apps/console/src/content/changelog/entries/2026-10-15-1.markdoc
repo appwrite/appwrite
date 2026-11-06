@@ -1,23 +1,15 @@
 ---
 layout: changelog
-title: Set up APNs for an iOS app with one CLI command
+title: "Cron schedules move to paid plans on Appwrite Cloud"
 date: 2026-10-15
-cover: /images/blog/announcing-apns-one-click-setup/cover.avif
-tags: messaging, cli
+description: "From October 19, 2026, functions on the Appwrite Cloud Free and Education plans run on intervals instead of cron expressions."
+tags: functions
 ---
 
-Appwrite CLI 28.5.0 sets up push notifications for iOS apps. Run `appwrite init apns` in your project and it creates the [APNs](/docs/products/messaging/apns#one-click-setup) production and sandbox providers, adds the push entitlement and background mode to your Xcode target, adds an Apple platform for the bundle ID, and checks with Apple that the App ID has Push Notifications on.
+From **Monday, October 19, 2026**, cron schedules for functions on Appwrite Cloud will need a paid plan. Functions on the Free and Education plans run on an [interval](/docs/products/functions/execute#interval) of 60 minutes or longer, and their existing cron schedules become intervals close to how often they run today. For example, `*/5 * * * *` becomes every 60 minutes.
 
-The bundle ID, team ID, and key ID are read from your Xcode project or Expo `app.json` and the `.p8` file name. With `--create-key`, the CLI signs in with your Apple ID and creates the APNs key for you, no Apple Developer portal needed.
+To keep cron, upgrade to a paid plan before October 19. To choose the interval yourself, select **Interval** in your function's **Settings** > **Executions** > **Schedule**, or replace `schedule` with `interval` in your SDK calls, CLI config, or Terraform resource.
 
-```bash
-appwrite init apns --create-key
-```
-
-{% arrow_link href="/blog/post/announcing-apns-one-click-setup" %}
-Read the announcement
-{% /arrow_link %}
-
-{% arrow_link href="/docs/products/messaging/apns#one-click-setup" %}
-Set up APNs with the CLI
+{% arrow_link href="/docs/products/functions/execute#interval" %}
+Learn about function intervals
 {% /arrow_link %}

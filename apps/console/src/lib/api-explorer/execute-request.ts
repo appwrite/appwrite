@@ -6,17 +6,22 @@ import type {
   ExecuteApiRequestResult,
   ExecuteApiMultipartRequestInput,
 } from './types'
-import { assertAllowedExplorerRequestUrl } from './proxy-validation'
+import {
+  assertAllowedExplorerRequestUrl,
+  isExplorerProxyMethod,
+  type ExplorerRequestHeaders,
+} from './proxy-validation'
 import { explorerFetch } from './explorer-http'
+import { getDebugEndpointBaseUrl } from '@/lib/debug-endpoint'
 import { proxyApiExplorerRequestFn } from '@/server/functions/api-explorer'
 
 function buildExplorerRequestHeaders(input: {
   projectId: string
   apiKey?: string
   jwt?: string
-  contentType?: string
-}): Record<string, string> {
-  const headers: Record<string, string> = {
+  contentType?: 'application/json'
+}): ExplorerRequestHeaders {
+  const headers: ExplorerRequestHeaders = {
     'X-Appwrite-Project': input.projectId,
   }
 
@@ -43,10 +48,7 @@ function buildRequestUrl(
 ): string {
   let resolvedPath = path
   for (const [key, value] of Object.entries(pathParams)) {
-    resolvedPath = resolvedPath.replace(
-      `{${key}}`,
-      encodeURIComponent(value),
-    )
+    resolvedPath = resolvedPath.replace(`{${key}}`, encodeURIComponent(value))
   }
 
   const base = endpoint.replace(/\/$/, '')
@@ -198,21 +200,34 @@ export async function executeApiRequest(
   const headers = buildExplorerRequestHeaders({
     projectId,
     apiKey,
-    jwt:
-      requestAuth?.mode === 'user' ? requestAuth.jwt : undefined,
+    jwt: requestAuth?.mode === 'user' ? requestAuth.jwt : undefined,
     contentType:
-      hasBody && contentType === 'application/json' ? contentType : undefined,
+      hasBody && contentType === 'application/json'
+        ? 'application/json'
+        : undefined,
   })
 
   const url = buildRequestUrl(endpoint, method.path, pathParams, queryParams)
+  const requestMethod = method.httpMethod.toUpperCase()
+  const requestBody = hasBody ? body : undefined
+
+  if (
+    !isExplorerProxyMethod(requestMethod) ||
+    !shouldUseExplorerProxy(endpoint)
+  ) {
+    return executeDirectRequest(url, endpoint, {
+      method: requestMethod,
+      headers,
+      body: requestBody,
+    })
+  }
 
   const proxied = await proxyApiExplorerRequestFn({
     data: {
       url,
-      method: method.httpMethod.toUpperCase(),
+      method: requestMethod,
       headers,
-      body: hasBody ? body : undefined,
-      allowedEndpoint: endpoint,
+      body: requestBody,
     },
   })
 
@@ -226,29 +241,25 @@ export async function executeApiRequest(
   })
 }
 
-export async function executeApiMultipartRequest(
-  input: ExecuteApiMultipartRequestInput,
+/**
+ * The console server only proxies to its configured API endpoint. Same-origin
+ * consoles and debug endpoint overrides send the request from the browser.
+ */
+function shouldUseExplorerProxy(endpoint: string): boolean {
+  if (typeof window === 'undefined') return true
+  if (getDebugEndpointBaseUrl()) return false
+  return new URL(endpoint).origin !== window.location.origin
+}
+
+async function executeDirectRequest(
+  url: string,
+  endpoint: string,
+  init: RequestInit,
 ): Promise<ExecuteApiRequestResult> {
-  const { config, method, pathParams, queryParams, formData, requestAuth } =
-    input
-  const { endpoint, projectId, apiKey } = config
-
-  const headers = buildExplorerRequestHeaders({
-    projectId,
-    apiKey,
-    jwt:
-      requestAuth?.mode === 'user' ? requestAuth.jwt : undefined,
-  })
-
-  const url = buildRequestUrl(endpoint, method.path, pathParams, queryParams)
   assertAllowedExplorerRequestUrl(url, endpoint)
 
   const started = performance.now()
-  const response = await explorerFetch(url, {
-    method: method.httpMethod.toUpperCase(),
-    headers,
-    body: formData,
-  })
+  const response = await explorerFetch(url, init)
   const durationMs = Math.round(performance.now() - started)
   const bodyBytes = await response.arrayBuffer()
 
@@ -264,6 +275,28 @@ export async function executeApiMultipartRequest(
     bodyBytes,
     durationMs,
     ok: response.ok,
+  })
+}
+
+export async function executeApiMultipartRequest(
+  input: ExecuteApiMultipartRequestInput,
+): Promise<ExecuteApiRequestResult> {
+  const { config, method, pathParams, queryParams, formData, requestAuth } =
+    input
+  const { endpoint, projectId, apiKey } = config
+
+  const headers = buildExplorerRequestHeaders({
+    projectId,
+    apiKey,
+    jwt: requestAuth?.mode === 'user' ? requestAuth.jwt : undefined,
+  })
+
+  const url = buildRequestUrl(endpoint, method.path, pathParams, queryParams)
+
+  return executeDirectRequest(url, endpoint, {
+    method: method.httpMethod.toUpperCase(),
+    headers,
+    body: formData,
   })
 }
 

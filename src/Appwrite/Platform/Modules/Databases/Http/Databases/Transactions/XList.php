@@ -31,7 +31,7 @@ class XList extends Action
             ->setHttpPath('/v1/databases/transactions')
             ->desc('List transactions')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'rows.read')
+            ->label('scope', ['documents.read', 'rows.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
@@ -65,6 +65,8 @@ class XList extends Action
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        $queries = \array_merge($queries, $this->getTransactionTypeQueryFilters());
 
         $response->dynamic(new Document([
             'transactions' => $dbForProject->find('transactions', $queries),

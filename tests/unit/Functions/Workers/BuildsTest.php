@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Functions\Workers;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
@@ -73,7 +74,7 @@ final class BuildsTest extends TestCase
         $git->method('generateCloneCommand')->willReturn(new Command('true'));
         $git->method('supportsRepositoryArchives')->willReturn(true);
         $git->method('getRepositoryPresignedUrl')->willReturn('https://example.com/archive.tar.gz');
-        $git->method('updateCommitStatus')->willReturnCallback(static function (string $repository, string $sha, string $owner, string $state) use (&$commitStates): void {
+        $git->method('updateCheck')->willReturnCallback(static function (string $owner, string $repository, string $sha, string $state) use (&$commitStates): void {
             $commitStates[] = $state;
         });
 
@@ -82,7 +83,7 @@ final class BuildsTest extends TestCase
         $vcsFactory->method('fromInstallation')->willReturn($git);
 
         $project = new Document(['$id' => 'project', '$sequence' => '5', 'name' => 'Project', 'region' => 'default']);
-        $deployments = new readonly class (new Jobs($this->createStub(ClientInterface::class)), $dbForProject, $project, ['apiHostname' => 'localhost']) extends Deployments {
+        $deployments = new readonly class (new Jobs($this->createStub(ClientInterface::class)), $dbForProject, $project, ['apiHostname' => 'localhost'], $this->createStub(BuildPublisher::class)) extends Deployments {
             protected function admit(Document $resource, Document $deployment): void
             {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment limit reached');

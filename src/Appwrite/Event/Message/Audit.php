@@ -7,9 +7,12 @@ use Utopia\Database\Document;
 
 final class Audit extends Base
 {
+    /**
+     * @param array $payload Not queued: no audits consumer reads it. Kept so producers that still pass it keep working.
+     */
     public function __construct(
         public readonly string $event,
-        public readonly array $payload,
+        public readonly array $payload = [],
         public readonly Document $project = new Document(),
         public readonly Document $user = new Document(),
         public readonly Document $impersonatorUser = new Document(),
@@ -20,16 +23,17 @@ final class Audit extends Base
         public readonly string $hostname = '',
         public readonly string $sdk = '',
         public readonly string $sdkVersion = '',
+        public readonly string $reason = '',
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
             'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'user' => UserContext::fromDocument($this->user)->toArray(),
             'impersonatorUser' => UserContext::fromDocument($this->impersonatorUser)->toArray(),
-            'payload' => $this->payload,
             'resource' => $this->resource,
             'mode' => $this->mode,
             'ip' => $this->ip,
@@ -38,17 +42,19 @@ final class Audit extends Base
             'hostname' => $this->hostname,
             'sdk' => $this->sdk,
             'sdkVersion' => $this->sdkVersion,
+            'reason' => $this->reason,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(
             event: $data['event'] ?? '',
-            payload: $data['payload'] ?? [],
             project: new Document($data['project'] ?? []),
-            user: new Document($data['user'] ?? []),
-            impersonatorUser: new Document($data['impersonatorUser'] ?? []),
+            // Messages queued by older producers carry the whole user document; keep only what consumers read.
+            user: new Document(UserContext::fromArray($data['user'] ?? [])->toArray()),
+            impersonatorUser: new Document(UserContext::fromArray($data['impersonatorUser'] ?? [])->toArray()),
             resource: $data['resource'] ?? '',
             mode: $data['mode'] ?? '',
             ip: $data['ip'] ?? '',
@@ -56,6 +62,7 @@ final class Audit extends Base
             hostname: $data['hostname'] ?? '',
             sdk: $data['sdk'] ?? '',
             sdkVersion: $data['sdkVersion'] ?? '',
+            reason: $data['reason'] ?? '',
         );
     }
 
@@ -74,6 +81,7 @@ final class Audit extends Base
             hostname: $context->hostname,
             sdk: $context->sdk,
             sdkVersion: $context->sdkVersion,
+            reason: $context->reason,
         );
     }
 }

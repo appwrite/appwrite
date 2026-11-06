@@ -253,6 +253,20 @@ class ParseTest extends TestCase
         $this->assertSame(Method::Distinct, $parsed->getMethod());
     }
 
+    public function testParseDistinctWithValuesThrows(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('distinct takes no attribute or values');
+        Query::parse('{"method":"distinct","values":["status"]}');
+    }
+
+    public function testParseDistinctWithAttributeThrows(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('distinct takes no attribute or values');
+        Query::parse('{"method":"distinct","attribute":"status","values":[]}');
+    }
+
     public function testRoundTripJoin(): void
     {
         $original = Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);

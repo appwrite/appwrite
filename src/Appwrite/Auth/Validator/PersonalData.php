@@ -14,6 +14,7 @@ class PersonalData extends Password
         protected ?string $phone = null,
         protected bool $strict = false,
         protected bool $allowEmpty = false,
+        protected array $denyList = [],
     ) {
         parent::__construct($allowEmpty);
     }
@@ -27,7 +28,7 @@ class PersonalData extends Password
      */
     public function getDescription(): string
     {
-        return 'Password must not include any personal data like your name, email, phone number, etc.';
+        return 'Password must not include any personal data like your name, email, phone number, or custom blocked terms.';
     }
 
     /**
@@ -78,6 +79,16 @@ class PersonalData extends Password
 
         if ($phone && strpos($password, $phone) !== false) {
             return false;
+        }
+
+        foreach ($this->denyList as $term) {
+            if (!$this->strict) {
+                $term = strtolower($term);
+            }
+
+            if ($term !== '' && str_contains($password, $term)) {
+                return false;
+            }
         }
 
         return true;

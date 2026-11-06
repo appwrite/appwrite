@@ -18,7 +18,7 @@ import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
-  analyticsFilterAttributeForDimension,
+  analyticsFilterAttributeForTab,
 } from '@/lib/analytics/analytics-filters'
 
 // ─── Fixed card geometry ────────────────────────────────────────────────────
@@ -181,6 +181,8 @@ export type BreakdownTab = {
    * Map tabs are left out of the "Show more" modal, which lists rows.
    */
   display?: 'list' | 'map'
+  /** With the `props` dimension: rank this custom prop's values. */
+  propKey?: string
 }
 
 type BreakdownPanelProps = {
@@ -253,7 +255,7 @@ export function BreakdownPanel({
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
-  const filterAttribute = analyticsFilterAttributeForDimension(active.dimension)
+  const filterAttribute = analyticsFilterAttributeForTab(active)
 
   const { breakdown, isLoading, error, unsupported } = useAnalyticsBreakdown(
     projectId,
@@ -263,6 +265,7 @@ export function BreakdownPanel({
     undefined,
     true,
     filters,
+    active.propKey,
   )
 
   // Unknown rows (no referrer, unparseable agent, unknown location) are
@@ -290,7 +293,7 @@ export function BreakdownPanel({
       : active.id
 
   // Rows with a filterable dimension and a real value become filter toggles.
-  const filterRowProps = (value: string | undefined) => {
+  const filterRowProps = (value: string | null | undefined) => {
     if (!filterAttribute || !value) return {}
     const isActive = isFilterActive(filterAttribute, value)
     return {
@@ -358,6 +361,7 @@ export function BreakdownPanel({
               <AnalyticsValueMenu
                 key={`${entry.value}-${index}`}
                 dimension={active.dimension}
+                attribute={filterAttribute}
                 value={entry.value!}
                 label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
                 href={rowHref?.(entry.value!, active.id)}

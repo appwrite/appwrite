@@ -442,7 +442,8 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query]);
+        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 

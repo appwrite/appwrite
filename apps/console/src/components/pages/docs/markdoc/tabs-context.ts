@@ -3,7 +3,6 @@ import { createContext, useContext } from 'react'
 export type TabsContextValue = {
   activeId: string
   setActiveId: (id: string) => void
-  registerTab: (id: string, title: string) => void
   tabs: Array<{ id: string; title: string }>
 }
 

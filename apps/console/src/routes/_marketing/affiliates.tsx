@@ -4,7 +4,11 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/affiliates/View'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
+import { affiliatesFaqItems } from '@/lib/affiliates/content'
 
 export const Route = createFileRoute('/_marketing/affiliates')({
   ...marketingRouteLifetime,
@@ -17,7 +21,7 @@ export const Route = createFileRoute('/_marketing/affiliates')({
       description:
         'Earn Appwrite Cloud credits by referring developers. Join the Affiliates program, share invite links, and get rewarded when referrals upgrade to Pro.',
     });
-    return seo;
+    return { ...seo, scripts: [getMarketingFaqScript(affiliatesFaqItems)] };
   },
   loader: async ({ context }) => {},
   component: AffiliatesPage,

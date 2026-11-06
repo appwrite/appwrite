@@ -19,9 +19,11 @@ import { useCallback, useState } from 'react'
 import { endOfDay, startOfDay, subDays, subHours, subYears } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
+import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   AnalyticsDimension,
   AnalyticsInterval,
+  type AnalyticsPropertyType,
   ID,
   Query,
   type Models,
@@ -133,7 +135,9 @@ export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
   'app_foregrounded',
 ])
 
-export function isCustomAnalyticsEvent(name: string | null | undefined): boolean {
+export function isCustomAnalyticsEvent(
+  name: string | null | undefined,
+): boolean {
   return !!name && !ANALYTICS_AUTOMATIC_EVENTS.has(name)
 }
 
@@ -213,7 +217,9 @@ function keepPreviousAcrossRange<T>(
  * The last 24 whole hours: from the start of the hour 23 hours ago to the end
  * of the current hour. Hour-aligned, so the query key only changes hourly.
  */
-export function getLast24HoursAnalyticsRange(now: Date = new Date()): AnalyticsRange {
+export function getLast24HoursAnalyticsRange(
+  now: Date = new Date(),
+): AnalyticsRange {
   const end = new Date(now)
   end.setMinutes(59, 59, 999)
   const start = new Date(now)
@@ -232,7 +238,9 @@ export function analyticsRangeKey(range: AnalyticsRange): string {
  * period" comparisons. For a calendar range (`startOfDay .. endOfDay`) this
  * lands exactly on the preceding N calendar days.
  */
-export function getPreviousAnalyticsRange(range: AnalyticsRange): AnalyticsRange {
+export function getPreviousAnalyticsRange(
+  range: AnalyticsRange,
+): AnalyticsRange {
   const start = new Date(range.startAt).getTime()
   const end = new Date(range.endAt).getTime()
   const span = Math.max(0, end - start) + 1
@@ -286,8 +294,21 @@ export const ANALYTICS_CHART_INTERVALS: readonly AnalyticsChartInterval[] = [
 
 export const DEFAULT_ANALYTICS_CHART_INTERVAL: AnalyticsChartInterval = '1d'
 
+export function resolveAnalyticsChartInterval(
+  interval: AnalyticsChartInterval,
+  dateRange: DateRange | undefined,
+): AnalyticsChartInterval {
+  return resolveUsageChartIntervalWithin(
+    interval,
+    dateRange,
+    ANALYTICS_CHART_INTERVALS,
+  )
+}
+
 function toApiInterval(interval: AnalyticsChartInterval): AnalyticsInterval {
-  return interval === '1h' ? AnalyticsInterval.OneHour : AnalyticsInterval.OneDay
+  return interval === '1h'
+    ? AnalyticsInterval.OneHour
+    : AnalyticsInterval.OneDay
 }
 
 /** Zero-filled metric used while loading or when a property has no data yet. */
@@ -997,6 +1018,7 @@ export async function fetchAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const response = await withReadTimeout(
     'breakdown',
@@ -1007,6 +1029,7 @@ export async function fetchAnalyticsBreakdown(
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
+      propKey,
     }),
   )
 
@@ -1024,6 +1047,7 @@ export function analyticsBreakdownQueryOptions(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const queryKey = [
     'analytics',
@@ -1034,6 +1058,7 @@ export function analyticsBreakdownQueryOptions(
     analyticsRangeKey(range),
     limit,
     ...analyticsFiltersKey(filters),
+    ...(propKey ? ['propKey', propKey] : []),
   ]
   return queryOptions({
     queryKey,
@@ -1049,6 +1074,7 @@ export function analyticsBreakdownQueryOptions(
         range,
         limit,
         filters,
+        propKey,
       ),
     // Panels only request the dimension of their visible tab, so 21 dimensions
     // never fan out into 21 requests on mount.
@@ -1057,7 +1083,10 @@ export function analyticsBreakdownQueryOptions(
       !!projectId &&
       !!propertyId &&
       isClientQueryEnabled &&
-      isAnalyticsFilterShapeSupported(filters, { kind: 'breakdown', dimension }),
+      isAnalyticsFilterShapeSupported(filters, {
+        kind: 'breakdown',
+        dimension,
+      }),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -1075,6 +1104,7 @@ export function useAnalyticsBreakdown(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsBreakdownQueryOptions(
@@ -1085,6 +1115,7 @@ export function useAnalyticsBreakdown(
       limit,
       enabled,
       filters,
+      propKey,
     ),
   )
 
@@ -1109,6 +1140,7 @@ export type CreateAnalyticsPropertyInput = {
   propertyId?: string
   name: string
   domain?: string
+  type?: AnalyticsPropertyType
 }
 
 export function useCreateAnalyticsProperty(
@@ -1124,6 +1156,7 @@ export function useCreateAnalyticsProperty(
         propertyId: input.propertyId?.trim() || ID.unique(),
         name: input.name.trim(),
         domain: input.domain?.trim() || undefined,
+        type: input.type,
       })
     },
     onSuccess: async () => {
@@ -1146,6 +1179,8 @@ export type UpdateAnalyticsPropertyInput = {
   domain?: string
   enabled?: boolean
   allowedOrigins?: string[]
+  identifyUsers?: boolean
+  type?: AnalyticsPropertyType
 }
 
 export function useUpdateAnalyticsProperty(
@@ -1165,6 +1200,10 @@ export function useUpdateAnalyticsProperty(
         ...(input.allowedOrigins !== undefined && {
           allowedOrigins: input.allowedOrigins,
         }),
+        ...(input.identifyUsers !== undefined && {
+          identifyUsers: input.identifyUsers,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
       })
     },
     onSuccess: async (property) => {

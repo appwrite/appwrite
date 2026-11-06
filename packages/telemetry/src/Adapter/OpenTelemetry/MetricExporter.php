@@ -18,9 +18,9 @@ use OpenTelemetry\SDK\Metrics\PushMetricExporterInterface;
 /**
  * Empty observable collections must not invalidate the other metrics in an OTLP request.
  */
-final class MetricExporter implements PushMetricExporterInterface, AggregationTemporalitySelectorInterface
+final readonly class MetricExporter implements PushMetricExporterInterface, AggregationTemporalitySelectorInterface
 {
-    public function __construct(private readonly OtlpMetricExporter $exporter)
+    public function __construct(private OtlpMetricExporter $exporter)
     {
     }
 

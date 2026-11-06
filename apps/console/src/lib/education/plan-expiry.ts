@@ -3,22 +3,16 @@ import {
   type BillingPlanRecord,
 } from '@/lib/utils/plan-filter'
 
-/** An Education organization is covered for this many months after it is created. */
-export const EDUCATION_PLAN_DURATION_MONTHS = 6
-
-/** No Education organization is disabled before this instant, however old it is. */
-export const EDUCATION_PLAN_EARLIEST_END_AT = Date.UTC(2026, 10, 1)
-
 /** The curtain starts reminding the team this long before the plan ends. */
 export const EDUCATION_PLAN_REMINDER_MS = 5 * 7 * 24 * 60 * 60 * 1000
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /**
- * "Remind me later" hides the reminder this long. It is only offered while
- * more time than this remains, so a snooze never runs into the end date.
+ * "Remind me later" hides the reminder this long. It is offered on every
+ * visit until the plan ends; a stored dismiss is ignored once it has ended.
  */
-export const EDUCATION_PLAN_DISMISS_MS = 2 * DAY_MS
+export const EDUCATION_PLAN_DISMISS_MS = DAY_MS
 const DISMISS_STORAGE_PREFIX = 'console.educationPlanExpiry.dismissedUntil.'
 
 export function educationPlanDismissStorageKey(organizationId: string): string {
@@ -26,18 +20,15 @@ export function educationPlanDismissStorageKey(organizationId: string): string {
 }
 
 /**
- * When the Education plan ends for an organization created at `createdAt`:
- * 6 months after creation, but never before November 1, 2026.
+ * When the Education plan ends, from the organization's `educationExpiresAt`,
+ * which Cloud computes. Null when absent or invalid, so nothing is shown.
  */
 export function getEducationPlanEndsAt(
-  createdAt: string | null | undefined,
+  educationExpiresAt: string | null | undefined,
 ): number | null {
-  if (!createdAt) return null
-  const created = new Date(createdAt)
-  if (Number.isNaN(created.getTime())) return null
-  const endsAt = new Date(created)
-  endsAt.setUTCMonth(endsAt.getUTCMonth() + EDUCATION_PLAN_DURATION_MONTHS)
-  return Math.max(endsAt.getTime(), EDUCATION_PLAN_EARLIEST_END_AT)
+  if (!educationExpiresAt) return null
+  const endsAt = new Date(educationExpiresAt).getTime()
+  return Number.isNaN(endsAt) ? null : endsAt
 }
 
 export function isEducationPlanEnded(
@@ -64,17 +55,17 @@ export function daysUntilEducationPlanEnds(
   return Math.ceil(remaining / DAY_MS)
 }
 
-/** False in the last days before the plan ends and once it has ended. */
+/** False once the plan has ended. */
 export function canSnoozeEducationPlanReminder(
   endsAt: number,
   now = Date.now(),
 ): boolean {
-  return endsAt - now > EDUCATION_PLAN_DISMISS_MS
+  return !isEducationPlanEnded(endsAt, now)
 }
 
 /**
- * A dismiss hides the reminder for 2 days. In the last days and once the plan
- * ends, a stored dismiss no longer counts.
+ * A dismiss hides the reminder for 1 day. Once the plan ends, a stored
+ * dismiss no longer counts.
  */
 export function isEducationPlanReminderSnoozed(
   endsAt: number,

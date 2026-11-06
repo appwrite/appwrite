@@ -19,6 +19,66 @@ final class VariablesCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    public function testUpdateVariableDescriptionKeepsResourcesLive(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false);
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Created after the variable, so both start live
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Description Live Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertTrue($function['body']['live']);
+        $functionId = $function['body']['$id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => ID::unique(),
+            'name' => 'Description Live Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['live']);
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->updateVariable($variableId, description: 'Rotated quarterly');
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertTrue($function['body']['live']);
+        $this->assertTrue($site['body']['live']);
+
+        $updated = $this->updateVariable($variableId, value: 'sk_live');
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertFalse($function['body']['live']);
+        $this->assertFalse($site['body']['live']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $headers);
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $headers);
+        $this->deleteVariable($variableId);
+    }
+
     /**
      * Test that project variables are available in function build and runtime.
      */

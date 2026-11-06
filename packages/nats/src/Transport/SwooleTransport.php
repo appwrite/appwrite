@@ -7,6 +7,7 @@ namespace Utopia\NATS\Transport;
 use Swoole\Coroutine\Client;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 
 /**
  * Coroutine-native transport built on Swoole\Coroutine\Client.
@@ -100,7 +101,8 @@ final class SwooleTransport implements Transport
         $client->set($this->buildTlsSettings($options));
 
         if (!$client->enableSSL()) {
-            throw new ConnectionException('Failed to upgrade connection to TLS');
+            $this->close();
+            throw new TlsException('Failed to upgrade connection to TLS');
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -9,7 +10,9 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -54,6 +57,7 @@ class Get extends Action
             ->inject('response')
             ->inject('project')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -62,22 +66,18 @@ class Get extends Action
         string $failure,
         Response $response,
         Document $project,
-        array $platform
+        array $platform,
+        User $user
     ) {
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = EncryptionKey::current();
 
         if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
 
-        // The callback endpoint is public, so it verifies this signature
-        // before trusting the projectId and redirect URLs in state.
-        $state = \json_encode([
-            'projectId' => $project->getId(),
-            'success' => $success,
-            'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$project->getId(), $success, $failure]), $signingKey),
-        ]);
+        // The callback endpoint is public, so it verifies this signature and
+        // that the console user who started the flow is the one finishing it.
+        $state = (string) \json_encode(State::create($project->getId(), $user->getId(), $success, $failure)->sign($signingKey));
 
         if (\strlen($state) > APP_LIMIT_VCS_STATE) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');

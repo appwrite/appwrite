@@ -13,6 +13,8 @@ namespace Utopia\Usage;
  */
 class Accumulator
 {
+    private const BATCH_SIZE = 1_000;
+
     private Usage $usage;
 
     /**
@@ -108,63 +110,28 @@ class Accumulator
     /**
      * Flush the in-memory buffer to storage.
      *
-     * Separates buffered metrics into events and gauges, then writes each batch
-     * to the appropriate table via addBatch(). Only entries whose batch write
-     * succeeds are removed from the buffer, so a partial failure preserves
-     * the unwritten metrics for retry on the next flush.
+     * Writes events, then gauges, one batch of at most BATCH_SIZE entries per
+     * addBatch() call, and removes each batch from the buffer as soon as it is
+     * written. A batch that fails stays buffered for the next flush, so a retry
+     * never writes an earlier batch twice.
      *
-     * If addBatch() throws mid-flush, any earlier successful batches have
-     * already been cleared from the buffer — the exception is allowed to
-     * propagate so the caller can observe the failure.
+     * If addBatch() throws, the batches written before it are already cleared
+     * and the exception propagates so the caller can observe the failure.
      *
      * @return bool True if all batches succeeded (or buffer was empty)
      * @throws \Exception
      */
     public function flush(): bool
     {
-        if (empty($this->buffer)) {
-            $this->flushedAt = microtime(true);
-            return true;
-        }
-
-        // Separate events and gauges; keep track of buffer keys so we can
-        // selectively unset only the entries whose write succeeded.
-        $eventKeys = [];
-        $gaugeKeys = [];
-        $events = [];
-        $gauges = [];
-
+        $keys = [Usage::TYPE_EVENT => [], Usage::TYPE_GAUGE => []];
         foreach ($this->buffer as $key => $entry) {
-            if ($entry['type'] === Usage::TYPE_EVENT) {
-                $events[] = $entry;
-                $eventKeys[] = $key;
-            } else {
-                $gauges[] = $entry;
-                $gaugeKeys[] = $key;
-            }
+            $keys[$entry['type']][] = $key;
         }
 
-        $overallResult = true;
-
-        // Flush events — clear buffer entries only on success.
-        if (!empty($events)) {
-            if ($this->usage->addBatch($events, Usage::TYPE_EVENT)) {
-                foreach ($eventKeys as $key) {
-                    unset($this->buffer[$key]);
-                }
-            } else {
-                $overallResult = false;
-            }
-        }
-
-        // Flush gauges — clear buffer entries only on success.
-        if (!empty($gauges)) {
-            if ($this->usage->addBatch($gauges, Usage::TYPE_GAUGE)) {
-                foreach ($gaugeKeys as $key) {
-                    unset($this->buffer[$key]);
-                }
-            } else {
-                $overallResult = false;
+        $written = true;
+        foreach ($keys as $type => $typeKeys) {
+            foreach (\array_chunk($typeKeys, self::BATCH_SIZE) as $batch) {
+                $written = $this->write($type, $batch) && $written;
             }
         }
 
@@ -175,7 +142,26 @@ class Accumulator
             $this->flushedAt = microtime(true);
         }
 
-        return $overallResult;
+        return $written;
+    }
+
+    /**
+     * @param list<string> $keys
+     * @throws \Exception
+     */
+    private function write(string $type, array $keys): bool
+    {
+        $entries = \array_map(fn (string $key): array => $this->buffer[$key], $keys);
+
+        if (!$this->usage->addBatch($entries, $type, self::BATCH_SIZE)) {
+            return false;
+        }
+
+        foreach ($keys as $key) {
+            unset($this->buffer[$key]);
+        }
+
+        return true;
     }
 
     /**

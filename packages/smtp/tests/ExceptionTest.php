@@ -20,6 +20,7 @@ use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TimeoutException;
 use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Reply;
@@ -43,6 +44,7 @@ final class ExceptionTest extends TestCase
         yield [AuthenticationException::class];
         yield [CapabilityException::class];
         yield [MessageException::class];
+        yield [UnconfirmedException::class];
     }
 
     /**

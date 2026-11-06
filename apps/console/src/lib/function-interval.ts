@@ -115,7 +115,7 @@ export function isIntervalAllowed(
 export type FunctionScheduleMode = 'none' | 'interval' | 'cron'
 
 export function getFunctionScheduleMode(func: {
-  interval?: number
+  interval?: number | null
   schedule?: string
 }): FunctionScheduleMode {
   if ((func.interval ?? 0) > 0) return 'interval'

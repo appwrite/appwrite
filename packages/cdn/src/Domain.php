@@ -25,6 +25,11 @@ final class Domain
     }
 
     /**
+     * Cache paths are joined onto provider API routes (Fastly purges at
+     * `/purge/{domain}{path}`), and HTTP clients resolve `.` and `..` segments
+     * before sending, so such a segment would move the request off that route.
+     * No cached URL contains one, so they are refused, percent-encoded or not.
+     *
      * @param array<int, mixed> $paths
      * @return array<int, string>
      */
@@ -34,8 +39,29 @@ final class Domain
             if (!\is_string($path) || !str_starts_with($path, '/')) {
                 throw new \InvalidArgumentException('Every cache path must be a string beginning with "/".');
             }
+
+            if (self::hasDotSegment($path)) {
+                throw new \InvalidArgumentException('Cache paths must not contain "." or ".." segments.');
+            }
         }
 
         return $paths;
+    }
+
+    /**
+     * Whether the path part, before any query or fragment, has a `.` or `..` segment.
+     */
+    private static function hasDotSegment(string $path): bool
+    {
+        $path = substr($path, 0, strcspn($path, '?#'));
+
+        foreach (explode('/', $path) as $segment) {
+            $segment = str_ireplace('%2e', '.', $segment);
+            if ($segment === '.' || $segment === '..') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

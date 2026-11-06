@@ -7,8 +7,8 @@ import {
 } from '@/hooks/use-visitor-country'
 import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
-  isIndiaCountryCode,
   isNonPayingConsoleCustomer,
+  isStartPromoBannerCountry,
 } from '@/lib/console-banners/start-promo-audience'
 
 export type StartPromoBannerAudienceState =
@@ -17,8 +17,8 @@ export type StartPromoBannerAudienceState =
   | { status: 'eligible' }
 
 /**
- * India + non-paying customers (signed-in) or India guests. Waits for locale,
- * account session, and (when signed in) organizations before resolving.
+ * Start-eligible country + non-paying customers (signed-in) or eligible guests.
+ * Waits for locale, account session, and (when signed in) organizations before resolving.
  */
 export function useStartPromoBannerAudience(): StartPromoBannerAudienceState {
   const {
@@ -29,11 +29,11 @@ export function useStartPromoBannerAudience(): StartPromoBannerAudienceState {
   const countryCode = useVisitorCountryCode()
   const resolutionComplete = useVisitorCountryResolutionComplete()
   const localeQueries = useVisitorCountryQueryState()
-  const isIndia = isIndiaCountryCode(countryCode)
+  const inEligibleCountry = isStartPromoBannerCountry(countryCode)
 
   const orgQuery = useQuery({
     ...organizationsQueryOptions(),
-    enabled: isAuthenticated && resolutionComplete && isIndia,
+    enabled: isAuthenticated && resolutionComplete && inEligibleCountry,
   })
 
   if (!resolutionComplete) {
@@ -48,7 +48,7 @@ export function useStartPromoBannerAudience(): StartPromoBannerAudienceState {
     return { status: 'pending' }
   }
 
-  if (!isIndia) {
+  if (!inEligibleCountry) {
     return { status: 'hidden' }
   }
 

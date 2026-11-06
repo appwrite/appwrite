@@ -34,6 +34,7 @@ class Attributes extends Validator
         'subQueryAuthenticators',
         'subQueryChallenges',
         'subQueryDevKeys',
+        'subQueryDeviceSessions',
         'subQueryIndexes',
         'subQueryKeys',
         'subQueryMemberships',
@@ -114,6 +115,7 @@ class Attributes extends Validator
         }
 
         $keyValidator = new Key();
+        $descriptionValidator = new Text(1024, 0);
         $supportedTypes = Attribute::types();
         $keys = [];
 
@@ -222,6 +224,12 @@ class Attributes extends Validator
             // Validate signed only for integer/bigint/float types
             if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::storedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
                 $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
+                return false;
+            }
+
+            // Validate description field if provided
+            if (isset($attribute['description']) && !$descriptionValidator->isValid($attribute['description'])) {
+                $this->message = "Invalid 'description' value for attribute '" . $attribute['key'] . "': " . $descriptionValidator->getDescription();
                 return false;
             }
 

@@ -42,6 +42,14 @@ class MySQL extends SQL implements
     use Trait\Upsert;
     use Trait\UpsertSelect;
 
+    private const int FULL_TEXT_MINIMUM_WORD_LENGTH = 3;
+
+    private const array FULL_TEXT_STOPWORDS = [
+        'a', 'about', 'an', 'are', 'as', 'at', 'be', 'by', 'com', 'de', 'en', 'for', 'from', 'how', 'i', 'in',
+        'is', 'it', 'la', 'of', 'on', 'or', 'that', 'the', 'this', 'to', 'was', 'what', 'when', 'where', 'who',
+        'will', 'with', 'und', 'www',
+    ];
+
     protected string $updateJoinTable = '';
 
     protected string $updateJoinLeft = '';
@@ -95,6 +103,13 @@ class MySQL extends SQL implements
         }
 
         if ($exact) {
+            $words = $this->splitSearchWords($term);
+            $indexed = \array_values(\array_filter($words, $this->isIndexedSearchWord(...)));
+
+            if ($indexed !== []) {
+                return $this->compileExactSearchExpression($attribute, $words, $indexed, $not);
+            }
+
             $sanitized = '"' . $sanitized . '"';
         } else {
             $sanitized .= '*';
@@ -107,6 +122,43 @@ class MySQL extends SQL implements
         }
 
         return 'MATCH(' . $attribute . ') AGAINST(? IN BOOLEAN MODE)';
+    }
+
+    /**
+     * InnoDB loses phrase matches for rows whose transactions commit out of document ID order
+     * (MySQL bug #110448, also present in MariaDB), so an exact search requires every indexed
+     * word through the full-text index and checks their order against the stored value instead.
+     *
+     * @param  list<string>  $words
+     * @param  list<string>  $indexed
+     */
+    private function compileExactSearchExpression(string $attribute, array $words, array $indexed, bool $not): string
+    {
+        $separator = '[^[:alnum:]_]';
+
+        $this->addBinding('+' . \implode(' +', $indexed));
+        $this->addBinding('(^|' . $separator . ')' . \implode($separator . '+', $words) . '(' . $separator . '|$)');
+
+        $expression = 'MATCH(' . $attribute . ') AGAINST(? IN BOOLEAN MODE) AND ' . $attribute . ' REGEXP ?';
+
+        return $not ? 'NOT (' . $expression . ')' : '(' . $expression . ')';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function splitSearchWords(string $term): array
+    {
+        $words = \preg_split("/[^\\p{L}\\p{N}_']+/u", $term, flags: PREG_SPLIT_NO_EMPTY) ?: [];
+        $words = \array_map(static fn (string $word): string => \trim($word, "'"), $words);
+
+        return \array_values(\array_filter($words, static fn (string $word): bool => $word !== ''));
+    }
+
+    private function isIndexedSearchWord(string $word): bool
+    {
+        return \mb_strlen($word) >= self::FULL_TEXT_MINIMUM_WORD_LENGTH
+            && !\in_array(\mb_strtolower($word), self::FULL_TEXT_STOPWORDS, true);
     }
 
     #[\Override]
