@@ -68,7 +68,11 @@ cd templates/node/sync-with-qdrant
 tar --exclude code.tar.gz -czf code.tar.gz .
 ```
 
-In the Appwrite Console, go to **Functions**, click **Create function**, and choose **create a function manually**. Pick a Node.js runtime, version 18.17 or later, upload `code.tar.gz`, set the entrypoint to `src/main.js` and the build command to `npm install`, and allow anyone to execute the function so the demo page and your app can call its domain. Then click **Create and deploy**.
+In the Appwrite Console, go to **Functions**, click **Create function**, and choose **create a function manually**. Pick a Node.js runtime, version 18.17 or later, upload `code.tar.gz`, and set the entrypoint to `src/main.js` and the build command to `npm install`. Unless the table's data is public, don't allow anyone to execute the function. Then click **Create and deploy**.
+
+{% info title="Keep the function private" %}
+Anyone who can execute the function can start a sync or search the collection, and search results include the matching rows in full. Each of those requests also spends your OpenAI credits. The function's domain, including the demo page, only accepts requests when its [execute access](/docs/products/functions/functions#execution-access) includes `Any`, so only use the domain for public data. To make an existing function private, remove `Any` from its execute access.
+{% /info %}
 
 You can also deploy the folder with the [Appwrite CLI](/docs/tooling/command-line/functions), or copy it into your own repository and [deploy it from Git](/docs/products/functions/deploy-from-git).
 
@@ -89,15 +93,17 @@ The recipe reads your table with the function's [ephemeral API key](/docs/produc
 
 ## Step 4: Sync and search
 
-Copy the function's domain from the **Domains** tab and send a `POST` request to start the sync:
+To start the sync, [execute the function from the Console](/docs/products/functions/execute#console) with the `POST` method and the path `/`. The function responds with `Sync finished.` when the upsert completes.
+
+To search from your server, [create an execution](/docs/products/functions/execute#sdk) with a Server SDK and an API key that has the `executions.write` scope. Use the `POST` method, the path `/search`, and a JSON body with a `prompt`, such as `{"prompt": "Books about space travel"}`. The execution's `responseBody` contains the JSON response, with the 5 closest points in `searchResults`.
+
+If the function allows anyone to execute it, you can call its domain from the **Domains** tab instead. Open the domain in your browser to search from the demo page, or use `curl`:
 
 ```bash
+# Sync the table
 curl -X POST https://<FUNCTION_DOMAIN>
-```
 
-The function responds with `Sync finished.` when the upsert completes. Open the domain in your browser to search from the demo page, or query the collection directly:
-
-```bash
+# Search the collection
 curl -X POST https://<FUNCTION_DOMAIN>/search \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Books about space travel"}'
@@ -105,7 +111,7 @@ curl -X POST https://<FUNCTION_DOMAIN>/search \
 
 Each result carries the original row in its payload, so use the payload's `$id` to map results back to your rows. The recipe numbers points by their position in each sync rather than by row ID.
 
-Requests to a function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions), which stop after 30 seconds. To sync a large table, raise the function's timeout under **Settings** > **Timeout** and start the sync as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
+[Synchronous executions](/docs/products/functions/execute#synchronous-executions), including requests to a function's domain, stop after 30 seconds. To sync a large table, raise the function's timeout under **Settings** > **Timeout** and start the sync as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
 
 # Read more about Qdrant and Appwrite Functions
 

@@ -68,6 +68,10 @@ You don't need to create an Appwrite API key. The function reads your table with
 
 ## Step 3: Sync the table and test search
 
+{% info title="Only index public data" %}
+Your app uses the search API key in the browser, and the demo page shows it to anyone who opens the function's domain, so anyone can search every row you sync. Only sync tables whose rows are safe to show publicly. The template also allows anyone to execute the function, which lets anyone start a sync. To stop that, remove `Any` from the function's [execute access](/docs/products/functions/functions#execution-access) and start syncs [from the Console](/docs/products/functions/execute#console) or a [Server SDK](/docs/products/functions/execute#sdk) instead. The function's domain and demo page then stop accepting requests.
+{% /info %}
+
 Once the deployment is ready, copy the function's domain from the **Domains** tab and send a `POST` request to start the sync:
 
 ```bash

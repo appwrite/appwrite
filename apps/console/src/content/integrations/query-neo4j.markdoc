@@ -74,6 +74,8 @@ To see the graph, open your instance in the Aura console and run:
 MATCH (w:Warehouse)-[:STORES]->(c:Category) RETURN w, c
 ```
 
+The template allows anyone to execute the function, so anyone who finds its domain can add warehouses to your database. Before you query your own data, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
 # Read more about Neo4j and Appwrite Functions
 
 If you would like to learn more about Neo4j and Appwrite Functions, we have some resources that you should visit:

@@ -91,6 +91,8 @@ curl -X DELETE https://<FUNCTION_DOMAIN>/1
 
 You can also check the rows in the database's **SQL editor** in the Console.
 
+The template allows anyone to execute the function, so anyone who finds its domain can read, change, and delete your todos. Before you store real data, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain. To keep using the domain, check a [JWT](/docs/products/auth/jwt) from each caller in your code instead.
+
 # Read more about Drizzle and Appwrite Databases
 
 If you would like to learn more about Drizzle and Appwrite Databases, we have some resources that you should visit:

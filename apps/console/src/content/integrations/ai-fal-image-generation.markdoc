@@ -68,6 +68,8 @@ The response contains the image URL:
 
 To keep generated images, download them from that URL and upload them to [Appwrite Storage](/docs/products/storage) in your own code.
 
+The template allows anyone to execute the function, so anyone who finds its domain can generate images with your fal key. Before you use it in a public app, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
 # Read more about fal and Appwrite Functions
 
 If you would like to learn more about fal and Appwrite Functions, we have some resources that you should visit:

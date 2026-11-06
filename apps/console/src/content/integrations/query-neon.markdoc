@@ -75,6 +75,8 @@ The response lists the rows in the `warehouses` table:
 
 Every request adds another row. Requests with other methods return `404`. You can inspect the table in the Neon console's SQL editor.
 
+The template allows anyone to execute the function, so anyone who finds its domain can add rows to your database. Before you query your own data, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
 # Read more about Neon and Appwrite Functions
 
 If you would like to learn more about Neon and Appwrite Functions, we have some resources that you should visit:
