@@ -41,6 +41,6 @@ For production deployments, optimization, and advanced configuration, see the [p
 
 After successful deployment:
 
-- [Configure services](/docs/advanced/self-hosting/configuration) - Set up email, storage, and other services
+- [Configure services](/docs/advanced/self-hosting#configuration) - Set up email, storage, and other services
 - [Production optimization](/docs/advanced/self-hosting/production) - Prepare for production workloads
 - [Updates and maintenance](/docs/advanced/self-hosting/production/updates) - Keep your instance up to date
