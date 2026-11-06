@@ -526,7 +526,7 @@ $container->set('cacheClient', fn () => new HttpClientPool(new Connections(
     'cache.storage',
     4,
     fn () => new Retry(
-        new Client((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(3)->withConnectTimeout(1)),
+        new Client((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(1)->withConnectTimeout(1)),
         new RetryStrategy(retries: 1, delay: 0.05, maxDelay: 0.05),
     ),
     timeout: 1.0,

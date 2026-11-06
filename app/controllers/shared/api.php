@@ -753,6 +753,7 @@ Http::init()
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             [$cache, $fallback] = $responseCache($key);
+            Span::add('storage.cache.device', $fallback !== null);
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
@@ -761,6 +762,7 @@ Http::init()
                 $data = $fallback->load($key, $timestamp);
                 if (! empty($data)) {
                     $cache->save($key, $data);
+                    Span::add('storage.cache.copied', true);
                 }
             }
 
@@ -1189,8 +1191,11 @@ Http::shutdown()
             ])));
         }
 
+        // A read entry is rewritten on the device on one day in 15, spread by key, so a bucket's
+        // expiry counted from the last write doesn't take out everything copied on the same day.
+        $rewrite = $stale && ($fallback === null || \crc32($key) % 15 === \intdiv(\time(), 86400) % 15);
         $missed = \in_array('miss', $response->getHeaders()['x-appwrite-cache'] ?? [], true);
-        if (($stale && $fallback === null) || $missed || $signature !== $cacheLog->getAttribute('signature')) {
+        if ($rewrite || $missed || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
         }
     });

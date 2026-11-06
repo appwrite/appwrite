@@ -44,7 +44,7 @@ final class StorageCustomServerTest extends Scope
      * Seconds a request may take with the device down: a read and a copy, each a 3s
      * timeout retried once, and margin. A default client's 30s timeout can't fit in this.
      */
-    private const int CACHE_OUTAGE_BUDGET = 15;
+    private const int CACHE_OUTAGE_BUDGET = 6;
 
     /**
      * @var array Cached bucket data for tests
