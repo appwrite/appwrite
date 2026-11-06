@@ -1,37 +1,48 @@
 ---
 layout: article
 title: DigitalOcean deployment
-description: Deploy Appwrite on DigitalOcean using the one-click Marketplace app.
+description: Deploy Appwrite on a DigitalOcean Droplet with the Docker installer.
 ---
 
-Deploy Appwrite on DigitalOcean using the pre-configured Marketplace app.
+Deploy Appwrite on a DigitalOcean Droplet with the Appwrite Docker installer.
 
+{% info title="Marketplace app" %}
+The Appwrite 1-Click app is no longer available on the DigitalOcean Marketplace. Use the steps below to install Appwrite on a Droplet instead.
+{% /info %}
 
-# One-click installation {% #one-click %}
+# Install on a Droplet {% #install-on-droplet %}
 
-{% section #marketplace-install step=1 title="Create marketplace Droplet" %}
+{% section #create-droplet step=1 title="Create a Droplet" %}
 
-1. Visit the [Appwrite Marketplace page](https://marketplace.digitalocean.com/apps/appwrite)
-2. Click **Create Appwrite Droplet**
-3. Choose your configuration:
-   - **Plan**: Minimum 4GB RAM recommended
-   - **Region**: Select closest to your users
+1. In the [DigitalOcean Control Panel](https://cloud.digitalocean.com), create a Droplet.
+2. Choose your configuration:
+   - **Image**: The [Docker](https://marketplace.digitalocean.com/apps/docker) app from the Marketplace, which comes with Docker Engine and Docker Compose, or any Linux image you install Docker on yourself
+   - **Size**: At least 2 CPU cores and 4GB of RAM, as listed in the [system requirements](/docs/advanced/self-hosting/installation#system-requirements)
+   - **Region**: Select the region closest to your users
    - **SSH keys**: Add your SSH key for access
-4. Click **Create Droplet**
+3. Click **Create Droplet**
 
 {% /section %}
 
-{% section #marketplace-setup step=2 title="Complete setup" %}
+{% section #install-appwrite step=2 title="Run the installer" %}
 
-1. Wait for Droplet provisioning to complete
-2. Navigate to your Droplet's IP address in a web browser
-3. Complete the initial setup wizard following the prompts
+1. If you use a DigitalOcean Cloud Firewall or a firewall on the Droplet, allow inbound traffic on ports 80 and 443, and on port 20080 while the setup wizard runs.
+2. Connect to the Droplet over SSH.
+3. Run the macOS and Linux [installation command](/docs/advanced/self-hosting/installation#installation-commands).
+
+{% /section %}
+
+{% section #complete-setup step=3 title="Complete setup" %}
+
+1. Open `http://<DROPLET_IP>:20080` in a web browser.
+2. Complete the [setup wizard](/docs/advanced/self-hosting/installation#setup-wizard) following the prompts.
+3. Close port 20080 after the installation completes.
 
 {% /section %}
 
 # Custom installations {% #custom-installations %}
 
-For manual installations on DigitalOcean Droplets or other configurations, follow the [general installation guide](/docs/advanced/self-hosting/installation) which covers Docker setup and configuration for any Linux server.
+To configure the installation yourself instead of using the setup wizard, follow the [manual installation](/docs/advanced/self-hosting/installation#manual-installation) steps on the Droplet.
 
 # Production considerations {% #production %}
 
