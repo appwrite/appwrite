@@ -66,9 +66,13 @@ export function ReviewAll({
       {
         onSuccess: ({ added, skipped, failed }) => {
           const summary = [
-            `${added} ${t('repositories added')}`,
-            skipped > 0 ? `${skipped} ${t('repositories already on')}` : null,
-            failed > 0 ? `${failed} ${t('repositories failed')}` : null,
+            t('Added: {count}').replace('{count}', String(added)),
+            skipped > 0
+              ? t('Already on: {count}').replace('{count}', String(skipped))
+              : null,
+            failed > 0
+              ? t('Failed: {count}').replace('{count}', String(failed))
+              : null,
           ]
             .filter(Boolean)
             .join(', ')

@@ -68,9 +68,9 @@ export const heReviewsDictionary: Record<string, string> = {
     'אין לכם הרשאה להוסיף repos.',
   'Add all repositories': 'הוספת כל המאגרים',
   'Adding repositories...': 'מוסיף מאגרים...',
-  'repositories added': 'מאגרים נוספו',
-  'repositories already on': 'מאגרים כבר פעילים',
-  'repositories failed': 'מאגרים נכשלו',
+  'Added: {count}': 'נוספו: {count}',
+  'Already on: {count}': 'כבר פעילים: {count}',
+  'Failed: {count}': 'נכשלו: {count}',
   'Some repositories could not be added': 'לא ניתן היה להוסיף חלק מהמאגרים',
   'Counting repositories...': 'סופר מאגרים...',
   'Turn on code review for every repository in the installation?':
