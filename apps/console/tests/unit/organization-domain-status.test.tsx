@@ -103,9 +103,10 @@ describe('organization domain nameservers', () => {
   })
 
   test('shows external nameservers with Verify, not a pending Status', () => {
-    const view = renderView('Cloudflare')
+    // The server sends "Appwrite" or an empty string
+    const view = renderView('')
 
-    expect(view.getByText('Cloudflare')).toBeTruthy()
+    expect(view.getAllByText('3rd party').length).toBeGreaterThan(0)
     expect(view.getByText('Verify')).toBeTruthy()
     expect(view.queryByText('Status')).toBeNull()
     expect(view.queryByText('Pending')).toBeNull()
