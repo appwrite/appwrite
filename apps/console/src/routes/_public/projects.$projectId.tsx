@@ -649,8 +649,15 @@ function ProjectLayout() {
         loaderData?.projectBlocked === true ||
         hasActiveProjectBlock(projectData, projectId)),
   )
-  // Only the organization's limits suspend anything: a project's own limits
-  // come from plans that bill overage (see isProjectLockedByProjectUsage).
+  // The curtain names whichever limit locked the project: the organization's,
+  // or the project's own bandwidth on plans that bill other overage.
+  const planUsageCurtainLimits = isProjectLockedByPlanUsage(
+    billingOrganization,
+  )
+    ? billingOrganization?.billingLimits
+    : project?.billingLimits
+  // A project's own limits come from plans that bill overage, so only the
+  // organization's limits mean API access is suspended.
   const planUsageBillingLimits = billingOrganization?.billingLimits
   const showPlanUsageLimitBanner =
     !budgetLimitReached &&
@@ -881,7 +888,7 @@ function ProjectLayout() {
       ) : planUsageLimitReached ? (
         <PlanUsageLimitProjectCurtain
           teamId={budgetCurtainTeamId}
-          billingLimits={planUsageBillingLimits}
+          billingLimits={planUsageCurtainLimits}
         />
       ) : projectBlocked && projectForPaused?.teamId ? (
         <BlockedProjectCurtain teamId={projectForPaused.teamId} />
