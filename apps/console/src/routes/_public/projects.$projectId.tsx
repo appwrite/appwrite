@@ -38,6 +38,7 @@ import {
   isBudgetLimitReached,
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
@@ -356,7 +357,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // leave the project open so customers can delete resources.
       const planUsageLimitReached =
         !budgetLimitReached &&
-        (isProjectLockedByPlanUsage(projectData) ||
+        (isProjectLockedByProjectUsage(projectData) ||
           isProjectLockedByPlanUsage(organization))
 
       if (budgetLimitReached || planUsageLimitReached) {
@@ -638,7 +639,7 @@ function ProjectLayout() {
       (routeContext.planUsageLimitReached === true ||
         loaderData?.planUsageLimitReached === true ||
         isProjectLockedByPlanUsage(billingOrganization) ||
-        isProjectLockedByPlanUsage(project)),
+        isProjectLockedByProjectUsage(project)),
   )
 
   const projectBlocked = Boolean(
