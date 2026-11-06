@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouterState } from '@tanstack/react-router'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -26,10 +26,14 @@ export const Route = createFileRoute('/_auth/agent/mcp/callback')({
 
 function AgentMcpOAuthCallbackPage() {
   const t = useT()
-  const search = Route.useSearch()
+  // The raw query string, not the parsed search: the router JSON-parses values, which
+  // would turn a number-like authorization code into a number.
+  const searchStr = useRouterState({
+    select: (state) => state.location.searchStr,
+  })
   const message = useMemo(
-    () => parseMcpOAuthCallbackSearch(search),
-    [search],
+    () => parseMcpOAuthCallbackSearch(searchStr),
+    [searchStr],
   )
   const [posted, setPosted] = useState(false)
 

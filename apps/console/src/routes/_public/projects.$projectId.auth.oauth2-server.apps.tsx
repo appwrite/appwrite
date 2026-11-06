@@ -9,7 +9,8 @@ import {
 
 /** `?appId=` opens that app's drawer (used by "Copy link" / "Open in new tab"). */
 const oauth2ServerAppsSearchSchema = z.object({
-  appId: z.string().optional().catch(undefined),
+  // A custom all-digit id is JSON-parsed to a number by the router: coerce it back.
+  appId: z.coerce.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute(

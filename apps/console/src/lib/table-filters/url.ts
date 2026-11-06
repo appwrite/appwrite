@@ -206,6 +206,33 @@ export function searchParamsFromRouterLocation(
 }
 
 /**
+ * A raw query param as the link meant it. When a page validates a number-like value
+ * (`?userId=12345`) as a string, the router writes it back to the URL JSON-quoted
+ * (`?userId=%2212345%22`) so it parses as a string again: undo that quoting. Other
+ * values come back unchanged, so long tokens keep every digit.
+ */
+export function getRawSearchParam(
+  params: URLSearchParams,
+  key: string,
+): string | null {
+  const value = params.get(key)
+  if (
+    value &&
+    value.length >= 2 &&
+    value.startsWith('"') &&
+    value.endsWith('"')
+  ) {
+    try {
+      const parsed: unknown = JSON.parse(value)
+      if (typeof parsed === 'string') return parsed
+    } catch {
+      // Not router quoting: keep the value as it is.
+    }
+  }
+  return value
+}
+
+/**
  * Read list search params from TanStack Router validated `search` (not `location.search`,
  * which is the parsed object when `validateSearch` is set - not a query string).
  */
