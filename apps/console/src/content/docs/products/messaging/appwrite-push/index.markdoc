@@ -590,7 +590,12 @@ While the app is on screen, the message reaches your `subscribe` callback, and m
 A message to a user needs no target or topic. Appwrite creates the user's topic the first time you send to it.
 
 {% info title="Users with FCM or APNs targets" %}
-Appwrite picks the delivery route per user, not per device. If any of the user's devices has an FCM or APNs target, Appwrite sends that user's messages only through FCM or APNs, and none of their devices receive them over Appwrite Push, web browsers included. The Apple SDK creates an APNs target when it subscribes with `background: true`. To keep Appwrite Push for all of the user's devices, register an [Appwrite push target](#push-target) on any one of them.
+Appwrite picks one delivery route for each user, not for each device:
+
+- If any of the user's devices has an FCM or APNs target, all of that user's messages go through FCM or APNs. None of their devices get them over Appwrite Push, web browsers included.
+- The Apple SDK creates an APNs target when it subscribes with `background: true`.
+
+To keep all of a user's devices on Appwrite Push, register an [Appwrite push target](#push-target) on any one of them.
 {% /info %}
 {% /section %}
 
@@ -650,7 +655,7 @@ Targets belong to the session that created them. When the user signs out with `d
 
 # Message format {% #message-format %}
 
-Your callback receives the message as JSON in `message.data`. It contains `messageId`, `priority`, which defaults to `high`, and the fields you set when you sent it:
+Your callback receives the message as JSON in `message.data`. A message sent with a title, a body, an image, and data looks like this:
 
 ```json
 {
@@ -667,7 +672,13 @@ Your callback receives the message as JSON in `message.data`. It contains `messa
 }
 ```
 
-`notification` can also carry `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). `createPush` takes `image` as a Storage file, `<BUCKET_ID>:<FILE_ID>`, and the message carries a URL to that file. With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
+The fields are:
+
+- `messageId`: the message's ID. With at least once delivery, the default, a message can arrive twice, for example when it's replayed after a reconnect. Use this ID to skip duplicates.
+- `notification`: the title and body. It also holds any of these [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush) options you set: `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`.
+- `notification.image`: a URL to the image. When you send, pass the image as a Storage file in the form `<BUCKET_ID>:<FILE_ID>`.
+- `data`: the custom data you sent.
+- `priority`: `high`, unless you set another priority when you sent the message.
 
 # Topics {% #topics %}
 
@@ -696,7 +707,10 @@ const news = await push.subscribe(['news'], (message) => {
 
 Topic IDs must match exactly. Wildcards like `+` and `#` are refused, and of the `users/` topics, a user can subscribe only to their own. When the user is no longer a subscriber of the topic through any of their targets, Appwrite drops the device's live subscription to it.
 
-Topics take quality of service and message expiry settings too, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription. A topic without an expiry uses the lowest expiry of your enabled Appwrite providers, or 7 days if none sets one. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
+Topics have their own [delivery settings](/docs/products/messaging/topics#appwrite-push), the `qos` and `expiry` parameters of `createTopic` and `updateTopic`:
+
+- **Quality of service**: a message is delivered at the lowest setting of the provider, the topic, and the subscription.
+- **Expiry**: a topic without its own expiry uses the lowest expiry of your enabled Appwrite providers, or 7 days if none sets one.
 
 # Subscription options {% #subscription-options %}
 
@@ -802,9 +816,19 @@ if (status.bestEffort) {
 }
 ```
 
-`requestExactAlarms` and `requestIgnoreBatteryOptimizations` return `false` when the permission is already granted or not needed, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`, without the `context` argument, and they're async there. Outside Android, `backgroundStatus()` returns `null`, and both request methods resolve to `false`.
+`requestExactAlarms` and `requestIgnoreBatteryOptimizations` return `false` when:
 
-For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove the push service (`io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, `io.appwrite.reactnative.services.PushService` on React Native) and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
+- the permission is already granted or isn't needed, or
+- the matching permission isn't declared in your manifest.
+
+Flutter and React Native have the same methods on `push`, without the `context` argument, and they're async there. Outside Android, `backgroundStatus()` returns `null`, and both request methods resolve to `false`.
+
+For immediate delivery, call `push.setForeground(true)` while the app is on screen. It runs a foreground service that shows a quiet ongoing notification, and the setting is kept across restarts.
+
+The service is a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never call `setForeground`, remove these from your merged manifest with `tools:node="remove"`:
+
+- the push service: `io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, or `io.appwrite.reactnative.services.PushService` on React Native
+- the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission
 
 ## iOS {% #background-ios %}
 
@@ -873,7 +897,12 @@ await account.deleteSession({ sessionId: 'current' });
 
 A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik serves MQTT over TLS on port `8883` and MQTT over secure WebSocket on port `8084`. See the [MQTT environment variables](/docs/advanced/self-hosting/configuration/environment-variables#mqtt) to change the ports, the replay depth, and the maximum packet size.
 
-By default, the Android, Apple, React Native, and Flutter mobile SDKs connect to `push.<YOUR_API_HOST>` on port `8883`, so a `push.` DNS record that points at your server is enough for them. The Web SDK and Flutter on the web connect to `wss://push.<YOUR_API_HOST>` on port `443`, which Traefik doesn't serve, so set the broker address on web clients. You can also set it on any client instead of adding the DNS record:
+Where each SDK connects by default decides what you set up:
+
+- **Android, Apple, React Native, and Flutter on mobile** connect to `push.<YOUR_API_HOST>` on port `8883`. A `push.` DNS record that points at your server is enough.
+- **Web, and Flutter on the web,** connect to `wss://push.<YOUR_API_HOST>` on port `443`, which Traefik doesn't serve. Set the broker address on these clients.
+
+You can also set the broker address on any client instead of adding the DNS record:
 
 ```ts
 client.setPushEndpoint('mqtts://appwrite.example.com:8883'); // Android, Apple, React Native, Flutter on mobile
