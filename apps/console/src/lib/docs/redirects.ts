@@ -11,6 +11,8 @@ export type DocsRedirectTarget = {
 const DOCS_REDIRECTS: Record<string, string> = {
   references: 'references/cloud/client-web/account',
   'references/quick-start': 'references/cloud/client-web/account',
+  'advanced/self-hosting/configuration':
+    'advanced/self-hosting/configuration/environment-variables',
   'tooling/command-line': 'tooling/command-line/installation',
   'tooling/assistant': 'products/agent',
   'tooling/ai': 'tooling',
