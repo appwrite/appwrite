@@ -383,6 +383,38 @@ final class DeploymentsTest extends TestCase
     {
         $this->assertNotSame(Deployments::id('my-app', 'deployment'), Deployments::id('my', 'app-deployment'));
     }
+
+    /**
+     * The jobs-service names the Kubernetes Job "job-<id>" and labels the pod
+     * with both that name and the id, so each must be a valid label value
+     * (at most 63 bytes) and the name a valid DNS-1123 subdomain, or the Job
+     * is refused and every build of the project fails.
+     */
+    public function testIdIsSchedulableForTheLongestProjectIds(): void
+    {
+        $deploymentId = '6a1b2c3d4e5f6a7b8c9d';
+        $labelValue = '/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/';
+        $subdomain = '/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/';
+
+        foreach (['longprojectidreachingthirtysixchars1', 'my-hyphenated-project-id-of-30', \str_repeat('a-', 17) . 'aa'] as $projectId) {
+            $id = Deployments::id($projectId, $deploymentId);
+            $name = 'job-' . $id;
+
+            $this->assertLessThanOrEqual(63, \strlen($name), $projectId);
+            $this->assertMatchesRegularExpression($labelValue, $name, $projectId);
+            $this->assertMatchesRegularExpression($labelValue, $id, $projectId);
+            $this->assertMatchesRegularExpression($subdomain, $name, $projectId);
+        }
+    }
+
+    public function testShortenedIdIsStableAndSeparatesProjects(): void
+    {
+        $id = Deployments::id('longprojectidreachingthirtysixchars1', '6a1b2c3d4e5f6a7b8c9d');
+
+        $this->assertSame($id, Deployments::id('longprojectidreachingthirtysixchars1', '6a1b2c3d4e5f6a7b8c9d'));
+        $this->assertNotSame($id, Deployments::id('longprojectidreachingthirtysixchars2', '6a1b2c3d4e5f6a7b8c9d'));
+        $this->assertNotSame($id, Deployments::id('longprojectidreachingthirtysixchars1', '6a1b2c3d4e5f6a7b8c9e'));
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments
