@@ -6,170 +6,164 @@ namespace Tests\Unit\Auth\LDAP;
 
 use Appwrite\Auth\LDAP\Client;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\DNS\Lookup\Recursive;
 
 /**
- * Configuration validation and, more importantly, filter escaping.
- *
- * A search filter is assembled from a value the user supplies, so it carries the
- * same injection risk as a SQL query built by concatenation.
+ * Configuration handling, the user filter and identifier rendering. Everything
+ * that talks to a directory is covered against a real one in
+ * tests/e2e/Services/Project/LDAPSessionIntegrationTest.php.
  */
 final class ClientTest extends TestCase
 {
-    private function client(array $over = []): Client
+    private function client(array $config = []): Client
     {
-        return new Client(
-            host: $over['host'] ?? 'ldap.example.com',
-            port: $over['port'] ?? 389,
-            encryption: $over['encryption'] ?? Client::ENCRYPTION_TLS,
-            baseDn: $over['baseDn'] ?? 'dc=example,dc=com',
-            bindDn: $over['bindDn'] ?? 'cn=service,dc=example,dc=com',
-            bindPassword: $over['bindPassword'] ?? 'secret',
-            userFilter: $over['userFilter'] ?? '(uid={{username}})',
-            provisionGroupDn: $over['provisionGroupDn'] ?? '',
-            emailAttribute: $over['emailAttribute'] ?? 'mail',
-            nameAttribute: $over['nameAttribute'] ?? 'cn',
-        );
+        return new Client(new PublicHostname(new PublicInternet(), new Recursive(['127.0.0.1'])), \array_merge([
+            'hosts' => ['ldap.example.com'],
+            'baseDn' => 'dc=example,dc=com',
+        ], $config));
     }
 
-    public function testValidConfigurationIsAccepted(): void
+    public function testDefaults(): void
     {
         $client = $this->client();
 
-        $this->assertTrue($client->useStartTls());
-        $this->assertFalse($client->useSsl());
+        $this->assertSame('(uid=alice)', $this->client()->filter('alice')->toString());
+        $this->assertSame(636, Client::port(Client::ENCRYPTION_LDAPS));
+        $this->assertSame(389, Client::port(Client::ENCRYPTION_STARTTLS));
+        $this->assertSame(389, Client::port(Client::ENCRYPTION_NONE));
+        $this->assertInstanceOf(Client::class, $client);
     }
 
-    public function testHostIsRequired(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/host is required/i');
-
-        $this->client(['host' => '  ']);
-    }
-
-    public function testBaseDnIsRequired(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/base DN is required/i');
-
-        $this->client(['baseDn' => '']);
-    }
-
-    public function testPortMustBeInRange(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/port must be/i');
-
-        $this->client(['port' => 70000]);
-    }
-
-    public function testUnsupportedEncryptionIsRejected(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/encryption/i');
-
-        $this->client(['encryption' => 'rot13']);
-    }
-
-    /**
-     * A filter without the placeholder resolves to the same entry for every
-     * sign-in, which would let anyone in as whoever it happens to match.
-     */
-    public function testUserFilterWithoutPlaceholderIsRejected(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/placeholder/i');
-
-        $this->client(['userFilter' => '(uid=admin)']);
-    }
-
-    public function testEmailAttributeIsRequired(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessageMatches('/email attribute is required/i');
-
-        $this->client(['emailAttribute' => '']);
-    }
-
-    public function testPlaceholderIsSubstituted(): void
-    {
-        $this->assertSame('(uid=alice)', $this->client()->getUserFilter('alice'));
-    }
-
-    /**
-     * RFC 4515 metacharacters must be escaped, or a username of `*` matches
-     * every entry in the subtree.
-     */
-    public function testWildcardIsEscaped(): void
-    {
-        $filter = $this->client()->getUserFilter('*');
-
-        $this->assertSame('(uid=\2a)', $filter);
-        $this->assertStringNotContainsString('=*', $filter);
-    }
-
-    public function testFilterBreakoutIsEscaped(): void
-    {
-        $filter = $this->client()->getUserFilter('alice)(uid=*');
-
-        $this->assertStringNotContainsString(')(', $filter);
-        $this->assertStringContainsString('\29\28', $filter);
-    }
-
-    public function testNullByteIsEscaped(): void
-    {
-        $this->assertStringNotContainsString("\x00", $this->client()->getUserFilter("alice\x00"));
-    }
-
-    public function testBackslashIsEscaped(): void
-    {
-        $this->assertStringContainsString('\5c', $this->client()->getUserFilter('do\\main'));
-    }
-
-    /**
-     * The provisioning group is a distinguished name rather than a filter, so
-     * there is no placeholder to substitute and no filter syntax for an admin
-     * to get wrong. Membership is resolved against the directory at sign-in.
-     */
-    public function testProvisionGroupIsStoredAsGivenOnceTrimmed(): void
+    public function testFilterCombinesUsernameAndUserFilter(): void
     {
         $client = $this->client([
-            'provisionGroupDn' => '  cn=staff,ou=groups,dc=example,dc=com  ',
+            'usernameAttribute' => 'sAMAccountName',
+            'userFilter' => '(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))',
         ]);
 
-        $this->assertTrue($client->hasProvisionGroup());
-        $this->assertSame('cn=staff,ou=groups,dc=example,dc=com', $client->getProvisionGroupDn());
+        $this->assertSame(
+            '(&(sAMAccountName=alice)(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))))',
+            $client->filter('alice')->toString()
+        );
+
+        // A DN match asked for explicitly is kept.
+        $client = $this->client([
+            'userFilter' => '(ou:dn:=people)',
+        ]);
+
+        $this->assertSame('(&(uid=alice)(ou:dn:=people))', $client->filter('alice')->toString());
     }
 
-    /**
-     * No configured group means every user the directory authenticates is
-     * allowed an account, which is the default.
-     */
-    public function testProvisionGroupIsOptional(): void
+    #[DataProvider('injectionProvider')]
+    public function testFilterCarriesUsernameAsValue(string $username, string $expected): void
     {
-        $this->assertFalse($this->client()->hasProvisionGroup());
-        $this->assertFalse($this->client(['provisionGroupDn' => '   '])->hasProvisionGroup());
+        // The username is an assertion value, so filter syntax inside it is
+        // literal: a wildcard never matches everything and a parenthesis never
+        // closes the filter early.
+        $this->assertSame($expected, $this->client()->filter($username)->toString());
     }
 
-    public function testSslAndStartTlsAreDistinct(): void
+    public static function injectionProvider(): array
     {
-        $ssl = $this->client(['encryption' => Client::ENCRYPTION_SSL, 'port' => 636]);
-        $none = $this->client(['encryption' => Client::ENCRYPTION_NONE]);
-
-        $this->assertTrue($ssl->useSsl());
-        $this->assertFalse($ssl->useStartTls());
-        $this->assertFalse($none->useSsl());
-        $this->assertFalse($none->useStartTls());
+        return [
+            'wildcard' => ['*', '(uid=\2a)'],
+            'partial wildcard' => ['ali*', '(uid=ali\2a)'],
+            'closing the filter' => ['alice)(uid=*', '(uid=alice\29\28uid=\2a)'],
+            'backslash' => ['ali\\ce', '(uid=ali\5cce)'],
+            'null byte' => ["ali\0ce", '(uid=ali\00ce)'],
+            'already escaped' => ['\2a', '(uid=\2a)'],
+        ];
     }
 
-    /**
-     * A directory accepts an empty password as an "unauthenticated bind" and
-     * reports success, which would authenticate anyone. It is refused before
-     * any connection is made, which is why this needs no directory.
-     */
-    public function testEmptyPasswordIsRejectedWithoutConnecting(): void
+    public function testFilterRefusesUserFilterThatDoesNotParse(): void
     {
-        $this->assertNull($this->client()->authenticate('alice', ''));
+        $client = $this->client([
+            'userFilter' => '(objectClass=person',
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('(objectClass=person');
+
+        try {
+            $client->filter('alice');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::USER_LDAP_DIRECTORY_ERROR, $error->getType());
+            throw $error;
+        }
+    }
+
+    public function testIdentifierRendersObjectGuidLikeActiveDirectory(): void
+    {
+        // {3F2504E0-4F89-11D3-9A0C-0305E82C3301} as the directory stores it:
+        // the first three groups little-endian, the rest in order.
+        $bytes = \hex2bin('e004253f894fd3119a0c0305e82c3301');
+
+        $this->assertSame('3f2504e0-4f89-11d3-9a0c-0305e82c3301', Client::identifier('objectGUID', $bytes));
+        $this->assertSame('3f2504e0-4f89-11d3-9a0c-0305e82c3301', Client::identifier('objectguid', $bytes));
+    }
+
+    public function testIdentifierKeepsText(): void
+    {
+        $this->assertSame('6c4a7f0e-1d2b-4c8e-9f3a-0a1b2c3d4e5f', Client::identifier('entryUUID', '6c4a7f0e-1d2b-4c8e-9f3a-0a1b2c3d4e5f'));
+        $this->assertSame('alice', Client::identifier('uid', 'alice'));
+        $this->assertSame('Élodie', Client::identifier('cn', 'Élodie'));
+    }
+
+    public function testIdentifierRendersOtherBinaryAsHex(): void
+    {
+        $this->assertSame('ff00fe', Client::identifier('GUID', "\xff\x00\xfe"));
+    }
+
+    #[DataProvider('invalidConfigProvider')]
+    public function testConstructorRefusesInvalidConfiguration(array $config, string $message): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        $this->client($config);
+    }
+
+    public static function invalidConfigProvider(): array
+    {
+        return [
+            'no hosts' => [['hosts' => []], 'host'],
+            'blank hosts' => [['hosts' => ['', ' ']], 'host'],
+            'too many hosts' => [['hosts' => \array_fill(0, Client::HOSTS_MAX + 1, 'ldap.example.com')], 'hosts'],
+            'bad encryption' => [['encryption' => 'ssl'], 'encryption'],
+            'port too low' => [['port' => -1], 'port'],
+            'port too high' => [['port' => 65536], 'port'],
+            'timeout too low' => [['timeout' => 0], 'timeout'],
+            'timeout too high' => [['timeout' => Client::TIMEOUT_MAX + 1], 'timeout'],
+            'no base dn' => [['baseDn' => ' '], 'base DN'],
+            'blank username attribute' => [['usernameAttribute' => ''], 'usernameAttribute'],
+            'blank id attribute' => [['idAttribute' => ''], 'idAttribute'],
+            'blank email attribute' => [['emailAttribute' => ''], 'emailAttribute'],
+            'blank name attribute' => [['nameAttribute' => ''], 'nameAttribute'],
+        ];
+    }
+
+    public function testAuthenticateRefusesEmptyCredentialsWithoutConnecting(): void
+    {
+        // RFC 4513 lets a directory treat an empty password as an anonymous bind
+        // and report success, so it is refused before any connection is made.
+        $client = $this->client([
+            'hosts' => ['127.0.0.1'],
+            'port' => 1,
+            'encryption' => 'none',
+        ]);
+
+        foreach ([['alice', ''], ['', 'secret'], ['', '']] as [$username, $password]) {
+            try {
+                $client->authenticate($username, $password);
+                $this->fail('Empty credentials were not refused.');
+            } catch (Exception $error) {
+                $this->assertSame(Exception::USER_INVALID_CREDENTIALS, $error->getType());
+            }
+        }
     }
 }
