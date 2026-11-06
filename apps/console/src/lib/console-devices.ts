@@ -23,10 +23,10 @@ export type ConsoleAccountLabel = {
 }
 
 /**
- * The session model carries only `userId`, never an email or name, and an operator
- * cannot read other console users through the account API. So each account's label
- * is cached locally the last time it was the active account on this browser; the
- * switcher falls back to the user id for an account it has not seen active yet.
+ * Each session carries the user's name (`userName`), but not the email, and an operator
+ * cannot read other console users through the account API. So each account's email is
+ * cached locally the last time it was the active account on this browser; the switcher
+ * shows the name alone for an account it has not seen active yet.
  */
 function readLabels(): Record<string, ConsoleAccountLabel> {
   if (typeof window === 'undefined') return {}

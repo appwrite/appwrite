@@ -60,8 +60,8 @@ export function ConsoleAccountSwitcherDialog({
 
   const [pending, setPending] = useState<string | null>(null)
 
-  // Cache the active account's label so the switcher can name it among the device's
-  // sessions, which only carry user ids.
+  // Sessions carry the user's name; the email is cached from the last time each
+  // account was active on this browser, since the account API cannot read other users.
   useEffect(() => {
     if (open) rememberConsoleAccountLabel(account)
   }, [open, account])
@@ -81,7 +81,10 @@ export function ConsoleAccountSwitcherDialog({
       return {
         sessionId: session.$id,
         userId: session.userId,
-        name: label?.name || (isActiveAccount ? (account?.name ?? '') : ''),
+        name:
+          session.userName ||
+          label?.name ||
+          (isActiveAccount ? (account?.name ?? '') : ''),
         email: label?.email || (isActiveAccount ? (account?.email ?? '') : ''),
         active: session.$id === activeSessionId,
       }
