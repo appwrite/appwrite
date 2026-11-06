@@ -1616,5 +1616,43 @@ return [
                 'type' => 'text'
             ],
         ]
+    ],
+    [
+        'key' => 'catchall',
+        'name' => 'Catchall',
+        'tagline' => 'A shared inbox for testing your app\'s emails, built on Appwrite Functions email triggers.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [SiteUseCases::DASHBOARD],
+        'screenshotDark' => $url . '/images/sites/templates/catchall-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/catchall-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/email-testing',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [],
+        'scopes' => [
+            'rows.read',
+            'rows.write',
+            'files.read',
+            'files.write',
+            'teams.read',
+            'databases.read',
+            'databases.write',
+            'tables.read',
+            'tables.write',
+            'buckets.read',
+            'buckets.write',
+            'functions.read',
+            'functions.write',
+            'project.read',
+            'project.write',
+            'sites.read',
+            'sites.write',
+        ],
     ]
 ];
