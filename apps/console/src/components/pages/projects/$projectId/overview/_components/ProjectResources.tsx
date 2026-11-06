@@ -73,7 +73,7 @@ import {
   SITE_SCREENSHOT_THUMB_WIDTH,
   SITE_SCREENSHOTS_BUCKET_ID,
 } from '@/lib/sites/screenshot-preview-sizes'
-import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
+import { formatDecimalBytes, toByteCount } from '@/lib/utils/byte-display-unit'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { cn } from '@/lib/utils'
 
@@ -293,7 +293,7 @@ export function ProjectResources({
     bucketsQuery,
     (data) => ({
       total: data.total,
-      items: data.buckets.map((bucket) => bucketItem(projectId, bucket)),
+      items: data.buckets.map((bucket) => bucketItem(projectId, bucket, t)),
     }),
     () => void bucketsQuery.refetch(),
   )
@@ -790,7 +790,14 @@ function DeploymentStatus({
   )
 }
 
-function bucketItem(projectId: string, bucket: Models.Bucket): ResourceItem {
+function bucketItem(
+  projectId: string,
+  bucket: Models.Bucket,
+  t: (text: string) => string,
+): ResourceItem {
+  // The bucket list API always reports `totalSize` as 0, so show the
+  // configured per-file limit instead of a size.
+  const maximumFileSize = toByteCount(bucket.maximumFileSize)
   return {
     id: bucket.$id,
     title: bucket.name,
@@ -799,11 +806,17 @@ function bucketItem(projectId: string, bucket: Models.Bucket): ResourceItem {
         <Folder className="h-4 w-4" />
       </OverviewListRowIcon>
     ),
-    meta: (
-      <span className="truncate tabular-nums">
-        {formatDecimalBytes(bucket.totalSize ?? 0)}
-      </span>
-    ),
+    meta:
+      bucket.enabled === false ? (
+        <span className="flex shrink-0 items-center gap-1.5">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
+          {t('Disabled')}
+        </span>
+      ) : maximumFileSize > 0 ? (
+        <span className="truncate tabular-nums">
+          {t('Files up to')} {formatDecimalBytes(maximumFileSize)}
+        </span>
+      ) : undefined,
     date: bucket.$createdAt,
     link: {
       to: '/projects/$projectId/storage/$bucketId',
