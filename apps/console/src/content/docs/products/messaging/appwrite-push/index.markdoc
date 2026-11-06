@@ -176,6 +176,7 @@ val provider = messaging.createAppwriteProvider(
 import io.appwrite.Client;
 import io.appwrite.ID;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
 import io.appwrite.services.Messaging;
 
 Client client = new Client()
@@ -185,21 +186,25 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.createAppwriteProvider(
-    ID.unique(),     // providerId
-    "Appwrite Push", // name
-    null,            // enabled (optional)
-    1L,              // qos (optional)
-    86400L,          // expiry (optional)
-    new CoroutineCallback<>((provider, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
-        }
+try {
+    messaging.createAppwriteProvider(
+        ID.unique(),     // providerId
+        "Appwrite Push", // name
+        null,            // enabled (optional)
+        1L,              // qos (optional)
+        86400L,          // expiry (optional)
+        new CoroutineCallback<>((provider, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
 
-        System.out.println(provider);
-    })
-);
+            System.out.println(provider);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
 ```
 ```server-swift
 import Appwrite
@@ -317,7 +322,7 @@ Import the URL polyfill once, before the SDK:
 import 'react-native-url-polyfill/auto';
 ```
 
-On Expo SDK 52, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. The SDK doesn't use a config plugin. If you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
+If Metro can't resolve the SDK's imports, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. Don't add `react-native-appwrite` to `plugins` in `app.json`, because the SDK has no config plugin.
 {% /tabsitem %}
 
 {% tabsitem #setup-android title="Android" %}
@@ -451,7 +456,9 @@ Each message has four fields:
 Background delivery reconnects later with that credential. A JWT expires, so use a session where you can.
 
 {% info title="Web apps on the same domain as Appwrite" %}
-The Web SDK can read the session only when your app and your Appwrite API are on different domains, such as `example.com` and `<REGION>.cloud.appwrite.io`. If they share a domain, for example through a custom API domain, set a JWT before you subscribe: `client.setJWT((await account.createJWT()).jwt)`.
+The Web SDK reads the session from `localStorage`, where it's kept only when your app and your Appwrite API are on different domains, such as `example.com` and `<REGION>.cloud.appwrite.io`.
+
+If they share a domain, for example through a custom API domain, set a JWT before you subscribe: `client.setJWT((await account.createJWT()).jwt)`. A JWT expires after 15 minutes, so set a new one before then, or the SDK can't reconnect.
 {% /info %}
 
 To know when the connection opens, closes, or fails, register these callbacks. Calling one again replaces the earlier callback.
@@ -535,23 +542,27 @@ val message = messaging.createPush(
 )
 ```
 ```server-java
-messaging.createPush(
-    ID.unique(),                     // messageId
-    "Your order has shipped",        // title
-    "Track it from the Orders tab.", // body
-    null,                            // topics
-    List.of("<USER_ID>"),            // users
-    null,                            // targets
-    Map.of("orderId", "<ORDER_ID>"), // data
-    new CoroutineCallback<>((message, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
-        }
+try {
+    messaging.createPush(
+        ID.unique(),                     // messageId
+        "Your order has shipped",        // title
+        "Track it from the Orders tab.", // body
+        null,                            // topics
+        List.of("<USER_ID>"),            // users
+        null,                            // targets
+        Map.of("orderId", "<ORDER_ID>"), // data
+        new CoroutineCallback<>((message, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
 
-        System.out.println(message);
-    })
-);
+            System.out.println(message);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
 ```
 ```server-swift
 let message = try await messaging.createPush(
@@ -738,7 +749,9 @@ Topics have their own [delivery settings](/docs/products/messaging/topics#appwri
 
 # Notifications and taps {% #notifications %}
 
-A subscription with `background` posts a notification for each message while the app isn't on screen, using the `title`, `body`, and `image` you sent. A message with only `data` posts no notification and only reaches your callback.
+A subscription with `background` posts a notification for each message while the app isn't on screen, using the `title`, `body`, and `image` you sent.
+
+A message with only `data` reaches your callback without a notification. The exception is a suspended iOS app: Appwrite wakes it through APNs for every message, so a message with only `data` shows as "New message".
 
 - **Android 13 and later**: the first background subscription asks for the notification permission. If the user declines, messages still reach your callback.
 - **Android icon**: add a `meta-data` entry to your `<application>` with your icon. The key is `io.appwrite.push.notification_icon` for the Android SDK, `io.appwrite.flutter.push.notification_icon` for Flutter, and `io.appwrite.reactnative.push.notification_icon` for React Native.
