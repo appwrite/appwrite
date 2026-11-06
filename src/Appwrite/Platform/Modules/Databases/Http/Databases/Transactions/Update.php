@@ -281,7 +281,7 @@ class Update extends Action
                         }
 
                         if (\is_array($data) && !empty($data)) {
-                            $data = $this->parseOperators($data, $collection);
+                            $data = $this->parseStagedOperators($action, $data, $collection);
                         }
 
                         if ($action === 'delete' && $documentId) {

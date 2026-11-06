@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\VectorsDB;
 
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Id;
@@ -292,6 +293,50 @@ trait DatabasesBase
         $this->assertArrayHasKey('$updatedAt', $get2['body']);
 
         return $data;
+    }
+
+    #[Depends('testCreateDocument')]
+    public function testUpdateDocumentWithOperatorLikeMetadata(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $note = '{"method":"stringConcat","values":["!"]}';
+
+        $created = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", $headers, [
+            'documentId' => Id::unique(),
+            'data' => [
+                'embeddings' => array_fill(0, 1536, 0.2),
+                'metadata' => ['type' => 'note'],
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $documentId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", $headers, [
+            'data' => ['metadata' => ['type' => 'note', 'note' => $note]],
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", $headers);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertSame($note, $document['body']['metadata']['note']);
+
+        /**
+         * Test for FAILURE
+         */
+        $rejected = $this->client->call(Client::METHOD_PATCH, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", $headers, [
+            'data' => ['metadata' => ['note' => ['$operator' => ['method' => 'stringConcat', 'values' => ['!']]]]],
+        ]);
+        $this->assertEquals(400, $rejected['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_BAD_REQUEST, $rejected['body']['type']);
     }
 
     #[Depends('testUpdateDocument')]
