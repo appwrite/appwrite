@@ -879,7 +879,7 @@ class Get extends Base
             // The session joins the account switching device and becomes its active one, before the
             // redirect goes out so the device reads consistently on the client's next request
             if ($authDevice !== null) {
-                $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project);
+                $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
                 AuthDevice::refreshCookie($response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
             }
         }

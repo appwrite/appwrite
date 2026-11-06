@@ -387,6 +387,25 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($long['body']['expire'], $response['body']['expire']);
         $this->assertGreaterThan($deviceExpire, $response['body']['expire']);
+        $deviceExpire = $response['body']['expire'];
+
+        /**
+         * Test for SUCCESS - refreshing a held session (updateSession) extends the device with it
+         */
+        $sessionKey = 'a_session_' . $projectId;
+        $refreshed = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $long['cookies'][$sessionKey] . '; ' . $deviceKey . '=' . $device['cookie'],
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(200, $refreshed['headers']['status-code']);
+        $this->assertGreaterThan($deviceExpire, $refreshed['body']['expire']);
+        $this->assertArrayHasKey($deviceKey, $refreshed['cookies']);
+
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($refreshed['body']['expire'], $response['body']['expire']);
     }
 
     public function testAccountDevicesPolicy(): void

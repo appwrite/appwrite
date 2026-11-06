@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -81,6 +82,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('mode')
             ->inject('session')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
@@ -100,6 +102,7 @@ class Create extends Action
         Authorization $authorization,
         string $mode,
         ?Document $current,
+        Mqtt $mqtt,
     ): void {
         if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Account devices are disabled for this project');
@@ -147,15 +150,17 @@ class Create extends Action
 
         // Adopt the caller's current session so the account they are already signed in as is
         // in the device and switchable, not just sessions created after the device exists.
-        // Skipped in admin mode: there the current session belongs to the console user in the
-        // platform database, not the target project database this device is written to.
-        if ($mode !== APP_MODE_ADMIN && $current instanceof Document && empty($current->getAttribute('deviceId', ''))) {
+        // A session still pointing at a device that no longer exists (expired and swept) is
+        // free to be adopted too. Skipped in admin mode: there the current session belongs to
+        // the console user in the platform database, not the target project database this
+        // device is written to.
+        if ($mode !== APP_MODE_ADMIN && $current instanceof Document && $this->isAdoptable($dbForProject, $authorization, $current)) {
             $current = $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
                 'deviceId' => $device->getId(),
                 'deviceInternalId' => $device->getSequence(),
             ])));
 
-            $device = AuthDevice::attach($dbForProject, $authorization, $device, $current, $publisherForDeletes, $project);
+            $device = AuthDevice::attach($dbForProject, $authorization, $device, $current, $publisherForDeletes, $project, $mqtt);
             $expire = $device->getAttribute('expire');
         }
 
@@ -183,5 +188,18 @@ class Create extends Action
             ->setPayload($response->output($device, Response::MODEL_DEVICE), sensitive: ['secret']);
 
         $response->dynamic($device, Response::MODEL_DEVICE);
+    }
+
+    /**
+     * A session can join a new device when it is on no device, or when the device it points at is gone.
+     */
+    private function isAdoptable(Database $dbForProject, Authorization $authorization, Document $session): bool
+    {
+        $deviceId = (string) $session->getAttribute('deviceId', '');
+        if (empty($deviceId)) {
+            return true;
+        }
+
+        return $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId))->isEmpty();
     }
 }

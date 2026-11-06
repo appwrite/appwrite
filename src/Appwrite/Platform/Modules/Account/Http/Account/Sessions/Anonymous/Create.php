@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -84,6 +85,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('authDevice')
             ->inject('publisherForDeletes')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
@@ -104,6 +106,7 @@ class Create extends Action
         Authorization $authorization,
         ?Document $authDevice,
         DeletePublisher $publisherForDeletes,
+        Mqtt $mqtt,
     ): void {
         $protocol = $request->getProtocol();
 
@@ -220,7 +223,7 @@ class Create extends Action
         // The session joins the account switching device and becomes its active one, before the
         // response goes out so the device reads consistently on the client's next request
         if ($authDevice !== null) {
-            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project);
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
             AuthDevice::refreshCookie($response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
         }
 

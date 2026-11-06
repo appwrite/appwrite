@@ -4,9 +4,11 @@ namespace Appwrite\Auth;
 
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -41,9 +43,10 @@ class AuthDevice
      *
      * @return Document The device with the new active pointer and expiry, holding its sessions.
      */
-    public static function attach(Database $dbForProject, Authorization $authorization, Document $device, Document $session, DeletePublisher $publisherForDeletes, Document $project): Document
+    public static function attach(Database $dbForProject, Authorization $authorization, Document $device, Document $session, DeletePublisher $publisherForDeletes, Document $project, Mqtt $mqtt): Document
     {
         $userId = $session->getAttribute('userId', '');
+        $replaced = false;
 
         foreach ($device->getAttribute('sessions', []) as $held) {
             /** @var Document $held */
@@ -54,6 +57,7 @@ class AuthDevice
             // Replaced, not signed out by the caller: the request's own event is the new session's
             // create, so like the session-limit prune this fires no delete event for the old one.
             $authorization->skip(fn () => $dbForProject->deleteDocument('sessions', $held->getId()));
+            $replaced = true;
 
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $project,
@@ -62,10 +66,13 @@ class AuthDevice
             ));
         }
 
-        $expire = $device->getAttribute('expire');
-        $sessionExpire = $session->getAttribute('expire');
-        if (!empty($sessionExpire) && (empty($expire) || new \DateTime($sessionExpire) > new \DateTime($expire))) {
-            $expire = $sessionExpire;
+        if ($replaced && !empty($userId)) {
+            // A realtime connection opened on the replaced session must not outlive it, as with deleteSession
+            try {
+                $mqtt->revoke($project->getId(), $userId);
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
         }
 
         $cookie = $device->getAttribute(self::ATTRIBUTE_COOKIE, '');
@@ -74,7 +81,7 @@ class AuthDevice
         $authorization->skip(fn () => $dbForProject->updateDocument('devices', $deviceId, new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
-            'expire' => $expire,
+            'expire' => self::latestExpire($device, $session),
         ])));
 
         if (!empty($userId)) {
@@ -87,6 +94,55 @@ class AuthDevice
         $device->setAttribute(self::ATTRIBUTE_COOKIE, $cookie);
 
         return $device;
+    }
+
+    /**
+     * Keep the device alive for a session it holds whose expiry moved out, for example after
+     * updateSession extended it. Returns the device when it exists, with the transient cookie
+     * value carried over from $authDevice when that is the same device, so the caller can
+     * re-issue the cookie; null when the session is not on a device or the device is gone.
+     */
+    public static function extend(Database $dbForProject, Authorization $authorization, Document $session, ?Document $authDevice): ?Document
+    {
+        $deviceId = (string) $session->getAttribute('deviceId', '');
+        if (empty($deviceId)) {
+            return null;
+        }
+
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+        if ($device->isEmpty()) {
+            return null;
+        }
+
+        $expire = self::latestExpire($device, $session);
+        if ($expire !== $device->getAttribute('expire')) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('devices', $deviceId, new Document([
+                'expire' => $expire,
+            ])));
+            $dbForProject->purgeCachedDocument('devices', $deviceId);
+            $device->setAttribute('expire', $expire);
+        }
+
+        if ($authDevice !== null && $authDevice->getId() === $deviceId) {
+            $device->setAttribute(self::ATTRIBUTE_COOKIE, $authDevice->getAttribute(self::ATTRIBUTE_COOKIE, ''));
+        }
+
+        return $device;
+    }
+
+    /**
+     * The later of the device's and the session's expiry: a device lives as long as its newest session.
+     */
+    private static function latestExpire(Document $device, Document $session): ?string
+    {
+        $expire = $device->getAttribute('expire');
+        $sessionExpire = $session->getAttribute('expire');
+
+        if (!empty($sessionExpire) && (empty($expire) || new \DateTime($sessionExpire) > new \DateTime($expire))) {
+            return $sessionExpire;
+        }
+
+        return $expire;
     }
 
     /**
