@@ -90,4 +90,13 @@ describe('ensureApexDomainInOrganization', () => {
     await ensureApexDomainInOrganization('team1', 'app.example.com')
     expect(created).toEqual(['example.com'])
   })
+
+  test('does not register a Cloud zone when the variables fail to load', async () => {
+    const created = mockCloud(async () => {
+      throw new Error('Network request failed')
+    })
+    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.network')
+    await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run')
+    expect(created).toEqual([])
+  })
 })
