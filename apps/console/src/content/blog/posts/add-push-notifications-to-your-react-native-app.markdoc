@@ -2,7 +2,7 @@
 layout: post
 title: "Add push notifications to your React Native app without Firebase"
 description: Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.
-date: 2026-10-16
+date: 2026-11-06
 cover: /images/blog/add-push-notifications-to-your-react-native-app/cover.avif
 timeToRead: 9
 author: atharva

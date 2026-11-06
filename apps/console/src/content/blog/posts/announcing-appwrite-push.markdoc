@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing Appwrite Push: push notifications without Firebase"
 description: Appwrite Push delivers push notifications from Appwrite straight to your Android, iOS, web, Flutter, and React Native apps, with no Firebase project, service account, or device token to manage.
-date: 2026-10-16
+date: 2026-11-06
 cover: /images/blog/announcing-appwrite-push/cover.avif
 timeToRead: 7
 author: arnab-chatterjee

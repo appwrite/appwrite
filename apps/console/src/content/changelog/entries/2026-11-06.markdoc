@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: Send push notifications without Firebase with Appwrite Push
-date: 2026-10-16
+date: 2026-11-06
 cover: /images/blog/announcing-appwrite-push/cover.avif
 tags: messaging, sdk
 ---

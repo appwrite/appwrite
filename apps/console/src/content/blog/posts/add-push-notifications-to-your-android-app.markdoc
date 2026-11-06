@@ -2,7 +2,7 @@
 layout: post
 title: "Add push notifications to your Android app without Firebase"
 description: Send push notifications to a Kotlin app with Appwrite Push. Notify customers when an order ships, deliver while the app is closed, and open the order on tap.
-date: 2026-10-16
+date: 2026-11-06
 cover: /images/blog/add-push-notifications-to-your-android-app/cover.avif
 timeToRead: 9
 author: atharva

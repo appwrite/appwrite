@@ -2,7 +2,7 @@
 layout: post
 title: "Add push notifications to your iOS app with Appwrite Push"
 description: Send push notifications to a SwiftUI app with Appwrite Push. Notify customers when an order ships, show the message while the app is suspended, and open the order on tap.
-date: 2026-10-16
+date: 2026-11-06
 cover: /images/blog/add-push-notifications-to-your-ios-app/cover.avif
 timeToRead: 10
 author: atharva
