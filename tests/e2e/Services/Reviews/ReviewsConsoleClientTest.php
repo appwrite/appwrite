@@ -452,6 +452,22 @@ final class ReviewsConsoleClientTest extends Scope
         $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $agent, 'Fixed in the latest commit.', replyTo: $reply - 1, authorType: 'Bot', author: 'cursor[bot]', association: 'NONE');
         $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $agent)['headers']['status-code']);
 
+        // Each answered comment is counted once, however many usage reports it sends
+        $usageHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['usage.read']),
+        ];
+        $answered = $handle !== '' ? 3 : 2;
+        $this->assertEventually(function () use ($usageHeaders, $repositoryId, $answered) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['reviews.chats'],
+                'queries' => [Query::equal('resourceId', [$repositoryId])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertEquals($answered, \array_sum(\array_column($response['body']['metrics'][0]['points'], 'value')));
+        }, 60_000, 500);
+
         /**
          * Test for FAILURE
          */

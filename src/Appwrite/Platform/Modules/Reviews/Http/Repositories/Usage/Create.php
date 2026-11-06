@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -86,8 +87,19 @@ class Create extends Base
         $documents = $this->prepareUsage($usage, 'reviewChats', $chat);
 
         if (!empty($documents)) {
+            // A chat is counted once, with its first usage: the service reports it only once a
+            // model ran, so a comment it chose not to answer without asking one costs nothing.
+            $answered = $authorization->skip(fn () => $dbForProject->findOne('reviewUsage', [
+                Query::equal('resourceType', ['reviewChats']),
+                Query::equal('resourceInternalId', [(string) $chat->getSequence()]),
+            ]));
+
             $authorization->skip(fn () => $dbForProject->createDocuments('reviewUsage', $documents));
             $this->publishTokens($project, $chat, $documents, $publisherForUsage);
+
+            if ($answered->isEmpty()) {
+                $this->publishUsage($project, $this->getRepositoryUsage($chat)->addMetric(METRIC_REVIEWS_CHATS, 1), $publisherForUsage);
+            }
         }
 
         $response->noContent();
