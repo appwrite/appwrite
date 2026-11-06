@@ -878,6 +878,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -5117,6 +5128,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -9152,6 +9177,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Geo\Geo;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -92,6 +93,8 @@ class Update extends Base
             ->inject('authorization')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -116,7 +119,9 @@ class Update extends Base
         Authorization $authorization,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
-        $this->createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime);
+        $this->createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime, $authDevice, $publisherForDeletes);
     }
 }
