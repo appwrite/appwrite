@@ -67,6 +67,8 @@ class S3 extends Device
 
     private const int MAX_COPY_OBJECT_SIZE = 5368709120; // 5 GB — the CopyObject limit; larger objects copy server side part by part
 
+    private const int MAX_PRESIGN_SECONDS = 604800; // 7 days — the longest a SigV4 query signature may last
+
     private readonly string $fqdn;
 
     private readonly string $host;
@@ -1143,20 +1145,85 @@ class S3 extends Device
             hash('sha256', $amzPayloadStr),
         ]);
 
-        // Make Signature
-        $kSecret = 'AWS4' . $this->secretKey;
-        $kDate = hash_hmac('sha256', $amzDateStamp, $kSecret, true);
-        $kRegion = hash_hmac('sha256', $region, $kDate, true);
-        $kService = hash_hmac('sha256', $service, $kRegion, true);
-        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
-
-        $signature = hash_hmac('sha256', mb_convert_encoding($stringToSignStr, 'utf-8'), $kSigning);
+        $signature = $this->sign($amzDateStamp, $stringToSignStr);
 
         return $algorithm . ' ' . implode(',', [
             'Credential=' . $this->accessKey . '/' . implode('/', $credentialScope),
             'SignedHeaders=' . implode(';', array_keys($combinedHeaders)),
             'Signature=' . $signature,
         ]);
+    }
+
+    /**
+     * The SigV4 signature of a string to sign, with the key for one day.
+     *
+     * Shared by the header-signed requests and presigned URLs, so the two can
+     * never derive the key differently.
+     */
+    private function sign(string $date, string $stringToSign): string
+    {
+        $kDate = hash_hmac('sha256', $date, 'AWS4' . $this->secretKey, true);
+        $kRegion = hash_hmac('sha256', $this->region, $kDate, true);
+        $kService = hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+
+        return hash_hmac('sha256', mb_convert_encoding($stringToSign, 'utf-8'), $kSigning);
+    }
+
+    /**
+     * A URL that lets whoever holds it GET the object at a path until it
+     * expires, with no credentials of their own (SigV4 query-string signing).
+     *
+     * The object is addressed exactly as read() addresses it, so path-style and
+     * virtual-hosted endpoints both work. Range requests are allowed, which is
+     * what lets a reader such as ffmpeg seek in it rather than download it whole.
+     * The URL is a credential for that object: keep it out of logs and errors.
+     *
+     * @param  int  $expires  Seconds the URL stays valid, at most 604800 (7 days)
+     * @param  int|null  $now  The signing time as a Unix timestamp; null means now
+     *
+     * @throws \InvalidArgumentException When the lifetime is outside 1..604800 seconds
+     */
+    public function getPresignedUrl(string $path, int $expires = 3600, ?int $now = null): string
+    {
+        if ($expires < 1 || $expires > self::MAX_PRESIGN_SECONDS) {
+            throw new \InvalidArgumentException('A presigned URL must last between 1 and ' . self::MAX_PRESIGN_SECONDS . ' seconds');
+        }
+
+        $now ??= time();
+        $amzDate = gmdate('Ymd\THis\Z', $now);
+        $date = substr($amzDate, 0, 8);
+        $scope = $date . '/' . $this->region . '/s3/aws4_request';
+        $uri = $this->path . $this->getAbsolutePath(($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/');
+
+        $parameters = [
+            'X-Amz-Algorithm' => 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential' => $this->accessKey . '/' . $scope,
+            'X-Amz-Date' => $amzDate,
+            'X-Amz-Expires' => (string) $expires,
+            'X-Amz-SignedHeaders' => 'host',
+        ];
+        uksort($parameters, $this->sortMetaHeadersCmp(...));
+        $query = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
+
+        $canonical = implode("\n", [
+            Method::GET,
+            $uri,
+            $query,
+            'host:' . $this->host,
+            '',
+            'host',
+            'UNSIGNED-PAYLOAD',
+        ]);
+
+        $stringToSign = implode("\n", [
+            'AWS4-HMAC-SHA256',
+            $amzDate,
+            $scope,
+            hash('sha256', $canonical),
+        ]);
+
+        return $this->fqdn . $uri . '?' . $query . '&X-Amz-Signature=' . $this->sign($date, $stringToSign);
     }
 
     /**

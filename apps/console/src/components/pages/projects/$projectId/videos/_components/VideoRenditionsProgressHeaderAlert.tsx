@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import {
   HeaderAlertBar,
@@ -10,12 +11,11 @@ import {
   parseVideoProgress,
 } from '@/lib/react-query/hooks/videos'
 import { useT } from '@/lib/i18n/translate'
-import type { VideoRendition } from '@/lib/appwrite/videos'
 
 type VideoRenditionsProgressHeaderAlertProps = {
   projectId: string
   videoId: string
-  renditions: VideoRendition[]
+  renditions: Models.VideoRendition[]
 }
 
 export function VideoRenditionsProgressHeaderAlert({

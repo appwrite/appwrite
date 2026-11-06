@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { Check, ChevronDown, Circle, Info } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
@@ -24,6 +25,7 @@ import {
   useProjectVideo,
   useVideoRenditions,
   useVideoSubtitles,
+  useVideoTimeline,
   videoSourceHasAudio,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
@@ -35,12 +37,11 @@ import {
 } from '@/lib/utils/video-format'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import { useT } from '@/lib/i18n/translate'
-import type { Video, VideoRendition, VideoRenditionList, VideoSubtitle, VideoSubtitleList } from '@/lib/appwrite/videos'
 
 export type VideoOverviewInitialData = {
-  video: Video
-  renditions: VideoRenditionList
-  subtitles: VideoSubtitleList
+  video: Models.Video
+  renditions: Models.VideoRenditionList
+  subtitles: Models.VideoCaptionList
 }
 
 type ViewProps = {
@@ -61,7 +62,7 @@ export function View({ initialData }: ViewProps = {}) {
   const renditions =
     renditionsFromHook?.renditions ?? initialData?.renditions.renditions ?? []
   const subtitles =
-    subtitlesFromHook?.subtitles ?? initialData?.subtitles.subtitles ?? []
+    subtitlesFromHook?.captions ?? initialData?.subtitles.captions ?? []
 
   if (!video) return null
 
@@ -169,7 +170,7 @@ function SourcePopover({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
 
@@ -337,7 +338,7 @@ type DetailPath =
   | '/projects/$projectId/videos/$videoId/timeline'
   | '/projects/$projectId/videos/$videoId/streaming'
 
-function formatResolutionAndAspectRatio(video: Video): string {
+function formatResolutionAndAspectRatio(video: Models.Video): string {
   const resolution =
     video.width > 0 ? formatResolution(video.width, video.height) : ''
   const ratio = video.aspectRatio?.trim() ?? ''
@@ -411,15 +412,17 @@ function SetupChecklist({
   subtitles,
 }: {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
-  subtitles: VideoSubtitle[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =
     useVideoDetailActions()
+  const { data: timeline } = useVideoTimeline(projectId, video.$id)
 
   const hasReady = renditions.some((r) => r.status === 'ready')
+  const hasTimeline = Boolean(timeline && timeline.cues.length > 0)
 
   const linkButton = (to: DetailPath, label: string) => (
     <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>
@@ -471,7 +474,7 @@ function SetupChecklist({
       description: t('Thumbnails for scrubbing and poster images.'),
       term: 'timeline',
       optional: true,
-      done: Boolean(video.previewId),
+      done: hasTimeline,
       action: linkButton(
         '/projects/$projectId/videos/$videoId/timeline',
         t('Open timeline'),

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
@@ -16,6 +17,40 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
+FROM appwrite/base:2.0.0 AS ffmpeg
+
+# Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
+# Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
+# GnuTLS gives ffmpeg its https protocol: the videos worker reads S3 sources over
+# a presigned URL, and without a TLS library ffmpeg has no https at all.
+# Cloned from the GitHub mirror at the release tag, like every other pinned source
+# the utopia libraries build; ffmpeg.org drops connections from CI runners.
+ARG FFMPEG_VERSION=8.1.2
+
+RUN apk add --no-cache \
+        build-base nasm pkgconf git \
+        x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
+        libtheora-dev libvorbis-dev gnutls-dev \
+    && git clone --depth 1 --branch "n${FFMPEG_VERSION}" https://github.com/FFmpeg/FFmpeg.git /tmp/ffmpeg \
+    && cd /tmp/ffmpeg \
+    && ./configure \
+        --prefix=/opt/ffmpeg \
+        --enable-gpl \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-libvpx \
+        --enable-libopus \
+        --enable-libmp3lame \
+        --enable-libtheora \
+        --enable-libvorbis \
+        --enable-gnutls \
+        --disable-debug \
+        --disable-doc \
+        --disable-ffplay \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/ffmpeg
+
 FROM appwrite/base:2.2.9 AS base
 
 LABEL maintainer="team@appwrite.io"
@@ -30,6 +65,24 @@ ENV _APP_VERSION=$VERSION \
 RUN if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
+
+# Runtime libs for the source-built ffmpeg 8.1.2; mediainfo is unused by the
+# worker today (probe is ffprobe) but kept until that Dockerfile comment is retired.
+RUN apk add --no-cache \
+        mediainfo \
+        x264-libs \
+        x265-libs \
+        libvpx \
+        opus \
+        lame-libs \
+        libtheora \
+        libvorbis \
+        gnutls \
+        libstdc++ \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
 
 WORKDIR /usr/src/code
 
@@ -64,6 +117,8 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
+    mkdir -p /storage/videos && \
+    mkdir -p /storage/videos-tmp && \
     mkdir -p /storage/debug && \
     chown -Rf www-data:www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data:www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
@@ -71,6 +126,8 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data:www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data:www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
     chown -Rf www-data:www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
+    chown -Rf www-data:www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
+    chown -Rf www-data:www-data /storage/videos-tmp && chmod -Rf 0755 /storage/videos-tmp && \
     chown -Rf www-data:www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
@@ -117,6 +174,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-videos && \
     chmod +x /usr/local/bin/worker-stats-resources && \
     chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks

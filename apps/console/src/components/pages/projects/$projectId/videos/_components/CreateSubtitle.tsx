@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { Captions } from 'lucide-react'
 import { toast } from 'sonner'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
@@ -30,7 +31,6 @@ import {
   getVideoSubtitleLanguage,
   VIDEO_SUBTITLE_LANGUAGES,
 } from '@/lib/videos/subtitle-languages'
-import type { VideoSubtitle } from '@/lib/appwrite/videos'
 
 const SUBTITLE_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip']
 const SUBTITLE_NAME_PATTERN = /^[A-Za-z0-9 \-.,()_']*$/
@@ -41,7 +41,7 @@ type CreateSubtitleProps = {
   projectId: string
   videoId: string
   /** When set, the dialog updates this subtitle instead of creating one. */
-  subtitle?: VideoSubtitle | null
+  subtitle?: Models.VideoCaption | null
 }
 
 export function CreateSubtitle({

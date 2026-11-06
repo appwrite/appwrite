@@ -14,7 +14,6 @@ import {
   GalleryHorizontal,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import {
   VideoActionButton,
   VideoFact,
@@ -22,8 +21,7 @@ import {
   VideoSectionCard,
 } from '../../_components/VideoPage'
 import { VideoUrlRow } from '../../_components/VideoUrlRow'
-import { useVideoDetailActions } from '../../_components/video-detail-actions'
-import { TimelineSpriteThumb } from '../../_components/player/TimelineSpriteThumb'
+import { TimelineThumbnail } from '../../_components/player/TimelineThumbnail'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -33,15 +31,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useQuery } from '@tanstack/react-query'
 import {
   isVideoMetadataReady,
-  useCreateVideoTimeline,
-  useProjectVideo,
   useVideoTimeline,
+  videoQueryOptions,
   type VideoTimelineCue,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 
@@ -61,32 +58,27 @@ export function View() {
     projectId: string
     videoId: string
   }
-  const { writeDisabledReason } = useVideoDetailActions()
-  const { data: video } = useProjectVideo(projectId, videoId)
-  const [requested, setRequested] = useState(false)
-  const timelineQuery = useVideoTimeline(projectId, videoId, {
-    pollWhileMissing: requested,
+  const { data: video } = useQuery({
+    ...videoQueryOptions(projectId, videoId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.timelineStatus
+      return status === 'pending' || status === 'started' ? 3000 : false
+    },
   })
-  const createTimeline = useCreateVideoTimeline(projectId, videoId)
+  const generating =
+    video?.timelineStatus === 'pending' || video?.timelineStatus === 'started'
+  const timelineQuery = useVideoTimeline(projectId, videoId, {
+    pollWhileMissing: generating,
+  })
   const timeline = timelineQuery.data
-
-  useEffect(() => {
-    if (timeline) setRequested(false)
-  }, [timeline])
 
   const sheets = useMemo(
     () => new Set((timeline?.cues ?? []).map((cue) => cue.imageUrl)).size,
     [timeline?.cues],
   )
   const [chosenFrame, setChosenFrame] = useState<number | null>(null)
-  const defaultFrame = useMemo(() => {
-    const index = (timeline?.cues ?? []).findIndex(
-      (cue) => previewIdFromCue(cue) === video?.previewId,
-    )
-    return Math.max(0, index)
-  }, [timeline?.cues, video?.previewId])
   const selectedFrame = Math.min(
-    chosenFrame ?? defaultFrame,
+    chosenFrame ?? 0,
     Math.max(0, (timeline?.cues.length ?? 1) - 1),
   )
   const interval =
@@ -98,30 +90,10 @@ export function View() {
 
   // Probed audio-only files report a duration but no frame size; the worker produces no WebVTT for them.
   const audioOnly = video.duration > 0 && !isVideoMetadataReady(video)
-  const generateDisabledReason =
-    writeDisabledReason ??
-    (audioOnly ? t('Audio-only videos have no frames for a timeline.') : null)
-  const generating = requested || createTimeline.isPending
-
-  const generate = () =>
-    createTimeline.mutate(undefined, {
-      onSuccess: () => {
-        setRequested(true)
-        toast.success(t('Timeline generation started'))
-      },
-      onError: (error) =>
-        toast.error(getErrorMessage(error) || t('Failed to generate timeline')),
-    })
+  const failed = video.timelineStatus === 'error'
 
   return (
-    <VideoPage
-      title={t('Timeline')}
-      term="timeline"
-      createLabel={timeline ? t('Regenerate timeline') : t('Generate timeline')}
-      onCreate={generate}
-      createDisabled={generating || Boolean(generateDisabledReason)}
-      createDisabledTooltip={generateDisabledReason ?? undefined}
-    >
+    <VideoPage title={t('Timeline')} term="timeline">
       {timelineQuery.isLoading ? (
         <p className="text-[13px] text-muted-foreground">
           {t('Loading timeline...')}
@@ -136,7 +108,7 @@ export function View() {
               </p>
               <p className="text-[13px] text-muted-foreground">
                 {t(
-                  'Sampling frames into sprite sheets. Thumbnails appear here when ready.',
+                  'Sampling frames into thumbnail sheets. Thumbnails appear here when ready.',
                 )}
               </p>
             </div>
@@ -144,38 +116,35 @@ export function View() {
         ) : (
           <EmptyState
             icon={GalleryHorizontal}
-            title={t('No timeline yet')}
-            description={t(
-              'Generate a timeline to get scrubbing thumbnails and a preview image for this video.',
-            )}
+            title={failed ? t('Timeline failed') : t('No timeline yet')}
+            description={
+              failed
+                ? video.timelineError ||
+                  t('The timeline job failed before it could sample frames.')
+                : audioOnly
+                  ? t('Audio-only videos have no frames for a timeline.')
+                  : t(
+                      'Creating a video starts the timeline. Thumbnails appear here when the job finishes.',
+                    )
+            }
             isEmpty
             hasFilters={false}
             variant="card"
-            action={
-              <VideoActionButton
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={generate}
-                disabledReason={generateDisabledReason}
-              >
-                {t('Generate timeline')}
-              </VideoActionButton>
-            }
           />
         )
       ) : (
         <>
           <VideoSectionCard
             title={t('Thumbnails')}
-            term="sprite"
+            term="thumbnail"
             description={t(
-              'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.',
+              'Scroll through the thumbnails and hover one to see its time range and thumbnail region. Select one to use it as the preview image.',
             )}
           >
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {[
                 { label: t('Thumbnails'), value: String(timeline.cues.length) },
-                { label: t('Sprite sheets'), value: String(sheets) },
+                { label: t('Thumbnail sheets'), value: String(sheets) },
                 {
                   label: t('Interval'),
                   value: interval > 0 ? `${interval.toFixed(1)}s` : '-',
@@ -215,7 +184,7 @@ export function View() {
             title={t('Timeline file')}
             term="timeline"
             description={t(
-              'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.',
+              'A WebVTT file that maps time ranges to thumbnail sheet regions. Point your player thumbnail option at this URL.',
             )}
             bodyClassName="space-y-3"
           >
@@ -369,7 +338,7 @@ function ThumbnailStrip({
                 onClick={() => onSelect(index)}
                 className="group relative shrink-0 snap-start overflow-hidden rounded-md focus-visible:outline-none"
               >
-                <TimelineSpriteThumb
+                <TimelineThumbnail
                   cue={cue}
                   width={thumbWidth}
                   className="transition-opacity group-hover:opacity-90"
@@ -398,7 +367,7 @@ function ThumbnailStrip({
                   </dd>
                 </div>
                 <div>
-                  <dt className="opacity-70">{t('Sprite region')}</dt>
+                  <dt className="opacity-70">{t('Thumbnail region')}</dt>
                   <dd className="font-mono">
                     #xywh={cue.x},{cue.y},{cue.width},{cue.height}
                   </dd>
@@ -507,16 +476,6 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
   )
 }
 
-function previewIdFromCue(cue: VideoTimelineCue): string | null {
-  try {
-    const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('previews')
-    return index >= 0 ? (segments[index + 1] ?? null) || null : null
-  } catch {
-    return null
-  }
-}
-
 const PREVIEW_SAVE_UNAVAILABLE =
   "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame."
 
@@ -558,7 +517,7 @@ function PreviewImageCard({
       ) : (
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-[240px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-            <TimelineSpriteThumb cue={cue} className="w-full" />
+            <TimelineThumbnail cue={cue} className="w-full" />
             <span className="pointer-events-none absolute bottom-1.5 start-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
               {formatPlaybackTime(cue.start)}
             </span>

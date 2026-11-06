@@ -19,6 +19,7 @@ export const TOPOLOGY_SERVICES = {
     'appwrite-worker-builds',
     'appwrite-worker-jobs',
     'appwrite-worker-screenshots',
+    'appwrite-worker-videos',
     'appwrite-worker-certificates',
     'appwrite-worker-executions',
     'appwrite-worker-functions',
@@ -128,6 +129,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - redis
       - \${_APP_DB_HOST:-postgresql}
@@ -248,6 +251,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -271,6 +275,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_RENDITION
       - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
@@ -508,6 +513,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -531,7 +538,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=83
+      - _APP_WORKER_MAX_COROUTINES=84
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -648,6 +655,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MIGRATION_HOST
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_RENDITION
+      - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_EMBEDDING`,
   },
@@ -739,6 +748,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -762,7 +773,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=83
+      - _APP_WORKER_MAX_COROUTINES=84
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -879,6 +890,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MIGRATION_HOST
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_RENDITION
+      - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_EMBEDDING`,
   },
@@ -907,6 +920,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -930,7 +945,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=83
+      - _APP_WORKER_MAX_COROUTINES=84
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -1047,6 +1062,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MIGRATION_HOST
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_RENDITION
+      - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_EMBEDDING`,
   },
@@ -1075,6 +1092,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -1098,7 +1117,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=83
+      - _APP_WORKER_MAX_COROUTINES=84
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -1215,6 +1234,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MIGRATION_HOST
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_RENDITION
+      - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_EMBEDDING`,
   },
@@ -1521,6 +1542,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
@@ -1530,6 +1553,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_RENDITION
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1881,6 +1905,78 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_WASABI_BUCKET
     extra_hosts:
       - host.docker.internal:host-gateway`,
+  },
+  {
+    name: 'appwrite-worker-videos',
+    block: `  appwrite-worker-videos:
+    entrypoint: worker-videos
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-videos
+    image: appwrite/appwrite:2.7.0
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
+    depends_on:
+      - redis
+      - \${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_MEMORY_LIMIT
+      - _APP_WORKERS_NUM=1
+      # Transcoding is CPU-bound, so a single coroutine per worker avoids
+      # oversubscribing cores with concurrent ffmpeg processes.
+      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_LOGGING_CONFIG
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
+      - _APP_VIDEOS_ENCODE_TIMEOUT`,
   },
   {
     name: 'appwrite-worker-certificates',
@@ -2316,6 +2412,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_RENDITION
       - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES`,
@@ -2901,6 +2998,12 @@ export const COMPOSE_VOLUMES: Array<{ name: string; block: string }> = [
   { name: 'appwrite-config', block: '  appwrite-config: null' },
   { name: 'appwrite-models', block: '  appwrite-models: null' },
   {
+    name: 'appwrite-videos',
+    block: `  appwrite-videos: null
+  # Scratch for source download + ffmpeg; swap this volume for block storage later.`,
+  },
+  { name: 'appwrite-videos-tmp', block: '  appwrite-videos-tmp: null' },
+  {
     name: 'openruntimes-node-modules-cache',
     block: '  openruntimes-node-modules-cache: null',
   },
@@ -3041,6 +3144,7 @@ _APP_FUNCTIONS_TIMEOUT=900
 _APP_FUNCTIONS_CREATION_ABUSE_LIMIT=5000
 _APP_SITES_RUNTIMES=static-1,node-22
 _APP_SITES_TIMEOUT=60
+_APP_COMPUTE_STREAMING=enabled
 _APP_EXECUTOR_HOST=http://exc1/v1
 _APP_EXECUTOR_SECRET=your-secret-key
 _APP_EXECUTOR_IMAGES=openruntimes/node:v5-22,openruntimes/static:v5-1
@@ -3065,6 +3169,8 @@ _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE=15778800
 _APP_MAINTENANCE_RETENTION_CACHE=2592000
 _APP_MAINTENANCE_RETENTION_EXECUTION=1209600
 _APP_MAINTENANCE_RETENTION_SCHEDULES=86400
+_APP_MAINTENANCE_RETENTION_RENDITION=86400
+_APP_VIDEOS_ENCODE_TIMEOUT=21600
 _APP_MAINTENANCE_RETENTION_ALERTS=7776000
 _APP_USAGE_STATS=enabled
 _APP_USAGE_PASS=appwrite

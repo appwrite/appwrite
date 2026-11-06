@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
@@ -13,10 +14,9 @@ import {
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { Video } from '@/lib/appwrite/videos'
 
 type ViewProps = {
-  initialData?: { video: Video }
+  initialData?: { video: Models.Video }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -44,7 +44,7 @@ function NameCard({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
   const [name, setName] = useState(video.name)
@@ -109,7 +109,7 @@ function SourceCard({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
   return (
@@ -152,7 +152,7 @@ function DeleteCard({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
   const navigate = useNavigate()

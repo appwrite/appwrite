@@ -1,5 +1,5 @@
+import { VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { VideoOutput } from '@/lib/appwrite/videos'
 
 export type VideoMasterManifestKind = 'hls' | 'dash' | 'cmaf-hls' | 'cmaf-dash'
 
@@ -82,9 +82,9 @@ export function getVideoSubtitleManifestUrl(
   output: string,
 ): string {
   return withoutEmptyParams(
-    sdk.forProject(projectId).videos.getSubtitleManifest({
+    sdk.forProject(projectId).videos.getCaptionManifest({
       videoId,
-      subtitleId,
+      captionId: subtitleId,
       output: output as VideoOutput,
     }),
   )

@@ -2106,6 +2106,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MAINTENANCE_RETENTION_RENDITION',
+                'description' => 'Maximum age (in seconds) of an in-flight video rendition (`pending`, `started`, `ended`, or `uploading`) or caption (`pending` or `started`) before maintenance parks it as `aborted`. The default value is 86400 seconds (1 day).',
+                'introduction' => '2.4.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_ENCODE_TIMEOUT',
+                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. Set it to 0 to disable the limit. When the limit is disabled, or set high enough that an hour of slack would pass 7 days, an S3 source is copied locally instead of read through a presigned URL, which cannot be signed for longer than 7 days and would otherwise expire mid-encode. The default value is 21600 seconds (6 hours).',
+                'introduction' => '2.6.0',
+                'default' => '21600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
                 'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
                 'introduction' => '2.7.0',

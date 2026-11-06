@@ -1,0 +1,46 @@
+<?php
+$mpd = $this->getParam('mpd', []);
+echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+     profiles="<?php if (isset($mpd['profiles'])): echo $this->print($mpd['profiles'], self::FILTER_ESCAPE); endif;?>" type="<?php if (isset($mpd['type'])): echo $this->print($mpd['type'], self::FILTER_ESCAPE); endif;?>" mediaPresentationDuration="<?php if (isset($mpd['mediaPresentationDuration'])): echo $this->print($mpd['mediaPresentationDuration'], self::FILTER_ESCAPE); endif;?>" maxSegmentDuration="<?php if (isset($mpd['maxSegmentDuration'])): echo $this->print($mpd['maxSegmentDuration'], self::FILTER_ESCAPE); endif;?>" minBufferTime="<?php if (isset($mpd['minBufferTime'])): echo $this->print($mpd['minBufferTime'], self::FILTER_ESCAPE); endif;?>">
+    <ProgramInformation></ProgramInformation>
+    <ServiceDescription id="0"></ServiceDescription>
+    <Period id="0" start="PT0.0S">
+    <?php foreach ($this->getParam('renditions', []) as $adaptation): ?>
+    <AdaptationSet <?php  if (isset($adaptation['id'])):?> id="<?php echo $this->print($adaptation['id'], self::FILTER_ESCAPE); endif;?>"<?php if (isset($adaptation['attributes']['contentType'])): ?> contentType="<?php echo $this->print($adaptation['attributes']['contentType'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['startWithSAP'])): ?> startWithSAP="<?php echo $this->print($adaptation['attributes']['startWithSAP'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['segmentAlignment'])): ?> segmentAlignment="<?php echo $this->print($adaptation['attributes']['segmentAlignment'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['bitstreamSwitching'])): ?> bitstreamSwitching="<?php echo $this->print($adaptation['attributes']['bitstreamSwitching'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['frameRate'])): ?> frameRate="<?php echo $this->print($adaptation['attributes']['frameRate'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['maxWidth'])): ?> maxWidth="<?php echo $this->print($adaptation['attributes']['maxWidth'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['par'])): ?> par="<?php echo $this->print($adaptation['attributes']['par'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($adaptation['attributes']['lang'])): ?> lang="<?php echo $this->print($adaptation['attributes']['lang'], self::FILTER_ESCAPE); ?>"<?php endif;?>>
+        <?php foreach ($adaptation['representations'] ?? [] as $representation): ?>
+        <Representation <?php if (isset($representation['attributes']['id'])):?> id="<?php echo $this->print($representation['attributes']['id'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['mimeType'])):?> mimeType="<?php echo $this->print($representation['attributes']['mimeType'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['codecs'])):?> codecs="<?php echo $this->print($representation['attributes']['codecs'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['bandwidth'])):?> bandwidth="<?php echo $this->print($representation['attributes']['bandwidth'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['width'])):?> width="<?php echo $this->print($representation['attributes']['width'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['height'])):?> height="<?php echo $this->print($representation['attributes']['height'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['sar'])):?> sar="<?php echo $this->print($representation['attributes']['sar'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['attributes']['audioSamplingRate'])):?> audioSamplingRate="<?php echo $this->print($representation['attributes']['audioSamplingRate'], self::FILTER_ESCAPE); ?>"<?php endif;?>>
+            <BaseURL><?php if (isset($representation['baseUrl'])): echo $this->print($representation['baseUrl'], self::FILTER_ESCAPE);  endif;?></BaseURL>
+            <?php if (isset($adaptation['attributes']['contentType']) && $adaptation['attributes']['contentType'] === 'audio' ):?>
+               <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+             <?php endif;?>
+            <SegmentList<?php if (isset($representation['segmentList']['attributes']['timescale'])): ?> timescale="<?php echo $this->print($representation['segmentList']['attributes']['timescale'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['duration'])): ?> duration="<?php echo $this->print($representation['segmentList']['attributes']['duration'], self::FILTER_ESCAPE); ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['startNumber'])): ?> startNumber="<?php echo $this->print($representation['segmentList']['attributes']['startNumber'], self::FILTER_ESCAPE); ?>"<?php endif;?>>
+            <Initialization sourceURL="<?php if (isset($representation['segmentList']['init'])):?><?php echo $this->print($representation['segmentList']['init'], self::FILTER_ESCAPE); ?><?php endif;?>"/>
+            <?php if (!empty($representation['segmentList']['timeline'])): ?>
+            <SegmentTimeline>
+                <?php foreach ($representation['segmentList']['timeline'] as $entry): ?>
+                <S<?php if (isset($entry['t'])): ?> t="<?php echo $this->print((string) (int) $entry['t'], self::FILTER_ESCAPE); ?>"<?php endif; ?> d="<?php echo $this->print((string) (int) $entry['d'], self::FILTER_ESCAPE); ?>"<?php if (isset($entry['r'])): ?> r="<?php echo $this->print((string) (int) $entry['r'], self::FILTER_ESCAPE); ?>"<?php endif; ?>/>
+                <?php endforeach; ?>
+            </SegmentTimeline>
+            <?php endif; ?>
+            <?php if (isset($representation['segmentList']['media'])):?>
+                <?php foreach ($representation['segmentList']['media'] as $segment): ?>
+                    <SegmentURL media="<?php if (isset($segment)):?><?php echo $this->print($segment, self::FILTER_ESCAPE); ?><?php endif;?>"/>
+                <?php endforeach; ?>
+            <?php endif;?>
+            </SegmentList>
+        </Representation>
+        <?php endforeach; ?>
+    </AdaptationSet>
+    <?php endforeach; ?>
+     <?php foreach ($this->getParam('captions', []) as $caption):?>
+         <AdaptationSet id="<?php if (isset($caption['id'])): echo $this->print($caption['id'], self::FILTER_ESCAPE);  endif;?>"  lang="<?php if (isset($caption['name'])): echo $this->print($caption['name'], self::FILTER_ESCAPE);  endif;?>" mimeType="text/vtt">
+             <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+             <Representation>
+                <BaseURL><?php if (isset($caption['baseUrl'])): echo $this->print($caption['baseUrl'], self::FILTER_ESCAPE); endif;?></BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <?php endforeach; ?>
+    </Period>
+</MPD>

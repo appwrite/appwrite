@@ -354,6 +354,26 @@
       ]
     },
     {
+      "name": "Videos",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Videos/",
+        "src/Appwrite/Video/",
+        "src/Appwrite/Event/Publisher/Video.php",
+        "src/Appwrite/Event/Message/Video",
+        "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Utopia/Response/Model/Video",
+        "src/Appwrite/Utopia/Database/Validator/Queries/Videos.php",
+        "src/Appwrite/Usage/Video.php",
+        "src/Appwrite/Messaging/Adapter/Realtime.php",
+        "app/views/videos/",
+        "app/config/videos-"
+      ]
+    },
+    {
       "name": "ProjectWebhooks",
       "runner": "e2e",
       "functional": false,
@@ -517,7 +537,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account"]
+      "services": ["Account", "Videos"]
     },
     {
       "label": "Screenshots",
@@ -548,7 +568,7 @@
       "compose_profiles": "s3",
       "wait": "executor",
       "storage_device": "s3",
-      "services": ["Functions", "Project", "Storage"]
+      "services": ["Functions", "Project", "Storage", "Videos"]
     },
     {
       "label": "Usage Outage",

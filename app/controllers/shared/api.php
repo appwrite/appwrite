@@ -20,6 +20,7 @@ use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -828,6 +829,13 @@ Http::init()
                             route: $route,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Thumbnail previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -843,6 +851,17 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept.
+                $vary = $route->getLabel('cache.vary', []);
+                if (\is_array($vary) && $vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
