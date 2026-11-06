@@ -601,6 +601,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
                 }
 
+                // A runtime may send header names in any casing.
+                $headers = \array_change_key_case($headers);
+
                 // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
                 $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
 
