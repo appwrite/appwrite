@@ -95,7 +95,11 @@ class Interval extends Action
         ];
     }
 
-    private function verifyDomain(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    /**
+     * Protected so a platform with mail rules can keep them out of this HTTP sweep;
+     * the rules collection here has no protocol attribute to filter on.
+     */
+    protected function verifyDomain(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
         $time = DatabaseDateTime::now();
         $fromTime = new DateTime('-3 days'); // Max 3 days old

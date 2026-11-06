@@ -11,10 +11,12 @@ use Utopia\Validator\Validator;
 
 class DNS extends Validator
 {
-    protected const string FAILURE_REASON_QUERY = 'DNS query failed.';
+    protected const string FAILURE_REASON_QUERY = 'DNS %s query to %s timed out or failed.';
     protected const string FAILURE_REASON_INTERNAL = 'Internal error occurred.';
     protected const string FAILURE_REASON_UNKNOWN = '';
     protected const string DEFAULT_DNS_SERVER = '8.8.8.8';
+    // Seconds per query; kept short because verification runs several queries per request
+    protected const int TIMEOUT = 3;
 
     // Memory from isValid to be used in getDescription
     /**
@@ -98,20 +100,21 @@ class DNS extends Validator
         $this->reason = self::FAILURE_REASON_UNKNOWN;
         $this->records = [];
 
-        $dns = new Client($this->dnsServer);
-
         try {
-            $question = new Question($value, $this->type);
-            $queryMessage = Message::query($question, recursionDesired: true);
-            $response = $dns->query($queryMessage);
-            $answers = $response->answers;
-
-            // Some DNS servers return all records, not only type that's asked for
-            // Likely occurs when no records of specific type are found
-            $query = array_filter($answers, fn (\Utopia\DNS\Message\Record $record): bool => $record->type === $this->type);
+            $query = $this->query($value);
         } catch (\Exception) {
-            $this->reason = self::FAILURE_REASON_QUERY;
+            $this->reason = \sprintf(self::FAILURE_REASON_QUERY, Record::typeCodeToName($this->type) ?? $this->type, $this->dnsServer);
             return false;
+        }
+
+        if ($this->type === Record::TYPE_CAA) {
+            // Only issue records restrict issuance for a host name (RFC 8659); an issuewild neither allows nor blocks it.
+            // Records without one still stop the climb to the parent: any CA may issue.
+            $issue = \array_filter($query, fn (Record $record): bool => \strtolower(\explode(' ', $record->rdata, 3)[1] ?? '') === 'issue');
+            if ($query !== [] && $issue === []) {
+                return true;
+            }
+            $query = $issue;
         }
 
         $this->count = \count($query);
@@ -150,11 +153,23 @@ class DNS extends Validator
                 $rdata = explode(';', $rdata, 2)[0]; // certainly.com
 
                 $this->records[] = $rdata;
-                if ($rdata === $this->target) {
+                // Issuer domains and tags are case-insensitive
+                if (\strtolower($rdata) === \strtolower($this->target) || \strtolower($record->rdata) === \strtolower($this->target)) {
                     return true;
                 }
-            } else {
-                $this->records[] = $record->rdata;
+
+                continue;
+            }
+
+            $this->records[] = $record->rdata;
+
+            // Host names are case-insensitive and may be fully qualified; TXT stays exact
+            if (\in_array($this->type, [Record::TYPE_CNAME, Record::TYPE_NS, Record::TYPE_MX], true)) {
+                if (\strtolower(\rtrim($record->rdata, '.')) === \strtolower(\rtrim($this->target, '.'))) {
+                    return true;
+                }
+
+                continue;
             }
 
             if ($record->rdata === $this->target) {
@@ -163,6 +178,22 @@ class DNS extends Validator
         }
 
         return false;
+    }
+
+    /**
+     * Query the resolver for records of the validated type
+     *
+     * @return array<Record>
+     * @throws \Exception
+     */
+    protected function query(string $value): array
+    {
+        $dns = new Client($this->dnsServer, timeout: self::TIMEOUT);
+        $response = $dns->query(Message::query(new Question($value, $this->type), recursionDesired: true));
+
+        // Some DNS servers return all records, not only type that's asked for
+        // Likely occurs when no records of specific type are found
+        return \array_filter($response->answers, fn (Record $record): bool => $record->type === $this->type);
     }
 
     /**

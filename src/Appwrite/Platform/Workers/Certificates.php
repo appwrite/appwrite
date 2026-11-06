@@ -166,12 +166,7 @@ class Certificates extends Action
         ?string $validationDomain = null
     ): void {
         // Get rule
-        $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-            : $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain->get()]),
-                Query::limit(1),
-            ]);
+        $rule = $this->findRule($dbForPlatform, $domain->get());
 
         // Skip if rule is not desired state (created but not verified yet).
         if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
@@ -290,13 +285,7 @@ class Certificates extends Action
          */
 
         // Get rule document for domain
-        // TODO: (@Meldiron) Remove after 1.7.x migration
-        $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-            : $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain->get()]),
-                Query::limit(1),
-            ]);
+        $rule = $this->findRule($dbForPlatform, $domain->get());
 
         // Rule not found (or) not in the expected state
         if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
@@ -353,14 +342,16 @@ class Certificates extends Action
 
                 $status = $certificates->getCertificateStatus($domain->get(), $domainType);
                 $certificate->setAttribute('status', $status);
+                $expireDate = $status === Status::EXPIRING ? $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate) : null;
+                $expired = $expireDate !== null && \strtotime($expireDate) <= \time();
 
-                // The provider owns the renewal and has not finished it; issuing again would not help
-                if ($status === Status::EXPIRING) {
+                // The provider owns the renewal and has not finished it; issuing again would not help.
+                // A first issuance inheriting an expired certificate has nothing serving, so it waits below like a new order.
+                if ($status === Status::EXPIRING && ($renewing || !$expired)) {
                     // It still serves, so a rule a renewal left generating is verified again, and renewal checks report it
                     $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                    $expireDate = $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate);
                     $date = \date('H:i:s');
-                    if ($expireDate !== null && \strtotime($expireDate) <= \time()) {
+                    if ($expired) {
                         $expiredOn = (new \DateTime($expireDate))->format('Y-m-d');
                         $logs .= "\033[90m[{$date}] \033[33mSSL certificate expired on {$expiredOn}, and the certificate provider has not renewed it yet. We'll check again tomorrow. \033[0m\n";
                         Console::warning('Certificate for ' . $domain->get() . ' expired on ' . $expiredOn . ' and its provider has not renewed it');
@@ -472,6 +463,32 @@ class Certificates extends Action
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
+    }
+
+    /**
+     * The rule a certificate job acts on. A hostname can also hold a mail rule,
+     * which has no certificate, so it is skipped. Its protocol is read from the
+     * row, not queried, because regions without that attribute reject the query.
+     */
+    protected function findRule(Database $dbForPlatform, string $domain): Document
+    {
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            return $dbForPlatform->getDocument('rules', md5($domain));
+        }
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::equal('domain', [$domain]),
+            Query::limit(10), // One row per protocol; the cap only bounds a malformed table
+        ]);
+
+        foreach ($rules as $rule) {
+            if ($rule->getAttribute('protocol') !== 'smtp') {
+                return $rule;
+            }
+        }
+
+        return new Document();
     }
 
     /**

@@ -27,6 +27,17 @@ class Maintenance extends Action
      */
     private const CERTIFICATE_RENEWAL_DEADLINE = 60 * 60 * 24 * 7;
 
+    /**
+     * How long after expiry a certificate is still checked, so a late provider
+     * renewal or a DNS fix still recovers it.
+     */
+    private const CERTIFICATE_EXPIRED_WINDOW = 60 * 60 * 24 * 30;
+
+    /**
+     * How long a renewal the operator opted out of waits before it is checked again.
+     */
+    private const CERTIFICATE_OPT_OUT_INTERVAL = 60 * 60 * 24;
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -141,16 +152,18 @@ class Maintenance extends Action
             Query::lessThan('attempts', 5), // Maximum 5 attempts
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+            Query::orderAsc('renewDate'),
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
         // Out of attempts or without a renew date, a renewal is never scheduled
-        // again and its certificate would expire silently. One about to expire is
-        // checked regardless, so the worker renews it or reports why it cannot.
+        // again and its certificate would expire silently. One about to expire, or
+        // expired within the window, is checked regardless, so the worker renews
+        // it or reports why it cannot.
         $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
         try {
             $expiring = $dbForPlatform->find('certificates', [
-                Query::greaterThan('expireDate', $time),
+                Query::greaterThan('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), -self::CERTIFICATE_EXPIRED_WINDOW)),
                 Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
                 Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
                 Query::orderAsc('expireDate'),
@@ -175,26 +188,31 @@ class Maintenance extends Action
 
         Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
 
-        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
 
         foreach ($documents as $certificate) {
-            $domain = $certificate->getAttribute('domain');
-            $rule = $isMd5 ?
-                $dbForPlatform->getDocument('rules', md5($domain)) :
-                    $dbForPlatform->findOne('rules', [
-                        Query::equal('domain', [$domain]),
-                        Query::limit(1)
-                    ]);
+            $rule = $this->findRule($dbForPlatform, $certificate->getAttribute('domain'));
 
-            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+            // Its own region renews it
+            if (!$rule->isEmpty() && $rule->getAttribute('region') !== $appRegion) {
                 continue;
             }
 
-            // Respect the operator opt-out. If Appwrite would not auto-issue this
-            // subdomain today, it must not auto-renew it either. Keep the owner
-            // gate so custom-domain renewals are never skipped.
+            // Without a rule, nothing renews or reuses it (a new rule starts its own), so it is
+            // deleted, as deleting its rule would have done. Kept, it would fill the limits on every run.
+            if ($rule->isEmpty()) {
+                $dbForPlatform->deleteDocument('certificates', $certificate->getId());
+                continue;
+            }
+
+            // Respect the operator opt-out: if Appwrite would not auto-issue this
+            // subdomain today, it must not auto-renew it either. Keep the owner gate
+            // so custom-domain renewals are never skipped. Checked again tomorrow
+            // rather than every run, so renewal resumes once auto-issue is back on.
             if ($rule->getAttribute('owner') === 'Appwrite' && !$certificateIssuer->isAutoIssueEnabled($rule)) {
+                $dbForPlatform->updateDocument('certificates', $certificate->getId(), new Document([
+                    'renewDate' => DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_OPT_OUT_INTERVAL),
+                ]));
                 continue;
             }
 
@@ -210,6 +228,31 @@ class Maintenance extends Action
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
             ));
         }
+    }
+
+    /**
+     * The rule a certificate renews. A hostname can also hold a mail rule,
+     * which has no certificate, so it is skipped. Its protocol is read from the
+     * row, not queried, because regions without that attribute reject the query.
+     */
+    protected function findRule(Database $dbForPlatform, string $domain): Document
+    {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            return $dbForPlatform->getDocument('rules', md5($domain));
+        }
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::equal('domain', [$domain]),
+            Query::limit(10), // One row per protocol; the cap only bounds a malformed table
+        ]);
+
+        foreach ($rules as $rule) {
+            if ($rule->getAttribute('protocol') !== 'smtp') {
+                return $rule;
+            }
+        }
+
+        return new Document();
     }
 
     private function notifyDeleteCache(int $interval, Document $console, DeletePublisher $publisherForDeletes): void
