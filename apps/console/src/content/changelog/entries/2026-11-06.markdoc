@@ -12,7 +12,7 @@ With Appwrite Push:
 
 - You create the provider in the Console without any credentials.
 - Your app subscribes with the Appwrite SDK after the user signs in.
-- A message you send to a user reaches every device they're signed in on.
+- A message you send to a user reaches every device they're signed in on. If the user also has FCM or APNs targets, register an [Appwrite push target](/docs/products/messaging/appwrite-push#push-target) on one of their devices.
 - Devices that were offline get the messages they missed when they reconnect, for up to 7 days.
 - On Android, messages arrive even while the app is closed. On iOS, Appwrite Push works with APNs to show messages while the app is suspended.
 
