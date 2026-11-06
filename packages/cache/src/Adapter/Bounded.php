@@ -62,7 +62,7 @@ class Bounded implements Adapter
         $this->store[$key] = ['time' => \time(), 'data' => $data];
 
         while ($this->size > $this->capacity) {
-            $this->purge((string) \array_key_first($this->store));
+            $this->purge(\array_key_first($this->store));
         }
 
         return $data;

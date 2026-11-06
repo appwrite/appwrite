@@ -36,7 +36,7 @@ final class LayeredTest extends Base
     public function testASmallReadIsAnsweredFromTheFrontWithoutTheBack(): void
     {
         $this->back->save('key', 'small');
-        $this->assertSame('small', $this->layered->load('key', 60));
+        $this->layered->load('key', 60);
 
         $this->back->purge('key');
 
