@@ -501,14 +501,19 @@ final class StorageCustomServerTest extends Scope
             $params = ['width' => $width, 'output' => 'png'];
             $first = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
             $this->assertSame('miss', $first['headers']['x-appwrite-cache']);
-            $this->assertEventually(fn () => $this->assertSame('hit', $this->client->call(Client::METHOD_GET, $path, $headers, $params)['headers']['x-appwrite-cache']));
+            // A render stamps the time into the image, and a read that beats the write renders again, so only a hit fixes the bytes.
+            $hit = [];
+            $this->assertEventually(function () use (&$hit, $path, $headers, $params): void {
+                $hit = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
+                $this->assertSame('hit', $hit['headers']['x-appwrite-cache']);
+            });
 
             $added = \array_diff($this->getCacheKeys($device), $before);
             $addedFilesystem = \array_diff($this->getCacheKeys($filesystem), $beforeFilesystem);
             $this->assertCount(1, [...$added, ...$addedFilesystem]);
             $entries[$width] = [
                 'key' => [...$added, ...$addedFilesystem][0],
-                'body' => \md5($first['body']),
+                'body' => \md5($hit['body']),
                 'onDevice' => $added !== [],
             ];
         }
@@ -529,7 +534,7 @@ final class StorageCustomServerTest extends Scope
 
     private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
     {
-        $filesystem->write($filesystem->getPath($key), $device->read($device->getPath($key)));
+        $filesystem->write($filesystem->getPath($key), $device->read($device->getPath($key)), 'application/octet-stream');
     }
 
     public function testCreateBucket(): void
