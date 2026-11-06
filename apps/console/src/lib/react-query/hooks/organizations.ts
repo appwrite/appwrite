@@ -15,7 +15,6 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Query, ID, type Models } from '@appwrite.io/console'
-import type { Models as BillingModels } from '@appwrite.io/console-billing'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -547,12 +546,10 @@ export function organizationInvoiceQueryOptions(
     queryKey: ['invoices', 'organization', organizationId, 'detail', invoiceId],
     queryFn: async () => {
       try {
-        const invoice = await sdk.forConsole.organizations.getInvoice({
+        return await sdk.forConsole.organizations.getInvoice({
           organizationId: organizationId!,
           invoiceId: invoiceId!,
         })
-        // Cloud #7412 adds this field; use its generated types until the main SDK carries it.
-        return invoice as Models.Invoice & Pick<BillingModels.Invoice, 'items'>
       } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 404) {
           return null

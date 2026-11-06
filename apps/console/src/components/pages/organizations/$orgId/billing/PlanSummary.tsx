@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useSearch, useNavigate } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import type { Models as BillingModels } from '@appwrite.io/console-billing'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -553,7 +552,7 @@ function BillingProjectResourceCategorySection({
   items,
   currency,
 }: {
-  items: readonly BillingModels.InvoiceItem[]
+  items: readonly Models.InvoiceItem[]
   currency: string
   category: BillingProjectResourceCategoryGroup
   plan: Models.BillingPlan | null | undefined
@@ -623,7 +622,7 @@ function BillingDedicatedDbSpecGroup({
   items,
   currency,
 }: {
-  items: readonly BillingModels.InvoiceItem[]
+  items: readonly Models.InvoiceItem[]
   currency: string
   group: DedicatedDbBillingSpecGroup
 }) {
@@ -691,7 +690,7 @@ function BillingDedicatedDbMetricRow({
   currency,
   recorded,
 }: {
-  recorded: readonly BillingModels.InvoiceItem[]
+  recorded: readonly Models.InvoiceItem[]
   currency: string
   item: DedicatedDbBillingSpecGroup['items'][number]
 }) {
@@ -903,7 +902,7 @@ function formatResourceLimit(
 
 function usageCategories(
   resources: AggregationResourceLike[] | null | undefined,
-  items: readonly BillingModels.InvoiceItem[],
+  items: readonly Models.InvoiceItem[],
   plan: Models.BillingPlan | null | undefined,
   specifications: ReturnType<typeof buildDedicatedDbBillingSpecLookup>,
 ): BillingProjectResourceCategoryGroup[] {
@@ -960,7 +959,7 @@ function usageCategories(
   return groupBillingProjectResources(rows)
 }
 
-function LinePeriod({ item }: { item: BillingModels.InvoiceItem }) {
+function LinePeriod({ item }: { item: Models.InvoiceItem }) {
   if (!item.from && !item.to) return null
   return (
     <p className="text-[11px] text-muted-foreground py-1">
@@ -975,7 +974,7 @@ function RecordedLine({
   item,
   currency,
 }: {
-  item: BillingModels.InvoiceItem
+  item: Models.InvoiceItem
   currency: string
 }) {
   return (
@@ -1015,7 +1014,7 @@ function RecordedUsageRow({
   onUpgrade,
 }: {
   resource: BillingProjectResourceItem
-  items: readonly BillingModels.InvoiceItem[]
+  items: readonly Models.InvoiceItem[]
   currency: string
   onUpgrade?: () => void
 }) {
