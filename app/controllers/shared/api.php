@@ -28,8 +28,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -680,9 +678,10 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
+    ->inject('responseCache')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, callable $responseCache, Document $impersonatorUser, User $targetUser) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -753,11 +752,19 @@ Http::init()
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-            );
+            [$cache, $fallback] = $responseCache($key);
+            Span::add('storage.cache.device', $fallback !== null);
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
+
+            // A key that just moved to the device: copy it across instead of regenerating it.
+            if (empty($data) && $fallback !== null) {
+                $data = $fallback->load($key, $timestamp);
+                if (! empty($data)) {
+                    $cache->save($key, $data);
+                    Span::add('storage.cache.copied', true);
+                }
+            }
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
@@ -835,8 +842,11 @@ Http::init()
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $data);
+                    // Refresh the file's mtime so TTL-based expiry in cache->load() stays valid.
+                    // A device entry isn't rewritten: if it expires, it misses and refills once.
+                    if ($fallback === null) {
+                        $cache->save($key, $data);
+                    }
                 }
 
                 $response
@@ -1117,7 +1127,8 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
+    ->inject('responseCache')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, callable $responseCache) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1128,10 +1139,8 @@ Http::shutdown()
             return;
         }
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-        );
         $key = $request->cacheIdentifier();
+        [$cache, $fallback] = $responseCache($key);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1173,7 +1182,8 @@ Http::shutdown()
         }
 
         // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
-        // (keeps the file mtime current for TTL checks) and re-persist on content change.
+        // (on the filesystem, also the file mtime for TTL checks) and re-persist on content
+        // change, or when the load missed, so an emptied store refills instead of waiting.
         $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
         if ($stale) {
             $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
@@ -1181,7 +1191,11 @@ Http::shutdown()
             ])));
         }
 
-        if ($stale || $signature !== $cacheLog->getAttribute('signature')) {
+        // A read entry is rewritten on the device on one day in 15, spread by key, so a bucket's
+        // expiry counted from the last write doesn't take out everything copied on the same day.
+        $rewrite = $stale && ($fallback === null || \crc32($key) % 15 === \intdiv(\time(), 86400) % 15);
+        $missed = \in_array('miss', $response->getHeaders()['x-appwrite-cache'] ?? [], true);
+        if ($rewrite || $missed || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
         }
     });
