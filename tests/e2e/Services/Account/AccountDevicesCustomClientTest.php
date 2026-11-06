@@ -349,6 +349,91 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
+    public function testDeviceDropsSessionsDeletedElsewhere(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $sessionKey = 'a_session_' . $projectId;
+
+        $emailOne = \uniqid() . 'elsewhere1@localhost.test';
+        $emailTwo = \uniqid() . 'elsewhere2@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($emailOne, $password);
+        $userTwoId = $this->createUserWithPassword($emailTwo, $password);
+
+        $device = $this->createDevice();
+
+        $first = $this->signIn($device['cookie'], $emailOne, $password);
+        $this->assertEquals(201, $first['headers']['status-code']);
+        $firstSessionId = $first['body']['$id'];
+
+        $second = $this->signIn($device['cookie'], $emailTwo, $password);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondSessionId = $second['body']['$id'];
+
+        // Read the device once so it is cached holding both sessions
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['sessions']);
+
+        /**
+         * Test for SUCCESS - user one signs out of the device's (inactive) session from another browser
+         */
+        $elsewhere = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $emailOne,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $elsewhere['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $firstSessionId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $elsewhere['cookies'][$sessionKey],
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - the device no longer lists the deleted session
+         */
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($secondSessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertEquals($userTwoId, $response['body']['sessions'][0]['userId']);
+
+        /**
+         * Test for FAILURE - switching to the deleted session is a not-found, not a server error
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_device_' . $projectId . '=' . $device['cookie'],
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $firstSessionId,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS - a session deleted through the Users API also leaves the device
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userTwoId . '/sessions/' . $secondSessionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals([], $response['body']['sessions']);
+    }
+
     public function testDeviceLivesAsLongAsItsNewestSession(): void
     {
         $projectId = $this->getProject()['$id'];

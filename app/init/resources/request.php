@@ -782,6 +782,17 @@ return function (Container $context): void {
             return null;
         }
 
+        // The sessions a device holds come from a subquery cached with the device, but a session can
+        // be deleted by paths that never touch the device: another browser, the Users API, account
+        // deletion, the expired-session cleanup. Read the verified device again past the cache, so it
+        // never lists a session that is gone. Only the endpoints that inject authDevice pay for it.
+        $dbForProject->purgeCachedDocument('devices', $deviceId);
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
+        if ($device->isEmpty()) {
+            return null;
+        }
+
         // The cookie value as received, so an endpoint that extends the device can re-issue it. Never persisted.
         $device->setAttribute(AuthDevice::ATTRIBUTE_COOKIE, $store->encode());
 
