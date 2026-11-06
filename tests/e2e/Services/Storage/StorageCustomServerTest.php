@@ -252,7 +252,7 @@ final class StorageCustomServerTest extends Scope
         foreach ($entries as $width => $entry) {
             $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
             $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
-            $this->assertSame($entry['body'], \md5($preview['body']));
+            $this->assertSame($entry['image'], $this->getImageSignature($preview['body']));
         }
         $this->assertSame($onDevice, $this->getCacheKeys($device));
         $this->assertSame($onFilesystem, $this->getCacheKeys($filesystem));
@@ -277,7 +277,7 @@ final class StorageCustomServerTest extends Scope
         foreach ($entries as $width => $entry) {
             $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
             $this->assertSame('hit', $preview['headers']['x-appwrite-cache'], 'served from the filesystem, not regenerated');
-            $this->assertSame($entry['body'], \md5($preview['body']));
+            $this->assertSame($entry['image'], $this->getImageSignature($preview['body']));
         }
 
         // Copied across with the same bytes, and the original kept so lowering the percentage finds it warm.
@@ -475,7 +475,7 @@ final class StorageCustomServerTest extends Scope
      * Caches a run of preview sizes, each its own key, noting where each one landed.
      *
      * @param array<string, string> $headers
-     * @return array{path: string, entries: array<int, array{key: string, body: string, onDevice: bool}>}
+     * @return array{path: string, entries: array<int, array{key: string, image: string, onDevice: bool}>}
      */
     private function warmPreviewCache(array $headers, Device $filesystem, Device $device): array
     {
@@ -501,19 +501,14 @@ final class StorageCustomServerTest extends Scope
             $params = ['width' => $width, 'output' => 'png'];
             $first = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
             $this->assertSame('miss', $first['headers']['x-appwrite-cache']);
-            // A render stamps the time into the image, and a read that beats the write renders again, so only a hit fixes the bytes.
-            $hit = [];
-            $this->assertEventually(function () use (&$hit, $path, $headers, $params): void {
-                $hit = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
-                $this->assertSame('hit', $hit['headers']['x-appwrite-cache']);
-            });
+            $this->assertEventually(fn () => $this->assertSame('hit', $this->client->call(Client::METHOD_GET, $path, $headers, $params)['headers']['x-appwrite-cache']));
 
             $added = \array_diff($this->getCacheKeys($device), $before);
             $addedFilesystem = \array_diff($this->getCacheKeys($filesystem), $beforeFilesystem);
             $this->assertCount(1, [...$added, ...$addedFilesystem]);
             $entries[$width] = [
                 'key' => [...$added, ...$addedFilesystem][0],
-                'body' => \md5($hit['body']),
+                'image' => $this->getImageSignature($first['body']),
                 'onDevice' => $added !== [],
             ];
         }
@@ -530,6 +525,17 @@ final class StorageCustomServerTest extends Scope
         \sort($keys);
 
         return $keys;
+    }
+
+    /**
+     * Compares pixels, since a render stamps the time into the file and a read that beats the cache write renders again.
+     */
+    private function getImageSignature(string $body): string
+    {
+        $image = new \Imagick();
+        $image->readImageBlob($body);
+
+        return $image->getImageSignature();
     }
 
     private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
