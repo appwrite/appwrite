@@ -1,0 +1,102 @@
+---
+layout: integration
+title: Query Appwrite PostgreSQL with Drizzle
+description: Serve a todo REST API from an Appwrite native PostgreSQL database with Drizzle ORM
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/query-postgres-drizzle/cover.avif
+category: databases
+product:
+    vendor: Drizzle
+    description: "Drizzle ORM is a lightweight TypeScript ORM with a SQL-like query builder and schema migrations through Drizzle Kit."
+platform:
+    - 'Cloud'
+---
+
+[Drizzle ORM](https://orm.drizzle.team/) is a TypeScript ORM that keeps you close to SQL. You define tables in TypeScript, query them with a type-safe builder, and manage schema changes with Drizzle Kit migrations.
+
+# How does the integration work?
+
+The **Postgres with Drizzle** function template serves a todo REST API from an Appwrite [native PostgreSQL database](/docs/products/databases/postgresql). It's written in TypeScript, defines a `todos` table with Drizzle, and connects with the `postgres.js` driver with prepared statements turned off, so it works through the connection pooler.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Lists all todos |
+| `POST /` | Creates a todo from a JSON body with a `title` of 1 to 255 characters |
+| `GET /:id` | Returns one todo |
+| `PATCH /:id` | Updates the `title` or `completed` value of a todo |
+| `DELETE /:id` | Deletes a todo |
+
+Use it as a template for any API that keeps its data in PostgreSQL and its schema in Drizzle migrations.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL databases run on Appwrite Cloud and are available on paid plans. See [billing and plan requirements](/docs/products/databases/postgresql#plans).
+{% /info %}
+
+# Prerequisites
+
+- An [Appwrite Cloud](/sign-up) project on a paid plan.
+- Node.js and Git on your machine, to run the migrations.
+
+# How to implement
+
+To implement the Drizzle integration, there are several steps you must complete:
+
+## Step 1: Create a PostgreSQL database
+
+In your Appwrite project, go to **Databases** and click **Create database**. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group, name the database, pick a specification, and click **Create database**. Wait until it's ready.
+
+Open the database and click **Credentials** to copy its connection string from the **DSN** tab. The string uses the direct port, `5432`. The [connection pooler](/docs/products/databases/postgresql/connection-pooling) listens on port `6432` of the same host, so the pooled string is the same with the port changed.
+
+## Step 2: Create the Appwrite Function
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Postgres with Drizzle**, and click **Create from template**. Under **Template variables**, set `DATABASE_URL` to the pooled connection string, on port `6432`.
+
+Choose **Connect your repository** so the template's code, including its Drizzle migrations, lives in a repository you can clone. Then click **Create and deploy**.
+
+## Step 3: Apply the migrations
+
+The function doesn't create tables. Clone the new repository, then apply the migrations in its `drizzle/` folder from your machine. Run them over the direct connection on port `5432`, since schema changes expect a session-level connection:
+
+```bash
+npm install
+DATABASE_URL="postgresql://admin:<PASSWORD>@db-<HASH>.<REGION>.appwrite.center:5432/<DATABASE>?sslmode=require" npm run db:migrate
+```
+
+When you change `src/schema.ts` later, run `npm run db:generate` to create a new migration, apply it with `npm run db:migrate`, and push the code to deploy the function again.
+
+## Step 4: Test the API
+
+Copy the function's domain from the **Domains** tab and create a todo:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN> \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Write the docs"}'
+```
+
+The function responds with `201` and the new todo. List, update, and delete todos with the other routes:
+
+```bash
+curl https://<FUNCTION_DOMAIN>
+
+curl -X PATCH https://<FUNCTION_DOMAIN>/1 \
+  -H "Content-Type: application/json" \
+  -d '{"completed": true}'
+
+curl -X DELETE https://<FUNCTION_DOMAIN>/1
+```
+
+You can also check the rows in the database's **SQL editor** in the Console.
+
+# Read more about Drizzle and Appwrite Databases
+
+If you would like to learn more about Drizzle and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Drizzle with Appwrite PostgreSQL](/docs/products/databases/postgresql/integrations/drizzle)
+- [Connect to Appwrite PostgreSQL](/docs/products/databases/postgresql/connections)
+- [Connection pooling](/docs/products/databases/postgresql/connection-pooling)
+- [Drizzle ORM documentation](https://orm.drizzle.team/)
+- [Postgres with Drizzle template source](https://github.com/appwrite/templates/tree/1.4.0/node-typescript/postgres-with-drizzle)

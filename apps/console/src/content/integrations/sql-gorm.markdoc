@@ -1,0 +1,124 @@
+---
+layout: integration
+title: GORM with managed PostgreSQL and MySQL
+description: Use the GORM ORM for Go with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-gorm/cover.avif
+category: databases
+product:
+    vendor: GORM
+    description: 'GORM is an open-source ORM for Go with associations, hooks, auto migrations, and drivers for PostgreSQL and MySQL.'
+platform:
+    - 'Cloud'
+---
+
+[GORM](https://gorm.io/) is an ORM library for Go. You declare models as structs, create tables with `AutoMigrate`, and query through a chainable API, while GORM manages a `database/sql` connection pool underneath.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. GORM connects to them through its regular drivers, `gorm.io/driver/postgres` and `gorm.io/driver/mysql`, so models, migrations, and queries work with no Appwrite-specific configuration.
+
+A long-running Go server connects to the engine directly and caps its own pool. Many instances or serverless runtimes can share the database's connection pooler instead.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect GORM to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The MySQL username is `admin.<hash>` and the database name is always `default`.
+
+## Step 2: Build the DSN and open a connection
+
+Read the credentials from the environment and open GORM against the direct engine port:
+
+{% tabs %}
+{% tabsitem #open-postgresql title="PostgreSQL" %}
+```go
+dsn := fmt.Sprintf(
+    "host=%s user=admin password=%s dbname=%s port=5432 sslmode=require",
+    os.Getenv("DB_HOST"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"),
+)
+
+db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+```
+
+For full certificate verification, use `sslmode=verify-full`. Go validates against the system certificate pool, and the certificate is signed by a public CA, so no CA file is needed.
+{% /tabsitem %}
+
+{% tabsitem #open-mysql title="MySQL" %}
+```go
+cfg := mysqlcfg.Config{
+    User:      os.Getenv("DB_USER"), // admin.<hash>
+    Passwd:    os.Getenv("DB_PASSWORD"),
+    Net:       "tcp",
+    Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), "3306"),
+    DBName:    "default",
+    ParseTime: true,
+    TLSConfig: "true",
+}
+
+db, err := gorm.Open(gormmysql.Open(cfg.FormatDSN()), &gorm.Config{})
+```
+
+`mysqlcfg` is `github.com/go-sql-driver/mysql`. Formatting the DSN with its `Config` escapes passwords correctly, and `ParseTime` scans date and time columns into `time.Time`.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Migrate the schema
+
+Create tables with `AutoMigrate` during development:
+
+```go
+type User struct {
+    ID        uint   `gorm:"primaryKey"`
+    Email     string `gorm:"size:255;uniqueIndex"`
+    CreatedAt time.Time
+}
+
+if err := db.AutoMigrate(&User{}); err != nil {
+    panic(err)
+}
+```
+
+`AutoMigrate` adds missing tables, columns, and indexes, but never drops columns or changes types. For production, run versioned migrations with [golang-migrate](https://github.com/golang-migrate/migrate). Either way, run schema changes on the direct port (`5432` or `3306`) as the primary user.
+
+## Step 4: Size the connection pool
+
+Cap the underlying `database/sql` pool so the sum across all instances stays under your specification's connection limit:
+
+```go
+sqlDB, err := db.DB()
+if err != nil {
+    panic(err)
+}
+
+sqlDB.SetMaxOpenConns(25)
+sqlDB.SetMaxIdleConns(25)
+sqlDB.SetConnMaxLifetime(time.Hour)
+```
+
+## Step 5: Use the pooler for high fan-out traffic
+
+For many instances or serverless runtimes, connect through the pooler and keep each pool small. On PostgreSQL, use port `6432` and open the driver with `postgres.New(postgres.Config{DSN: dsn, PreferSimpleProtocol: true})` so it stops issuing prepared statements, which transaction mode cannot keep. On MySQL, use port `6033` and set `InterpolateParams: true` so placeholder values are sent as one text query.
+
+To test migrations in CI, run them against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, then delete the branch when the job finishes.
+
+# Read more about GORM and Appwrite Databases
+
+If you would like to learn more about GORM and Appwrite Databases, we have some resources that you should visit:
+
+- [Use GORM with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/gorm)
+- [Use GORM with a native MySQL database](/docs/products/databases/mysql/integrations/gorm)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [GORM documentation](https://gorm.io/docs/)

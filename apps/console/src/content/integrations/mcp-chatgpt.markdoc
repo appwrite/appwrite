@@ -1,0 +1,92 @@
+---
+layout: integration
+title: MCP with ChatGPT
+description: Connect ChatGPT to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-chatgpt/cover.avif
+category: mcp
+product:
+    vendor: OpenAI
+    description: "ChatGPT is OpenAI's AI assistant, which can call external tools through connectors and plugins."
+platform:
+    - 'Cloud'
+---
+
+[ChatGPT](https://chatgpt.com) is OpenAI's AI assistant. Connectors and plugins let it call external services from a conversation, so it can look at real data instead of working from what you paste into the chat.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects ChatGPT to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that signs you in with OAuth, so there is nothing to run locally and no API key to create. One server covers both your project and the Appwrite documentation, so you don't need separate API and docs connectors.
+
+Once connected, ChatGPT can explore your projects, inspect and manage resources such as databases, storage, users, functions, and sites, and search the Appwrite documentation. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+You can connect in two ways: install the official Appwrite plugin for ChatGPT, or add the server as a custom connector.
+
+{% info title="Appwrite Cloud projects" %}
+The hosted MCP server signs in with your Appwrite Cloud account, so ChatGPT can reach your Cloud projects without any local setup.
+{% /info %}
+
+# How to implement
+
+To connect ChatGPT to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: ChatGPT asks you to sign in to Appwrite when you connect.
+
+## Step 2: Connect Appwrite to ChatGPT
+
+{% tabs %}
+{% tabsitem #plugin title="Appwrite plugin" %}
+In the ChatGPT desktop app:
+
+1. Open **Plugins** in the sidebar.
+2. Search for `Appwrite` and open the **Appwrite** listing.
+3. Click **Install plugin**.
+4. Follow the connection prompt to sign in to Appwrite and authorize access.
+
+The plugin bundles the hosted connection, so you don't add a separate MCP server.
+{% /tabsitem %}
+{% tabsitem #connector title="Custom connector" %}
+1. Open ChatGPT settings and go to **Connectors**, sometimes labeled **Apps**.
+2. Create a custom connector.
+3. Set the MCP server URL to `https://mcp.appwrite.io`.
+4. Use `appwrite` as the server name if the form asks for one.
+5. Save, then connect. ChatGPT opens a browser window so you can sign in to Appwrite and authorize access.
+
+If ChatGPT cannot complete the redirect, check that you are signed in to Appwrite Cloud and that pop-ups are allowed.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Install Appwrite skills
+
+Skills give the assistant current Appwrite CLI and SDK patterns when it writes code. In your project directory, run:
+
+```bash
+npx skills add appwrite/skills
+```
+
+Skills and MCP work together: skills teach the assistant how to write Appwrite code, and the MCP server lets it act on a live project.
+
+## Step 4: Test the integration
+
+Start a new conversation and try prompts like:
+
+- `List my Appwrite projects`
+- `Show me the tables in my database`
+- `Create a new user in my Appwrite project`
+- `How do I implement file uploads with Appwrite Storage?`
+
+If ChatGPT cannot see the Appwrite tools, reconnect and confirm that the URL is exactly `https://mcp.appwrite.io` with no extra path.
+
+# Read more about ChatGPT and the Appwrite MCP server
+
+If you would like to learn more about ChatGPT and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect Appwrite to ChatGPT](/docs/tooling/ai/agents/chatgpt)
+- [Introducing the official Appwrite plugin for ChatGPT](/blog/post/announcing-appwrite-chatgpt-plugin)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite agent skills](/docs/tooling/ai/skills)

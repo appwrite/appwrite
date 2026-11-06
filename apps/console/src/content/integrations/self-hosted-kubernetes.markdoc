@@ -1,0 +1,98 @@
+---
+layout: integration
+title: Self-host Appwrite on Kubernetes
+description: Install and upgrade self-hosted Appwrite on your Kubernetes cluster with the official Helm chart
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/self-hosted-kubernetes/cover.avif
+category: self-hosting
+product:
+    vendor: Kubernetes
+    description: "Kubernetes is an open-source system for deploying, scaling, and managing containerized applications."
+platform:
+    - 'Self-hosted'
+---
+
+[Kubernetes](https://kubernetes.io) is an open-source system for deploying, scaling, and managing containerized applications. It runs on every major cloud as a managed service, such as Amazon EKS, Google Kubernetes Engine, and Azure Kubernetes Service, and on your own hardware.
+
+# How does the integration work?
+
+The official [Appwrite Helm chart](https://github.com/appwrite/helm-chart) installs self-hosted Appwrite on your Kubernetes cluster and upgrades it with Helm. It deploys the API, Console, realtime, workers, and schedulers, plus the routes your ingress controller or Gateway needs to reach them. The chart is published to `oci://ghcr.io/appwrite/charts/appwrite`, and each chart version deploys one Appwrite version.
+
+A plain install includes PostgreSQL, Redis, ClickHouse, and S3-compatible object storage, so you can try Appwrite on an empty cluster. For production, you replace each of them with a managed service, one at a time. Choose the chart over the [Docker installation](/docs/advanced/self-hosting/installation) when you already operate Kubernetes and want replicas across nodes, autoscaling, rolling upgrades, or GitOps with Argo CD or Flux.
+
+# Prerequisites
+
+- Kubernetes 1.29 or later, with a default StorageClass
+- [Helm](https://helm.sh/docs/intro/install/) 4, or Helm 3.18 or later, and `kubectl` connected to the cluster
+- About 2 CPUs and 4 GiB of memory free for Appwrite, plus room for builds and executions
+- An ingress controller, or a Gateway API implementation
+- For Functions and Sites, a cluster that admits a privileged pod in the executor's namespace
+
+# How to implement
+
+To install Appwrite on a Kubernetes cluster, there are several steps you must complete:
+
+## Step 1: Write a values file
+
+Point a DNS record for your domain at your ingress controller's load balancer, then describe the install in a values file. This example uses [cert-manager](https://cert-manager.io) with a Let's Encrypt `ClusterIssuer` named `letsencrypt`:
+
+```yaml
+# values.yaml
+appwrite:
+  domain: appwrite.example.com
+  certificatesEmail: ops@example.com
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  tls:
+    enabled: true
+```
+
+Decide the release name, `appwrite.domain`, database engine, and `storage.device` before the first install, because they are hard to change once Appwrite holds data.
+
+## Step 2: Install the chart
+
+```bash
+helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
+  --namespace appwrite --create-namespace \
+  -f values.yaml --wait --timeout 15m
+```
+
+The chart checks your values before it installs anything, and names any setting that is missing or inconsistent.
+
+## Step 3: Check the install and create the first account
+
+```bash
+kubectl -n appwrite get pods
+helm test appwrite -n appwrite
+kubectl -n appwrite get certificate
+```
+
+Every pod should be `Running`, the tests should pass, and the certificate should become `Ready`. Then open `https://appwrite.example.com` and sign up. The first account becomes the Console administrator.
+
+## Step 4: Back up the encryption key
+
+The chart generates `_APP_OPENSSL_KEY_V1`, which encrypts data at rest. Without it, a database backup can't be read, so store it outside the cluster:
+
+```bash
+kubectl -n appwrite get secret appwrite -o jsonpath='{.data._APP_OPENSSL_KEY_V1}' | base64 -d
+```
+
+## Step 5: Prepare for production
+
+Before real users depend on the install, move PostgreSQL, Redis, and ClickHouse to managed services or operators, and files to an S3 store with redundancy. Give the Functions and Sites executor dedicated nodes, or set `compute.enabled: false` if you don't use them. The chart repository has [example values files](https://github.com/appwrite/helm-chart/tree/main/examples) for managed services on AWS, Google Cloud, and Azure, and a [production guide](https://github.com/appwrite/helm-chart/blob/main/docs/production.md).
+
+# Read more about Kubernetes and Appwrite
+
+If you would like to learn more about running Appwrite on Kubernetes, we have some resources that you should visit:
+
+- [Self-host Appwrite on Kubernetes](/docs/advanced/self-hosting/platforms/kubernetes)
+- [Announcing the official Appwrite Helm chart for Kubernetes](/blog/post/announcing-appwrite-helm-chart)
+- [Appwrite Helm chart on GitHub](https://github.com/appwrite/helm-chart)
+- [Helm documentation](https://helm.sh/docs/)

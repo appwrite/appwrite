@@ -1,0 +1,94 @@
+---
+layout: integration
+title: Appwrite plugin for Codex
+description: Install the official Appwrite plugin in Codex for the hosted MCP server and thirteen Appwrite agent skills
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-codex/cover.avif
+category: mcp
+product:
+    vendor: OpenAI
+    description: "Codex is OpenAI's coding agent, available in the ChatGPT desktop app and in the terminal through the Codex CLI."
+platform:
+    - 'Cloud'
+---
+
+Codex is OpenAI's coding agent. It reads, writes, and runs code in your projects from the ChatGPT desktop app or from your terminal with the Codex CLI, and it shares one plugin directory with ChatGPT.
+
+# How does the integration work?
+
+Appwrite's official plugin, published in the ChatGPT plugin directory, works in Codex too. It has two parts:
+
+- **The hosted Appwrite MCP server.** Codex connects to `https://mcp.appwrite.io/` and signs you in to your Appwrite account with OAuth. From there it can search the Appwrite documentation, create tables, manage users, and deploy functions and sites in your project.
+- **Thirteen agent skills.** Eleven skills cover the Appwrite CLI and the TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift SDKs. Two more guide Codex through deployments to Appwrite Sites and Appwrite Functions. Codex loads the skills that match your task.
+
+Changes to your project go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To use Appwrite in Codex, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: the plugin asks you to sign in to Appwrite after you install it.
+
+## Step 2: Install the Appwrite plugin
+
+{% tabs %}
+{% tabsitem #desktop title="Desktop app" %}
+1. Open the ChatGPT desktop app.
+2. Click **Plugins** in the sidebar.
+3. Search for `Appwrite` and select the **Appwrite** plugin.
+4. Click **Install plugin**.
+{% /tabsitem %}
+{% tabsitem #cli title="Codex CLI" %}
+1. Run `codex` in your terminal, then run `/plugins`.
+2. Switch to the **OpenAI Curated** marketplace.
+3. Search for `Appwrite` and select the **Appwrite** plugin.
+4. Select **Install plugin**.
+{% /tabsitem %}
+{% /tabs %}
+
+After installation, sign in to Appwrite and authorize access when prompted, then start a new Codex session.
+
+If you installed the earlier plugin from the Appwrite marketplace, it does not include the hosted MCP server. Remove it and the marketplace with:
+
+```bash
+codex plugin remove appwrite@appwrite
+codex plugin marketplace remove appwrite
+```
+
+## Step 3: Connect the MCP server without the plugin (optional)
+
+Skip this step if you installed the plugin. To use only the MCP server, add it from your terminal:
+
+```bash
+codex mcp add appwrite --url https://mcp.appwrite.io/
+```
+
+If Codex does not prompt you to sign in, run `codex mcp login appwrite`. Manual setup is an alternative to the plugin, not an extra requirement.
+
+## Step 4: Test the integration
+
+Try prompts like:
+
+- `List the projects in my Appwrite account`
+- `Create a new user in my Appwrite project`
+- `Show me the tables in my database`
+- `How do I implement file uploads with Appwrite Storage?`
+
+# Read more about Codex and Appwrite
+
+If you would like to learn more about Codex and Appwrite, we have some resources that you should visit:
+
+- [Set up Appwrite in Codex](/docs/tooling/ai/agents/codex)
+- [The new Appwrite plugin for Codex: Skills and hosted MCP](/blog/post/appwrite-codex-plugin-hosted-mcp)
+- [Appwrite agent skills](/docs/tooling/ai/skills)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Plugin source code on GitHub](https://github.com/appwrite/codex-plugin)

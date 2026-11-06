@@ -1,0 +1,89 @@
+---
+layout: integration
+title: OAuth with Auth0
+description: Sign users in to your app through your Auth0 tenant
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-auth0/cover.avif
+category: auth
+product:
+    vendor: Auth0
+    description: 'Auth0 is an identity platform from Okta that lets developers add login, single sign-on, and user management to their applications.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Auth0](https://auth0.com/) is an identity platform from Okta for adding login, single sign-on, and user management to applications. Teams use it to manage sign-in for several apps in one tenant, connect enterprise identity providers, and enforce policies such as multi-factor authentication in one place.
+
+# How does the integration work?
+
+You can use the Auth0 OAuth adapter in Appwrite Auth to sign users in through your Auth0 tenant. Appwrite sends users to your tenant's login page, exchanges the authorization code for tokens, and creates an Appwrite user and session from the profile Auth0 returns. This fits teams that already manage identities in Auth0 and want to use Appwrite as their app's backend.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes, plus `offline_access` so Auth0 can return a refresh token. It stores the user's name, email address, and profile picture, and marks the email as verified only when Auth0 reports `email_verified` as `true`.
+
+# How to implement
+
+To implement the Auth0 OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an application on Auth0
+
+In the [Auth0 Dashboard](https://manage.auth0.com/), go to **Applications** > **Applications** and click **Create Application**. Give the application a name, choose **Regular Web Applications** as the application type, and create it.
+
+Open the application's **Settings** tab and save the following values for later use:
+
+| Field name | |
+| --- | --- |
+| Domain | Your tenant's domain, for example `example.us.auth0.com`. |
+| Client ID | The public identifier of the application. |
+| Client Secret | The secret Appwrite uses to exchange authorization codes. |
+
+You'll fill in **Allowed Callback URLs** under **Application URIs** after you configure Appwrite in the next step.
+
+## Step 2: Add Auth0 OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Auth0** under the **OAuth2 Providers** section.
+
+Fill in the provider form with the values you saved from Auth0:
+
+- **Client ID**: the application's Client ID.
+- **Client Secret**: the application's Client Secret.
+- **Domain**: your Auth0 domain without `https://`, for example `example.us.auth0.com`. Appwrite builds the authorization, token, and user info URLs from it.
+
+Optionally, set **Prompt** to `none`, `login`, or `consent` to control whether Auth0 shows its login and consent screens. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/auth0/<PROJECT_ID>`, but always copy the exact value from the Console. Back in the Auth0 Dashboard, paste it into **Allowed Callback URLs** on the application's **Settings** tab and save the changes.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Auth0` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Auth0,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Auth0 and Appwrite Auth
+
+If you would like to learn more about Auth0 and Appwrite Auth, we have some resources that you should visit:
+
+- [Auth0 documentation](https://auth0.com/docs)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

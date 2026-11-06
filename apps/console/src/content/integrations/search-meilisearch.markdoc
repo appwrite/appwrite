@@ -1,0 +1,91 @@
+---
+layout: integration
+title: Search with Meilisearch
+description: Index an Appwrite Databases table in Meilisearch and add search-as-you-type to your app
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/search-meilisearch/cover.avif
+category: search
+product:
+    vendor: Meilisearch
+    description: "Meilisearch is an open-source search engine that returns fast, typo-tolerant results as users type."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Meilisearch](https://www.meilisearch.com/) is an open-source search engine built for search-as-you-type experiences. It returns relevant, typo-tolerant results in milliseconds, and you can run it on your own server or use Meilisearch Cloud.
+
+# How does the integration work?
+
+The **Sync with Meilisearch** function template copies the rows of an Appwrite Databases table into a Meilisearch index. When you send a `POST` request to the function, it reads the table 100 rows at a time and adds every row to the index, using the row's `$id` as the primary key. Your app then searches Meilisearch directly with a search-only API key, while Appwrite stays the source of truth for the data.
+
+The function also serves a demo search page on `GET /`, so you can check the index right after the first sync.
+
+# Prerequisites
+
+- An Appwrite database with a table that holds the data you want to search.
+- A Meilisearch instance that both your function and your browser can reach, such as a [Meilisearch Cloud](https://www.meilisearch.com/cloud) project or your own server. A local address like `http://127.0.0.1:7700` won't work from a deployed function.
+
+# How to implement
+
+To implement the Meilisearch integration, there are several steps you must complete:
+
+## Step 1: Set up Meilisearch
+
+Create a Meilisearch Cloud project or start your own Meilisearch server, then save these values for later:
+
+| Value | Description |
+| --- | --- |
+| URL | The address of your Meilisearch project or server |
+| Admin API key | A key that can add documents. The function uses it to write to the index. |
+| Search API key | A key limited to searching. The demo page uses it in the browser. |
+
+Pick a name for the index, such as `appwrite_index`. You don't need to create it in advance: Meilisearch creates the index when the function adds the first documents. Never use the admin key or the master key in client code.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a runtime the template supports in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Sync with Meilisearch**, and click **Create from template**. The template is available for Node.js, Python, PHP, Bun, and Ruby.
+
+Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `APPWRITE_DATABASE_ID` | The ID of the database that holds your table |
+| `APPWRITE_COLLECTION_ID` | The ID of the table to index. The template reads it through the legacy Databases API, which calls tables collections. |
+| `MEILISEARCH_ENDPOINT` | Your Meilisearch URL |
+| `MEILISEARCH_ADMIN_API_KEY` | The admin API key |
+| `MEILISEARCH_SEARCH_API_KEY` | The search API key |
+| `MEILISEARCH_INDEX_NAME` | The index name you picked |
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+You don't need to create an Appwrite API key. The function reads your table with an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) limited to the read scopes the template asks for: `databases.read`, `collections.read`, `tables.read`, `documents.read`, and `rows.read`.
+
+## Step 3: Sync the table and test search
+
+Once the deployment is ready, copy the function's domain from the **Domains** tab and send a `POST` request to start the sync:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN>
+```
+
+The function responds with `Sync finished.` once every row is in the index. Open the same domain in your browser to load the demo page and search your data.
+
+Requests to a function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions), which stop after 30 seconds. To index a large table, raise the function's timeout under **Settings** > **Timeout** and start the sync as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions) instead.
+
+Each sync adds or replaces every row in the index, so run it again after your data changes. Rows you delete in Appwrite stay in the index until you remove them from Meilisearch.
+
+# Read more about Meilisearch and Appwrite Functions
+
+If you would like to learn more about Meilisearch and Appwrite Functions, we have some resources that you should visit:
+
+- [Meilisearch documentation](https://www.meilisearch.com/docs)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Synchronous and asynchronous executions](/docs/products/functions/execute)
+- [Search with Algolia](/integrations/search-algolia)
+- [Sync with Meilisearch template source](https://github.com/appwrite/templates/tree/1.2.0/node/sync-with-meilisearch)

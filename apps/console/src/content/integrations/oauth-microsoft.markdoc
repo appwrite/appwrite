@@ -1,0 +1,74 @@
+---
+layout: integration
+title: OAuth with Microsoft
+description: Authenticate users with a Microsoft work, school, or personal account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-microsoft/cover.avif
+category: auth
+product:
+    vendor: Microsoft
+    description: "Microsoft Entra ID is Microsoft's cloud identity service, which signs people in with work or school accounts and personal Microsoft accounts."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Microsoft accounts sign people in to products such as Outlook, Teams, OneDrive, and Xbox. Organizations manage work and school accounts in Microsoft Entra ID, formerly Azure Active Directory, while individuals use personal Microsoft accounts. The Microsoft identity platform lets your app sign in either kind of account through a single OAuth 2.0 app registration.
+
+# How does the integration work?
+
+You can use the Microsoft OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account, and it lets companies that run on Microsoft 365 use the accounts they already manage.
+
+Appwrite signs users in through the Microsoft identity platform v2.0 endpoints for the tenant you configure, requests the `offline_access` and `user.read` scopes, and reads the user's profile from Microsoft Graph. It uses the account's user principal name as the email address.
+
+Microsoft Graph doesn't report whether that email address is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect Microsoft to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Microsoft as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Microsoft OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Register an app in Microsoft Entra ID
+
+First, sign in to the [Microsoft Entra admin center](https://entra.microsoft.com), browse to **Entra ID** > **App registrations**, and select **New registration**. Give the app a name and pick the **Supported account types** that should be able to sign in. Your choice must match the tenant you set in Appwrite in the next step. Leave the redirect URI empty for now and select **Register**.
+
+On the app's **Overview** page, save the **Application (client) ID**. Then open **Certificates & secrets**, create a new client secret, and save its **Value**. Microsoft shows the value only once.
+
+## Step 2: Add the Microsoft OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Microsoft** under the **OAuth2 Providers** section.
+
+Enter the application ID in **Entra ID Application ID, also known as Client ID** and the secret value in **Entra ID Application Secret, also known as Client Secret**. Then set **Tenant** to the audience that should be able to sign in:
+
+| Tenant | Who can sign in | Matching supported account type |
+| --- | --- | --- |
+| `common` | Work or school accounts from any Entra ID tenant, and personal Microsoft accounts | **Any Entra ID Tenant + Personal Microsoft accounts** |
+| `organizations` | Work or school accounts from any Entra ID tenant | **Multiple Entra ID tenants** |
+| `consumers` | Personal Microsoft accounts only | **Personal accounts only** |
+| Your tenant ID | Accounts in your own tenant only | **Single tenant only** |
+
+Appwrite requires a tenant before you can turn the provider on. Optionally, set **Prompt** to `select_account` to show the account picker, `login` to ask the user to sign in again, `consent` to ask for consent again, or `none` to skip both screens. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/microsoft/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in your app registration, open **Authentication**, add a **Web** platform, and paste the URI as a redirect URI.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Microsoft` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Microsoft and Appwrite Auth
+
+If you would like to learn more about Microsoft and Appwrite Auth, we have some resources that you should visit:
+
+- [Register an app in Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app)
+- [OAuth 2.0 and OpenID Connect protocols on the Microsoft identity platform](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

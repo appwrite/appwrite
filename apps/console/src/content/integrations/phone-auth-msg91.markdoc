@@ -1,0 +1,100 @@
+---
+layout: integration
+title: Phone auth with MSG91
+description: Deliver one-time passwords for phone authentication through MSG91
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-msg91/cover.avif
+category: auth
+product:
+    vendor: MSG91
+    description: "MSG91 is a cloud communication platform that provides SMS, WhatsApp, voice, and email APIs for businesses."
+platform:
+    - 'Self-hosted'
+---
+
+[MSG91](https://msg91.com) is a cloud communication platform from India that provides APIs for SMS, WhatsApp, voice, and email. It sends every SMS through a template that you create in the MSG91 dashboard.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use MSG91 to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Appwrite sends each message through MSG91's flow API with your sender ID and template. For every recipient, it passes the message text as the value of the `otp` and `content` variables. The message text is the one-time code, or the invitation link when you invite a team member by phone.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the MSG91 provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up MSG91
+
+First, [sign up for an MSG91 account](https://msg91.com/signup) and save the following information from the MSG91 dashboard:
+
+| Field name | |
+| --- | --- |
+| Auth key | Open the username menu, select **Authkey**, verify your mobile number, and click **Create Authkey**. |
+| Sender ID | Head to **SMS** > **Sender ID** and click **Create sender ID**. |
+| Template ID | Create an SMS template for your one-time passwords that uses an `otp` variable where the code should appear, then copy its template ID. |
+
+Messages to Indian numbers also need a sender ID and template approved under India's DLT regulations.
+
+## Step 2: Add MSG91 to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<SENDER_ID>:<AUTH_KEY>@msg91
+_APP_SMS_FROM=<TEMPLATE_ID>
+```
+
+With MSG91, `_APP_SMS_FROM` holds your template ID rather than a phone number. URL-encode the values in `_APP_SMS_PROVIDER` if they contain characters other than letters and numbers. Appwrite only turns on SMS delivery when both variables are set.
+
+Then recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for your phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+14255550123'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about MSG91 and Appwrite Auth
+
+If you would like to learn more about phone authentication with MSG91 and Appwrite Auth, we have some resources that you should visit:
+
+- [Find your MSG91 auth key](https://msg91.com/help/where-can-i-find-my-authentication-key)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [SMS with MSG91 in Appwrite Messaging](/integrations/sms-msg91)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

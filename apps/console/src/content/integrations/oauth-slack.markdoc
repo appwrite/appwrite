@@ -1,0 +1,64 @@
+---
+layout: integration
+title: OAuth with Slack
+description: Authenticate users with an existing Slack account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-slack/cover.avif
+category: auth
+product:
+    vendor: Slack
+    description: "Slack is a messaging platform where teams work together in channels, direct messages, and huddles."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Slack is a messaging platform where teams work together in channels, direct messages, and huddles. [Sign in with Slack](https://docs.slack.dev/authentication/sign-in-with-slack/) uses OpenID Connect to let people sign in to other apps with their Slack account, which suits tools built for teams that already work in Slack.
+
+# How does the integration work?
+
+You can use the Slack OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable.
+
+Appwrite requests the `openid`, `email`, and `profile` user scopes and reads the user's name and email address from Slack. Slack also shares the user's profile photo, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Appwrite doesn't receive a verification status for the email address from Slack, so it stores the address as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect Slack to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Slack as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Slack OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a Slack app
+
+First, head to [your Slack apps](https://api.slack.com/apps) and click **Create New App**. Choose to create it from scratch, give it a name, and pick the workspace you'll develop it in.
+
+On the app's **Basic Information** page, save the **Client ID** and **Client Secret** from the **App Credentials** section. You will add the redirect URL in the next step.
+
+## Step 2: Add the Slack OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Slack** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from Slack, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/slack/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in your Slack app settings, open **OAuth & Permissions**, add the URI under **Redirect URLs**, and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Slack` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Slack and Appwrite Auth
+
+If you would like to learn more about Slack and Appwrite Auth, we have some resources that you should visit:
+
+- [Sign in with Slack](https://docs.slack.dev/authentication/sign-in-with-slack/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

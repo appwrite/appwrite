@@ -1,0 +1,76 @@
+---
+layout: integration
+title: OAuth with OpenID Connect
+description: Authenticate users with any OpenID Connect compliant identity provider
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-oidc/cover.avif
+category: auth
+product:
+    vendor: OpenID Connect
+    description: "OpenID Connect is an open identity standard from the OpenID Foundation that adds an identity layer on top of OAuth 2.0."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[OpenID Connect](https://openid.net/developers/how-connect-works/) (OIDC) is an open standard from the OpenID Foundation that adds an identity layer on top of OAuth 2.0. Identity providers such as Microsoft Entra ID, Okta, Auth0, Keycloak, and Google implement it, and so do many enterprise and self-hosted identity servers. An OIDC provider signs users in, issues tokens, and describes the signed-in user through a standard user info endpoint.
+
+# How does the integration work?
+
+You can use the OpenID Connect adapter in Appwrite Auth to sign users in with any OpenID Connect compliant identity provider, including providers that don't have a dedicated adapter in Appwrite. This is useful when your users already have accounts in a company identity provider or an identity server you run yourself.
+
+Appwrite uses the authorization code flow and requests the `openid`, `profile`, and `email` scopes. It can discover the provider's authorization, token, and user info endpoints from a well-known configuration URL, or you can enter each endpoint yourself. Appwrite sends the client ID and client secret in the body of the token request, identifies the user by the `sub` claim, and reads `name`, `email`, and `email_verified` from the user info endpoint. The email address is marked as verified only when the provider reports it as verified.
+
+Each Appwrite project has one OpenID Connect provider. If you need several identity providers, use the dedicated adapters where Appwrite has them, such as Okta, Auth0, Keycloak, or Microsoft.
+
+# How to implement
+
+To implement the OpenID Connect adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Register a client with your identity provider
+
+First, open your identity provider's admin console and register a new client, sometimes called an application or relying party. Configure it as a confidential web application that uses the authorization code grant, and allow the `openid`, `profile`, and `email` scopes. If the provider lets you choose how the client authenticates at the token endpoint, choose the method that sends the client secret in the request body, often called `client_secret_post`.
+
+If the form requires a redirect URI right away, temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step.
+
+Save the client ID and client secret. Then find the provider's discovery document. It's usually published at the issuer URL followed by `/.well-known/openid-configuration`, for example `https://login.example.com/.well-known/openid-configuration`.
+
+## Step 2: Add the OpenID Connect adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **OpenID Connect** under the **OAuth2 Providers** section.
+
+Fill in the following fields:
+
+| Field | Value |
+| --- | --- |
+| **Client ID** | The client ID from your identity provider. |
+| **Client Secret** | The client secret from your identity provider. |
+| **Well-known URL** | The discovery document URL. When you set it, Appwrite discovers the other endpoints automatically. |
+| **Authorization URL**, **Token URL**, **User Info URL** | Required only when you don't provide a well-known URL. An endpoint you enter here takes precedence over the discovered one. |
+| **Prompt** | Optional. `login` asks the user to sign in again, `consent` asks for consent again, `select_account` shows an account picker, and `none` skips these screens. If you include `none`, it must be the only value. |
+| **Max Age** | Optional. A time in seconds. The user must have authenticated with the provider within this time, or the provider asks them to sign in again. |
+
+Turn the provider on and click **Update**. Then copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/oidc/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in your identity provider, add this URI to the client's allowed redirect URIs and remove the temporary URL.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Oidc` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about OpenID Connect and Appwrite Auth
+
+If you would like to learn more about OpenID Connect and Appwrite Auth, we have some resources that you should visit:
+
+- [How OpenID Connect works](https://openid.net/developers/how-connect-works/)
+- [OpenID Connect Discovery specification](https://openid.net/specs/openid-connect-discovery-1_0.html)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

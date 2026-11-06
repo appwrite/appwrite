@@ -1,0 +1,66 @@
+---
+layout: integration
+title: Self-host Appwrite on DigitalOcean
+description: Run self-hosted Appwrite on a DigitalOcean Droplet with the Docker installer
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/self-hosted-digitalocean/cover.avif
+category: self-hosting
+product:
+    vendor: DigitalOcean
+    description: "DigitalOcean is a cloud provider with virtual machines called Droplets, managed Kubernetes, and Spaces object storage."
+platform:
+    - 'Self-hosted'
+---
+
+[DigitalOcean](https://www.digitalocean.com) is a cloud provider for developers and small teams. It offers Linux virtual machines called Droplets, managed Kubernetes, managed databases, and Spaces object storage.
+
+# How does the integration work?
+
+Appwrite runs on any Linux server that supports Docker, so a Droplet is a quick way to self-host it on DigitalOcean. You create the Droplet, run the Appwrite Docker installer, and finish the configuration in a web-based setup wizard. Pair it with [DigitalOcean Spaces](/integrations/storage-digitalocean-spaces) to keep uploaded files off the Droplet's disk.
+
+The [DigitalOcean deployment guide](/docs/advanced/self-hosting/platforms/digitalocean) also covers the Appwrite 1-Click app on the DigitalOcean Marketplace. A 1-Click image bundles a fixed Appwrite version, so the steps below install the current release on a regular Droplet.
+
+# How to implement
+
+To self-host Appwrite on a DigitalOcean Droplet, there are several steps you must complete:
+
+## Step 1: Create a Droplet
+
+In the DigitalOcean Control Panel, create a Linux Droplet with at least 2 vCPUs and 4 GB of RAM, the minimum Appwrite needs, in the region closest to your users. Add your SSH key so you can connect to it. Appwrite also expects 2 GB of swap memory.
+
+If you use a DigitalOcean Cloud Firewall, allow inbound HTTP (80) and HTTPS (443), SSH (22) from your IP address, and port 20080 while the setup wizard runs.
+
+## Step 2: Install Docker and run the Appwrite installer
+
+Connect to the Droplet over SSH and [install Docker Engine](https://docs.docker.com/engine/install/) with Docker Compose version 2. Then run the Appwrite installer:
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.7.1
+```
+
+The [installation guide](/docs/advanced/self-hosting/installation) always shows the command for the latest release.
+
+## Step 3: Complete the setup wizard
+
+Open `http://<DROPLET_IP>:20080` in your browser. Set the hostname your instance will use, choose a database (PostgreSQL is the default), save the generated secret key somewhere safe, create your account, and click **Install**. When the installation finishes, open your hostname to reach the Appwrite Console, and close port 20080 again.
+
+## Step 4: Prepare for production
+
+Before real users depend on the Droplet, work through the [production guide](/docs/advanced/self-hosting/production), set up [backups](/docs/advanced/self-hosting/production/backups), and keep the instance on a current release with the [update guide](/docs/advanced/self-hosting/production/updates).
+
+# Read more about DigitalOcean and self-hosted Appwrite
+
+If you would like to learn more about running Appwrite on DigitalOcean, we have some resources that you should visit:
+
+- [DigitalOcean deployment guide](/docs/advanced/self-hosting/platforms/digitalocean)
+- [Self-hosting installation guide](/docs/advanced/self-hosting/installation)
+- [Storage with DigitalOcean Spaces](/integrations/storage-digitalocean-spaces)
+- [DigitalOcean Droplets documentation](https://docs.digitalocean.com/products/droplets/)

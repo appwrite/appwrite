@@ -1,0 +1,77 @@
+---
+layout: integration
+title: OAuth with Dailymotion
+description: Authenticate users with an existing Dailymotion account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-dailymotion/cover.avif
+category: auth
+product:
+    vendor: Dailymotion
+    description: 'Dailymotion is a video platform where people watch, upload, and share videos, and where publishers distribute and monetize their content.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Dailymotion](https://www.dailymotion.com/) is a video platform where people watch, upload, and share videos. Publishers and creators also use it to distribute videos to their own sites with the Dailymotion Player and to manage their channels through its API.
+
+# How does the integration work?
+
+You can use the Dailymotion OAuth adapter in Appwrite Auth to let users sign in with their Dailymotion account. This fits video tools, creator dashboards, and companion apps for Dailymotion channels. The session stores Dailymotion's access token as `providerAccessToken`, so your server can call the Dailymotion API on the user's behalf.
+
+Appwrite uses Dailymotion's authorization code flow on `api.dailymotion.com` and requests the `userinfo` and `email` scopes. It stores the user's name, email, and avatar, and marks the email as verified only when the profile's `verified` field is `true`.
+
+# How to implement
+
+To implement the Dailymotion OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a Dailymotion API key
+
+Log in to [Dailymotion Studio](https://www.dailymotion.com/partner/api-keys/) with an **Owner** or **Admin** account and go to **Settings** > **Account** > **API keys** > **Create API key**.
+
+Choose **Public API key**. Dailymotion uses public keys when users sign in with their own account, and the `api.dailymotion.com` endpoints that Appwrite calls require one. Give the key a title and description, and temporarily enter `https://temporary-endpoint.com/` as the **Callback URL**. You'll replace it with the URI from Appwrite in the next step.
+
+Click **Create** and save the **API key** and **API secret**. Dailymotion shows the secret only once.
+
+## Step 2: Add Dailymotion OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Dailymotion** under the **OAuth2 Providers** section.
+
+Paste the key's credentials into the **API Key** and **API Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/dailymotion/<PROJECT_ID>`, but always copy the exact value from the Console. Update your API key's **Callback URL** in Dailymotion Studio with it. Dailymotion rejects sign-in requests whose redirect URI doesn't match the key's callback URL.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Dailymotion` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Dailymotion,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Dailymotion and Appwrite Auth
+
+If you would like to learn more about Dailymotion and Appwrite Auth, we have some resources that you should visit:
+
+- [Authenticate using authorization codes on Dailymotion](https://developers.dailymotion.com/v0/docs/authenticate-using-authorization-codes)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

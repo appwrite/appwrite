@@ -1,0 +1,78 @@
+---
+layout: integration
+title: Storage with Akamai Object Storage
+description: Store files from your self-hosted Appwrite instance in Akamai Object Storage
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/storage-akamai/cover.avif
+category: storage
+product:
+    vendor: Akamai
+    description: "Akamai Object Storage, formerly Linode Object Storage, is S3-compatible object storage on Akamai's cloud computing platform."
+platform:
+    - 'Self-hosted'
+---
+
+[Akamai Object Storage](https://techdocs.akamai.com/cloud-computing/docs/object-storage), formerly Linode Object Storage, is an S3-compatible object storage service on Akamai's cloud computing platform. Buckets live in a region and are reached through an S3 endpoint such as `us-east-1.linodeobjects.com`.
+
+# How does the integration work?
+
+By default, self-hosted Appwrite Storage keeps uploaded files on your server's local disk. The `linode` storage adapter, named after the service's former brand, stores them in an Akamai Object Storage bucket instead, so file storage scales separately from your server and survives a server rebuild. Appwrite builds the bucket address, `<bucket>.<region>.linodeobjects.com`, from the bucket name and region you configure.
+
+{% info title="Self-hosted only" %}
+Storage adapters configure a self-hosted Appwrite instance. Appwrite Cloud manages file storage for you.
+{% /info %}
+
+# How to implement
+
+To store Appwrite files in Akamai Object Storage, there are several steps you must complete:
+
+## Step 1: Create a bucket and an access key
+
+In Akamai Cloud Manager, create an Object Storage bucket in the region closest to your Appwrite server. Note the bucket name and the region ID at the start of its S3 endpoint, for example `us-east-1` from `us-east-1.linodeobjects.com` or `us-iad-10` from `us-iad-10.linodeobjects.com`.
+
+Then create an access key with read and write access to the bucket. Save the **access key** and **secret key**. Cloud Manager shows the secret key only once.
+
+## Step 2: Configure the Akamai adapter in Appwrite
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and set the storage variables:
+
+```env
+_APP_STORAGE_DEVICE=linode
+_APP_STORAGE_S3_ACCESS_KEY=<ACCESS_KEY>
+_APP_STORAGE_S3_SECRET=<SECRET_KEY>
+_APP_STORAGE_S3_REGION=us-east-1
+_APP_STORAGE_S3_BUCKET=<BUCKET_NAME>
+```
+
+`_APP_STORAGE_DEVICE=linode` selects the Akamai Object Storage adapter, and the `_APP_STORAGE_S3_*` variables hold its credentials, region, and bucket.
+
+{% info title="Upgrading an older configuration" %}
+Older installations set `_APP_STORAGE_LINODE_ACCESS_KEY`, `_APP_STORAGE_LINODE_SECRET`, `_APP_STORAGE_LINODE_REGION`, and `_APP_STORAGE_LINODE_BUCKET`. Appwrite 2.0 and later still read them as a fallback when `_APP_STORAGE_S3_ACCESS_KEY`, `_APP_STORAGE_S3_SECRET`, and `_APP_STORAGE_S3_BUCKET` are not all set, but they are deprecated, and the Open Runtimes orchestrator that builds Functions and Sites doesn't read them. Move the values to the `_APP_STORAGE_S3_*` variables.
+{% /info %}
+
+Recreate the containers and check that the variables are applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+Changing the storage device doesn't move files Appwrite has already stored, so configure it before you store production files.
+
+## Step 3: Test the adapter
+
+Open your project in the Appwrite Console, go to **Storage**, create a bucket, and upload a file. The file then appears in your bucket in Akamai Cloud Manager.
+
+# Read more about Akamai Object Storage and Appwrite Storage
+
+If you would like to learn more about Akamai Object Storage and Appwrite Storage, we have some resources that you should visit:
+
+- [Storage configuration for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/storage)
+- [Storage environment variables](/docs/advanced/self-hosting/configuration/environment-variables#storage)
+- [Appwrite Storage](/docs/products/storage)
+- [Akamai Object Storage endpoint types and regions](https://techdocs.akamai.com/cloud-computing/docs/endpoint-types)
