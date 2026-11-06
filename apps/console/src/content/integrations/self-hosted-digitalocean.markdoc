@@ -33,6 +33,8 @@ If you use a DigitalOcean Cloud Firewall, allow inbound HTTP (80) and HTTPS (443
 
 ## Step 2: Install Docker and run the Appwrite installer
 
+The [DigitalOcean deployment guide](/docs/advanced/self-hosting/platforms/digitalocean) also covers the Appwrite 1-Click app on the DigitalOcean Marketplace. A 1-Click image bundles a fixed Appwrite version, so the steps below install the current release on a regular Droplet.
+
 Connect to the Droplet over SSH and [install Docker Engine](https://docs.docker.com/engine/install/) with Docker Compose version 2. Then run the macOS and Linux [installation command](/docs/advanced/self-hosting/installation#installation-commands) from the installation guide, which always installs the latest release.
 
 ## Step 3: Complete the setup wizard
