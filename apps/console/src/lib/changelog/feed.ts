@@ -22,11 +22,22 @@ function absolute(path: string): string {
   return path.startsWith('/') ? `${MARKETING_SITE_ORIGIN}${path}` : path
 }
 
-/** Site-relative link and image targets only resolve on the site, so a client gets them absolute. */
+/**
+ * Site-relative link and image targets only resolve on the site, so a client gets them absolute. Code is
+ * left alone, as a sample may show a relative link on purpose.
+ */
 function absoluteLinks(markdown: string): string {
-  return markdown.replace(/(\]\()(\/[^)\s]*)/g, (_match, open, path) => {
-    return `${open}${absolute(path)}`
-  })
+  return markdown
+    .split(/(```[\s\S]*?```|`[^`\n]*`)/)
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(
+            /(\]\()(\/[^)\s]*)/g,
+            (_match, open, path) => `${open}${absolute(path)}`,
+          ),
+    )
+    .join('')
 }
 
 /** Most entries have no description of their own, so a list row shows the opening paragraph as plain text. */
