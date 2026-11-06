@@ -144,6 +144,8 @@ class Update extends Action
         $dbForProject->updateDocument('sessions', $sessionId, $session);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        $session->setAttribute('userName', $user->getAttribute('name', ''));
+
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())

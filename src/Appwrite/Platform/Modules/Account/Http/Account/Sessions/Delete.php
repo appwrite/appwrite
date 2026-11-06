@@ -132,6 +132,7 @@ class Delete extends Action
             unset($sessions[$key]);
 
             $session->setAttribute('current', $session->getId() === $current?->getId());
+            $session->setAttribute('userName', $user->getAttribute('name', ''));
 
             if ($session->getAttribute('current')) {
                 $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));

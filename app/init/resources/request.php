@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
@@ -721,9 +722,11 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
-    $context->set('device', function (Project $project, Request $request, Database $dbForProject, Token $proofForToken, $authorization): ?Document {
+    $context->set('authDevice', function (Project $project, Request $request, Database $dbForProject, Token $proofForToken, $authorization): ?Document {
         /**
          * Resolves the account-switching device from the request, or null when there is none.
+         *
+         * Named `authDevice` to keep clear of the storage devices (`deviceForFiles` and friends).
          *
          * Mirrors the session cookie flow: the device secret arrives in the a_device_<projectId>
          * cookie (or its _legacy twin), the x-appwrite-device header for SSR clients, or the
@@ -731,8 +734,8 @@ return function (Container $context): void {
          * document is looked up by id and gated by verifying the secret, like a session.
          *
          * Keyed and stored by the request's project, the same as the create/update/delete
-         * actions and the session-attach hook, so a device resolves in every mode (dbForProject
-         * already maps the console project to the platform database).
+         * actions and the session endpoints that attach to it, so a device resolves in every
+         * mode (dbForProject already maps the console project to the platform database).
          */
         $authorization->setStatus(true);
 
@@ -775,6 +778,9 @@ return function (Container $context): void {
         ) {
             return null;
         }
+
+        // The cookie value as received, so an endpoint that extends the device can re-issue it. Never persisted.
+        $device->setAttribute(AuthDevice::ATTRIBUTE_COOKIE, $store->encode());
 
         return $device;
     }, ['project', 'request', 'dbForProject', 'proofForToken', 'authorization']);

@@ -291,13 +291,13 @@ return [
         'description' => 'The current user session could not be found.',
         'code' => 404,
     ],
-    Exception::DEVICE_NOT_FOUND => [
-        'name' => Exception::DEVICE_NOT_FOUND,
+    Exception::USER_DEVICE_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_NOT_FOUND,
         'description' => 'The requested account switching device could not be found. Create one with the create device endpoint first.',
         'code' => 404,
     ],
-    Exception::DEVICE_SESSION_NOT_FOUND => [
-        'name' => Exception::DEVICE_SESSION_NOT_FOUND,
+    Exception::USER_DEVICE_SESSION_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_SESSION_NOT_FOUND,
         'description' => 'The requested session is not held by this account switching device.',
         'code' => 404,
     ],

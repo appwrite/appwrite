@@ -864,8 +864,8 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->inject('device')
-    ->action(function (Route $route, User $user, ?Document $device) {
+    ->inject('authDevice')
+    ->action(function (Route $route, User $user, ?Document $authDevice) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
@@ -873,9 +873,9 @@ Http::init()
         }
 
         // An account switching device may hold several accounts at once: creating another
-        // session adds it to the device instead of being refused, and the shutdown hook
-        // below makes the new session the active one.
-        if ($device !== null) {
+        // session adds it to the device instead of being refused. The create action attaches
+        // the new session and makes it the active one (see AuthDevice::attach).
+        if ($authDevice !== null) {
             return;
         }
 
@@ -933,50 +933,6 @@ Http::shutdown()
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
-    });
-
-/**
- * Attach a newly created session to the account switching device
- *
- * When a session is created while a device cookie is present, the session joins the
- * device and becomes its active session. The create action has already written the
- * session cookie, so the device simply records which session is now active.
- */
-Http::shutdown()
-    ->groups(['session'])
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('device')
-    ->inject('authorization')
-    ->action(function (Response $response, Database $dbForProject, ?Document $device, Authorization $authorization) {
-        if ($device === null) {
-            return;
-        }
-
-        $payload = $response->getPayload();
-        $sessionId = $payload['$id'] ?? '';
-        $userId = $payload['userId'] ?? '';
-        if (empty($sessionId) || empty($userId)) {
-            return;
-        }
-
-        $session = $authorization->skip(fn () => $dbForProject->getDocument('sessions', $sessionId));
-        if ($session->isEmpty()) {
-            return;
-        }
-
-        $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), new Document([
-            'deviceId' => $device->getId(),
-            'deviceInternalId' => $device->getSequence(),
-        ])));
-
-        $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
-            'activeSessionId' => $session->getId(),
-            'activeSessionInternalId' => $session->getSequence(),
-        ])));
-
-        $dbForProject->purgeCachedDocument('users', $userId);
-        $dbForProject->purgeCachedDocument('devices', $device->getId());
     });
 
 Http::shutdown()

@@ -3,8 +3,10 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Devices;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Platform\Action;
@@ -44,15 +46,15 @@ class Create extends Action
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('audits.event', 'device.create')
-            ->label('audits.resource', 'device/{response.$id}')
+            ->label('audits.resource', 'user/{user.$id}')
             ->label('sdk', new Method(
                 namespace: 'account',
                 group: 'devices',
                 name: 'createDevice',
                 description: <<<EOT
-                Create an account switching device. A device is a container, scoped to one browser or app install, that holds multiple sessions and tracks which one is active. Once a device exists, session creation endpoints attach the new session to it automatically, so a single browser can stay signed in to several accounts and switch between them.
+                Create an account switching device. A device is a container, scoped to one browser or app install, that holds multiple sessions and tracks which one is active. Once a device exists, session creation endpoints attach the new session to it automatically, so a single browser can stay signed in to several accounts and switch between them. A device holds at most one session per user: signing in again as a user it already holds replaces that user's session. The device lives as long as its newest session.
 
-                The device secret is returned in a cookie. Run this on app start: if the browser already has a valid device, the existing one is returned with the same status code instead of an error, so it is always safe to call.
+                The device secret is returned in a cookie, and in the response only when the device was just created. Run this on app start: if the browser already has a valid device, the existing one is returned with the same status code instead of an error, so it is always safe to call.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -69,12 +71,13 @@ class Create extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('geo')
-            ->inject('device')
+            ->inject('authDevice')
             ->inject('locale')
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
             ->inject('queueForEvents')
+            ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('mode')
             ->inject('session')
@@ -87,12 +90,13 @@ class Create extends Action
         Project $project,
         Database $dbForProject,
         Geo $geo,
-        ?Document $device,
+        ?Document $authDevice,
         Locale $locale,
         ProofsToken $proofForToken,
         bool $domainVerification,
         ?string $cookieDomain,
         Event $queueForEvents,
+        DeletePublisher $publisherForDeletes,
         Authorization $authorization,
         string $mode,
         ?Document $current,
@@ -104,22 +108,12 @@ class Create extends Action
         // A browser that already holds a valid device keeps it: devs call this on every app
         // start, so returning the existing device beats an error. No new cookie is written,
         // the browser already carries it, and the secret is already gone from our side.
-        if ($device !== null) {
-            $activeSessionId = $device->getAttribute('activeSessionId', '');
-            $sessions = $device->getAttribute('sessions', []);
-            foreach ($sessions as $key => $session) {
-                /** @var Document $session */
-                $session
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                    ->setAttribute('current', $session->getId() === $activeSessionId)
-                    ->setAttribute('secret', $session->getAttribute('secret', ''));
-                $sessions[$key] = $session;
-            }
-            $device->setAttribute('sessions', $sessions);
+        if ($authDevice !== null) {
+            $authDevice = AuthDevice::present($dbForProject, $authorization, $locale, $authDevice);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($device, Response::MODEL_DEVICE);
+                ->dynamic($authDevice, Response::MODEL_DEVICE);
             return;
         }
 
@@ -155,27 +149,14 @@ class Create extends Action
         // in the device and switchable, not just sessions created after the device exists.
         // Skipped in admin mode: there the current session belongs to the console user in the
         // platform database, not the target project database this device is written to.
-        $sessions = [];
         if ($mode !== APP_MODE_ADMIN && $current instanceof Document && empty($current->getAttribute('deviceId', ''))) {
-            $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
+            $current = $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
                 'deviceId' => $device->getId(),
                 'deviceInternalId' => $device->getSequence(),
             ])));
-            $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
-                'activeSessionId' => $current->getId(),
-                'activeSessionInternalId' => $current->getSequence(),
-            ])));
-            $dbForProject->purgeCachedDocument('users', $current->getAttribute('userId'));
 
-            $device
-                ->setAttribute('activeSessionId', $current->getId())
-                ->setAttribute('activeSessionInternalId', $current->getSequence());
-
-            $current
-                ->setAttribute('current', true)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($current->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                ->setAttribute('secret', $current->getAttribute('secret', ''));
-            $sessions = [$current];
+            $device = AuthDevice::attach($dbForProject, $authorization, $device, $current, $publisherForDeletes, $project);
+            $expire = $device->getAttribute('expire');
         }
 
         $store = new Store();
@@ -194,9 +175,8 @@ class Create extends Action
             ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $device
-            ->setAttribute('sessions', $sessions)
-            ->setAttribute('secret', $encoded);
+        $device = AuthDevice::present($dbForProject, $authorization, $locale, $device);
+        $device->setAttribute('secret', $encoded);
 
         $queueForEvents
             ->setParam('deviceId', $device->getId())

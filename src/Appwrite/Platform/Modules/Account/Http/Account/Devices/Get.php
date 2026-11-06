@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Devices;
 
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
@@ -31,13 +33,16 @@ class Get extends Action
             ->setHttpPath('/v1/account/devices/:deviceId')
             ->desc('Get device')
             ->groups(['api', 'account'])
+            // A read, but guests must be able to call it: after the active session is deleted the
+            // caller is a guest and reads the device to pick another session. `sessions.write` is
+            // the only scope on this service the guest role has (there is no `sessions.read`).
             ->label('scope', 'sessions.write')
             ->label('sdk', new Method(
                 namespace: 'account',
                 group: 'devices',
                 name: 'getDevice',
                 description: <<<EOT
-                Get the account switching device for the current browser, including every session it holds and the ID of the active session. Use the string 'current' to reference the current browser's device.
+                Get the account switching device for the current browser, including every session it holds, the name of the user each session belongs to, and the ID of the active session. Use the string 'current' to reference the current browser's device.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -50,43 +55,32 @@ class Get extends Action
             ))
             ->param('deviceId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Device ID. Use the string \'current\' to reference the device of the current browser.', true, ['dbForProject'])
             ->inject('response')
-            ->inject('device')
+            ->inject('dbForProject')
+            ->inject('authDevice')
             ->inject('locale')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
         ?string $deviceId,
         Response $response,
-        ?Document $device,
+        Database $dbForProject,
+        ?Document $authDevice,
         Locale $locale,
+        Authorization $authorization,
     ): void {
-        if ($device === null) {
-            throw new Exception(Exception::DEVICE_NOT_FOUND);
+        if ($authDevice === null) {
+            throw new Exception(Exception::USER_DEVICE_NOT_FOUND);
         }
 
         // A caller may only read its own device, the one the cookie resolves to.
-        if ($deviceId !== 'current' && $deviceId !== $device->getId()) {
-            throw new Exception(Exception::DEVICE_NOT_FOUND);
+        if ($deviceId !== 'current' && $deviceId !== $authDevice->getId()) {
+            throw new Exception(Exception::USER_DEVICE_NOT_FOUND);
         }
 
-        $activeSessionId = $device->getAttribute('activeSessionId', '');
-        $sessions = $device->getAttribute('sessions', []);
+        $authDevice = AuthDevice::present($dbForProject, $authorization, $locale, $authDevice);
 
-        foreach ($sessions as $key => $session) {
-            /** @var Document $session */
-            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-            $session
-                ->setAttribute('countryName', $countryName)
-                ->setAttribute('current', $session->getId() === $activeSessionId)
-                ->setAttribute('secret', $session->getAttribute('secret', ''));
-
-            $sessions[$key] = $session;
-        }
-
-        $device->setAttribute('sessions', $sessions);
-
-        $response->dynamic($device, Response::MODEL_DEVICE);
+        $response->dynamic($authDevice, Response::MODEL_DEVICE);
     }
 }

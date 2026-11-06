@@ -42,8 +42,9 @@ class Update extends Action
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('event', 'users.[userId].sessions.[sessionId].update')
-            ->label('audits.event', 'device.updateSession')
-            ->label('audits.resource', 'device/{request.deviceId}')
+            ->label('audits.event', 'device.session.update')
+            ->label('audits.resource', 'user/{response.userId}')
+            ->label('audits.userId', '{response.userId}')
             ->label('sdk', new Method(
                 namespace: 'account',
                 group: 'devices',
@@ -69,7 +70,7 @@ class Update extends Action
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
-            ->inject('device')
+            ->inject('authDevice')
             ->inject('locale')
             ->inject('proofForToken')
             ->inject('domainVerification')
@@ -86,7 +87,7 @@ class Update extends Action
         Response $response,
         Project $project,
         Database $dbForProject,
-        ?Document $device,
+        ?Document $authDevice,
         Locale $locale,
         ProofsToken $proofForToken,
         bool $domainVerification,
@@ -94,15 +95,15 @@ class Update extends Action
         Event $queueForEvents,
         Authorization $authorization,
     ): void {
-        if ($device === null) {
-            throw new Exception(Exception::DEVICE_NOT_FOUND);
+        if ($authDevice === null) {
+            throw new Exception(Exception::USER_DEVICE_NOT_FOUND);
         }
 
-        if ($deviceId !== 'current' && $deviceId !== $device->getId()) {
-            throw new Exception(Exception::DEVICE_NOT_FOUND);
+        if ($deviceId !== 'current' && $deviceId !== $authDevice->getId()) {
+            throw new Exception(Exception::USER_DEVICE_NOT_FOUND);
         }
 
-        $sessions = $device->getAttribute('sessions', []);
+        $sessions = $authDevice->getAttribute('sessions', []);
         $session = null;
         foreach ($sessions as $candidate) {
             /** @var Document $candidate */
@@ -113,7 +114,7 @@ class Update extends Action
         }
 
         if ($session === null) {
-            throw new Exception(Exception::DEVICE_SESSION_NOT_FOUND);
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
         }
 
         $protocol = $request->getProtocol();
@@ -126,10 +127,12 @@ class Update extends Action
             'secret' => $proofForToken->hash($secret),
         ])));
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
+        $authorization->skip(fn () => $dbForProject->updateDocument('devices', $authDevice->getId(), new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
         ])));
+
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $session->getAttribute('userId')));
 
         $dbForProject->purgeCachedDocument('users', $session->getAttribute('userId'));
 
@@ -155,6 +158,7 @@ class Update extends Action
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('secret', $encoded)
             ->setAttribute('expire', DateTime::format(new \DateTime($session->getAttribute('expire'))));
 

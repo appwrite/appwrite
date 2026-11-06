@@ -251,4 +251,91 @@ final class WebhooksCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
         ]);
     }
+
+    public function testDeleteDeviceFiresSessionDeleteEvents(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+
+        $webhook = $this->createWebhook(
+            Id::unique(),
+            'Device sign-out events',
+            ['users.*.sessions.*.delete'],
+            true,
+            'http://request-catcher-webhook:5000/',
+            false,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $password = 'password';
+        $sessions = [];
+
+        // A device holding two accounts, created through the client-side endpoints
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(201, $device['headers']['status-code']);
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        foreach (['one', 'two'] as $suffix) {
+            $email = \uniqid() . 'device-' . $suffix . '@localhost.test';
+
+            $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => $password,
+                'name' => 'Device ' . $suffix,
+            ]);
+            $this->assertEquals(201, $user['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => $deviceKey . '=' . $deviceCookie,
+                'x-appwrite-project' => $projectId,
+            ], [
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertEquals(201, $session['headers']['status-code']);
+
+            $sessions[$session['body']['$id']] = $user['body']['$id'];
+        }
+
+        $this->assertCount(2, $sessions);
+
+        // Signing out of the whole device fires a session delete event for every account, not just the active one
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/devices/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        foreach ($sessions as $sessionId => $userId) {
+            $this->assertEventually(function () use ($userId, $sessionId) {
+                $delivery = $this->getLastRequest(function (array $request) use ($userId, $sessionId) {
+                    $this->assertStringContainsString(
+                        "users.{$userId}.sessions.{$sessionId}.delete",
+                        $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                    );
+                });
+
+                $this->assertNotEmpty($delivery);
+                $this->assertEquals($sessionId, $delivery['data']['$id']);
+                $this->assertEquals($userId, $delivery['data']['userId']);
+            }, 15000, 500);
+        }
+
+        $this->deleteWebhook($webhookId);
+    }
 }
