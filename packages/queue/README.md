@@ -98,6 +98,30 @@ Each queue is a WorkQueue-retention stream (a message is removed once acknowledg
 
 The server-side consumer is created with `max_deliver` one above `maxDeliver`, so reading it off `/jsz` shows the extra delivery. A message whose every attempt died unacknowledged, with no `reject()`, arrives once more and `receive()` dead-letters it without running a handler. At exactly `maxDeliver`, JetStream would retire it silently. It would stay on the work stream, counted as neither pending nor in flight, and only reach the dead stream if a broker happened to be subscribed when the server announced it. The consumer carries a `utopia_queue_spare_delivery` metadata key saying so. A broker under `Provisioning::Require`, which never writes configuration, reads that key to find the spare delivery, and reports through `onError` if it adopts a consumer provisioned without one. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
+### From a DSN
+
+`Nats::fromDSN()` builds the broker from `nats://[user[:password]@]host[:port]?param=value&...`, so a queue is tuned in configuration rather than code, and a producer and a consumer that read the same DSN provision the same queue:
+
+```php
+use Utopia\DSN\DSN;
+use Utopia\Queue\Broker\Nats;
+
+$broker = Nats::fromDSN(
+    new DSN('nats://user:pass@nats:4222?replicas=3&backoff=30,120,600&maxAckPending=360&maxBytes=1073741824&discard=new'),
+    'worker-audits',                 // client name, shown in the server's /connz
+    onError: fn (\Throwable $e) => error_log($e->getMessage()),
+);
+```
+
+The query string sets the constructor parameters listed in `Nats::DSN_PARAMS`, and anything left out keeps its default. It is read strictly. An unknown parameter is refused, because a typo would otherwise run the queue on defaults nobody chose. A number with a unit (`30s`) or a fraction where a count goes (`4.9`) is refused before the cast. `inactiveThreshold` is not settable from a DSN at all. Redelivery knobs that JetStream couples are reconciled rather than refused:
+
+- An explicit `ackWait` replaces the schedule's first step; otherwise the first step is the ack wait.
+- A `maxDeliver` lowered into the schedule trims it.
+- Delays below a second are raised to one.
+- `deadMaxAge=0` keeps dead letters forever.
+
+Code-level parameters (`onError`, `codec`, `messageId`, `provisioning`, …) are passed by name. A parameter the DSN owns is refused there, so a queue's configuration has one source. `Nats::connectionOptions()` gives the same server and credentials to code that needs a raw connection.
+
 ### Shaping a queue
 
 Beyond redelivery, the constructor carries what a queue holds and how much of it is in flight. `maxMsgSize`, `maxMsgs`, `maxBytes` and `discard` bound the work stream — `discard: DiscardPolicy::New` turns a full stream into backpressure, where the publish fails rather than the oldest message being dropped, and it needs one of the two limits to apply to. `maxMsgSize` also applies to the dead stream, so a message the queue accepted can always be dead-lettered. `maxAckPending`, `maxWaiting` and `inactiveThreshold` shape the worker consumers; `maxAckPending` is the one to set, because JetStream's default of 1000 hands out far more than a worker can hold and the surplus spends its `ackWait` window waiting to be picked up. `maxAge` states the message TTL directly instead of deriving it from the queue's `jobTtl`, which each side builds separately.

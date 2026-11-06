@@ -11,15 +11,28 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from '@/lib/legacy-console-path'
+import { isZeroAccount } from '@/lib/zero/session'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
+
+export { isValidRelativeRedirect }
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
  * email before org/project APIs. Unverified sessions must stay on /verify-email.
  */
 export function requiresConsoleEmailVerification(
-  account: Pick<Models.User, 'emailVerification'> | null | undefined,
+  account:
+    | (Pick<Models.User, 'emailVerification'> & { labels?: string[] })
+    | null
+    | undefined,
 ): boolean {
   if (!account) return false
+  // The anonymous owner of a Zero project has no email; claiming verifies one.
+  if (isZeroAccount(account)) return false
   return (
     getActiveProfileFeatures().userVerification && !account.emailVerification
   )
@@ -36,30 +49,6 @@ const AUTH_PAGE_PATHS = [
   '/verify-email',
   '/auth/magic-url',
 ] as const
-
-export function isValidRelativeRedirect(value: string): boolean {
-  if (
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    /[\\\u0000-\u001f\u007f]/.test(value)
-  ) {
-    return false
-  }
-  try {
-    // Validate destination structure, not URLs embedded in query values.
-    // Callers must retain the original bytes rather than the normalized URL.
-    const origin = 'https://console.invalid'
-    const destination = new URL(value, origin)
-    const pathname = decodeURIComponent(destination.pathname)
-    return (
-      destination.origin === origin &&
-      !pathname.startsWith('//') &&
-      !/[\\\u0000-\u001f\u007f]/.test(pathname)
-    )
-  } catch {
-    return false
-  }
-}
 
 function normalizeRedirectPathname(redirect: string): string {
   const pathname = redirect.split('?')[0]?.split('#')[0] ?? redirect
@@ -98,6 +87,23 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
   if (isMarketingPagePath(pathname)) return undefined
 
   return redirect
+}
+
+/**
+ * Destination after a magic URL sign-in, `/` when the link names none or an
+ * unsafe one. Links may carry a legacy `/console/...` path, which the server
+ * only rewrites on a document load, so it is rewritten here. A fragment is
+ * dropped: route navigation carries only the path and query.
+ */
+export function resolveMagicUrlRedirect(redirect?: string | null): string {
+  let destination = redirect || undefined
+  if (destination && isValidRelativeRedirect(destination)) {
+    const url = new URL(destination, 'https://console.invalid')
+    destination = isLegacyConsolePath(url.pathname)
+      ? `${rewriteLegacyConsolePath(url.pathname, url.search)}${url.search}`
+      : destination.split('#')[0]
+  }
+  return resolvePostAuthRedirect(destination) ?? '/'
 }
 
 /**
@@ -152,6 +158,11 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  // Claiming a transfer offers its own choice of organization, so a new account
+  // does not get a starter organization and project it did not ask for.
+  if (redirect && normalizeRedirectPathname(redirect) === '/transfer') {
+    return
+  }
   // Education enrollment provisions its own organization after verifying GitHub.
   if (redirect && normalizeRedirectPathname(redirect) === EDUCATION_JOIN_PATH) {
     return

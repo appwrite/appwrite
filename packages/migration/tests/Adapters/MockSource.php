@@ -155,6 +155,7 @@ class MockSource extends Source
             Resource::TYPE_POLICIES,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,

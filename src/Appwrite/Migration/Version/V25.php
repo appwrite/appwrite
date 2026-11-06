@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
@@ -15,6 +16,7 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\System\System;
 
 class V25 extends Migration
 {
@@ -417,8 +419,8 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.4.0 for custom user photos
-                    foreach (['photoId', 'photoSize'] as $attribute) {
+                    // Added in 2.4.0 for custom user photos, and in 2.7.0 for alert email opt-outs
+                    foreach (['photoId', 'photoSize', 'alertsUnsubscribed'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
@@ -461,6 +463,39 @@ class V25 extends Migration
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                     } catch (Throwable $th) {
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    // Added in 2.8.0 for account switching: the device a session belongs to.
+                    $deviceAttributes = ['deviceInternalId', 'deviceId'];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $deviceAttributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $deviceAttributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_device');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_device\" from {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'devices':
+                    // Added in 2.8.0 for account switching.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        $this->createCollection('devices');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create collection \"devices\": {$th->getMessage()}");
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
@@ -523,6 +558,38 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
+                case 'reviews':
+                case 'reviewFindings':
+                case 'reviewEvents':
+                case 'reviewChats':
+                case 'reviewLearnings':
+                case 'reviewUsage':
+                    // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        $this->createCollection($id);
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
+                    }
+                    break;
+
+                case 'monitors':
+                case 'monitorAlerts':
+                    // New in 2.7.0. Platform collections, so only the console project visits them.
+                    $this->createCollection($id);
+                    // Created before monitors could be critical.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'critical');
+                    } catch (Duplicate) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
@@ -583,6 +650,31 @@ class V25 extends Migration
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'certificates':
+                    // The certificate's expiry and its provider's renewal state, shown on proxy rules.
+                    // Attributes that exist are skipped, and a console without the collection has
+                    // nothing to add to; any other failure propagates, since without them the
+                    // worker silently drops both on every write.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, ['expireDate', 'status']);
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        // A certificate issued before this release has no expiry, so maintenance would
+                        // never check it as it nears expiry. Read it from the certificate in storage.
+                        $letsEncrypt = new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', '')));
+                        foreach ($this->dbForProject->cursor($id, batchSize: 100) as $certificate) {
+                            if (!empty($certificate->getAttribute('expireDate'))) {
+                                continue;
+                            }
+                            $expireDate = $letsEncrypt->getCertificateExpiry($certificate->getAttribute('domain', ''), null);
+                            if ($expireDate !== null) {
+                                $this->dbForProject->updateDocument($id, $certificate->getId(), new Document(['expireDate' => $expireDate]));
+                            }
+                        }
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }

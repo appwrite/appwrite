@@ -1,5 +1,5 @@
-import { VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { VideoOutput } from '@/lib/appwrite/videos'
 
 export type VideoMasterManifestKind = 'hls' | 'dash' | 'cmaf-hls' | 'cmaf-dash'
 

@@ -1,3 +1,5 @@
+import type { SalesSource } from '@/lib/sales/contact-sales'
+
 /**
  * Curated analytics actions for low-cardinality, specific Plausible event names.
  *
@@ -28,6 +30,7 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
+  'zero-claim': 'Zero Claim Clicked',
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
@@ -87,7 +90,8 @@ export const ANALYTICS_ACTIONS = {
   'alternative-migrate': 'Alternative Migrate Clicked',
   'alternative-compare-other': 'Alternative Compare Other Clicked',
   'secret-start-building': 'Secret Campaign Start Building Clicked',
-  'secret-sticky-start-building': 'Secret Campaign Sticky Start Building Clicked',
+  'secret-sticky-start-building':
+    'Secret Campaign Sticky Start Building Clicked',
   'secret-read-docs': 'Secret Campaign Read Docs Clicked',
   'secret-open-files': 'Secret Campaign Open Files Clicked',
   'secret-source': 'Secret Campaign Source Clicked',
@@ -125,11 +129,13 @@ export const ANALYTICS_ACTIONS = {
   'pricing-promo-start-free': 'Pricing Promo Start Free Clicked',
   'pricing-promo-start-start': 'Pricing Promo Start Start Clicked',
   'pricing-promo-start-pro': 'Pricing Promo Start Pro Clicked',
-  'pricing-promo-contact-enterprise': 'Pricing Promo Contact Enterprise Clicked',
+  'pricing-promo-contact-enterprise':
+    'Pricing Promo Contact Enterprise Clicked',
   'pricing-compare-start-free': 'Pricing Compare Start Free Clicked',
   'pricing-compare-start-start': 'Pricing Compare Start Start Clicked',
   'pricing-compare-start-pro': 'Pricing Compare Start Pro Clicked',
-  'pricing-compare-contact-enterprise': 'Pricing Compare Contact Enterprise Clicked',
+  'pricing-compare-contact-enterprise':
+    'Pricing Compare Contact Enterprise Clicked',
 
   // Docs CTAs
   'docs-get-started': 'Docs Get Started Clicked',
@@ -154,6 +160,18 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-apply-coupon': 'Upgrade Apply Coupon Clicked',
   'upgrade-apply-coupon-confirm': 'Upgrade Apply Coupon Confirm Clicked',
   'upgrade-free-conflict-choice': 'Upgrade Free Conflict Choice Selected',
+
+  // In-console sales links (see `SALES_SOURCES`)
+  'billing-contact-sales': 'Billing Contact Sales Clicked',
+  'settings-contact-sales': 'Settings Contact Sales Clicked',
+  'members-contact-sales': 'Members Contact Sales Clicked',
+  'backups-contact-sales': 'Backups Contact Sales Clicked',
+  'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'specs-contact-sales': 'Specifications Contact Sales Clicked',
+  'replicas-contact-sales': 'Replicas Contact Sales Clicked',
+  'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'support-contact-sales': 'Support Contact Sales Clicked',
+  'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
@@ -247,7 +265,8 @@ export const ANALYTICS_ACTIONS = {
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
-  'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'init-recap-promo-banner-view-recap':
+    'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
     'Native OAuth Promo Banner Open Settings Clicked',
   'native-oauth-promo-banner-learn-more':
@@ -269,6 +288,8 @@ export const ANALYTICS_ACTIONS = {
   'firewall-spider-promo-modal-learn-more':
     'Firewall Spider Promo Modal Learn More Clicked',
   'firewall-spider-promo-sound': 'Firewall Spider Promo Sound Toggled',
+  'github-star-wizard-star': 'GitHub Star Wizard Star Clicked',
+  'github-star-wizard-skip': 'GitHub Star Wizard Skip Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
@@ -381,6 +402,20 @@ const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   'tier-enterprise': 'upgrade-select-enterprise',
 }
 
+const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
+  billing: 'billing-contact-sales',
+  settings: 'settings-contact-sales',
+  members: 'members-contact-sales',
+  backups: 'backups-contact-sales',
+  activity: 'activity-contact-sales',
+  specs: 'specs-contact-sales',
+  replicas: 'replicas-contact-sales',
+  compliance: 'compliance-contact-sales',
+  support: 'support-contact-sales',
+  'support-ticket': 'support-ticket-contact-sales',
+  'plan-picker': 'upgrade-contact-sales',
+}
+
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */
 const DOCS_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   '/docs': 'docs-nav-home',
@@ -435,6 +470,12 @@ export function getUpgradePlanSelectAnalyticsAction(
     UPGRADE_PLAN_SELECT_ACTIONS[key] ??
     UPGRADE_PLAN_SELECT_ACTIONS[key.replace(/\s+/g, '-')]
   )
+}
+
+export function getContactSalesAnalyticsAction(
+  source: SalesSource,
+): AnalyticsActionId {
+  return CONTACT_SALES_ACTIONS[source]
 }
 
 export function getDocsNavAnalyticsAction(

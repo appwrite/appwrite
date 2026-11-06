@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -19,7 +20,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -140,11 +140,20 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        // A draft's scheduledAt is only a suggestion until it is scheduled
+        if (
+            $message->getAttribute('status') !== MessageStatus::DRAFT
+            && !\is_null($currentScheduledAt)
+            && new \DateTime($currentScheduledAt) < new \DateTime()
+        ) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
+        if (
+            (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
+            && !\is_null($scheduledAt ?? $currentScheduledAt)
+        ) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -153,14 +162,12 @@ class Update extends Action
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'schedule' => $scheduledAt,
+                'schedule' => $scheduledAt ?? $currentScheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
 
             $message->setAttribute('scheduleId', $schedule->getId());
-        }
-
-        if (!\is_null($currentScheduledAt)) {
+        } elseif (!\is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -274,6 +281,6 @@ class Update extends Action
             ->setParam('messageId', $message->getId());
 
         $response
-            ->dynamic($message, Response::MODEL_MESSAGE);
+            ->dynamic($this->redactImageUrl($message, $request), Response::MODEL_MESSAGE);
     }
 }

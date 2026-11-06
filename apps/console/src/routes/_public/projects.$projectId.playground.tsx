@@ -9,7 +9,9 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute('/_public/projects/$projectId/playground')(
   {
     head: () => ({ meta: [{ title: pageTitle('Playground') }] }),
-    validateSearch: (search: Record<string, unknown>) => ({
+    validateSearch: (
+      search: Record<string, unknown>,
+    ): { service?: string; operation?: string } => ({
       service:
         typeof search.service === 'string' && search.service.trim()
           ? search.service.trim()

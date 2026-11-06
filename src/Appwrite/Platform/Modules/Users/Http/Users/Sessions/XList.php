@@ -66,6 +66,7 @@ class XList extends Action
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
+            $session->setAttribute('userName', $user->getAttribute('name', ''));
             $sessions[$key] = $session;
         }
 

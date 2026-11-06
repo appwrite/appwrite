@@ -5,6 +5,7 @@ use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -18,6 +19,7 @@ use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -26,6 +28,7 @@ use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
@@ -33,6 +36,7 @@ use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -84,7 +88,7 @@ $container->set('register', fn () => $register);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
-$container->set('console', fn () => new Document(Config::getParam('console')), []);
+$container->set('console', fn () => new Project(Config::getParam('console')), []);
 
 $container->set('platform', fn () => Config::getParam('platform', []), []);
 
@@ -203,6 +207,23 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
     }
 }, ['telemetry', 'publicHostname']);
 
+$container->set('adaptersForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): array {
+    $adapters = [];
+    foreach (PushService::cases() as $service) {
+        try {
+            $adapter = (new MessagingProvider($telemetry, $publicHostname))->internalPush($service);
+        } catch (\Throwable $error) {
+            Console::error('Ignoring ' . $service->variable() . ': ' . $error->getMessage());
+            continue;
+        }
+        if ($adapter !== null) {
+            $adapters[$service->value] = $adapter;
+        }
+    }
+
+    return $adapters;
+}, ['telemetry', 'publicHostname']);
+
 $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
@@ -317,6 +338,11 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForReviews', fn (Publisher $publisher) => new ReviewPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_REVIEWS_QUEUE_NAME', Event::REVIEWS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
@@ -340,6 +366,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForAlerts', fn (Publisher $publisher) => new AlertPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_ALERTS_QUEUE_NAME', Event::ALERTS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(

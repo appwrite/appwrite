@@ -574,6 +574,68 @@ final class V25Test extends TestCase
         ));
     }
 
+    public function testReadsTheExpiryOfCertificatesIssuedBeforeTheRelease(): void
+    {
+        if (!\is_dir(APP_STORAGE_CERTIFICATES) || !\is_writable(APP_STORAGE_CERTIFICATES)) {
+            $this->markTestSkipped(APP_STORAGE_CERTIFICATES . ' is not writable.');
+        }
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A certificates collection from the previous release: no expireDate and no status.
+        $certificates = Config::getParam('collections', [])['console']['certificates'];
+        $database->createCollection(Collection::create(
+            id: 'certificates',
+            attributes: \array_values(\array_filter(
+                $certificates['attributes'],
+                static fn (Attribute $attribute): bool => !\in_array($attribute->key, ['expireDate', 'status'], true)
+            )),
+            indexes: \array_values($certificates['indexes']),
+        ));
+
+        // One certificate is still in storage, the other one is gone.
+        $served = \uniqid() . '.v25.test';
+        $gone = \uniqid() . '.v25.test';
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_x509_export(\openssl_csr_sign(\openssl_csr_new(['commonName' => $served], $key), null, $key, 20), $pem);
+        \mkdir(APP_STORAGE_CERTIFICATES . '/' . $served, 0755, true);
+        \file_put_contents(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem', $pem);
+        foreach ([$served, $gone] as $domain) {
+            $database->createDocument('certificates', new Document(['$id' => \md5($domain), 'domain' => $domain, 'attempts' => 5, 'logs' => '']));
+        }
+
+        $migration = new class ($database, $certificates) extends V25 {
+            public function __construct(Database $database, array $certificates)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => ['certificates' => $certificates]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+            \unlink(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem');
+            \rmdir(APP_STORAGE_CERTIFICATES . '/' . $served);
+        }
+
+        $expiry = $database->getDocument('certificates', \md5($served))->getAttribute('expireDate');
+        $this->assertNotEmpty($expiry);
+        $this->assertEqualsWithDelta(\time() + 20 * 24 * 60 * 60, \strtotime($expiry), 120);
+        $this->assertEmpty($database->getDocument('certificates', \md5($gone))->getAttribute('expireDate'));
+    }
+
     public function testSyncsProjectFromOlderReleaseWithConfig(): void
     {
         $authorization = new Authorization();
