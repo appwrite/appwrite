@@ -326,7 +326,7 @@ final class WebhooksCustomServerTest extends Scope
                 $delivery = $this->getLastRequest(function (array $request) use ($userId, $sessionId) {
                     $this->assertStringContainsString(
                         "users.{$userId}.sessions.{$sessionId}.delete",
-                        $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                        (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')
                     );
                 });
 

@@ -121,14 +121,15 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertArrayHasKey($deviceKey, $response['cookies']);
         $this->assertEquals('', $response['body']['activeSessionId']);
         $this->assertEquals([], $response['body']['sessions']);
-        $this->assertNotEmpty($response['body']['secret']);
+        // The secret travels in the cookie; like a session secret it is a sensitive field, stripped for clients
+        $this->assertEmpty($response['body']['secret'] ?? '');
 
         $deviceId = $response['body']['$id'];
         $deviceCookie = $response['cookies'][$deviceKey];
         $deviceExpire = $response['body']['expire'];
 
         /**
-         * Test for SUCCESS - calling again returns the same device with 201 (DX), without the secret
+         * Test for SUCCESS - calling again returns the same device with 201 (DX)
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/devices', [
             'origin' => 'http://localhost',
@@ -139,7 +140,6 @@ final class AccountDevicesCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($deviceId, $response['body']['$id']);
-        $this->assertEmpty($response['body']['secret'] ?? '');
 
         /**
          * Test for SUCCESS - first session joins the device and becomes active, synchronously:

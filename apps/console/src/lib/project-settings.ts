@@ -119,7 +119,8 @@ function policyById(
   policies: ProjectPolicy[] | undefined,
   id:
     | ProjectPolicyId
-    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
+    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId]
+    | typeof AuthAccountDevicesPolicyId,
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
