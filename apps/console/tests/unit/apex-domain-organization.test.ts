@@ -97,6 +97,7 @@ describe('ensureApexDomainInOrganization', () => {
     })
     await ensureApexDomainInOrganization('team1', 'myapp.appwrite.network')
     await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run')
+    await ensureApexDomainInOrganization('team1', 'fn.appwrite.global')
     expect(created).toEqual([])
   })
 })

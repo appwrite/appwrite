@@ -158,7 +158,12 @@ export async function ensureApexDomainInOrganization(
   // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds
   // when the variables fail to load, and the variables, which carry only the
   // first sites and functions zone of the project's region, add any other.
-  const owned = ['appwrite.network', 'appwrite.run', 'appwrite.site']
+  const owned = [
+    'appwrite.network',
+    'appwrite.run',
+    'appwrite.site',
+    'appwrite.global',
+  ]
   try {
     const variables = await queryClient.fetchQuery(
       consoleVariablesQueryOptions(options?.region),
