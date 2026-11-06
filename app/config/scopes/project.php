@@ -81,6 +81,11 @@ return [
             "Access to update project\'s OAuth2 configuration.",
         "category" => "Project",
     ],
+    "project.ldap.write" => [
+        "description" =>
+            "Access to update and test project\'s LDAP configuration.",
+        "category" => "Project",
+    ],
     "templates.read" => [
         "description" =>
             "Access to read project\'s templates",

@@ -35,6 +35,7 @@ $platformCollections = [
             Attribute::string(key: 'services', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'apis', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'smtp', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
+            Attribute::string(key: 'ldap', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
             // TODO make sure size fits
             Attribute::string(key: 'templates', size: 1_000_000, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'auths', size: 16384, default: [], filters: [Filter::Json]),

@@ -402,6 +402,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_LDAP_DIRECTORY_ERROR => [
+        'name' => Exception::USER_LDAP_DIRECTORY_ERROR,
+        'description' => 'The LDAP directory could not be reached or refused the service account.',
+        'code' => 424,
+    ],
     Exception::USER_OAUTH2_PROVIDER_FAILURE => [
         'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
         'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
@@ -1299,6 +1304,11 @@ return [
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
         'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_LDAP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_LDAP_CONFIG_INVALID,
+        'description' => 'Provided LDAP config is invalid. Please check the configured values and try again.',
         'code' => 400,
     ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [

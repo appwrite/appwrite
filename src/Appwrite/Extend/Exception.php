@@ -118,6 +118,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
     public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_LDAP_DIRECTORY_ERROR = 'user_ldap_directory_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
@@ -336,6 +337,7 @@ class Exception extends \Exception
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
+    public const string PROJECT_LDAP_CONFIG_INVALID = 'project_ldap_config_invalid';
 
     public const string PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
