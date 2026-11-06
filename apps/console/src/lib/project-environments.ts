@@ -1,7 +1,10 @@
+import { PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
+
 /**
- * A row in the environment switcher: either the project itself (the default
- * environment, which has no environment document of its own) or one of the
- * environments listed under it. Every row is a project the Console can open.
+ * A row in the environment switcher: either the project itself (production,
+ * which has no environment document of its own and is always labeled
+ * Production) or one of the environments listed under it. Every row is a
+ * project the Console can open.
  */
 export interface ProjectEnvironmentOption {
   id: string
@@ -45,6 +48,77 @@ export function sortProjectEnvironments<T extends { $id: string }>(
     if (rankB === undefined) return -1
     return rankA - rankB
   })
+}
+
+/**
+ * Names offered when creating an environment, in order. A suggestion is
+ * skipped when any of its aliases is already used (case-insensitive). After
+ * the list is exhausted the field stays empty.
+ */
+const PROJECT_ENVIRONMENT_NAME_SUGGESTIONS: readonly {
+  name: string
+  aliases: readonly string[]
+}[] = [
+  { name: 'Stage', aliases: ['stage', 'staging'] },
+  { name: 'Dev', aliases: ['dev', 'development'] },
+  { name: 'QA', aliases: ['qa', 'quality assurance'] },
+  { name: 'Preview', aliases: ['preview'] },
+  { name: 'Test', aliases: ['test', 'testing'] },
+  { name: 'Sandbox', aliases: ['sandbox'] },
+  { name: 'Demo', aliases: ['demo'] },
+  { name: 'UAT', aliases: ['uat'] },
+  { name: 'Beta', aliases: ['beta'] },
+]
+
+/**
+ * The next unused environment name, or an empty string when every suggestion
+ * is already taken. `takenNames` are existing environment names and the
+ * project's own name.
+ */
+export function suggestProjectEnvironmentName(
+  takenNames: readonly string[],
+): string {
+  const taken = new Set(
+    takenNames.map((name) => name.trim().toLowerCase()).filter(Boolean),
+  )
+
+  for (const suggestion of PROJECT_ENVIRONMENT_NAME_SUGGESTIONS) {
+    if (suggestion.aliases.some((alias) => taken.has(alias))) continue
+    return suggestion.name
+  }
+
+  return ''
+}
+
+/**
+ * The environment a project document answers as, or null for production: while
+ * the Console is in an environment, the project answers as that environment.
+ * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
+ */
+export function projectEnvironmentId(
+  project: object | null | undefined,
+): string | null {
+  return (
+    (project as { environmentId?: string | null } | null | undefined)
+      ?.environmentId || null
+  )
+}
+
+/**
+ * The environment ID to offer for a name, as the ID the environment is addressed
+ * by in `X-Appwrite-Environment`: the name lowercased, with everything that is
+ * not a letter or a digit folded into single hyphens, no hyphen at either end
+ * and at most the project ID length. 'Stage' gives 'stage', 'QA / Beta 2'
+ * gives 'qa-beta-2', a name of symbols alone gives '' and leaves generation to
+ * the server.
+ */
+export function suggestProjectEnvironmentId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, PROJECT_ID_MAX_LENGTH)
+    .replace(/-+$/g, '')
 }
 
 /**
@@ -174,6 +248,26 @@ export function defaultProjectEnvironmentCopySelection(): ProjectEnvironmentCopy
     PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
       group.id,
       { structure: true, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** No group is copied. */
+export function emptyProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: false, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** Every group and, where it has one, its data. */
+export function fullProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: true, data: Boolean(group.data) },
     ]),
   ) as ProjectEnvironmentCopySelection
 }

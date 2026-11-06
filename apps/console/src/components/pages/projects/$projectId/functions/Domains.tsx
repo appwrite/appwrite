@@ -7,7 +7,8 @@ import {
   Trash2,
   ExternalLink,
   Globe,
-  Mail} from 'lucide-react'
+  Mail,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -20,22 +21,25 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   useFunctionDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
   canRetryRule,
   canViewRuleLogs,
@@ -47,12 +51,13 @@ import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 import { isSmtpRule } from '@/lib/function-smtp-domain'
 import { VerifySmtpDomain } from './domains/VerifySmtpDomain'
 
 export function View() {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
@@ -84,7 +89,9 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching} = useFunctionDomains(
+    isFetching: domainsFetching,
+    refetch: refetchDomains,
+  } = useFunctionDomains(
     projectId,
     functionId,
     currentPage,
@@ -213,7 +220,7 @@ export function View() {
               </TableHeader>
               <TableBody>
                 {rules.map((rule) => {
-                  const statusConfig = getDomainStatusBadgeConfig(rule.status)
+                  const statusConfig = getRuleStatusBadgeConfig(rule)
                   const isEmail = isSmtpRule(rule)
 
                   return (
@@ -236,7 +243,7 @@ export function View() {
                             </span>
                           ) : (
                             <a
-                              href={domainUrl(rule.domain)}
+                              href={visitUrl(rule.domain)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
@@ -264,33 +271,19 @@ export function View() {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Badge
-                              variant={statusConfig.variant}
-                              className="text-[10px] shrink-0 gap-1.5"
-                              title={
-                                rule.status === 'verifying'
-                                  ? t(
-                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
-                                    )
-                                  : undefined
-                              }
-                            >
-                              {rule.status === 'verifying' && (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                            <RuleStatusBadge rule={rule} />
+                            {statusConfig.variant !== 'success' &&
+                              canViewRuleLogs(rule) && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-[13px]"
+                                  onClick={() => handleViewLogs(rule)}
+                                >
+                                  {t('View logs')}
+                                </Button>
                               )}
-                              {t(statusConfig.label)}
-                            </Badge>
-                            {rule.status !== 'verified' && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleViewLogs(rule)}
-                              >
-                                {t('View logs')}
-                              </Button>
-                            )}
-                            {canRetryRule(rule.status) && (
+                            {canRetryRule(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -319,14 +312,18 @@ export function View() {
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
-                                    <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
+                                    <MenuItemContent icon={FileText}>
+                                      {t('Logs')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {canRetryRule(rule.status) && (
+                                {canRetryRule(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
-                                    <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
+                                    <MenuItemContent icon={RefreshCw}>
+                                      {t('Retry')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -342,7 +339,9 @@ export function View() {
                                         to: '/organizations/$orgId/domains/$domainId',
                                         params: {
                                           orgId: project.teamId,
-                                          domainId: orgDomainId}})
+                                          domainId: orgDomainId,
+                                        },
+                                      })
                                     }
                                   }}
                                   disabled={
@@ -355,12 +354,16 @@ export function View() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>
+                                    {t('Records')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(rule)}
                                 >
-                                  <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -410,17 +413,10 @@ export function View() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/functions/$functionId/domains/add',
-                params: { projectId: projectId!, functionId: functionId! }})
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
@@ -444,6 +440,8 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>

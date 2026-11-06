@@ -4,561 +4,449 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
+use Utopia\Agents\Effort;
+use Utopia\Agents\Event;
+use Utopia\Agents\Events\ReasoningDelta;
+use Utopia\Agents\Events\TextDelta;
+use Utopia\Agents\Events\ToolCall as ToolCallEvent;
+use Utopia\Agents\Events\ToolInputDelta;
+use Utopia\Agents\Exception\Api;
+use Utopia\Agents\Exception\Unsupported;
+use Utopia\Agents\FinishReason;
 use Utopia\Agents\Message;
+use Utopia\Agents\Model;
+use Utopia\Agents\Part;
+use Utopia\Agents\Parts\File;
+use Utopia\Agents\Parts\Image;
+use Utopia\Agents\Parts\Reasoning;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Parts\ToolResult;
+use Utopia\Agents\Request;
+use Utopia\Agents\Response;
+use Utopia\Agents\Role;
+use Utopia\Agents\Tool;
+use Utopia\Agents\ToolChoice;
+use Utopia\Agents\Usage;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
-class Anthropic extends Adapter
+/**
+ * Anthropic Messages API.
+ *
+ * Marks the system prompt (or, without one, the last tool) as a prompt cache
+ * breakpoint. The request follows the model generation:
+ *
+ * - Structured output uses the API's JSON schema output format from Claude
+ *   4.5 on. Older models get a "json" tool whose input is returned, and
+ *   streamed, as the response text.
+ * - Effort maps to adaptive thinking and the API's effort setting from Claude
+ *   4.6 on, and to a thinking token budget before that. Effort::None leaves
+ *   thinking off where the model allows it; from Claude 5 on, where thinking
+ *   cannot always be turned off, it asks for the lowest effort instead.
+ * - Temperature, top_p and top_k are sent only up to Claude 4.6: later models
+ *   reject them.
+ *
+ * A model ID without a version, such as an alias, is treated as current.
+ */
+class Anthropic extends Adapter implements Model
 {
-    protected const MAX_ATTACHMENTS_PER_MESSAGE = 10;
+    protected const string ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
-    protected const MAX_ATTACHMENT_BYTES = 5000000;
-
-    protected const MAX_TOTAL_ATTACHMENT_BYTES = 20000000;
+    protected const string VERSION = '2023-06-01';
 
     /**
-     * @var list<string>
+     * Name of the tool that carries structured output.
      */
-    protected const ALLOWED_ATTACHMENT_MIME_TYPES = [
-        'image/png',
-        'image/jpeg',
-        'image/webp',
-        'image/gif',
-    ];
+    protected const string OUTPUT = 'json';
 
     /**
-     * Claude 4 Opus - Flagship model with exceptional reasoning for the most demanding tasks
+     * Output token limit when the request sets none; the API requires one.
      */
-    public const MODEL_CLAUDE_4_OPUS = 'claude-opus-4-0';
+    protected const int MAX_TOKENS = 4096;
 
-    /**
-     * Claude 3 Opus - Premium model with superior performance on complex analysis and creative work
-     */
-    public const MODEL_CLAUDE_3_OPUS = 'claude-3-opus-latest';
+    protected string $endpoint;
 
-    /**
-     * Claude 4 Sonnet - Intelligent and responsive model optimized for productivity workflows
-     */
-    public const MODEL_CLAUDE_4_SONNET = 'claude-sonnet-4-0';
-
-    /**
-     * Claude 3.7 Sonnet - Enhanced model with improved reasoning and coding capabilities
-     */
-    public const MODEL_CLAUDE_3_7_SONNET = 'claude-3-7-sonnet-latest';
-
-    /**
-     * Claude 3.5 Sonnet - Versatile model balancing capability and speed for general use
-     */
-    public const MODEL_CLAUDE_3_5_SONNET = 'claude-3-5-sonnet-latest';
-
-    /**
-     * Claude 3.5 Haiku - Ultra-fast model for quick responses and lightweight processing
-     */
-    public const MODEL_CLAUDE_3_5_HAIKU = 'claude-3-5-haiku-latest';
-
-    /**
-     * Claude 3 Haiku - Rapid model designed for speed and efficiency on straightforward tasks
-     */
-    public const MODEL_CLAUDE_3_HAIKU = 'claude-3-haiku-20240307';
-
-    protected const ENDPOINT = 'https://api.anthropic.com/v1/messages';
-
-    protected const API_VERSION = '2023-06-01';
-
-    /**
-     * Cache TTL for 3600 seconds
-     */
-    private const CACHE_TTL_3600 = 'ephemeral';
-
-    /**
-     * Limit of instructions that can be cached
-     */
-    private const CACHE_LIMIT = 4;
-
-    protected string $apiKey;
-
-    protected string $model;
-
-    protected int $maxTokens;
-
-    protected float $temperature;
-
-    /**
-     * Create a new Anthropic adapter
-     *
-     *
-     * @throws \Exception
-     */
     public function __construct(
-        string $apiKey,
-        string $model = self::MODEL_CLAUDE_3_HAIKU,
-        int $maxTokens = 1024,
-        float $temperature = 1.0,
+        protected string $apiKey,
+        protected string $model,
+        ?string $endpoint = null,
         int $timeout = 90000,
-        (ClientInterface&StreamingClientInterface)|null $client = null
+        (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
-        $this->apiKey = $apiKey;
-        $this->maxTokens = $maxTokens;
-        $this->temperature = $temperature;
+        $this->endpoint = $endpoint ?? static::ENDPOINT;
         $this->timeout = $timeout;
         $this->client = $client;
-        $this->setModel($model);
     }
 
-    /**
-     * Check if the model supports JSON schema
-     */
-    public function isSchemaSupported(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Send a message to the Anthropic API
-     *
-     * @param  array<Message>  $messages
-     *
-     * @throws \Exception
-     */
-    public function send(array $messages, ?callable $listener = null): Message
-    {
-        if ($this->getAgent() === null) {
-            throw new \Exception('Agent not set');
-        }
-
-        $headers = [
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::API_VERSION,
-        ];
-
-        $systemMessages = [];
-        if (! empty($this->getAgent()->getDescription())) {
-            $systemMessages[] = [
-                'type' => 'text',
-                'text' => $this->getAgent()->getDescription(),
-                'cache_control' => [
-                    'type' => self::CACHE_TTL_3600,
-                ],
-            ];
-        }
-
-        $cacheControlCount = ! empty($this->getAgent()->getDescription()) ? 1 : 0;
-        foreach ($this->getAgent()->getInstructions() as $name => $content) {
-            $text = is_array($content) ? implode("\n", $content) : $content;
-            $message = [
-                'type' => 'text',
-                'text' => '# '.$name."\n\n".$text,
-            ];
-
-            if ($cacheControlCount < self::CACHE_LIMIT) {
-                $message['cache_control'] = [
-                    'type' => self::CACHE_TTL_3600,
-                ];
-                $cacheControlCount++;
-            }
-
-            $systemMessages[] = $message;
-        }
-
-        $formattedMessages = [];
-        foreach ($messages as $message) {
-            $formattedMessages[] = [
-                'role' => $message->getRole(),
-                'content' => $this->formatMessageContent($message),
-            ];
-        }
-
-        $schema = $this->getAgent()->getSchema();
-        $payload = [
-            'model' => $this->model,
-            'system' => $systemMessages,
-            'messages' => $formattedMessages,
-            'max_tokens' => $this->maxTokens,
-            'temperature' => $this->temperature,
-        ];
-
-        if (isset($schema)) {
-            $payload['tools'] = [
-                [
-                    'name' => $schema->getName(),
-                    'description' => $schema->getDescription(),
-                    'input_schema' => [
-                        'type' => 'object',
-                        'properties' => $schema->getProperties(),
-                        'required' => $schema->getRequired(),
-                    ],
-                ],
-            ];
-            $payload['tool_choice'] = [
-                'type' => 'tool',
-                'name' => $schema->getName(),
-            ];
-            $payload['stream'] = false;
-        } else {
-            $payload['stream'] = true;
-        }
-
-        $content = '';
-        if ($payload['stream']) {
-            $this->beginStreamProcessing();
-            try {
-                $response = $this->post(
-                    self::ENDPOINT,
-                    $payload,
-                    $headers,
-                    function (string $chunk) use (&$content, $listener): void {
-                        $content .= $this->process($chunk, $listener);
-                    }
-                );
-                $content .= $this->flushBufferedStreamData($listener);
-            } finally {
-                $this->endStreamProcessing();
-            }
-        } else {
-            $response = $this->post(self::ENDPOINT, $payload, $headers);
-        }
-
-        if ($response->getStatusCode() >= 400) {
-            if (! $payload['stream']) {
-                $json = json_decode((string) $response->getBody(), true);
-                $content = $this->formatErrorMessage($json);
-            }
-
-            throw new \Exception(
-                ucfirst($this->getName()).' API error: '.$content,
-                $response->getStatusCode()
-            );
-        }
-
-        if ($payload['stream']) {
-            return new Message($content);
-        }
-
-        $body = (string) $response->getBody();
-        $json = json_decode($body, true);
-
-        $text = '';
-        if (is_array($json)) {
-            $content = $json['content'] ?? null;
-            if (is_array($content) && isset($content[0])) {
-                $item = $content[0];
-                if (is_array($item) &&
-                    isset($item['type']) && $item['type'] === 'tool_use' &&
-                    isset($item['name']) && $item['name'] === $schema->getName()) {
-                    $text = is_string($item['input']) ? $item['input'] : (json_encode($item['input']) ?: '');
-                }
-            }
-        }
-
-        if ($text === '') {
-            $text = $body;
-        }
-
-        return new Message($text);
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>|string
-     */
-    protected function formatMessageContent(Message $message): array|string
-    {
-        $parts = [];
-
-        if ($message->getContent() !== '') {
-            $parts[] = [
-                'type' => 'text',
-                'text' => $message->getContent(),
-            ];
-        }
-
-        foreach ($message->getAttachments() as $attachment) {
-            if (! $this->isImageAttachment($attachment)) {
-                continue;
-            }
-
-            $parts[] = $this->buildImagePart($attachment);
-        }
-
-        if (empty($parts)) {
-            return $message->getContent();
-        }
-
-        if (count($parts) === 1 && isset($parts[0]['type']) && $parts[0]['type'] === 'text') {
-            $text = $parts[0]['text'] ?? '';
-
-            return is_string($text) ? $text : '';
-        }
-
-        return $parts;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function buildImagePart(Message $image): array
-    {
-        $mimeType = $image->getMimeType() ?? 'application/octet-stream';
-        $mediaType = str_starts_with($mimeType, 'image/') ? $mimeType : 'application/octet-stream';
-
-        return [
-            'type' => 'image',
-            'source' => [
-                'type' => 'base64',
-                'media_type' => $mediaType,
-                'data' => base64_encode($image->getContent()),
-            ],
-        ];
-    }
-
-    /**
-     * Process a stream chunk from the Anthropic API
-     *
-     *
-     * @throws \Exception
-     */
-    protected function process(string $chunk, ?callable $listener): string
-    {
-        [, $lines] = $this->prepareStreamLines($chunk);
-
-        return $this->processStreamLines($lines, $listener);
-    }
-
-    /**
-     * @param  array<int, string>  $lines
-     */
-    protected function processStreamLines(array $lines, ?callable $listener): string
-    {
-        $block = '';
-
-        foreach ($lines as $line) {
-            $json = $this->decodeJsonOrSseLine($line);
-            if (! is_array($json)) {
-                continue;
-            }
-
-            $type = $json['type'] ?? null;
-            if ($type === null) {
-                continue;
-            }
-
-            switch ($type) {
-                case 'message_start':
-                    if (isset($json['message']) && is_array($json['message']) && isset($json['message']['usage']) && is_array($json['message']['usage'])) {
-                        $usage = $json['message']['usage'];
-                        if (isset($usage['input_tokens']) && is_int($usage['input_tokens'])) {
-                            $this->countInputTokens($usage['input_tokens']);
-                        }
-                        if (isset($usage['output_tokens']) && is_int($usage['output_tokens'])) {
-                            $this->countOutputTokens($usage['output_tokens']);
-                        }
-                        if (isset($usage['cache_creation_input_tokens']) && is_int($usage['cache_creation_input_tokens'])) {
-                            $this->countCacheCreationInputTokens($usage['cache_creation_input_tokens']);
-                        }
-                        if (isset($usage['cache_read_input_tokens']) && is_int($usage['cache_read_input_tokens'])) {
-                            $this->countCacheReadInputTokens($usage['cache_read_input_tokens']);
-                        }
-                    }
-                    break;
-
-                case 'content_block_start':
-                    // Initialize content block
-                    break;
-
-                case 'content_block_delta':
-                    if (! isset($json['delta']) || ! is_array($json['delta']) || ! isset($json['delta']['type'])) {
-                        break;
-                    }
-
-                    $deltaType = $json['delta']['type'];
-                    if ($deltaType === 'text_delta' && isset($json['delta']['text']) && is_string($json['delta']['text'])) {
-                        $this->appendStreamToken($block, $json['delta']['text'], $listener);
-                    }
-                    break;
-
-                case 'content_block_stop':
-                    // End of content block
-                    break;
-
-                case 'message_delta':
-                    if (isset($json['usage']) && is_array($json['usage'])) {
-                        $usage = $json['usage'];
-                        if (isset($usage['input_tokens']) && is_int($usage['input_tokens'])) {
-                            $this->countInputTokens($usage['input_tokens']);
-                        }
-                        if (isset($usage['output_tokens']) && is_int($usage['output_tokens'])) {
-                            $this->countOutputTokens($usage['output_tokens']);
-                        }
-                    }
-                    break;
-
-                case 'message_stop':
-                    break;
-
-                case 'error':
-                    return $this->formatErrorMessage($json);
-            }
-        }
-
-        return $block;
-    }
-
-    protected function flushBufferedStreamData(?callable $listener): string
-    {
-        $line = $this->consumeStreamBufferLine();
-        if ($line === null) {
-            return '';
-        }
-
-        return $this->processStreamLines([$line], $listener);
-    }
-
-    /**
-     * Get available models
-     *
-     * @return array<string>
-     */
-    public function getModels(): array
-    {
-        return [
-            self::MODEL_CLAUDE_4_OPUS,
-            self::MODEL_CLAUDE_3_OPUS,
-            self::MODEL_CLAUDE_4_SONNET,
-            self::MODEL_CLAUDE_3_7_SONNET,
-            self::MODEL_CLAUDE_3_5_SONNET,
-            self::MODEL_CLAUDE_3_5_HAIKU,
-            self::MODEL_CLAUDE_3_HAIKU,
-        ];
-    }
-
-    /**
-     * Get current model
-     */
-    public function getModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
-     * Set model to use
-     */
-    public function setModel(string $model): self
-    {
-        $this->model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Set max tokens
-     */
-    public function setMaxTokens(int $maxTokens): self
-    {
-        $this->maxTokens = $maxTokens;
-
-        return $this;
-    }
-
-    /**
-     * Set temperature
-     */
-    public function setTemperature(float $temperature): self
-    {
-        $this->temperature = $temperature;
-
-        return $this;
-    }
-
-    /**
-     * Get the adapter name
-     */
     public function getName(): string
     {
         return 'anthropic';
     }
 
-    public function supportsAttachments(): bool
+    public function getModel(): string
     {
-        return true;
+        return $this->model;
     }
 
-    public function supportsAttachment(Message $attachment): bool
+    public function getEndpoint(): string
     {
-        return $this->isImageAttachment($attachment);
+        return $this->endpoint;
     }
 
-    public function getMaxAttachmentsPerMessage(): ?int
+    public function generate(Request $request): Response
     {
-        return self::MAX_ATTACHMENTS_PER_MESSAGE;
+        return $this->stream($request, static function (Event $event): void {
+        });
     }
 
-    public function getMaxAttachmentBytes(): ?int
+    public function stream(Request $request, callable $listener): Response
     {
-        return self::MAX_ATTACHMENT_BYTES;
-    }
+        /** @var array<int, array{type: string, text: string, signature: string, id: string, name: string, json: string}> $blocks */
+        $blocks = [];
+        /** @var string|null $stop */
+        $stop = null;
+        /** @var array<mixed> $usage */
+        $usage = [];
+        $id = '';
+        $model = $this->model;
 
-    public function getMaxTotalAttachmentBytes(): ?int
-    {
-        return self::MAX_TOTAL_ATTACHMENT_BYTES;
-    }
+        $this->events($this->endpoint, $this->payload($request), function (string $name, array $event) use (&$blocks, &$stop, &$usage, &$id, &$model, $listener): void {
+            $type = $event['type'] ?? $name;
 
-    /**
-     * @return list<string>|null
-     */
-    public function getAllowedAttachmentMimeTypes(): ?array
-    {
-        return self::ALLOWED_ATTACHMENT_MIME_TYPES;
-    }
+            switch ($type) {
+                case 'message_start':
+                    $message = \is_array($event['message'] ?? null) ? $event['message'] : [];
+                    $id = \is_string($message['id'] ?? null) ? $message['id'] : $id;
+                    $model = \is_string($message['model'] ?? null) ? $message['model'] : $model;
+                    $usage = \is_array($message['usage'] ?? null) ? $message['usage'] : [];
+                    break;
 
-    /**
-     * Extract and format error information from API response
-     *
-     * @param  mixed  $json
-     */
-    protected function formatErrorMessage($json): string
-    {
-        if (! is_array($json)) {
-            return '(unknown_error) Unknown error';
+                case 'content_block_start':
+                    $index = \is_int($event['index'] ?? null) ? $event['index'] : \count($blocks);
+                    $block = \is_array($event['content_block'] ?? null) ? $event['content_block'] : [];
+                    $blocks[$index] = [
+                        'type' => \is_string($block['type'] ?? null) ? $block['type'] : '',
+                        'text' => \is_string($block['text'] ?? null) ? $block['text'] : (\is_string($block['thinking'] ?? null) ? $block['thinking'] : ''),
+                        'signature' => \is_string($block['signature'] ?? null) ? $block['signature'] : (\is_string($block['data'] ?? null) ? $block['data'] : ''),
+                        'id' => \is_string($block['id'] ?? null) ? $block['id'] : '',
+                        'name' => \is_string($block['name'] ?? null) ? $block['name'] : '',
+                        'json' => '',
+                    ];
+                    break;
+
+                case 'content_block_delta':
+                    $index = \is_int($event['index'] ?? null) ? $event['index'] : -1;
+                    $delta = \is_array($event['delta'] ?? null) ? $event['delta'] : [];
+                    if (! isset($blocks[$index])) {
+                        break;
+                    }
+
+                    $deltaType = $delta['type'] ?? '';
+                    if ($deltaType === 'text_delta' && \is_string($delta['text'] ?? null)) {
+                        $blocks[$index]['text'] .= $delta['text'];
+                        $listener(new TextDelta($delta['text']));
+                    } elseif ($deltaType === 'thinking_delta' && \is_string($delta['thinking'] ?? null)) {
+                        $blocks[$index]['text'] .= $delta['thinking'];
+                        $listener(new ReasoningDelta($delta['thinking']));
+                    } elseif ($deltaType === 'signature_delta' && \is_string($delta['signature'] ?? null)) {
+                        $blocks[$index]['signature'] .= $delta['signature'];
+                    } elseif ($deltaType === 'input_json_delta' && \is_string($delta['partial_json'] ?? null) && $delta['partial_json'] !== '') {
+                        $blocks[$index]['json'] .= $delta['partial_json'];
+                        $listener($this->output($blocks[$index])
+                            ? new TextDelta($delta['partial_json'])
+                            : new ToolInputDelta($blocks[$index]['id'], $blocks[$index]['name'], $delta['partial_json']));
+                    }
+                    break;
+
+                case 'content_block_stop':
+                    $index = \is_int($event['index'] ?? null) ? $event['index'] : -1;
+                    if (isset($blocks[$index]) && $blocks[$index]['type'] === 'tool_use' && ! $this->output($blocks[$index])) {
+                        $listener(new ToolCallEvent($this->call($blocks[$index])));
+                    }
+                    break;
+
+                case 'message_delta':
+                    $delta = \is_array($event['delta'] ?? null) ? $event['delta'] : [];
+                    if (\is_string($delta['stop_reason'] ?? null)) {
+                        $stop = $delta['stop_reason'];
+                    }
+                    if (\is_array($event['usage'] ?? null)) {
+                        $usage = array_replace($usage, array_filter($event['usage'], fn ($value) => $value !== null));
+                    }
+                    break;
+
+                case 'error':
+                    $error = \is_array($event['error'] ?? null) ? $event['error'] : [];
+                    $errorType = \is_string($error['type'] ?? null) ? $error['type'] : 'unknown_error';
+                    $message = \is_string($error['message'] ?? null) ? $error['message'] : 'Unknown error';
+                    throw new Api("Anthropic API error ({$errorType}): {$message}", $this->getName(), type: $errorType, retryable: \in_array($errorType, ['overloaded_error', 'api_error'], true));
+            }
+        });
+
+        ksort($blocks);
+        $parts = [];
+        $calls = 0;
+        foreach ($blocks as $block) {
+            $part = match ($block['type']) {
+                'text' => $block['text'] !== '' ? new Text($block['text']) : null,
+                'thinking' => new Reasoning($block['text'], $block['signature'] !== '' ? $block['signature'] : null),
+                'redacted_thinking' => new Reasoning('', $block['signature'], true),
+                'tool_use' => $this->output($block) ? new Text($block['json']) : $this->call($block),
+                default => null,
+            };
+            if ($part instanceof ToolCall) {
+                $calls++;
+            }
+            if ($part !== null) {
+                $parts[] = $part;
+            }
         }
 
-        $error = isset($json['error']) && is_array($json['error']) ? $json['error'] : [];
-        $errorType = isset($error['type']) && \is_string($error['type']) ? $error['type'] : 'unknown_error';
-        $errorMessage = isset($error['message']) && \is_string($error['message']) ? $error['message'] : 'Unknown error';
+        $finish = match ($stop) {
+            'end_turn', 'stop_sequence' => FinishReason::Stop,
+            'max_tokens', 'model_context_window_exceeded' => FinishReason::Length,
+            'tool_use' => $calls > 0 ? FinishReason::ToolCalls : FinishReason::Stop,
+            'refusal' => FinishReason::ContentFilter,
+            default => FinishReason::Other,
+        };
 
-        return '('.$errorType.') '.$errorMessage;
-    }
-
-    public function getSupportForEmbeddings(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @return array{
-     *     embedding: array<int, float>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
-     * }
-     */
-    public function embed(string $text): array
-    {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        return new Response($parts, $finish, $this->usage($usage), $id, $model);
     }
 
     /**
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
+     * @return array<string, mixed>
      */
-    public function bulkEmbed(array $texts): array
+    protected function payload(Request $request): array
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        $payload = [
+            'model' => $this->model,
+            'max_tokens' => $request->maxTokens ?? static::MAX_TOKENS,
+            'messages' => $this->messages($request->messages),
+            'stream' => true,
+        ];
+
+        $system = $request->system();
+        if ($system !== '') {
+            $payload['system'] = [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]];
+        }
+
+        // Structured output through the API's own format, or through the json tool for models without it.
+        $schema = $request->schema;
+        $native = ! $this->before('4.5');
+        $output = [];
+
+        $tools = array_map(fn (Tool $tool) => [
+            'name' => $tool->name,
+            'description' => $tool->description,
+            'input_schema' => $tool->input->toArray(),
+        ], $request->tools);
+
+        if ($schema !== null && $native) {
+            $output['format'] = ['type' => 'json_schema', 'schema' => $schema->toArray()];
+        }
+
+        if ($schema !== null && ! $native) {
+            $tools[] = [
+                'name' => static::OUTPUT,
+                'description' => 'Respond with a JSON object matching this schema. Call this tool to give your final answer.',
+                'input_schema' => $schema->toArray(),
+            ];
+        }
+
+        if ($tools !== []) {
+            if ($system === '') {
+                $tools[\count($tools) - 1]['cache_control'] = ['type' => 'ephemeral'];
+            }
+            $payload['tools'] = $tools;
+        }
+
+        $choice = $request->toolChoice;
+        if ($choice === null && $schema !== null && ! $native && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
+            $choice = ToolChoice::tool(static::OUTPUT);
+        }
+        if ($choice !== null) {
+            $payload['tool_choice'] = match ($choice->type) {
+                ToolChoice::REQUIRED => ['type' => 'any'],
+                ToolChoice::TOOL => ['type' => 'tool', 'name' => $choice->name],
+                default => ['type' => $choice->type],
+            };
+        }
+
+        $effort = $request->effort;
+        if ($effort !== null && $this->before('4.6')) {
+            if ($effort !== Effort::None) {
+                $budget = $effort->budget();
+                $payload['thinking'] = ['type' => 'enabled', 'budget_tokens' => $budget];
+                $payload['max_tokens'] = max($payload['max_tokens'], $budget + static::MAX_TOKENS);
+            }
+        } elseif ($effort === Effort::None) {
+            // Before Claude 5 thinking is off unless asked for; from 5 on some models always think.
+            if (! $this->before('5')) {
+                $output['effort'] = Effort::Low->value;
+            }
+        } elseif ($effort !== null) {
+            $payload['thinking'] = ['type' => 'adaptive'];
+            // xhigh arrived with Claude 4.7.
+            $output['effort'] = $effort === Effort::XHigh && $this->before('4.7')
+                ? Effort::High->value
+                : $effort->value;
+        }
+
+        if ($output !== []) {
+            $payload['output_config'] = $output;
+        }
+
+        // Anthropic rejects temperature, top_p and top_k while thinking is on.
+        $sampling = $this->before('4.7') && ! isset($payload['thinking']);
+        $settings = [
+            'temperature' => $sampling ? $request->temperature : null,
+            'top_p' => $sampling ? $request->topP : null,
+            'top_k' => $sampling ? $request->topK : null,
+            'stop_sequences' => $request->stop === [] ? null : $request->stop,
+        ];
+
+        /** @var array<string, mixed> $merged */
+        $merged = array_replace_recursive(
+            $payload,
+            array_filter($settings, fn ($value) => $value !== null),
+            $request->options($this->getName()),
+        );
+
+        return $merged;
     }
 
-    public function getEmbeddingDimension(): int
+    /**
+     * Whether the model's generation is older than $version. A model ID that names no
+     * generation, such as an alias, is treated as current.
+     */
+    protected function before(string $version): bool
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        $model = $this->version();
+
+        return $model !== null && version_compare($model, $version, '<');
+    }
+
+    /**
+     * The model's generation as major.minor, from IDs such as claude-opus-4-1-20250805,
+     * claude-sonnet-4-20250514, claude-3-5-haiku-latest or claude-haiku-5-5; null when
+     * the ID names none.
+     */
+    protected function version(): ?string
+    {
+        $numbers = array_values(array_filter(explode('-', $this->model), fn (string $part) => ctype_digit($part)));
+        if ($numbers === [] || \strlen($numbers[0]) > 2) {
+            return null;
+        }
+
+        // A date suffix is no minor version.
+        $minor = isset($numbers[1]) && \strlen($numbers[1]) <= 2 ? (int) $numbers[1] : 0;
+
+        return (int) $numbers[0].'.'.$minor;
+    }
+
+    /**
+     * Messages as Anthropic turns: tool results travel in user turns and
+     * consecutive turns of one role are merged, as the API requires.
+     *
+     * @param  list<Message>  $messages
+     * @return list<array{role: string, content: list<array<string, mixed>>}>
+     */
+    protected function messages(array $messages): array
+    {
+        $turns = [];
+
+        foreach ($messages as $message) {
+            if ($message->role === Role::System) {
+                continue;
+            }
+
+            $role = $message->role === Role::Assistant ? 'assistant' : 'user';
+            $content = [];
+            foreach ($message->parts as $part) {
+                $block = $this->block($part);
+                if ($block !== null) {
+                    $content[] = $block;
+                }
+            }
+            if ($content === []) {
+                continue;
+            }
+
+            $last = \count($turns) - 1;
+            if ($last >= 0 && $turns[$last]['role'] === $role) {
+                $turns[$last]['content'] = [...$turns[$last]['content'], ...$content];
+            } else {
+                $turns[] = ['role' => $role, 'content' => $content];
+            }
+        }
+
+        return $turns;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function block(Part $part): ?array
+    {
+        return match (true) {
+            $part instanceof Text => $part->text === '' ? null : ['type' => 'text', 'text' => $part->text],
+            $part instanceof Image => ['type' => 'image', 'source' => $part->url !== null
+                ? ['type' => 'url', 'url' => $part->url]
+                : ['type' => 'base64', 'media_type' => $part->mimeType, 'data' => $part->base64()]],
+            $part instanceof File => ['type' => 'document', 'source' => $part->url !== null
+                ? ['type' => 'url', 'url' => $part->url]
+                : ['type' => 'base64', 'media_type' => $part->mimeType, 'data' => $part->base64()]],
+            $part instanceof Reasoning => match (true) {
+                $part->signature === null => null,
+                $part->redacted => ['type' => 'redacted_thinking', 'data' => $part->signature],
+                default => ['type' => 'thinking', 'thinking' => $part->text, 'signature' => $part->signature],
+            },
+            $part instanceof ToolCall => ['type' => 'tool_use', 'id' => $part->id, 'name' => $part->name, 'input' => $this->object($part->arguments)],
+            $part instanceof ToolResult => ['type' => 'tool_result', 'tool_use_id' => $part->id, 'content' => $part->text(), 'is_error' => $part->error],
+            default => throw new Unsupported('Anthropic does not accept '.$part::class),
+        };
+    }
+
+    /**
+     * @param  array{type: string, text: string, signature: string, id: string, name: string, json: string}  $block
+     */
+    protected function call(array $block): ToolCall
+    {
+        return new ToolCall($block['id'], $block['name'], $this->arguments($block['json']));
+    }
+
+    /**
+     * Whether a block is the structured output tool.
+     *
+     * @param  array{type: string, text: string, signature: string, id: string, name: string, json: string}  $block
+     */
+    protected function output(array $block): bool
+    {
+        return $block['type'] === 'tool_use' && $block['name'] === static::OUTPUT;
+    }
+
+    /**
+     * @param  array<mixed>  $usage
+     */
+    protected function usage(array $usage): Usage
+    {
+        $read = \is_int($usage['cache_read_input_tokens'] ?? null) ? $usage['cache_read_input_tokens'] : 0;
+        $write = \is_int($usage['cache_creation_input_tokens'] ?? null) ? $usage['cache_creation_input_tokens'] : 0;
+        $input = \is_int($usage['input_tokens'] ?? null) ? $usage['input_tokens'] : 0;
+
+        return new Usage(
+            input: $input + $read + $write,
+            output: \is_int($usage['output_tokens'] ?? null) ? $usage['output_tokens'] : 0,
+            cacheRead: $read,
+            cacheWrite: $write,
+        );
+    }
+
+    protected function headers(): array
+    {
+        return [
+            'x-api-key' => $this->apiKey,
+            'anthropic-version' => static::VERSION,
+        ];
     }
 }

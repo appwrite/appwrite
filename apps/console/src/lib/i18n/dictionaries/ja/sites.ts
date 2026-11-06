@@ -88,6 +88,20 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Certificate expired': '証明書の期限切れ',
+  'Renewal failed': '証明書の更新に失敗しました',
+  'Certificate blocked': '証明書の発行が保留中',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
+  'Renewal blocked': '証明書の更新が保留中',
+  'Certificate renewal started': '証明書の更新を開始しました',
+  'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'この証明書は期限切れです。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    '詳細はログを確認してください。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    '証明書の更新は DNS レコードの追加を待っています。追加するレコードはログで確認できます。',
   'Back to sites': 'サイト一覧に戻る',
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',
@@ -207,6 +221,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'ドメインの削除に失敗しました',
   'Failed to add domain': 'ドメインの追加に失敗しました',
   'Failed to register domain': 'ドメインの登録に失敗しました',
+  'Verify domain ownership': 'ドメイン所有権の検証',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',
@@ -425,6 +442,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '接続された Git リポジトリでサイトを作成してデプロイ',
   'Configure the environment variables for this template':
     'このテンプレートの環境変数を構成',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'このテンプレートは、サイトのビルドと SSR の実行ごとに生成される一時的なキーにこれらのスコープを付与します。スコープはサイトの設定で変更できます。',
   'Screenshot may take a few moments after build completes':
     'ビルド完了後、スクリーンショットの生成に少し時間がかかることがあります',
   'Configure your site or share it with others':

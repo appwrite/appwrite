@@ -511,6 +511,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
   'View event': 'イベントを表示',
+  Reason: '理由',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',
@@ -696,10 +697,33 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロパティがイベントを受け付けるかどうかを設定します。',
   'Tracking enabled': '計測を有効にしました',
   'Tracking disabled': '計測を無効にしました',
+  'Browser versions': 'ブラウザのバージョン',
+  'OS versions': 'OS のバージョン',
+  'Versions': 'バージョン',
+  'Browser version': 'ブラウザのバージョン',
+  'OS version': 'OS のバージョン',
+  'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
+  'No identified users in this range': 'この期間に識別されたユーザーはいません',
+  'Event properties': 'イベントの属性',
+  'Values of the props sent with your events':
+    'イベントと一緒に送信された props の値',
+  'No event props in this range': 'この期間にイベントの props はありません',
+  'Not available with this filter': 'このフィルターでは利用できません',
+  'User identification': 'ユーザーの識別',
+  'Identify signed-in users': 'サインイン中のユーザーを識別する',
+  'User identification enabled': 'ユーザーの識別を有効にしました',
+  'User identification disabled': 'ユーザーの識別を無効にしました',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    '識別されたユーザーの数 (重複なし)。ユーザー ID を含むイベントのみを数え、匿名の訪問者は含みません。',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'クライアントセッションから送信されたイベントに、サインイン中のユーザーの ID を記録します。これにより、ユーザー単位でトラフィックを集計・内訳表示できます。匿名の訪問者には影響しません。ID はプロジェクトのユーザー ID で、メールアドレスや名前は記録されません。プライバシーポリシーでアナリティクスとユーザーアカウントの紐付けを扱っている場合にのみ有効にしてください。',
   'Tracking is enabled': '計測は有効です',
-  'Primary domain being tracked. Optional for native apps.':
-    '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    '計測対象の主要ドメインです。モバイルとエージェントのプロパティでは空欄でもかまいません。',
   'Domain updated': 'ドメインを更新しました',
+  'Type updated': 'タイプを更新しました',
+  'Only changes which panels the dashboard shows.':
+    'ダッシュボードに表示するパネルだけが変わります。',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
   'https://example.com': 'https://example.com',
@@ -778,6 +802,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Exit pages': '出口ページ',
   'Where visitors came from': '訪問者の流入元',
   'Most visited paths': '最も閲覧されたパス',
+  Screens: '画面',
+  'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
@@ -806,6 +832,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '1 つのコードベースから iOS、Android、web、デスクトップへ。',
   'Any language, straight against the HTTP API.':
     '任意の言語から HTTP API を直接呼び出します。',
+  'Websites and browser apps.': 'Web サイトとブラウザアプリ。',
+  'iOS and Android apps.': 'iOS と Android のアプリ。',
+  'AI agents and backend services, over the API.':
+    'AI エージェントやバックエンドサービスから API 経由で。',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'ダッシュボードに表示するパネルが決まります。後から設定で変更できます。',
+  'The site you are tracking. Page paths in reports link to it.':
+    '計測するサイトです。レポートのページパスはこのサイトにリンクします。',
   'Install the SDK': 'SDK をインストール',
   'Initialize tracking': '計測を初期化',
   'Turn on automatic tracking': '自動計測を有効化',
@@ -3406,10 +3440,26 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to update environment order': '環境の順序を更新できませんでした',
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
+  'Environment ID': '環境 ID',
+  'An environment with this ID already exists in this project.':
+    'この ID の環境はこのプロジェクトに既に存在します。',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    '英小文字、数字、ハイフンを使い、先頭は英字か数字にしてください。',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'アプリがプロジェクト ID と一緒に環境として渡す値です。staging、preview、qa のように入力しやすいものを選んでください。',
+  'Connect to this environment': 'この環境に接続',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'エンドポイントとプロジェクト ID は本番と同じです。環境 ID で区別します。',
   'Changes here do not affect production.':
     'ここでの変更は本番に影響しません。',
   'Name the environment and choose where it starts.':
     '環境に名前を付け、開始方法を選択します。',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    '環境は別のプロジェクトです。コピーしたものの ID はそのまま残ります。',
+  'Structure and settings are cloned, data only where you ask for it.':
+    '構成と設定がクローンされます。データは指定した分だけです。',
+  'Structure is selected by default. Include data only where you need it.':
+    '構成は最初から選択されています。データは必要な分だけ含めてください。',
   'Pick what to copy from the project.':
     'プロジェクトからコピーする内容を選択します。',
   'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
@@ -3666,9 +3716,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   // Environment copy at creation, its progress card, and backups in environments
   'Start from': '開始方法',
   'Empty environment': '空の環境',
-  'Nothing is copied from the project.':
-    'プロジェクトからは何もコピーしません。',
-  'Copy of the project': 'プロジェクトのコピー',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'プロジェクトからは何もコピーしません。スキャフォールディングはご自身で行います。',
+  'Clone of the project': 'プロジェクトのクローン',
   'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
     '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
   'What to copy': 'コピーする内容',
@@ -3701,4 +3751,278 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Backup policies and archives are managed on the project this environment belongs to.':
     'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
   'Open the project': 'プロジェクトを開く',
+  // Alert rules
+  '5 minutes': '5 分',
+  '6 hours': '6 時間',
+  Cooldown: 'クールダウン',
+  'Database storage': 'データベースストレージ',
+  'Egress spike': '送信トラフィックの急増',
+  'Enter a threshold of 0 or more.': '0 以上のしきい値を入力してください。',
+  Firing: '発生中',
+  'Greater than': 'より大きい',
+  'Greater than or equal': '以上',
+  'Inbound bandwidth': '受信帯域幅',
+  'Know when usage crosses a line': '使用量がしきい値を超えたら把握する',
+  'Last value': '最新の値',
+  'Less than': 'より小さい',
+  'Less than or equal': '以下',
+  Metric: 'メトリクス',
+  OK: '正常',
+  'Outbound bandwidth': '送信帯域幅',
+  'Read IOPS': '読み取り IOPS',
+  'Select resource': 'リソースを選択',
+  'Select the resource to watch.': '監視するリソースを選択してください。',
+  'No data': 'データなし',
+  'No usage recorded to compare yet':
+    '比較できる使用量はまだ記録されていません',
+  'This project has no buckets yet.':
+    'このプロジェクトにはまだバケットがありません。',
+  'This project has no databases of this type yet.':
+    'このプロジェクトにはまだこの種類のデータベースがありません。',
+  'Execution GB-hours': '実行の GB 時間',
+  'Files, databases and deployments grow past 50 GB.':
+    'ファイル、データベース、デプロイの合計が 50 GB を超えたとき。',
+  'Messages failed': '失敗メッセージ',
+  'More than 10 webhook deliveries fail in an hour.':
+    '1 時間に Webhook の配信が 10 件を超えて失敗したとき。',
+  'SMS messages sent': '送信 SMS メッセージ',
+  'This project has no functions yet.':
+    'このプロジェクトにはまだ関数がありません。',
+  'This project has no sites yet.':
+    'このプロジェクトにはまだサイトがありません。',
+  'Webhook events failed': '失敗した Webhook イベント',
+  'Webhook events sent': '送信した Webhook イベント',
+  'Webhook failures': 'Webhook の失敗',
+  Window: '期間',
+  'Write IOPS': '書き込み IOPS',
+  'Get notified when a usage metric crosses a threshold, and again when it recovers.':
+    '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
+  'Could not load resources.': 'リソースを読み込めませんでした。',
+  Comparator: '比較条件',
+  Console: 'コンソール',
+  'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
+  'Counted over the window and compared at every check.':
+    '期間内の合計をチェックごとに比較します。',
+  'Get notified when usage crosses a threshold, and again when it recovers.':
+    '使用量がしきい値を超えたときと、回復したときに通知を受け取ります。',
+  'Last checked': '最終チェック',
+  'Last fired': '最終発生',
+  Monitoring: 'モニタリング',
+  'More than a million database reads in an hour.':
+    '1 時間のデータベース読み取りが 100 万回を超えたとき。',
+  'No history is available for this metric yet.':
+    'このメトリクスの履歴はまだありません。',
+  'Not checked yet': '未チェック',
+  Notify: '通知',
+  'Outbound bandwidth above 10 GB in an hour.':
+    '1 時間の送信帯域幅が 10 GB を超えたとき。',
+  'Paused rules are not checked and never notify.':
+    '一時停止中のルールはチェックされず、通知も送信されません。',
+  'Project owners': 'プロジェクトのオーナー',
+  'Read surge': '読み取りの急増',
+  'Select a resource to see its history.':
+    '履歴を表示するリソースを選択してください。',
+  'The latest reading is compared at every check.':
+    'チェックごとに最新の値を比較します。',
+  'The whole project': 'プロジェクト全体',
+  Threshold: 'しきい値',
+  When: '条件',
+  'Would have fired once in the {range}.': '{range}に 1 回発生していました。',
+  'Would have fired {count} times in the {range}.':
+    '{range}に {count} 回発生していました。',
+  'Would not have fired in the {range}.': '{range}には発生していませんでした。',
+  is: 'が',
+  'last 12 hours': '過去 12 時間',
+  'last 24 hours': '過去 24 時間',
+  'last 30 days': '過去 30 日間',
+  'last 7 days': '過去 7 日間',
+  on: '対象',
+  'the whole project': 'プロジェクト全体',
+  within: '期間',
+  'Waiting for the first check': '最初のチェックを待っています',
+  peak: 'ピーク',
+  '{count} sent': '{count} 件送信',
+  ongoing: '継続中',
+  'Would not have fired in the {range}': '{range}には発火しなかったはずです',
+  'Would have fired {count}× in the {range}':
+    '{range}に {count} 回発火したはずです',
+  'History range': '履歴の範囲',
+  'Name, cooldown': '名前、クールダウン',
+  'Firing since': '発火開始',
+  Checked: 'チェック',
+  '{ratio} the {threshold} threshold': 'しきい値 {threshold} の {ratio}',
+  'Threshold {threshold}': 'しきい値 {threshold}',
+  Notifies: '通知先',
+  'at most once per {cooldown}': '{cooldown}に最大 1 回',
+  'Peak hour': 'ピーク時間',
+  'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
+  'Cap reached': '上限に到達',
+  '{percent}% of {budget}': '{budget} の {percent}%',
+  'Managed by budget': '予算で管理',
+  'Last sent': '最終送信',
+  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
+    'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
+  Alert: 'アラート',
+  'Alert not found': 'アラートが見つかりません',
+  'Budget monitors': '予算モニター',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'チェックは数分ごとに実行されるため、このモニターは評価されていません。',
+  'Create monitor': 'モニターを作成',
+  'Delete monitor': 'モニターを削除',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'モニターが発生したすべての記録: 発生時刻、しきい値をどれだけ超えたか、回復した時刻。',
+  'Failed to create monitor': 'モニターを作成できませんでした',
+  'Failed to delete monitor': 'モニターを削除できませんでした',
+  'Failed to update monitor': 'モニターを更新できませんでした',
+  'Filter alerts': 'アラートを絞り込む',
+  'Filter monitors': 'モニターを絞り込む',
+  'Fired for': '発生期間',
+  'Firing for': '発生中の期間',
+  'Latest reading': '最新の値',
+  'Monitor has been created': 'モニターを作成しました',
+  'Monitor has been deleted': 'モニターを削除しました',
+  'Monitor has been paused': 'モニターを一時停止しました',
+  'Monitor has been resumed': 'モニターを再開しました',
+  'Monitor has been updated': 'モニターを更新しました',
+  'Monitor not found': 'モニターが見つかりません',
+  Monitors: 'モニター',
+  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
+    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'No alerts yet': 'まだアラートはありません',
+  Ongoing: '継続中',
+  Peak: 'ピーク',
+  Resolved: '解決済み',
+  "Resolves when the monitor's rules stop holding.":
+    'モニターのルールが成立しなくなると解決します。',
+  'Search monitors...': 'モニターを検索...',
+  'Started firing': '発生開始',
+  'Still firing': '発生中',
+  'View monitor': 'モニターを表示',
+  'View monitors': 'モニターを表示',
+  'Waiting for recovery': '回復待ち',
+  Watches: '監視対象',
+  "You don't have permission to manage monitors.":
+    'モニターを管理する権限がありません。',
+  'between two alerts from this monitor.':
+    '(このモニターからの 2 つのアラートの間隔)。',
+  'the threshold': 'しきい値',
+  '{count} notifications sent, one per cooldown':
+    '{count} 件の通知を送信 (クールダウンごとに 1 件)',
+  'Its alerts stay in the history.': 'アラートは履歴に残ります。',
+  'Send alerts to a webhook': 'アラートを Webhook に送信',
+  Owners: 'オーナー',
+  Editors: '編集者',
+  Analysts: 'アナリスト',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'これらのロールのメンバーには、モニターが発火したときと解決したときにメールとコンソール通知が届きます。',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    '誰にもメールや通知は届きません。アラートはプロジェクトの Webhook や Functions 向けのイベントを引き続き発生させます。',
+  'Project webhooks and functions can also listen to its alert events.':
+    'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
+  'Nobody, only its events': 'なし（イベントのみ）',
+  Critical: '重要',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  'Critical. Rings on phones even on silent.':
+    '重要。サイレントでもスマートフォンが鳴ります。',
+  'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
+  'Notifies nobody': '通知先なし',
+  'Notifies nobody. Its alerts only fire their events.':
+    '通知先はありません。アラートはイベントのみを発生させます。',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    '各モニターは指定した組織ロールにメールと通知を送ります。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
+  'Unsubscribe from alert emails': 'アラートメールの配信停止',
+  'This monitor was deleted.': 'このモニターは削除されました。',
+  'Stop emails for this monitor': 'このモニターのメールを停止',
+  'Emails for this monitor are stopped.':
+    'このモニターのメールは停止されています。',
+  'Stop all usage alert emails': '使用量アラートのメールをすべて停止',
+  'Stop all alert emails of this kind': 'この種類のアラートメールをすべて停止',
+  'All usage alert emails are stopped.':
+    '使用量アラートのメールはすべて停止されています。',
+  'All alert emails of this kind are stopped.':
+    'この種類のアラートメールはすべて停止されています。',
+  'This link is invalid or has expired': 'このリンクは無効か、期限切れです',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'より新しいアラートメールの配信停止リンクを開いてください。',
+  "You'll still see these alerts in console notifications.":
+    'これらのアラートは引き続きコンソール通知に表示されます。',
+  'Saving...': '保存中...',
+  // Firewall rule schedules
+  'Times are in your local time zone:':
+    '時刻はローカルのタイムゾーンで表示されます:',
+  'Times follow the time zone this schedule was created in:':
+    '時刻はこのスケジュールを作成したタイムゾーンに従います:',
+  'Your local time zone:': 'ローカルのタイムゾーン:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
+  'Remove schedule': 'スケジュールを削除',
+  'The schedule will be removed when you save.': '保存するとスケジュールが削除されます。',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
+  Repeat: '繰り返し',
+  'Selected days every week': '毎週の選択した曜日',
+  'Selected days every other week': '隔週の選択した曜日',
+  'Weekends (Sat and Sun)': '週末（土・日）',
+  'Every few days': '数日ごと',
+  'Days of the week': '曜日',
+  'Select at least one day.': '曜日を 1 つ以上選択してください。',
+  'Repeat every (days)': '繰り返し間隔（日）',
+  'Starting on': '開始日',
+  'The week of this date is the first active week.':
+    'この日付を含む週が最初の有効な週になります。',
+  'The first active day. The rule is never active before it.':
+    '最初の有効日です。この日より前はルールが有効になりません。',
+  'All day': '終日',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    '開始時刻と終了時刻は異なる値にしてください。1 日中有効にするには「終日」をオンにします。',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'この時間帯は午前 0 時をまたぎます。選択した各曜日に始まり、翌朝に終わります。',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'プロジェクトのリソース',
+  'View all databases': 'すべてのデータベースを表示',
+  'View all sites': 'すべてのサイトを表示',
+  'Files up to': 'ファイル上限',
+  'View all functions': 'すべての関数を表示',
+  'View all buckets': 'すべてのバケットを表示',
+  'View all users': 'すべてのユーザーを表示',
+  'View all topics': 'すべてのトピックを表示',
+  'View all API keys': 'すべての API キーを表示',
+  'Failed to load sites': 'サイトの読み込みに失敗しました',
+  'Failed to load functions': '関数の読み込みに失敗しました',
+  'Failed to load buckets': 'バケットの読み込みに失敗しました',
+  'Failed to load users': 'ユーザーの読み込みに失敗しました',
+  'Failed to load topics': 'トピックの読み込みに失敗しました',
+  'Store, query, and sync your app data with a managed database.':
+    'マネージドデータベースで、アプリのデータを保存、クエリ、同期できます。',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'HTTP リクエスト、イベント、スケジュールに応じてバックエンドのコードを実行します。',
+  'Keep data apart by environment, customer, or workload.':
+    '環境、顧客、ワークロードごとにデータを分けて管理できます。',
+  'Deploy another app, a landing page, or your docs.':
+    '別のアプリ、ランディングページ、ドキュメントをデプロイできます。',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'Webhook、スケジュールジョブ、イベントハンドラーを追加できます。',
+  'Group files with their own permissions and limits.':
+    '権限と制限を個別に設定して、ファイルをまとめられます。',
+  'Add a user by hand, or let people sign up from your app.':
+    'ユーザーを手動で追加するか、アプリからサインアップしてもらえます。',
+  'Group subscribers to message them all at once.':
+    'サブスクライバーをまとめて、一度にメッセージを送信できます。',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'このプロジェクトを呼び出すウェブ、モバイル、デスクトップアプリをそれぞれ追加します。',
+  'Give your servers and scripts scoped access to this project.':
+    'サーバーやスクリプトに、スコープを限定したこのプロジェクトへのアクセスを付与します。',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'サーバーや環境ごとにキーを分け、必要なスコープだけを付与しましょう。',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    '権限、暗号化、画像プレビューを備えたファイルのアップロードと配信ができます。',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'メール、OAuth プロバイダー、電話番号、パスキーでユーザーをサインインさせます。',
+  'Send email, SMS, and push notifications to your users.':
+    'ユーザーにメール、SMS、プッシュ通知を送信します。',
+  'Auto-deploy on every push': 'push のたびに自動デプロイ',
 }

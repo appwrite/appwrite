@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
@@ -56,8 +57,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->label('abuse', [Limit::attempts(['url', 'userId'], 10)])
             ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Passkey ID.', false, ['dbForProject'])
             ->param('credential', [], new Assoc(), 'Registration credential returned by the authenticator, in the JSON form produced by `PublicKeyCredential.toJSON()`.')
             ->inject('request')

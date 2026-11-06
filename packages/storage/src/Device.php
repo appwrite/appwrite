@@ -6,6 +6,7 @@ namespace Utopia\Storage;
 
 use Psr\Http\Message\StreamInterface;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
@@ -119,6 +120,9 @@ abstract class Device
      * file replaced meanwhile are never mistaken for the one the caller knows.
      * S3 checks the ETag as part of the read; `Local` pins the file open and
      * hashes it, which costs a full pass over it before any byte is returned.
+     * With a time, the read only happens if the file was modified after it, which
+     * tells age and bytes apart in one request. A time and an ETag cannot be
+     * combined, because services disagree on which one wins.
      *
      * @param  int<0, max>  $offset
      * @param  int<0, max>|null  $length
@@ -126,8 +130,10 @@ abstract class Device
      *
      * @throws NotFoundException When there is no file at the path
      * @throws PreconditionFailedException When the file's ETag is not the given one
+     * @throws NotModifiedException When the file has not been modified after the given time
+     * @throws \InvalidArgumentException When given both an ETag and a time
      */
-    abstract public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface;
+    abstract public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface;
 
     /**
      * Deliver bytes without requiring a seekable copy of the entire object.

@@ -37,7 +37,7 @@ class Redis implements Connection
 
     public function execute(string $script, array $keys, array $args): mixed
     {
-        return $this->call(function (\Redis $redis) use ($script, $keys, $args): mixed {
+        [$result, $error] = $this->call(function (\Redis $redis) use ($script, $keys, $args): array {
             $hash = sha1($script);
             if (!isset($this->scripts[$hash])) {
                 $redis->script('load', $script);
@@ -53,11 +53,14 @@ class Redis implements Connection
                 $result = $redis->evalSha($hash, [...$keys, ...$args], \count($keys));
                 $error = $redis->getLastError();
             }
-            if ($result === false && $error !== null) {
-                throw new \RedisException($error);
-            }
-            return $result;
+            return [$result, $error];
         });
+
+        if ($result === false && $error !== null) {
+            throw new \RedisException($error);
+        }
+
+        return $result;
     }
 
     public function rightPopLeftPushArray(string $queue, string $destination, int $timeout): array|false
@@ -276,15 +279,14 @@ class Redis implements Connection
     }
 
     /**
-     * Run a command on the cached client. When phpredis reports the socket
-     * is gone, drop the client so the next command opens a fresh one, and
-     * for a command that is safe to repeat run it again right away.
+     * Run a command on the cached client, dropping the client whenever phpredis
+     * throws, and for a command that is safe to repeat run it again right away.
      *
-     * phpredis reconnects a dropped socket by itself, but when the peer stays
-     * away past its retry budget it parks the client in a failed state for
-     * good, and every later command throws "went away". A worker that lived
-     * through a broker failover longer than those retries would otherwise fail
-     * every ack until the process restarts.
+     * Any phpredis exception leaves the socket in an unknown state: a reply
+     * that missed the read timeout is still on its way, and the next command
+     * would read it as its own. The message cannot tell that apart from a
+     * server error reply, so the client is always dropped. Error replies phpredis
+     * returns rather than throws keep the socket, as their reply was read in full.
      *
      * Commands whose execution the server may already have applied (pops,
      * pushes, counters) are never replayed: the caller sees the error and the
@@ -299,10 +301,6 @@ class Redis implements Connection
         try {
             return $command($this->getRedis());
         } catch (\RedisException $e) {
-            if (!$this->isTransportError($e)) {
-                throw $e;
-            }
-
             $this->close();
 
             if (!$idempotent) {
@@ -311,28 +309,6 @@ class Redis implements Connection
 
             return $command($this->getRedis());
         }
-    }
-
-    /**
-     * phpredis errors that mean the socket is gone rather than the command
-     * being wrong. Anything else (WRONGTYPE, OOM, ...) is the caller's to see.
-     * A timed-out reply counts too: the socket still holds it, and the next
-     * command would read it as its own.
-     */
-    private function isTransportError(\RedisException $e): bool
-    {
-        $errors = [
-            'went away',
-            'connection lost',
-            'connection closed',
-            'connection refused',
-            'read error on connection',
-            'protocol error',
-            'timed out',
-        ];
-
-        $message = strtolower($e->getMessage());
-        return array_any($errors, fn (string $needle): bool => str_contains($message, $needle));
     }
 
     protected function getRedis(): \Redis

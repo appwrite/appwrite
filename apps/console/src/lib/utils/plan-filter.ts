@@ -22,6 +22,7 @@ export type CanonicalPlanId =
  * - tier-1 → 'pro'
  * - tier-2 → 'core' (legacy API name: Scale)
  * - auto-1 → 'education'
+ * - zero → 'free' (an unclaimed Appwrite Zero project runs on a Free-based plan)
  * - anything else → 'custom'
  */
 export function getPlanNameFromTier(
@@ -41,6 +42,7 @@ export function getPlanNameFromTier(
 
     const normalized = trimmed.toLowerCase()
     if (normalized === 'tier-1-1' || normalized === 'start') return 'start'
+    if (normalized === 'zero') return 'free'
 
     const tierMatch = trimmed.match(/tier-(\d+)/i)
     if (tierMatch) {

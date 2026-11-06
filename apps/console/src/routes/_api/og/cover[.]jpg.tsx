@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { encodeCoverImageBuffer } from '@/lib/cover-generator/encode-cover-image-sharp'
 import { readCoverPublicAssetBuffer } from '@/lib/cover-generator/public-assets'
-import { runWithCoverRenderContext } from '@/lib/cover-generator/render-context'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
 
 export const Route = createFileRoute('/_api/og/cover.jpg')({
@@ -17,9 +16,7 @@ export const Route = createFileRoute('/_api/og/cover.jpg')({
         }
 
         try {
-          const source = await runWithCoverRenderContext(url.origin, () =>
-            readCoverPublicAssetBuffer(path),
-          )
+          const source = await readCoverPublicAssetBuffer(path)
           if (!source) {
             return new Response('Cover not found', { status: 404 })
           }

@@ -5,7 +5,6 @@ namespace Appwrite\Databases;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Exception\Unavailable;
 use Utopia\Console;
-use Utopia\Database\Cache\Bridge;
 
 /**
  * A collection's cached list responses, held in one cache hash, and a version every purge changes.
@@ -32,9 +31,7 @@ readonly class ListCache
      */
     public function purge(): bool
     {
-        if ($this->cache instanceof Bridge) {
-            $this->cache->rotate($this->getVersionKey(), self::VERSION_TTL);
-        } elseif ($this->cache->save($this->getVersionKey(), \bin2hex(\random_bytes(16)), ttl: self::VERSION_TTL) === false) {
+        if ($this->cache->save($this->getVersionKey(), \bin2hex(\random_bytes(16)), ttl: self::VERSION_TTL) === false) {
             throw new Unavailable('Failed to change the version of the cached list responses of ' . $this->key);
         }
 

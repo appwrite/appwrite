@@ -7,6 +7,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -15,7 +16,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -57,10 +57,11 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response)
+    public function action(array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response, Request $request)
     {
         try {
             $queries = Query::parseQueries($queries);
@@ -97,7 +98,7 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
         $response->dynamic(new Document([
-            'messages' => $messages,
+            'messages' => \array_map(fn (Document $message): Document => $this->redactImageUrl($message, $request), $messages),
             'total' => $total,
         ]), Response::MODEL_MESSAGE_LIST);
     }

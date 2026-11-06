@@ -22,6 +22,51 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'Appwrite Start。ナイジェリアの開発者向けに設計されたプラン。',
   'Appwrite Start, a plan built for Pakistani developers.':
     'Appwrite Start。パキスタンの開発者向けに設計されたプラン。',
+  'Salaam Bangladesh': 'Salaam Bangladesh',
+  'Mabuhay Philippines': 'Mabuhay Philippines',
+  'Ahlan Egypt': 'Ahlan Egypt',
+  'Jambo Kenya': 'Jambo Kenya',
+  'Xin chào Vietnam': 'Xin chào Vietnam',
+  'Salam Algeria': 'Salam Algeria',
+  'Marhaba Morocco': 'Marhaba Morocco',
+  'Ayubowan Sri Lanka': 'Ayubowan Sri Lanka',
+  'Aslema Tunisia': 'Aslema Tunisia',
+  'Salom Uzbekistan': 'Salom Uzbekistan',
+  'Oli otya, Uganda': 'Oli otya, Uganda',
+  'Akwaaba Ghana': 'Akwaaba Ghana',
+  'Suostei Cambodia': 'Suostei Cambodia',
+  'Selam Ethiopia': 'Selam Ethiopia',
+  'Karibu Tanzania': 'Karibu Tanzania',
+  'Appwrite Start, a plan built for Bangladeshi developers.':
+    'Appwrite Start。バングラデシュの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Filipino developers.':
+    'Appwrite Start。フィリピンの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Egyptian developers.':
+    'Appwrite Start。エジプトの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Kenyan developers.':
+    'Appwrite Start。ケニアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Vietnamese developers.':
+    'Appwrite Start。ベトナムの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Algerian developers.':
+    'Appwrite Start。アルジェリアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Moroccan developers.':
+    'Appwrite Start。モロッコの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Sri Lankan developers.':
+    'Appwrite Start。スリランカの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Tunisian developers.':
+    'Appwrite Start。チュニジアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Uzbek developers.':
+    'Appwrite Start。ウズベキスタンの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ugandan developers.':
+    'Appwrite Start。ウガンダの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ghanaian developers.':
+    'Appwrite Start。ガーナの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Cambodian developers.':
+    'Appwrite Start。カンボジアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ethiopian developers.':
+    'Appwrite Start。エチオピアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Tanzanian developers.':
+    'Appwrite Start。タンザニアの開発者向けに設計されたプラン。',
   'New': '新規',
   'PostgreSQL announcement banner': 'PostgreSQL お知らせバナー',
   'Read more': '詳しく見る',

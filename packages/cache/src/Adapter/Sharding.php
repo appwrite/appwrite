@@ -5,7 +5,7 @@ namespace Utopia\Cache\Adapter;
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
 
-class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
+class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
 {
     /**
      * @var Adapter[]
@@ -153,32 +153,6 @@ class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \
         $index = $hash % $this->count;
 
         return $this->adapters[$index];
-    }
-
-    public function getGeneration(string $key): string
-    {
-        return $this->legacyAdapter($key)->getGeneration($key);
-    }
-
-    /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
-    {
-        return $this->legacyAdapter($key)->saveWithGeneration($key, $data, $hash, $generation, $ttl);
-    }
-
-    public function purgeLegacy(string $key, string $hash = ''): bool
-    {
-        return $this->legacyAdapter($key)->purgeLegacy($key, $hash);
-    }
-
-    private function legacyAdapter(string $key): \Utopia\Cache\Feature\Legacy
-    {
-        $adapter = $this->getAdapter($key);
-        if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
-            throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
-        }
-
-        return $adapter;
     }
 
     public function supportsVersioning(): bool

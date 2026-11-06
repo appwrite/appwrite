@@ -67,10 +67,19 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /**
+   * Internal only, switched on from the debug menu. Review product (AI code
+   * review of GitHub pull requests) via the `reviews` service. Even when on, it
+   * shows only where the server reports `_APP_REVIEWS_ENABLED`, since
+   * self-hosted instances run the review service only when they opt in.
+   */
+  reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
   /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
+  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -137,8 +146,10 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  reviews: 'Review',
   projectEnvironments: 'Project environments',
   projectTransfers: 'Project transfers',
+  alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -192,8 +203,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -236,8 +249,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

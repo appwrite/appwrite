@@ -43,7 +43,7 @@ Appwrite keeps a running summary of each visit as its events arrive.
 - **Duration**: the time from the visit's first event to its last.
 - **Pageviews** and **events**: how many of each the visit had.
 
-Only `pageview` events set entry and exit pages and count toward bounces. A visit that starts with a custom event takes its entry page from its first pageview. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
+Only views, `pageview` and `screen_view` events, set entry and exit pages and count toward bounces. A visit that starts with a custom event takes its entry page from its first view. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
 
 # Events from your server {% #server-events %}
 

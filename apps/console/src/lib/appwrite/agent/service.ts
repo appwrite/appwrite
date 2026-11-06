@@ -1345,7 +1345,7 @@ export class Agent {
    * @param {string} params.modelId - Model ID. Must match ^[a-z][a-z0-9_-]{1,63}$ when not using unique().
    * @param {string} params.name - Display name.
    * @param {string} params.provider - LLM provider identifier (e.g. openai).
-   * @param {string} params.model - Provider model identifier (e.g. gpt-4o).
+   * @param {string} params.model - Provider model identifier (e.g. gpt-6.1-terra).
    * @param {string} params.apiKey - Provider API key.
    * @param {string} params.baseUrl - Optional custom base URL for the provider API.
    * @param {boolean} params.enabled - Whether this model can be selected on conversations.
@@ -1457,7 +1457,7 @@ export class Agent {
    * @param {string} params.modelId - Model unique ID.
    * @param {string} params.name - Display name.
    * @param {string} params.provider - LLM provider identifier (e.g. openai).
-   * @param {string} params.model - Provider model identifier (e.g. gpt-4o).
+   * @param {string} params.model - Provider model identifier (e.g. gpt-6.1-terra).
    * @param {string} params.apiKey - Provider API key. Omit to keep the existing key.
    * @param {string} params.baseUrl - Optional custom base URL for the provider API.
    * @param {boolean} params.enabled - Whether this model can be selected on conversations.
