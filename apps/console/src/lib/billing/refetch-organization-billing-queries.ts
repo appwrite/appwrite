@@ -13,10 +13,6 @@ export async function refetchOrganizationBillingQueries(
       type: 'all',
     }),
     queryClient.refetchQueries({
-      queryKey: ['billing-aggregation', 'organization', organizationId],
-      type: 'all',
-    }),
-    queryClient.refetchQueries({
       queryKey: ['organization', organizationId],
     }),
   ])

@@ -107,6 +107,7 @@
         "zod": "^4.6.7",
       },
       "devDependencies": {
+        "@appwrite.io/console-billing": "https://pkg.vc/-/@appwrite/@appwrite.io/console@b4eb9da",
         "@happy-dom/global-registrator": "^21.0.4",
         "@playwright/test": "^1.58.2",
         "@tanstack/router-cli": "1.167.40",
@@ -148,6 +149,8 @@
   },
   "packages": {
     "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@14dbd5acb0b3dc64a7ac38c6eb75c09f3c9efa36", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-A9j93s35md2xVNFvMwNhZ0W5TdnOlk5jQdEEXfDPJQM8eyc7hfwSmJAV6yqctpQKCqLiPOQasbcOPwWW+n5CPw=="],
+
+    "@appwrite.io/console-billing": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@b4eb9da", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-Tede1cef2H5s3w8j83n6vIBiZ+hH9oWwnk+NxoTTNVX6y2JeXCZGdbqh13J5r8i+fM8v3X7Bv7RhoZ9+m/lKuw=="],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#9a50097", {}, "appwrite-specs-9a50097", "sha512-NHRJ+TCF1+Y2BM4KfOvbgJz9Z20KxdB6Bw7/6ljngSgvtufrM+dbeqIpQ/ZAFdmX8ViRx52nwxsh6BeRdxZi5A=="],
 

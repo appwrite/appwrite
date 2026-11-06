@@ -15,6 +15,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Query, ID, type Models } from '@appwrite.io/console'
+import type { Models as BillingModels } from '@appwrite.io/console-billing'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -537,40 +538,34 @@ export function useOrganizationBillingInvoicePresence(
   })
 }
 
-/**
- * Query function to fetch billing aggregation for an organization
- *
- * @param organizationId - The organization ID to fetch aggregation for
- * @param aggregationId - The billing aggregation ID from the organization
- * @param limit - Limit for project pagination (default: 10)
- * @param offset - Offset for project pagination (default: 0)
- * @returns Billing aggregation data or null if not found (404 handled gracefully)
- */
-export async function fetchOrganizationBillingAggregation(
-  organizationId: string,
-  aggregationId?: string | null,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
+/** Recorded charges for the current cycle; a new organization may have no draft yet. */
+export function organizationInvoiceQueryOptions(
+  organizationId: string | null | undefined,
+  invoiceId: string | null | undefined,
 ) {
-  if (!organizationId || !aggregationId) {
-    return null
-  }
-
-  try {
-    const response = await sdk.forConsole.organizations.getAggregation({
-      organizationId,
-      aggregationId,
-      limit,
-      offset,
-    })
-    return response
-  } catch (error: unknown) {
-    // Handle 404 gracefully - new organizations might not have aggregation yet
-    if (error?.code === 404 || error?.response?.code === 404) {
-      return null
-    }
-    throw error
-  }
+  return queryOptions({
+    queryKey: ['invoices', 'organization', organizationId, 'detail', invoiceId],
+    queryFn: async () => {
+      try {
+        const invoice = await sdk.forConsole.organizations.getInvoice({
+          organizationId: organizationId!,
+          invoiceId: invoiceId!,
+        })
+        // Cloud #7412 adds this field; use its generated types until the main SDK carries it.
+        return invoice as Models.Invoice & Pick<BillingModels.Invoice, 'items'>
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 404) {
+          return null
+        }
+        throw error
+      }
+    },
+    enabled: !!organizationId && !!invoiceId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  })
 }
 
 /**
@@ -2072,49 +2067,6 @@ export function organizationInvoicesQueryOptions(
 }
 
 /**
- * Query options for fetching billing aggregation for an organization
- *
- * This can be used in both route loaders and hooks to ensure consistent query configuration.
- */
-export function organizationBillingAggregationQueryOptions(
-  organizationId: string | null | undefined,
-  aggregationId?: string | null | undefined,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
-) {
-  return queryOptions({
-    queryKey: [
-      'billing-aggregation',
-      'organization',
-      organizationId,
-      aggregationId ?? null, // Normalize undefined to null for consistent query keys
-      limit,
-      offset,
-    ],
-    queryFn: () =>
-      fetchOrganizationBillingAggregation(
-        organizationId!,
-        aggregationId,
-        limit,
-        offset,
-      ),
-    enabled: !!organizationId && !!aggregationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Aggregation updates as usage accrues and when addons are enabled.
-    refetchOnMount: true,
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
-    gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
-    meta: {
-      // Slow usage aggregation must never keep the fullscreen initial loader up.
-      skipInitialLoader: true,
-    },
-  })
-}
-
-/**
  * Query options for fetching credits for an organization
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -2306,38 +2258,6 @@ export function useOrganizationInvoices(
 }
 
 /**
- * Hook to fetch billing aggregation for an organization
- *
- * @param organizationId - The organization ID to fetch aggregation for
- * @param aggregationId - The billing aggregation ID from the organization
- * @param limit - Limit for project pagination (default: 10)
- * @param offset - Offset for project pagination (default: 0)
- * @returns Billing aggregation data with loading state
- */
-export function useOrganizationBillingAggregation(
-  organizationId: string | null | undefined,
-  aggregationId?: string | null | undefined,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
-) {
-  const { data, isLoading, error, refetch } = useQuery(
-    organizationBillingAggregationQueryOptions(
-      organizationId,
-      aggregationId,
-      limit,
-      offset,
-    ),
-  )
-
-  return {
-    aggregation: data,
-    isLoading,
-    error,
-    refetch,
-  }
-}
-
-/**
  * Hook to fetch credits for an organization
  *
  * @param organizationId - The organization ID to fetch credits for
@@ -2481,11 +2401,7 @@ export function useUpdateOrganizationBudget() {
         queryKey: ['organization', variables.organizationId],
       })
       await queryClient.refetchQueries({
-        queryKey: [
-          'billing-aggregation',
-          'organization',
-          variables.organizationId,
-        ],
+        queryKey: ['invoices', 'organization', variables.organizationId],
       })
       // Projects also carry billingLimits; refresh so project curtains clear
       await queryClient.refetchQueries({

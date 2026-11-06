@@ -1,0 +1,234 @@
+import type { Page } from '@playwright/test'
+import { expect, test } from './fixtures'
+import { env } from './config/env'
+import { appwriteApiPath } from './helpers/appwrite-url'
+import { CONSOLE_SESSION_COOKIE_NAME } from '../src/lib/console-session-cookie'
+
+const orgId = 'recorded-lines'
+const invoiceId = 'current-invoice'
+const invoice = {
+  $id: invoiceId,
+  $updatedAt: '2026-11-01T00:00:00.000+00:00',
+  grossAmount: 0,
+  creditsUsed: 0,
+  currency: 'USD',
+  status: 'pending',
+  dueAt: '2026-12-01T00:00:00.000+00:00',
+  items: [
+    {
+      type: 'plan',
+      description: 'Historical plan price',
+      amount: 2500,
+      from: '2026-11-01T00:00:00.000+00:00',
+      to: '2026-12-01T00:00:00.000+00:00',
+    },
+    {
+      type: 'usage',
+      description: 'Recorded project bandwidth',
+      amount: 1001,
+      projectId: 'project-a',
+      from: '2026-10-01T00:00:00.000+00:00',
+      to: '2026-11-01T00:00:00.000+00:00',
+    },
+    { type: 'discount', description: 'Usage budget cap', amount: -1000 },
+    { type: 'rounding', description: 'Recorded rounding', amount: -1 },
+    { type: 'credit', description: 'Trial offset', amount: -2500 },
+  ],
+}
+
+async function mockBilling(
+  page: Page,
+  currentInvoice: unknown,
+  historyInvoice?: object,
+) {
+  await page.context().addCookies([
+    {
+      name: CONSOLE_SESSION_COOKIE_NAME,
+      value: 'mock-session',
+      url: 'http://localhost:4173',
+    },
+  ])
+  await page.route(`${env.VITE_APPWRITE_ENDPOINT}/**`, async (route) => {
+    const request = route.request()
+    const headers = {
+      'access-control-allow-origin':
+        request.headers().origin ?? 'http://localhost:4173',
+      'access-control-allow-credentials': 'true',
+      'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      'access-control-allow-headers':
+        request.headers()['access-control-request-headers'] ?? '*',
+    }
+    if (request.method() === 'OPTIONS') {
+      return route.fulfill({ status: 204, headers })
+    }
+    const path = appwriteApiPath(request.url())
+    const organization = {
+      $id: orgId,
+      name: 'Recorded org',
+      billingPlan: 'tier-1',
+      billingInvoiceId: invoiceId,
+      billingAggregationId: 'mutable-aggregation',
+    }
+    const responses: Record<string, unknown> = {
+      '/account': {
+        $id: 'owner',
+        name: 'Owner',
+        email: 'owner@example.com',
+        emailVerification: true,
+        status: true,
+        $createdAt: '2026-01-01T00:00:00.000+00:00',
+        prefs: {},
+        labels: [],
+        targets: [],
+      },
+      '/account/prefs': {},
+      '/health/version': { version: '1.9.0' },
+      '/locale': { countryCode: 'US', eu: false },
+      '/console/variables': {},
+      '/organization/projects': { total: 0, projects: [] },
+      '/account/billing-addresses': { total: 0, billingAddresses: [] },
+      [`/organizations/${orgId}/credits`]: { total: 0, credits: [] },
+      [`/teams/${orgId}`]: organization,
+      '/teams': { total: 1, teams: [organization] },
+      '/account/sessions': { total: 0, sessions: [] },
+      '/account/payment-methods': { total: 0, paymentMethods: [] },
+      '/organizations': { total: 1, teams: [organization] },
+      [`/organizations/${orgId}`]: organization,
+      [`/organizations/${orgId}/plan`]: {
+        $id: 'tier-1',
+        name: 'Pro',
+        price: 999,
+        selfService: true,
+      },
+      [`/organizations/${orgId}/invoices`]: {
+        total: historyInvoice ? 1 : 0,
+        invoices: historyInvoice ? [historyInvoice] : [],
+      },
+      [`/organizations/${orgId}/invoices/${invoiceId}`]: currentInvoice,
+    }
+    if (path === '/account/prefs' && request.method() === 'PATCH')
+      responses[path] = {
+        ...(responses['/account'] as object),
+        prefs: request.postDataJSON().prefs ?? {},
+      }
+    const found = path in responses && responses[path] !== null
+    return route.fulfill({
+      status: found ? 200 : 404,
+      headers,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        found ? responses[path] : { message: 'Not found', code: 404 },
+      ),
+    })
+  })
+  await page.goto(`/organizations/${orgId}/settings/billing`)
+  await expect(page.locator('[aria-label="Loading"]')).toBeHidden({
+    timeout: 30_000,
+  })
+  return page.locator('#current-cycle-usage')
+}
+
+test('shows saved lines and zero total without repricing or fetching aggregations', async ({
+  page,
+}) => {
+  const aggregationRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.url().includes('/aggregations/'))
+      aggregationRequests.push(request.url())
+  })
+  const summary = await mockBilling(page, invoice)
+  await expect(summary.getByText('Historical plan price')).toBeVisible()
+  await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
+  await expect(
+    summary
+      .getByText('Recorded project bandwidth')
+      .locator('..')
+      .getByText(/Oct 1, 2026/),
+  ).toBeVisible()
+  await expect(
+    summary
+      .getByText('Historical plan price')
+      .locator('..')
+      .getByText(/Dec 1, 2026/),
+  ).toBeVisible()
+  await expect(summary.getByText('Usage budget cap')).toBeVisible()
+  await expect(summary.getByText('Recorded rounding')).toBeVisible()
+  await expect(summary.getByText('Trial offset')).toBeVisible()
+  await expect(summary.getByText('-$10.00', { exact: true })).toBeVisible()
+  await expect(summary.getByText('-$0.01', { exact: true })).toBeVisible()
+  await expect(
+    summary.getByRole('link', { name: 'project-a' }),
+  ).toHaveAttribute('href', '/projects/project-a/usage')
+  await expect(summary.getByText('$0.00', { exact: true })).toBeVisible()
+  await expect(summary.getByText('$999.00')).toHaveCount(0)
+  expect(aggregationRequests).toEqual([])
+  await summary.screenshot({
+    path: test.info().outputPath('recorded-lines.png'),
+  })
+})
+
+test('applies only recorded account credits once', async ({ page }) => {
+  const summary = await mockBilling(page, {
+    ...invoice,
+    items: invoice.items.slice(0, 4),
+    creditsUsed: 5,
+  })
+  await expect(summary.getByText('Credits applied')).toBeVisible()
+  await expect(summary.getByText('-$5.00', { exact: true })).toBeVisible()
+  await expect(
+    summary
+      .getByText('Total', { exact: true })
+      .locator('..')
+      .getByText('$20.00', { exact: true }),
+  ).toBeVisible()
+})
+
+test('shows a recorded-total fallback for a legacy invoice', async ({
+  page,
+}) => {
+  const summary = await mockBilling(page, {
+    ...invoice,
+    items: [],
+    status: 'succeeded',
+    grossAmount: 49.5,
+    creditsUsed: 5,
+  })
+  await expect(
+    summary.getByText('Recorded charges; detailed pricing unavailable.'),
+  ).toBeVisible()
+  await expect(summary.getByText('$54.50', { exact: true })).toBeVisible()
+  await expect(summary.getByText('$49.50', { exact: true })).toBeVisible()
+  await expect(summary.getByText('Historical plan price')).toHaveCount(0)
+})
+
+test('does not invent charges when no invoice exists yet', async ({ page }) => {
+  const summary = await mockBilling(page, null)
+  await expect(summary.getByText('No invoice yet.')).toBeVisible()
+  await expect(summary.getByText('Total', { exact: true })).toHaveCount(0)
+})
+
+test('does not quote an unpriced legacy draft as a zero charge', async ({
+  page,
+}) => {
+  const summary = await mockBilling(page, { ...invoice, items: [], amount: 25 })
+  await expect(
+    summary.getByText('Invoice breakdown unavailable.'),
+  ).toBeVisible()
+  await expect(summary.getByText('Total', { exact: true })).toHaveCount(0)
+})
+
+test('preserves a paid zero invoice total in payment history', async ({
+  page,
+}) => {
+  await mockBilling(page, invoice, {
+    ...invoice,
+    $id: 'paid-invoice',
+    amount: 999,
+    grossAmount: 0,
+    status: 'succeeded',
+    $createdAt: '2026-11-01T00:00:00.000+00:00',
+  })
+  const history = page.locator('#payment-history')
+  await expect(history.getByText('$0.00', { exact: true })).toBeVisible()
+  await expect(history.getByText('$999.00')).toHaveCount(0)
+})

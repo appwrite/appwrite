@@ -415,10 +415,6 @@ export function ChangePlanWizardFullscreen() {
           type: 'all',
         }),
         queryClient.refetchQueries({
-          queryKey: ['billing-aggregation', 'organization', organizationId],
-          type: 'all',
-        }),
-        queryClient.refetchQueries({
           queryKey: ['invoices', 'organization', organizationId],
           type: 'all',
         }),
