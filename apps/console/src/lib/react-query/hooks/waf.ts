@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-query'
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
 import type { FirewallRule } from '@/lib/firewall/types'
+import type { FirewallSchedulePayload } from '@/lib/firewall/schedule'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import {
@@ -92,6 +93,8 @@ export type CreateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** When the rule is active. Leave out for always active. */
+  schedule?: FirewallSchedulePayload
 }
 
 export type UpdateFirewallRuleInput = {
@@ -117,6 +120,8 @@ export type UpdateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** Leave out to keep the stored schedule; an empty object removes it. */
+  schedule?: FirewallSchedulePayload | Record<string, never>
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -360,6 +365,7 @@ async function createFirewallRule(
     priority: input.priority,
     enabled: input.enabled ?? true,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
@@ -411,6 +417,7 @@ async function updateFirewallRule(
     priority: input.priority,
     enabled: input.enabled,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
