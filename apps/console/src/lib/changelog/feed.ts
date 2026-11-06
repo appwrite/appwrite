@@ -28,7 +28,7 @@ function absolute(path: string): string {
  */
 function absoluteLinks(markdown: string): string {
   return markdown
-    .split(/(```[\s\S]*?```|`[^`\n]*`)/)
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/)
     .map((part, index) =>
       index % 2 === 1
         ? part
