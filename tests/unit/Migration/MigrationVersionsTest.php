@@ -218,7 +218,11 @@ final class MigrationVersionsTest extends TestCase
             'resourceType' => 'domains',
             'resourceId' => 'domain-a',
             'resourceInternalId' => '1',
+            'parentResourceType' => 'teams',
+            'parentResourceId' => 'team-a',
+            'parentResourceInternalId' => '1',
             'title' => 'example.com expires in 30 days',
+            'body' => 'Renew example.com to keep it working.',
             'read' => false,
         ])));
 
