@@ -57,6 +57,8 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
+import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
+import { queryClient } from '@/lib/react-query/query-client'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -151,6 +153,30 @@ export async function ensureApexDomainInOrganization(
 ): Promise<void> {
   if (!isCloud() || !teamId || !domain?.trim()) return
   if (options?.skipForSites && isBuiltInSiteSubdomain(domain)) return
+
+  // A zone Appwrite serves is not the organization's to register, as the
+  // server's isAppwriteOwned holds, so an appwrite.network subdomain is skipped.
+  const owned: string[] = []
+  try {
+    const variables = await queryClient.fetchQuery(
+      consoleVariablesQueryOptions(),
+    )
+    owned.push(
+      variables._APP_DOMAIN_SITES ?? '',
+      variables._APP_DOMAIN_FUNCTIONS ?? '',
+    )
+  } catch {
+    // Without the variables, still register a custom domain.
+  }
+  const normalized = domain.trim().toLowerCase()
+  if (
+    owned.some(
+      (zone) =>
+        !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
+    )
+  ) {
+    return
+  }
 
   const apex = getApexDomain(domain)
   if (!apex) return
