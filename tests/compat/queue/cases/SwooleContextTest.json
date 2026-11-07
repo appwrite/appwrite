@@ -1,0 +1,231 @@
+{
+  "source": "packages/queue/tests/SwooleContextTest.php",
+  "cases": [
+    {
+      "name": "success releases the context after the callbacks",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "p2",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message"
+                ],
+                "context": "scoped",
+                "when": "p1"
+              }
+            ],
+            "hooks": {
+              "shutdown": [
+                {
+                  "has": "scoped"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:emails",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "shutdown0",
+              [
+                "p1"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "message:p2"
+              ]
+            ],
+            [
+              "shutdown0",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an error releases the context after the error callback",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "p2",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message"
+                ],
+                "context": "scoped",
+                "when": "p1",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "has": "scoped"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:emails",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "p1"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "message:p2"
+              ]
+            ],
+            [
+              "error0",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "each queue releases its own context",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "a1",
+                "queue": "first",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "b1",
+                "queue": "second",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "first",
+                "inject": [
+                  "message"
+                ],
+                "context": "scoped"
+              },
+              {
+                "queue": "second",
+                "has": "scoped"
+              }
+            ],
+            "shared": false
+          },
+          "expect": [
+            [
+              "job:first",
+              [
+                "message:a1"
+              ]
+            ],
+            [
+              "job:second",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

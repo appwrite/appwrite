@@ -1,0 +1,336 @@
+{
+  "source": "packages/client/tests/Adapter/SwooleCoroutine/ClientTest.php",
+  "cases": [
+    {
+      "name": "reconnects before posting to an abruptly closed idle connection",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connection_reuse",
+                true
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/drop-idle?key=${ns}:s"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "12"
+                ]
+              ]
+            ],
+            "body": "connection 1"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "POST",
+              "uri": "http://${http}/echo",
+              "body": "once"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"POST\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"],[\"Content-Length\",\"4\"]],\"body\":\"once\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "does not replay a post when the peer drops its response",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connection_reuse",
+                true
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "POST",
+              "uri": "http://${http}/drop-second?key=${ns}:p",
+              "body": "x"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "8"
+                ]
+              ]
+            ],
+            "body": "answered"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "POST",
+              "uri": "http://${http}/drop-second?key=${ns}:p",
+              "body": "x"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "8"
+                ]
+              ]
+            ],
+            "body": "answered"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/count?key=${ns}:p"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "1"
+                ]
+              ]
+            ],
+            "body": "3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a trusted certificate for another hostname",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "custom_ca",
+                "/tmp/compat-fs/client-certs/ca.pem"
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "https://${other-tls}/echo"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message quotes the host name, each runtime's own other route to the fixture server"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\TlsException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a buffered request after a streamed one on a reused connection gets its body",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connection_reuse",
+                true
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/chunked?chunks=2&size=3"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "chuchu"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    }
+  ]
+}

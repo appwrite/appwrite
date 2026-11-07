@@ -1,0 +1,433 @@
+{
+  "cases": [
+    {
+      "name": "every single-byte split of a stream with multi-byte characters",
+      "op": "stream.parse",
+      "args": {
+        "kind": "openai",
+        "events": "data: {\"choices\":[{\"delta\":{\"content\":\"café \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"😀 \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"☃\"}}]}\n\ndata: [DONE]\n\n",
+        "cuts": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155,
+          156,
+          157,
+          158,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165
+        ]
+      },
+      "expect": {
+        "content": "café 😀 ☃",
+        "tokens": [
+          "café ",
+          "😀 ",
+          "☃"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+      }
+    },
+    {
+      "name": "cuts inside multi-byte characters",
+      "op": "stream.parse",
+      "args": {
+        "kind": "openrouter",
+        "events": "data: {\"choices\":[{\"delta\":{\"content\":\"café \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"😀 \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"☃\"}}]}\n\ndata: [DONE]\n\n",
+        "cuts": [
+          5,
+          33,
+          34,
+          35,
+          70,
+          71,
+          72,
+          73
+        ]
+      },
+      "expect": {
+        "content": "café 😀 ☃",
+        "tokens": [
+          "café ",
+          "😀 ",
+          "☃"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"openai\\/gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+      }
+    },
+    {
+      "name": "raw json lines and sse lines",
+      "op": "stream.parse",
+      "args": {
+        "kind": "anthropic",
+        "events": "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"über \"}}\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"naïve\"}}\n",
+        "cuts": [
+          3,
+          60
+        ]
+      },
+      "expect": {
+        "content": "über naïve",
+        "tokens": [
+          "über ",
+          "naïve"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[],\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+      }
+    },
+    {
+      "name": "crlf separated events",
+      "op": "stream.parse",
+      "args": {
+        "kind": "gemini",
+        "events": "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"one \"}]}}]}\r\n\r\ndata: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"two\"}]}}]}\r\n\r\n",
+        "cuts": [
+          10,
+          11,
+          12
+        ]
+      },
+      "expect": {
+        "content": "one two",
+        "tokens": [
+          "one ",
+          "two"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"system_instruction\":{\"parts\":[{\"text\":\"\"}]},\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"hi\"}]}],\"generationConfig\":{\"maxOutputTokens\":1024,\"temperature\":1}}"
+      }
+    },
+    {
+      "name": "an event that is never terminated",
+      "op": "stream.parse",
+      "args": {
+        "kind": "deepseek",
+        "events": "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}",
+        "cuts": []
+      },
+      "expect": {
+        "content": "a",
+        "tokens": [
+          "a"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+      }
+    },
+    {
+      "name": "done markers with spaces and data lines without the space",
+      "op": "stream.parse",
+      "args": {
+        "kind": "xai",
+        "events": "data:  [DONE]  \ndata:{\"choices\":[{\"delta\":{\"content\":\"no space\"}}]}\ndata: {\"choices\":[{\"delta\":{\"content\":\"kept\"}}]}\n\n",
+        "cuts": [
+          7
+        ]
+      },
+      "expect": {
+        "content": "kept",
+        "tokens": [
+          "kept"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"grok-3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+      }
+    },
+    {
+      "name": "a whole chunk that is an error object",
+      "op": "stream.parse",
+      "args": {
+        "kind": "perplexity",
+        "status": 429,
+        "events": "  {\"error\":{\"code\":\"rate_limited\",\"message\":\"Slow down\"}}\n",
+        "cuts": []
+      },
+      "expect": {
+        "error": {
+          "class": "Exception",
+          "message": "Perplexity API error: (rate_limited) Slow down",
+          "code": 429
+        },
+        "tokens": [],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+      }
+    },
+    {
+      "name": "an error object split across chunks is parsed line by line",
+      "op": "stream.parse",
+      "args": {
+        "kind": "openai",
+        "events": "{\"error\":{\"code\":\"x\",\"message\":\"split\"}}\ndata: {\"choices\":[{\"delta\":{\"content\":\"after\"}}]}\n\n",
+        "cuts": [
+          10
+        ]
+      },
+      "expect": {
+        "content": "after",
+        "tokens": [
+          "after"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+      }
+    },
+    {
+      "name": "payload with every option",
+      "op": "stream.parse",
+      "args": {
+        "kind": "openai",
+        "model": "o4-mini",
+        "temperature": 0.30000000000000004,
+        "maxTokens": 12,
+        "description": "Desc",
+        "instructions": [
+          [
+            "A",
+            "1"
+          ],
+          [
+            "B",
+            [
+              "x",
+              "y"
+            ]
+          ],
+          [
+            "A",
+            "2"
+          ]
+        ],
+        "messages": [
+          "one",
+          {
+            "content": "two",
+            "role": "assistant"
+          }
+        ],
+        "events": "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n"
+      },
+      "expect": {
+        "content": "ok",
+        "tokens": [
+          "ok"
+        ],
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheCreation": 0,
+          "cacheRead": 0,
+          "total": 0
+        },
+        "request": "{\"model\":\"o4-mini\",\"messages\":[{\"role\":\"system\",\"content\":\"Desc\\n\\n# A\\n\\n2\\n\\n# B\\n\\nx\\ny\"},{\"role\":\"user\",\"content\":\"one\"},{\"role\":\"assistant\",\"content\":\"two\"}],\"temperature\":0.30000000000000004,\"stream\":true,\"max_completion_tokens\":12}"
+      }
+    }
+  ]
+}

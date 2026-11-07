@@ -1,0 +1,386 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/ChangeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ChangeTest::testConstructorWithOldAndNew",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc1",
+                "name": "Old Name"
+              }
+            },
+            "as": "o61"
+          },
+          "bind": "s112",
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "name": "Old Name"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc1",
+                "name": "New Name"
+              }
+            },
+            "as": "o62"
+          },
+          "bind": "s113",
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "name": "New Name"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Change",
+            "args": {
+              "old": {
+                "$obj": "o61"
+              },
+              "new": {
+                "$obj": "o62"
+              }
+            },
+            "as": "o63"
+          },
+          "expect": {
+            "$value": "Change",
+            "fields": {
+              "old": {
+                "$document": {
+                  "$id": "doc1",
+                  "name": "Old Name"
+                }
+              },
+              "new": {
+                "$document": {
+                  "$id": "doc1",
+                  "name": "New Name"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ChangeTest::testOldAndNewCarryTheirDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "status": "draft"
+              }
+            },
+            "as": "o64"
+          },
+          "bind": "s115",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "status": "draft"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "status": "published"
+              }
+            },
+            "as": "o65"
+          },
+          "bind": "s116",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "status": "published"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Change",
+            "args": {
+              "old": {
+                "$obj": "o64"
+              },
+              "new": {
+                "$obj": "o65"
+              }
+            },
+            "as": "o66"
+          },
+          "expect": {
+            "$value": "Change",
+            "fields": {
+              "old": {
+                "$document": {
+                  "$id": "test",
+                  "status": "draft"
+                }
+              },
+              "new": {
+                "$document": {
+                  "$id": "test",
+                  "status": "published"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o64"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "status"
+            }
+          },
+          "expect": "draft"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "status"
+            }
+          },
+          "expect": "published"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o64"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "test"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "test"
+        }
+      ]
+    },
+    {
+      "name": "ChangeTest::testDocumentsCannotBeReplacedOnceSet",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc",
+                "val": 1
+              }
+            },
+            "as": "o67"
+          },
+          "bind": "s122",
+          "expect": {
+            "$document": {
+              "$id": "doc",
+              "val": 1
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc",
+                "val": 2
+              }
+            },
+            "as": "o68"
+          },
+          "bind": "s123",
+          "expect": {
+            "$document": {
+              "$id": "doc",
+              "val": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Change",
+            "args": {
+              "old": {
+                "$obj": "o67"
+              },
+              "new": {
+                "$obj": "o68"
+              }
+            },
+            "as": "o69"
+          },
+          "expect": {
+            "$value": "Change",
+            "fields": {
+              "old": {
+                "$document": {
+                  "$id": "doc",
+                  "val": 1
+                }
+              },
+              "new": {
+                "$document": {
+                  "$id": "doc",
+                  "val": 2
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc",
+                "val": 0
+              }
+            },
+            "as": "o70"
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc",
+              "val": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ChangeTest::testWithEmptyDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o71"
+          },
+          "bind": "s126",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o72"
+          },
+          "bind": "s127",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Change",
+            "args": {
+              "old": {
+                "$obj": "o71"
+              },
+              "new": {
+                "$obj": "o72"
+              }
+            },
+            "as": "o73"
+          },
+          "expect": {
+            "$value": "Change",
+            "fields": {
+              "old": {
+                "$document": {}
+              },
+              "new": {
+                "$document": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o71"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o72"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

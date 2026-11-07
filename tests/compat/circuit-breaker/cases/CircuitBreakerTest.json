@@ -1,0 +1,2501 @@
+{
+  "source": "packages/circuit-breaker/tests/CircuitBreakerTest.php",
+  "cases": [
+    {
+      "name": "uses in-memory state by default",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "minimum_throughput": 2
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "cached state is shared across breaker instances",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 2
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 2
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            },
+            "fallback": "shared fallback",
+            "close": {
+              "result": "should not run"
+            }
+          },
+          "expect": "shared fallback"
+        }
+      ]
+    },
+    {
+      "name": "closed success does not write zero failures when already zero",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "store.writes",
+          "args": {
+            "store": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "cached transitions write state last",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "store.writes",
+          "args": {
+            "store": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/2"
+            ],
+            "reason": "opened_at is the time the circuit opened"
+          },
+          "expect": [
+            [
+              "set",
+              "users-api:opened_at",
+              "<masked>"
+            ],
+            [
+              "set",
+              "users-api:successes",
+              0
+            ],
+            [
+              "set",
+              "users-api:state",
+              "open"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "half-open successes close the circuit",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 2,
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-1"
+            }
+          },
+          "expect": "probe-1"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "open": false,
+            "closed": false,
+            "half_open": true
+          }
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-2"
+            }
+          },
+          "expect": "probe-2"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "open": false,
+            "closed": true,
+            "half_open": false
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "records telemetry for calls, fallbacks and transitions",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "telemetry": {
+              "$ref": "t"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.callback_failures",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "exception.type",
+                  "RuntimeException"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "closed -> open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.fallbacks",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.reason",
+                  "failure"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "open"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "fallback"
+                ],
+                [
+                  "exception.type",
+                  "RuntimeException"
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "prefixes telemetry metric names",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "metric_prefix": ".edge.",
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.set_telemetry",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "edge.breaker.callback_failures",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "exception.type",
+                  "RuntimeException"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "edge.breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "edge.breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "closed -> open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "edge.breaker.fallbacks",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.reason",
+                  "failure"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "edge.breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "open"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "fallback"
+                ],
+                [
+                  "exception.type",
+                  "RuntimeException"
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "edge.breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "edge.breaker.state",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ],
+            [
+              "edge.breaker.failures",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ],
+            [
+              "edge.breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.callbacks",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "edge.breaker.active_calls",
+              1
+            ],
+            [
+              "edge.breaker.state",
+              1
+            ],
+            [
+              "edge.breaker.failures",
+              1
+            ],
+            [
+              "edge.breaker.successes",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inspection methods do not emit telemetry",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "rare telemetry instruments are created on first record",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "closed -> open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "successful calls do not create rare telemetry instruments",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "success"
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the state observed during a call is the post-update state",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.array",
+          "bind": "c",
+          "args": {
+            "values": [
+              [
+                "users-api:state",
+                "open"
+              ],
+              [
+                "users-api:failures",
+                1
+              ],
+              [
+                "users-api:successes",
+                0
+              ],
+              [
+                "users-api:opened_at",
+                "$opened_ago_10"
+              ]
+            ]
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 1,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "telemetry": {
+              "$ref": "t"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe",
+              "during": [
+                {
+                  "op": "observe",
+                  "telemetry": {
+                    "$ref": "t"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "probe",
+            "during": [
+              [
+                [
+                  "breaker.active_calls",
+                  [
+                    [
+                      "users-api",
+                      1
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.state",
+                  [
+                    [
+                      "users-api",
+                      2
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.failures",
+                  [
+                    [
+                      "users-api",
+                      0
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.successes",
+                  [
+                    [
+                      "users-api",
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "open"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "half_open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "open -> half_open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "open"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "half_open"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "half_open"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "closed"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "half_open -> closed"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "half_open"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "closed"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "half_open"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "success"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "users-api"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "probe"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "probe: success"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "success"
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rejects an empty cache key when a cache is configured",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": ""
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Key must not be empty when a cache adapter is configured."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "trip transitions to open",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {},
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a tripped breaker short-circuits calls",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 1,
+            "minimum_throughput": 100
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "should not run"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "trip is idempotent",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "closed -> open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "trip persists state through the cache adapter",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api"
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api"
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "trip emits transition telemetry",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.transitions",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ],
+            [
+              "gauge",
+              "breaker.event.timestamp",
+              0,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.event",
+                  "transition"
+                ],
+                [
+                  "circuit_breaker.event_name",
+                  "closed -> open"
+                ],
+                [
+                  "circuit_breaker.from_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.to_state",
+                  "open"
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauges are observed at collection time",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok",
+              "during": [
+                {
+                  "op": "observe",
+                  "telemetry": {
+                    "$ref": "t"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "ok",
+            "during": [
+              [
+                [
+                  "breaker.active_calls",
+                  [
+                    [
+                      "default",
+                      1
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.state",
+                  [
+                    [
+                      "default",
+                      0
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.failures",
+                  [
+                    [
+                      "default",
+                      0
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.successes",
+                  [
+                    [
+                      "default",
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "success"
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "observations follow the breaker lifecycle",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "key": "kept",
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "bind": "kept",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.discarded",
+          "args": {
+            "key": "discarded",
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.callbacks",
+          "args": {
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              1
+            ],
+            [
+              "breaker.state",
+              1
+            ],
+            [
+              "breaker.failures",
+              1
+            ],
+            [
+              "breaker.successes",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "breaker.set_telemetry",
+          "args": {
+            "breaker": {
+              "$ref": "kept"
+            },
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.callbacks",
+          "args": {
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              1
+            ],
+            [
+              "breaker.state",
+              1
+            ],
+            [
+              "breaker.failures",
+              1
+            ],
+            [
+              "breaker.successes",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "breaker.set_telemetry",
+          "args": {
+            "breaker": {
+              "$ref": "kept"
+            },
+            "telemetry": {
+              "$ref": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "first"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              []
+            ],
+            [
+              "breaker.state",
+              []
+            ],
+            [
+              "breaker.failures",
+              []
+            ],
+            [
+              "breaker.successes",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "second"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an idle breaker observes the shared state",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "idle",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api"
+          },
+          "bind": "active",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "active"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "users-api",
+                  1
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "users-api",
+                  1
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "idle"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        }
+      ]
+    }
+  ]
+}

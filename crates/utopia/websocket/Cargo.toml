@@ -1,0 +1,33 @@
+[package]
+name = "utopia-websocket"
+description = "WebSocket servers behind one adapter interface (Network, in-memory), with hooks, fan-out sends and error stages, and a WebSocket client."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/websocket"
+publish.workspace = true
+
+[features]
+default = ["network"]
+# The network adapter (`Network`) and the client's network transport
+# (`Client::connect`), on utopia-async and tokio-tungstenite.
+network = ["dep:utopia-async", "dep:tokio-tungstenite", "dep:httparse"]
+
+[dependencies]
+bytes.workspace = true
+futures-util = { workspace = true, features = ["sink"] }
+http.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+httparse = { workspace = true, optional = true }
+utopia-async = { workspace = true, optional = true }
+tokio-tungstenite = { workspace = true, optional = true }
+
+[dev-dependencies]
+utopia-async.workspace = true
+
+[package.metadata.utopia]
+category = "servers"
+php-sync = "d693d49f17de8a800da566b9c37d34fa0ec9b0d2"

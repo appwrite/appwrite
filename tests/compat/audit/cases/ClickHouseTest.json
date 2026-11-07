@@ -1,0 +1,539 @@
+{
+  "source": "packages/audit/tests/Adapter/ClickHouseTest.php",
+  "cases": [
+    {
+      "name": "testPingSendsAuthenticatedGet",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.get_name",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": "ClickHouse"
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 200,
+            "body": "Ok.\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fake.requests",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "uri": "http://clickhouse:8124/ping",
+              "headers": {
+                "Host": [
+                  "clickhouse:8124"
+                ],
+                "X-ClickHouse-User": [
+                  "user"
+                ],
+                "X-ClickHouse-Key": [
+                  "secret"
+                ]
+              },
+              "content_type": "",
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testPingFailsOnErrorStatus",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 503
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPingFailsOnNetworkError",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.fail",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "message": "Connection refused"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPingUsesHttpsWhenSecure",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 200
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_secure",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fake.requests",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "uri": "https://clickhouse:8124/ping",
+              "headers": {
+                "Host": [
+                  "clickhouse:8124"
+                ],
+                "X-ClickHouse-User": [
+                  "user"
+                ],
+                "X-ClickHouse-Key": [
+                  "secret"
+                ]
+              },
+              "content_type": "",
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testQuerySendsParametersAsMultipartForm",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 200,
+            "body": "7\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_database",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": "logs"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "event",
+                "values": [
+                  "users.create"
+                ]
+              }
+            ]
+          },
+          "expect": 7
+        },
+        {
+          "op": "fake.requests",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "http://clickhouse:8124/",
+              "headers": {
+                "Host": [
+                  "clickhouse:8124"
+                ],
+                "X-ClickHouse-User": [
+                  "user"
+                ],
+                "X-ClickHouse-Key": [
+                  "secret"
+                ],
+                "X-ClickHouse-Database": [
+                  "logs"
+                ]
+              },
+              "content_type": "multipart/form-data",
+              "fields": {
+                "query": "SELECT COUNT(*) AS count FROM `logs`.`audits` WHERE `event` IN ({param0:String}) FORMAT TabSeparated",
+                "param_param0": "users.create"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testBatchInsertSendsRowsAsBody",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 200
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_batch",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "logs": [
+              {
+                "userId": "user1",
+                "event": "users.create",
+                "resource": "user/user1",
+                "userAgent": "Mozilla/5.0",
+                "ip": "127.0.0.1",
+                "time": "2026-01-01 00:00:00.000",
+                "data": [],
+                "actorType": "member",
+                "resourceType": "user",
+                "resourceId": "user1",
+                "projectId": "project1",
+                "projectInternalId": "1",
+                "teamId": "team1",
+                "teamInternalId": "1",
+                "hostname": "example.org",
+                "country": "us"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "fake.requests",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "http://clickhouse:8124/?query=INSERT+INTO+%60default%60.%60audits%60+%28%60id%60%2C+%60time%60%2C+%60actorId%60%2C+%60event%60%2C+%60resource%60%2C+%60userAgent%60%2C+%60ip%60%2C+%60data%60%2C+%60actorType%60%2C+%60actorInternalId%60%2C+%60resourceParent%60%2C+%60resourceType%60%2C+%60resourceId%60%2C+%60resourceInternalId%60%2C+%60country%60%2C+%60city%60%2C+%60continentCode%60%2C+%60subdivisions%60%2C+%60isp%60%2C+%60autonomousSystemNumber%60%2C+%60autonomousSystemOrganization%60%2C+%60connectionType%60%2C+%60connectionUsageType%60%2C+%60connectionOrganization%60%2C+%60projectId%60%2C+%60projectInternalId%60%2C+%60teamId%60%2C+%60teamInternalId%60%2C+%60hostname%60%2C+%60sdk%60%2C+%60sdkVersion%60%2C+%60osCode%60%2C+%60osName%60%2C+%60osVersion%60%2C+%60clientType%60%2C+%60clientCode%60%2C+%60clientName%60%2C+%60clientVersion%60%2C+%60clientEngine%60%2C+%60clientEngineVersion%60%2C+%60deviceName%60%2C+%60deviceBrand%60%2C+%60deviceModel%60%29+FORMAT+JSONEachRow",
+              "headers": {
+                "Host": [
+                  "clickhouse:8124"
+                ],
+                "X-ClickHouse-User": [
+                  "user"
+                ],
+                "X-ClickHouse-Key": [
+                  "secret"
+                ],
+                "X-ClickHouse-Database": [
+                  "default"
+                ]
+              },
+              "content_type": "application/x-www-form-urlencoded",
+              "body": "{\"id\":\"<uniqid>\",\"time\":\"2026-01-01 00:00:00.000\",\"actorId\":\"user1\",\"event\":\"users.create\",\"resource\":\"user/user1\",\"userAgent\":\"Mozilla/5.0\",\"ip\":\"127.0.0.1\",\"data\":\"[]\",\"actorType\":\"member\",\"actorInternalId\":null,\"resourceParent\":\"\",\"resourceType\":\"user\",\"resourceId\":\"user1\",\"resourceInternalId\":null,\"country\":\"us\",\"city\":null,\"continentCode\":null,\"subdivisions\":null,\"isp\":null,\"autonomousSystemNumber\":null,\"autonomousSystemOrganization\":null,\"connectionType\":null,\"connectionUsageType\":null,\"connectionOrganization\":null,\"projectId\":\"project1\",\"projectInternalId\":\"1\",\"teamId\":\"team1\",\"teamInternalId\":\"1\",\"hostname\":\"example.org\",\"sdk\":null,\"sdkVersion\":null,\"osCode\":null,\"osName\":null,\"osVersion\":null,\"clientType\":null,\"clientCode\":null,\"clientName\":null,\"clientVersion\":null,\"clientEngine\":null,\"clientEngineVersion\":null,\"deviceName\":null,\"deviceBrand\":null,\"deviceModel\":null}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testQueryReportsErrorStatus",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.respond",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "status": 500,
+            "body": "Code: 60. DB::Exception: Unknown table"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: ClickHouse query failed with HTTP 500: Code: 60. DB::Exception: Unknown table"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryWrapsNetworkErrors",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.fail",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "message": "Connection refused"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: Connection refused"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "no response queued: the client's RuntimeException is wrapped too",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "host": "clickhouse",
+            "username": "user",
+            "password": "secret",
+            "port": 8124,
+            "fake": true
+          },
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: No response queued."
+            }
+          }
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,398 @@
+{
+  "source": "packages/auth/tests/Proofs/TokenTest.php",
+  "cases": [
+    {
+      "name": "generate",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": 32
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[0-9a-f]{32}$/",
+            "value": {
+              "$ref": "t"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "sha256 hash and verify",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": 32
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "sha",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.set_hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "hash": {
+              "$ref": "sha"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.hash_setter",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "method": "setVersion",
+            "value": "sha256"
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.hash_name",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": "sha"
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t",
+          "expect": "<masked>"
+        },
+        {
+          "op": "proof.hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "t"
+            }
+          },
+          "bind": "h",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "hash of a random token"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[a-f0-9]{64}$/",
+            "value": {
+              "$ref": "h"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "t"
+            },
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": "wrongtoken",
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "proof.hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": "abc"
+          },
+          "expect": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        }
+      ]
+    },
+    {
+      "name": "get and set length",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": 32
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 32
+        },
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": 64
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p2"
+            }
+          },
+          "expect": 64
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 64
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[0-9a-f]{64}$/",
+            "value": {
+              "$ref": "t"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t1",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[0-9a-f]$/",
+            "value": {
+              "$ref": "t1"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t7",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[0-9a-f]{7}$/",
+            "value": {
+              "$ref": "t7"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "default length",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 256
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.strlen",
+          "args": {
+            "value": {
+              "$ref": "t"
+            }
+          },
+          "expect": 256
+        }
+      ]
+    },
+    {
+      "name": "invalid length",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": 32
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Token length must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "token",
+            "length": -5
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Token length must be greater than 0"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

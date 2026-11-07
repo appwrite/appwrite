@@ -1,0 +1,2242 @@
+{
+  "source": "packages/query/tests/AST/Serializer/PostgreSQLTest.php",
+  "cases": [
+    {
+      "name": "testDoubleQuoteIdentifiers",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Serializer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name, email FROM users"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                }
+              ]
+            ]
+          },
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 21
+            },
+            "args": [
+              [
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                }
+              ]
+            ]
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 22
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Serializer\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Comma"
+              },
+              "value": ",",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "email",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Comma"
+              },
+              "value": ",",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "email",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        {
+          "$object": "AST\\Parser",
+          "id": 21
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 22,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 23,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 24,
+                "props": {
+                  "name": "email",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 25,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": null,
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        "SELECT \"name\", \"email\" FROM \"users\""
+      ]
+    },
+    {
+      "name": "testRoundTrip",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT u.name, COUNT(*) AS total FROM users u LEFT JOIN orders o ON u.id = o.user_id WHERE u.status = 'active' GROUP BY u.name ORDER BY total DESC LIMIT 10"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                },
+                {
+                  "$o": 21
+                },
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                },
+                {
+                  "$o": 28
+                },
+                {
+                  "$o": 29
+                },
+                {
+                  "$o": 30
+                },
+                {
+                  "$o": 31
+                },
+                {
+                  "$o": 32
+                },
+                {
+                  "$o": 33
+                },
+                {
+                  "$o": 34
+                },
+                {
+                  "$o": 35
+                },
+                {
+                  "$o": 36
+                },
+                {
+                  "$o": 37
+                },
+                {
+                  "$o": 38
+                },
+                {
+                  "$o": 39
+                },
+                {
+                  "$o": 40
+                },
+                {
+                  "$o": 41
+                },
+                {
+                  "$o": 42
+                },
+                {
+                  "$o": 43
+                },
+                {
+                  "$o": 44
+                },
+                {
+                  "$o": 45
+                },
+                {
+                  "$o": 46
+                },
+                {
+                  "$o": 47
+                },
+                {
+                  "$o": 48
+                },
+                {
+                  "$o": 49
+                },
+                {
+                  "$o": 50
+                },
+                {
+                  "$o": 51
+                },
+                {
+                  "$o": 52
+                },
+                {
+                  "$o": 53
+                },
+                {
+                  "$o": 54
+                },
+                {
+                  "$o": 55
+                },
+                {
+                  "$o": 56
+                },
+                {
+                  "$o": 57
+                },
+                {
+                  "$o": 58
+                },
+                {
+                  "$o": 59
+                },
+                {
+                  "$o": 60
+                },
+                {
+                  "$o": 61
+                },
+                {
+                  "$o": 62
+                },
+                {
+                  "$o": 63
+                },
+                {
+                  "$o": 64
+                },
+                {
+                  "$o": 65
+                },
+                {
+                  "$o": 66
+                },
+                {
+                  "$o": 67
+                },
+                {
+                  "$o": 68
+                },
+                {
+                  "$o": 69
+                },
+                {
+                  "$o": 70
+                },
+                {
+                  "$o": 71
+                },
+                {
+                  "$o": 72
+                },
+                {
+                  "$o": 73
+                }
+              ]
+            ]
+          },
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 118
+            },
+            "args": [
+              [
+                {
+                  "$o": 74
+                },
+                {
+                  "$o": 75
+                },
+                {
+                  "$o": 76
+                },
+                {
+                  "$o": 77
+                },
+                {
+                  "$o": 78
+                },
+                {
+                  "$o": 79
+                },
+                {
+                  "$o": 80
+                },
+                {
+                  "$o": 81
+                },
+                {
+                  "$o": 82
+                },
+                {
+                  "$o": 83
+                },
+                {
+                  "$o": 84
+                },
+                {
+                  "$o": 85
+                },
+                {
+                  "$o": 86
+                },
+                {
+                  "$o": 87
+                },
+                {
+                  "$o": 88
+                },
+                {
+                  "$o": 89
+                },
+                {
+                  "$o": 90
+                },
+                {
+                  "$o": 91
+                },
+                {
+                  "$o": 92
+                },
+                {
+                  "$o": 93
+                },
+                {
+                  "$o": 94
+                },
+                {
+                  "$o": 95
+                },
+                {
+                  "$o": 96
+                },
+                {
+                  "$o": 97
+                },
+                {
+                  "$o": 98
+                },
+                {
+                  "$o": 99
+                },
+                {
+                  "$o": 100
+                },
+                {
+                  "$o": 101
+                },
+                {
+                  "$o": 102
+                },
+                {
+                  "$o": 103
+                },
+                {
+                  "$o": 104
+                },
+                {
+                  "$o": 105
+                },
+                {
+                  "$o": 106
+                },
+                {
+                  "$o": 107
+                },
+                {
+                  "$o": 108
+                },
+                {
+                  "$o": 109
+                },
+                {
+                  "$o": 110
+                },
+                {
+                  "$o": 111
+                },
+                {
+                  "$o": 112
+                },
+                {
+                  "$o": 113
+                },
+                {
+                  "$o": 114
+                },
+                {
+                  "$o": 115
+                },
+                {
+                  "$o": 116
+                },
+                {
+                  "$o": 117
+                }
+              ]
+            ]
+          },
+          {
+            "new": "AST\\Serializer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 137
+            },
+            "args": [
+              {
+                "$o": 119
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Comma"
+              },
+              "value": ",",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "COUNT",
+              "position": 15
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Star"
+              },
+              "value": "*",
+              "position": 21
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "AS",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 26
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "total",
+              "position": 27
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 32
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 38
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 43
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 44
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 45
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "LEFT",
+              "position": 46
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 50
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "JOIN",
+              "position": 51
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 55
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "orders",
+              "position": 56
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 62
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "o",
+              "position": 63
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 64
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 32,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "ON",
+              "position": 65
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 33,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 67
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 34,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 68
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 35,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 69
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 36,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "id",
+              "position": 70
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 37,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 72
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 38,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 73
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 39,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 74
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 40,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "o",
+              "position": 75
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 41,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 76
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 42,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "user_id",
+              "position": 77
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 43,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 84
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 44,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 85
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 45,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 90
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 46,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 91
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 47,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 92
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 48,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "status",
+              "position": 93
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 49,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 99
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 50,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 100
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 51,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 101
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 52,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'active'",
+              "position": 102
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 53,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 110
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 54,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "GROUP",
+              "position": 111
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 55,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 116
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 56,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "BY",
+              "position": 117
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 57,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 119
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 58,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 120
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 59,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 121
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 60,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 122
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 61,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 126
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 62,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "ORDER",
+              "position": 127
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 63,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 132
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 64,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "BY",
+              "position": 133
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 65,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 135
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 66,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "total",
+              "position": 136
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 67,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 141
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 68,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "DESC",
+              "position": 142
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 69,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 146
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 70,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "LIMIT",
+              "position": 147
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 71,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 152
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 72,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "10",
+              "position": 153
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 73,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 155
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 74,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 75,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 76,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 77,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 78,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Comma"
+              },
+              "value": ",",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 79,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "COUNT",
+              "position": 15
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 80,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 81,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Star"
+              },
+              "value": "*",
+              "position": 21
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 82,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 83,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "AS",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 84,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "total",
+              "position": 27
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 85,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 86,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 38
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 87,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 44
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 88,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "LEFT",
+              "position": 46
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 89,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "JOIN",
+              "position": 51
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 90,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "orders",
+              "position": 56
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 91,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "o",
+              "position": 63
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 92,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "ON",
+              "position": 65
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 93,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 68
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 94,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 69
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 95,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "id",
+              "position": 70
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 96,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 73
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 97,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "o",
+              "position": 75
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 98,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 76
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 99,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "user_id",
+              "position": 77
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 100,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 85
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 101,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 91
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 102,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 92
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 103,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "status",
+              "position": 93
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 104,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 100
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 105,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'active'",
+              "position": 102
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 106,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "GROUP",
+              "position": 111
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 107,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "BY",
+              "position": 117
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 108,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "u",
+              "position": 120
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 109,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Dot"
+              },
+              "value": ".",
+              "position": 121
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 110,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 122
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 111,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "ORDER",
+              "position": 127
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 112,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "BY",
+              "position": 133
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 113,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "total",
+              "position": 136
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 114,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "DESC",
+              "position": 142
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 115,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "LIMIT",
+              "position": 147
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 116,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "10",
+              "position": 153
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 117,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 155
+            }
+          }
+        ],
+        {
+          "$object": "AST\\Parser",
+          "id": 118
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 119,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 120,
+                "props": {
+                  "name": "name",
+                  "table": "u",
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Expression\\Aliased",
+                "id": 121,
+                "props": {
+                  "expression": {
+                    "$value": "AST\\Call\\Func",
+                    "id": 122,
+                    "props": {
+                      "name": "COUNT",
+                      "arguments": [
+                        {
+                          "$value": "AST\\Star",
+                          "id": 123,
+                          "props": {
+                            "table": null,
+                            "schema": null
+                          }
+                        }
+                      ],
+                      "distinct": false,
+                      "filter": null
+                    }
+                  },
+                  "alias": "total"
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 124,
+              "props": {
+                "name": "users",
+                "alias": "u",
+                "schema": null
+              }
+            },
+            "joins": [
+              {
+                "$value": "AST\\JoinClause",
+                "id": 125,
+                "props": {
+                  "type": "LEFT JOIN",
+                  "table": {
+                    "$value": "AST\\Reference\\Table",
+                    "id": 126,
+                    "props": {
+                      "name": "orders",
+                      "alias": "o",
+                      "schema": null
+                    }
+                  },
+                  "condition": {
+                    "$value": "AST\\Expression\\Binary",
+                    "id": 127,
+                    "props": {
+                      "left": {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 128,
+                        "props": {
+                          "name": "id",
+                          "table": "u",
+                          "schema": null
+                        }
+                      },
+                      "operator": "=",
+                      "right": {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 129,
+                        "props": {
+                          "name": "user_id",
+                          "table": "o",
+                          "schema": null
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 130,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 131,
+                  "props": {
+                    "name": "status",
+                    "table": "u",
+                    "schema": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 132,
+                  "props": {
+                    "value": "active"
+                  }
+                }
+              }
+            },
+            "groupBy": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 133,
+                "props": {
+                  "name": "name",
+                  "table": "u",
+                  "schema": null
+                }
+              }
+            ],
+            "having": null,
+            "orderBy": [
+              {
+                "$value": "AST\\OrderByItem",
+                "id": 134,
+                "props": {
+                  "expression": {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 135,
+                    "props": {
+                      "name": "total",
+                      "table": null,
+                      "schema": null
+                    }
+                  },
+                  "direction": {
+                    "$enum": "OrderDirection::Desc"
+                  },
+                  "nulls": null
+                }
+              }
+            ],
+            "limit": {
+              "$value": "AST\\Literal",
+              "id": 136,
+              "props": {
+                "value": 10
+              }
+            },
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer\\PostgreSQL",
+          "id": 137
+        },
+        "SELECT \"u\".\"name\", COUNT(*) AS \"total\" FROM \"users\" AS \"u\" LEFT JOIN \"orders\" AS \"o\" ON \"u\".\"id\" = \"o\".\"user_id\" WHERE \"u\".\"status\" = 'active' GROUP BY \"u\".\"name\" ORDER BY \"total\" DESC LIMIT 10"
+      ]
+    }
+  ]
+}

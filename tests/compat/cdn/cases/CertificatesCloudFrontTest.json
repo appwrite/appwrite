@@ -1,0 +1,2349 @@
+{
+  "source": "packages/cdn/tests/Certificates/Provider/CloudFrontTest.php",
+  "cases": [
+    {
+      "name": "issue certificate creates tenant with managed certificate",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "EDFDVBD6EXAMPLE",
+        "connection_group": "cg_1",
+        "parameters": {
+          "origin": "fra&syd"
+        },
+        "method": "issueCertificate",
+        "domain": "Example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 201,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ],
+        "cert_name": "ignored"
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>EDFDVBD6EXAMPLE</DistributionId><Name>example.com</Name><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><Parameters><Parameter><Name>origin</Name><Value>fra&amp;syd</Value></Parameter></Parameters><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate lets CloudFront serve the token when configured",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "validation_token_host": "cloudfront",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 201,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Name>example.com</Name><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><ManagedCertificateRequest><ValidationTokenHost>cloudfront</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate finds tenant created concurrently",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 409,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityAlreadyExists</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Name>example.com</Name><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate rejects domain held elsewhere",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 409,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>CNAMEAlreadyExists</Code><Message>One or more of the CNAMEs you provided are already associated with a different resource.</Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "Failed to create CloudFront distribution tenant with status 409: CNAMEAlreadyExists: One or more of the CNAMEs you provided are already associated with a different resource."
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Name>example.com</Name><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate returns recheck date once issued",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/result"
+        ],
+        "reason": "thirty days from now"
+      },
+      "expect": {
+        "result": "<masked>",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate waits on pending validation",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate requests again after failure",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Customizations><Certificate><Arn>arn:aws:acm:us-east-1:1:certificate/old</Arn></Certificate><WebAcl><Action>override</Action><Arn>arn:aws:wafv2:acl</Arn></WebAcl></Customizations><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>validation-timed-out</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E2"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "PUT",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<UpdateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><Customizations><WebAcl><Action>override</Action><Arn>arn:aws:wafv2:acl</Arn></WebAcl></Customizations><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></UpdateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate requests one for tenant without",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E2"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "PUT",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<UpdateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></UpdateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "issue certificate enables disabled tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E2"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/result"
+        ],
+        "reason": "thirty days from now"
+      },
+      "expect": {
+        "result": "<masked>",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "PUT",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<UpdateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><ConnectionGroupId>cg_1</ConnectionGroupId><Enabled>true</Enabled></UpdateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "long domains get hashed tenant names",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "issueCertificate",
+        "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccc.example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 201,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccc.example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Name>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bb-5473d940654255220b28fc46d3f58a65bfb11f091dc35291322d2834caadb7cf</Name><Domains><DomainItem><Domain>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccc.example.com</Domain></DomainItem></Domains><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccc.example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status maps pending-validation",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": "pending",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status maps issued",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": "issued",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status maps inactive",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>inactive</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": "unknown",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status throws when AWS stopped trying: validation-timed-out",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>validation-timed-out</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\Certificate",
+          "message": "CloudFront stopped trying to issue a certificate for example.com: the certificate is validation-timed-out.",
+          "status": "failed",
+          "blocked": false,
+          "challenges": [],
+          "warnings": []
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status throws when AWS stopped trying: failed",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>failed</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\Certificate",
+          "message": "CloudFront stopped trying to issue a certificate for example.com: the certificate is failed.",
+          "status": "failed",
+          "blocked": false,
+          "challenges": [],
+          "warnings": []
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status throws when AWS stopped trying: expired",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>expired</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\Certificate",
+          "message": "CloudFront stopped trying to issue a certificate for example.com: the certificate is expired.",
+          "status": "failed",
+          "blocked": false,
+          "challenges": [],
+          "warnings": []
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status throws when AWS stopped trying: revoked",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>revoked</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\Certificate",
+          "message": "CloudFront stopped trying to issue a certificate for example.com: the certificate is revoked.",
+          "status": "failed",
+          "blocked": false,
+          "challenges": [],
+          "warnings": []
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificate status is unknown without tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "result": "unknown",
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "is renew required: no tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isRenewRequired",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "result": true,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "is renew required: no certificate",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isRenewRequired",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "result": true,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "is renew required: failed",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isRenewRequired",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>failed</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": true,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "is renew required: pending validation",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isRenewRequired",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": false,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "is renew required: issued",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isRenewRequired",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": false,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "validation tokens while pending validation",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getValidationTokens",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": [
+          {
+            "domain": "example.com",
+            "from": "http://example.com/.well-known/pki-validation/abc.txt",
+            "to": "https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "validation tokens are empty once issued",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getValidationTokens",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+          }
+        ]
+      },
+      "expect": {
+        "result": [],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "validation tokens are empty without a tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "getValidationTokens",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "result": [],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete certificate disables then deletes tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E2"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 204
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "PUT",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\"?>\n<UpdateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><ConnectionGroupId>cg_1</ConnectionGroupId><Enabled>false</Enabled></UpdateDistributionTenantRequest>\n"
+          },
+          {
+            "method": "DELETE",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "if-match": "E2",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete certificate skips disable for disabled tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 204
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "DELETE",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete certificate ignores missing tenant",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "leaves a wildcard tenant alone",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "app.example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>*.example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=app.example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "leaves a shared tenant alone",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult><DomainResult><Domain>www.example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "leaves a foreign tenant alone",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>other</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete certificate reports tenant still deploying",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "deleteCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E1"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled><Status>InProgress</Status></DistributionTenant>"
+          },
+          {
+            "status": 409,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>ResourceNotDisabled</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront distribution tenant tenant_1 for example.com is disabled but not yet deployed; delete it again once the change has propagated."
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "DELETE",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "if-match": "E1",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "rejects unknown validation token host",
+      "op": "certificates.new",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "validation_token_host": "dns"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Validation token host must be \"cloudfront\" or \"self-hosted\"."
+        }
+      }
+    },
+    {
+      "name": "instant generation is never",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isInstantGeneration",
+        "domain": "example.com",
+        "responses": []
+      },
+      "expect": {
+        "result": false,
+        "requests": []
+      }
+    },
+    {
+      "name": "instant generation checks the domain",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "dist",
+        "connection_group": "cg_1",
+        "method": "isInstantGeneration",
+        "domain": "https://example.com",
+        "responses": []
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "responses that are not what CloudFront sends",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudfront",
+            "access_key_id": "AKID",
+            "secret_access_key": "secret",
+            "distribution": "dist",
+            "connection_group": "cg_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "not xml"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront distribution tenant response was not valid XML."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<DistributionTenant/>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront distribution tenant response was missing its ID."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront distribution tenant response was missing its ETag."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              },
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront managed certificate response was not valid XML."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              },
+              {
+                "status": 200,
+                "body": "<ManagedCertificateDetails/>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "unknown",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/managed-certificate/tenant_1",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 500
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch CloudFront distribution tenant with status 500: Unknown CloudFront error"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "error": "Connection refused"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch CloudFront distribution tenant with status 0: Connection refused"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 403,
+                "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>0</Code><Message>Denied</Message></Error><RequestId>req</RequestId></ErrorResponse>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch CloudFront distribution tenant with status 403: Denied"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled><Status>InProgress</Status></DistributionTenant>"
+              },
+              {
+                "status": 412,
+                "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>PreconditionFailed</Code><Message>The If-Match version is missing or not valid.</Message></Error><RequestId>req</RequestId></ErrorResponse>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to delete CloudFront distribution tenant with status 412: PreconditionFailed: The If-Match version is missing or not valid."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/tenant_1",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "if-match": "E1",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 404,
+                "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error><RequestId>req</RequestId></ErrorResponse>"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to create CloudFront distribution tenant with status 200: Unknown CloudFront error"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant",
+                "headers": {
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "content-type": "application/xml",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider",
+                  "x-amz-date": "<date>"
+                },
+                "body": "<?xml version=\"1.0\"?>\n<CreateDistributionTenantRequest xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><DistributionId>dist</DistributionId><Name>example.com</Name><Domains><DomainItem><Domain>example.com</Domain></DomainItem></Domains><ConnectionGroupId>cg_1</ConnectionGroupId><ManagedCertificateRequest><ValidationTokenHost>self-hosted</ValidationTokenHost><PrimaryDomainName>example.com</PrimaryDomainName><CertificateTransparencyLoggingPreference>enabled</CertificateTransparencyLoggingPreference></ManagedCertificateRequest><Enabled>true</Enabled></CreateDistributionTenantRequest>\n"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "through the default client and the facade",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudfront",
+            "access_key_id": "AKID",
+            "secret_access_key": "secret",
+            "distribution": "dist",
+            "connection_group": "cg_1",
+            "transport": "http",
+            "session_token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getValidationTokens",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+              }
+            ]
+          },
+          "expect": {
+            "result": [
+              {
+                "domain": "example.com",
+                "from": "http://example.com/.well-known/pki-validation/abc.txt",
+                "to": "https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt"
+              }
+            ],
+            "requests": [
+              {
+                "method": "GET",
+                "url": "/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "/2020-05-31/managed-certificate/tenant_1",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "facade",
+            "provider": {
+              "$ref": "p"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "f"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "ETag": "E1"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>inactive</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled><Status>InProgress</Status></DistributionTenant>"
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateArn>arn:aws:acm:us-east-1:1:certificate/new</CertificateArn><CertificateStatus>issued</CertificateStatus><ValidationTokenHost>self-hosted</ValidationTokenHost><ValidationTokenDetails><ValidationTokenDetail><Domain>example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/abc.txt</RedirectFrom><RedirectTo>https://validation.us-east-1.acm-validations.aws/123/.well-known/pki-validation/abc.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "issued",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "/2020-05-31/managed-certificate/tenant_1",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=AKID/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

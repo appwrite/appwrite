@@ -1,0 +1,164 @@
+{
+  "source": "packages/queue/tests/AdapterContextTest.php",
+  "cases": [
+    {
+      "name": "consume releases the last message's context",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message"
+                ],
+                "context": "scoped"
+              }
+            ],
+            "hooks": {
+              "workerStop": [
+                {
+                  "has": "scoped"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:emails",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "workerStop0",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed message releases its context after the error callback",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "p2",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message"
+                ],
+                "context": "scoped",
+                "when": "p1",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ],
+                  "has": "scoped"
+                }
+              ],
+              "workerStop": [
+                {
+                  "has": "scoped"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:emails",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "p1"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "message:p2"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                null
+              ]
+            ],
+            [
+              "workerStop0",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

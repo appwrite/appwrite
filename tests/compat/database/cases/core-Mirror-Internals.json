@@ -1,0 +1,531 @@
+{
+  "cases": [
+    {
+      "name": "Mirror waits for replications and forwards settings to both sides",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.await_replications",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.await_replications",
+          "args": {
+            "timeout": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "database.await_replications",
+          "args": {
+            "timeout": 250
+          },
+          "expect": null
+        },
+        {
+          "op": "database.await_replications",
+          "args": {
+            "timeout": -5
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "A replication timeout cannot be negative, -5 given"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": true
+              }
+            },
+            "as": "a1"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "attribute": {
+              "$obj": "a1"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i1"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "people",
+            "indexes": [
+              {
+                "$obj": "i1"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "people",
+            "indexes": [
+              {
+                "$obj": "i1"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "ada",
+              "name": "Ada"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "name": "Ada",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.await_replications",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "people",
+            "db": {
+              "$ref": "dst"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "db": {
+              "$ref": "dst"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "database.set_cache_writer_timeout",
+          "args": {
+            "seconds": 3
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_checking_grants",
+          "args": {
+            "db": {
+              "$ref": "src"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.is_checking_grants",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_schemaless",
+          "args": {
+            "schemaless": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_filters",
+          "args": {
+            "filters": [
+              "rot13"
+            ]
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_filters",
+          "args": {
+            "db": {
+              "$ref": "src"
+            }
+          },
+          "expect": {
+            "$registry": [
+              "rot13"
+            ]
+          }
+        },
+        {
+          "op": "database.get_filters",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            }
+          },
+          "expect": {
+            "$registry": [
+              "rot13"
+            ]
+          }
+        },
+        {
+          "op": "database.with_filtering",
+          "args": {
+            "filtering": false,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.is_filtering",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_validation",
+          "args": {
+            "validation": false,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.is_validating",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

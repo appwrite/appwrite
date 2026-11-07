@@ -1,0 +1,901 @@
+{
+  "source": "Utopia\\Cache\\Cache::recordPurges (no PHP test)",
+  "cases": [
+    {
+      "name": "records each purged key and hash, folded, in first-purge order",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "save",
+                "key": "Rows",
+                "data": "row",
+                "hash": "A"
+              },
+              {
+                "op": "purge",
+                "key": "Rows",
+                "hash": "A"
+              },
+              {
+                "op": "purge",
+                "key": "rows"
+              },
+              {
+                "op": "purge",
+                "key": "ROWS",
+                "hash": "a"
+              },
+              {
+                "op": "load",
+                "key": "rows",
+                "ttl": 60,
+                "hash": "a"
+              },
+              {
+                "op": "purge",
+                "key": "Other",
+                "hash": "x"
+              },
+              {
+                "op": "purge",
+                "key": "rows",
+                "hash": "b"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "rows",
+                  {
+                    "$array": [
+                      [
+                        "a",
+                        true
+                      ],
+                      [
+                        "",
+                        true
+                      ],
+                      [
+                        "b",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "other",
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric keys and hashes become integer array keys",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "123",
+                "hash": "0"
+              },
+              {
+                "op": "purge",
+                "key": "123",
+                "hash": "01"
+              },
+              {
+                "op": "purge",
+                "key": "0"
+              },
+              {
+                "op": "purge",
+                "key": "-1",
+                "hash": "1.5"
+              },
+              {
+                "op": "purge",
+                "key": "007",
+                "hash": "9"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  123,
+                  {
+                    "$array": [
+                      [
+                        0,
+                        true
+                      ],
+                      [
+                        "01",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  0,
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  -1,
+                  {
+                    "$array": [
+                      [
+                        "1.5",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "007",
+                  {
+                    "$array": [
+                      [
+                        9,
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a case-sensitive cache records keys as given",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "Rows",
+                "hash": "A"
+              },
+              {
+                "op": "purge",
+                "key": "rows",
+                "hash": "a"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "Rows",
+                  {
+                    "$array": [
+                      [
+                        "A",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "rows",
+                  {
+                    "$array": [
+                      [
+                        "a",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false,
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a callback that purges nothing records nothing",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "save",
+                "key": "Rows",
+                "data": "row",
+                "hash": "A"
+              },
+              {
+                "op": "load",
+                "key": "rows",
+                "ttl": 60,
+                "hash": "a"
+              }
+            ]
+          },
+          "expect": {
+            "purges": [],
+            "results": [
+              true,
+              "row"
+            ]
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": []
+          },
+          "expect": {
+            "purges": [],
+            "results": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "purges outside a recording are not recorded",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "first"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "first",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false
+            ]
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "between"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "second"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "second",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "overlapping recordings each record every purge made while they run",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "outer",
+                "hash": "1"
+              },
+              {
+                "op": "record",
+                "steps": [
+                  {
+                    "op": "purge",
+                    "key": "inner"
+                  },
+                  {
+                    "op": "record",
+                    "steps": [
+                      {
+                        "op": "purge",
+                        "key": "innermost"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "op": "purge",
+                "key": "outer",
+                "hash": "2"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "outer",
+                  {
+                    "$array": [
+                      [
+                        1,
+                        true
+                      ],
+                      [
+                        2,
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "inner",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "innermost",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false,
+              {
+                "purges": {
+                  "$array": [
+                    [
+                      "inner",
+                      {
+                        "$array": [
+                          [
+                            "",
+                            true
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "innermost",
+                      {
+                        "$array": [
+                          [
+                            "",
+                            true
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                },
+                "results": [
+                  false,
+                  {
+                    "purges": {
+                      "$array": [
+                        [
+                          "innermost",
+                          {
+                            "$array": [
+                              [
+                                "",
+                                true
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    },
+                    "results": [
+                      false
+                    ]
+                  }
+                ]
+              },
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a callback that throws returns its exception",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "lost"
+              },
+              {
+                "op": "fail",
+                "message": "callback failed"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "after"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "after",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a nested recording that throws leaves the outer one recording",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "record",
+                "steps": [
+                  {
+                    "op": "purge",
+                    "key": "inner"
+                  },
+                  {
+                    "op": "fail",
+                    "message": "inner failed"
+                  }
+                ]
+              },
+              {
+                "op": "purge",
+                "key": "outer"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "inner",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "outer",
+                  {
+                    "$array": [
+                      [
+                        "",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              {
+                "$error": {
+                  "class": "Exception",
+                  "message": "inner failed"
+                }
+              },
+              false
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a purge is recorded before the adapter runs it",
+      "steps": [
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "record",
+                "steps": [
+                  {
+                    "op": "purge",
+                    "key": "Failing",
+                    "hash": "H"
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "failing",
+                  {
+                    "$array": [
+                      [
+                        "h",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              {
+                "$error": {
+                  "class": "RuntimeException",
+                  "message": "Cache failed."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

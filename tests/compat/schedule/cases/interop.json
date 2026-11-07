@@ -1,0 +1,481 @@
+{
+  "source": "packages/schedule/tests/E2E/RedisStoreTest.php",
+  "cases": [
+    {
+      "name": "a claim written by one runtime is read by the other",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "wa",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "wb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "wa"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 100.5,
+              "coveredUntil": 1787022060.25,
+              "syncedUntil": 1787022000.0
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "wb"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 100.5,
+            "coveredUntil": 1787022060.25,
+            "syncedUntil": 1787022000.0
+          }
+        },
+        {
+          "side": "b",
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "wb"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "standby",
+              "expiresAt": 200.0,
+              "coveredUntil": 1787022120.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "wa"
+            }
+          },
+          "expect": {
+            "token": "standby",
+            "expiresAt": 200.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": null
+          }
+        },
+        {
+          "side": "a",
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "wa"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "late",
+              "expiresAt": 300.0,
+              "coveredUntil": 1787022000.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "b",
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "wb"
+            },
+            "expected": null,
+            "claim": {
+              "token": "fresh",
+              "expiresAt": 300.0,
+              "coveredUntil": null,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "b",
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "wb"
+            }
+          },
+          "expect": {
+            "token": "standby",
+            "expiresAt": 200.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a successor in the other runtime resumes from the watermark",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "ca",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "wa",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "wb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "cron": "* * * * *"
+            }
+          },
+          "bind": "sa",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "cron": "* * * * *"
+            }
+          },
+          "bind": "sb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "sa"
+            },
+            "clock": {
+              "$ref": "ca"
+            },
+            "store": {
+              "$ref": "wa"
+            },
+            "tick": 60,
+            "lease": 240,
+            "token": "a"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "sb"
+            },
+            "clock": {
+              "$ref": "cb"
+            },
+            "store": {
+              "$ref": "wb"
+            },
+            "tick": 60,
+            "lease": 240,
+            "token": "b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "side": "a",
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": []
+        },
+        {
+          "side": "a",
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "ca"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "cb"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "side": "a",
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "ca"
+            },
+            "seconds": 300.0
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "cb"
+            },
+            "seconds": 300.0
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022120.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:03:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022180.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:04:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022240.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:05:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022300.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:06:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022360.000000"
+            }
+          ]
+        },
+        {
+          "side": "b",
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "wb"
+            }
+          },
+          "expect": {
+            "token": "b",
+            "expiresAt": 1787022630.0,
+            "coveredUntil": 1787022390.0,
+            "syncedUntil": 1787022030.0
+          }
+        },
+        {
+          "side": "a",
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,804 @@
+{
+  "source": "packages/dns/tests/Resolver/MemoryTest.php",
+  "cases": [
+    {
+      "name": "resolve returns exact record",
+      "steps": [
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 77,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "header": {
+              "id": 77,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolve NODATA includes authority",
+      "steps": [
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 77,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 28
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "header": {
+              "id": 77,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 28,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolve NXDOMAIN",
+      "steps": [
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 77,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "header": {
+              "id": 77,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "missing.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolve SOA falls back to parent zone",
+      "steps": [
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 77,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "child.www.example.com",
+                  "type": 6
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "header": {
+              "id": 77,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "child.www.example.com",
+                "type": 6,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "query sources",
+      "steps": [
+        {
+          "op": "query.new",
+          "args": {
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "message": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp",
+            "maxResponseSize": 512
+          }
+        },
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "127.0.0.1",
+            "port": 53,
+            "protocol": "udp"
+          },
+          "expect": {
+            "header": {
+              "id": 3,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "2001:db8::1",
+            "port": 65535,
+            "protocol": "tcp"
+          },
+          "expect": {
+            "message": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            "ip": "2001:db8::1",
+            "port": 65535,
+            "protocol": "tcp",
+            "maxResponseSize": 65535
+          }
+        },
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "2001:db8::1",
+            "port": 65535,
+            "protocol": "tcp"
+          },
+          "expect": {
+            "header": {
+              "id": 3,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "",
+            "port": 0,
+            "protocol": "https"
+          },
+          "expect": {
+            "message": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            "ip": "",
+            "port": 0,
+            "protocol": "https",
+            "maxResponseSize": 65535
+          }
+        },
+        {
+          "op": "memory.resolve",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": "192.0.2.10"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 0,
+                "rdata": "ns1.example.com. admin.example.com. 1 3600 600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 3,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "ip": "",
+            "port": 0,
+            "protocol": "https"
+          },
+          "expect": {
+            "header": {
+              "id": 3,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    }
+  ]
+}

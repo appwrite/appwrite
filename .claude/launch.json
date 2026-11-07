@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "crates",
+      "runtimeExecutable": "apps/crates/node_modules/.bin/vite",
+      "runtimeArgs": [
+        "dev",
+        "apps/crates",
+        "--port",
+        "3200",
+        "--strictPort"
+      ],
+      "port": 3200
+    }
+  ]
+}

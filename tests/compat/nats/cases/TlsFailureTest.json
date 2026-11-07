@@ -1,0 +1,49 @@
+{
+  "source": "packages/nats/tests/Transport/TlsFailureTest.php",
+  "cases": [
+    {
+      "name": "testFailedTlsUpgradeRaisesTlsException",
+      "op": "transport.tls_failure",
+      "args": {
+        "mode": "upgrade",
+        "close_peer": true
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\TlsException",
+          "message": "Failed to upgrade connection to TLS: stream_socket_enable_crypto(): SSL operation failed with code 1. OpenSSL Error messages:\nerror:0A00010B:SSL routines::wrong version number"
+        },
+        "connected": false
+      }
+    },
+    {
+      "name": "testFailedTlsUpgradeClosesTheSocket",
+      "op": "transport.tls_failure",
+      "args": {
+        "mode": "upgrade",
+        "close_peer": false
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\TlsException",
+          "message": "Failed to upgrade connection to TLS: stream_socket_enable_crypto(): SSL operation failed with code 1. OpenSSL Error messages:\nerror:0A00010B:SSL routines::wrong version number"
+        },
+        "connected": false,
+        "peer_eof": true
+      }
+    },
+    {
+      "name": "testRefusedTlsConnectIsNotATlsFailure",
+      "op": "transport.tls_failure",
+      "args": {
+        "mode": "refused"
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException"
+        },
+        "connected": false
+      }
+    }
+  ]
+}

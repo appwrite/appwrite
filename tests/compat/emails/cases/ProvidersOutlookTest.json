@@ -1,0 +1,643 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/OutlookTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "hotmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "live.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "outlook.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "hotmail.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "live.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "msn.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "passport.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "outlook.de"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "hotmail.fr"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "live.it"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+spam",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+newsletter",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+work",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+personal",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+test123",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+anything",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+verylongtag",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag.with.dots",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag_with_underscores",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag123",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user+",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": ".user",
+            "domain": "outlook.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "hotmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+spam",
+            "domain": "hotmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name",
+            "domain": "hotmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "live.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+spam",
+            "domain": "live.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name",
+            "domain": "live.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "outlook.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "hotmail.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "live.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name",
+            "domain": "outlook.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name",
+            "domain": "hotmail.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name",
+            "domain": "live.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "msn.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "passport.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "outlook.de"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "hotmail.fr"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "user.name+tag",
+            "domain": "live.it"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "outlook.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "outlook"
+          },
+          "expect": "outlook.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "outlook"
+          },
+          "expect": [
+            "outlook.com",
+            "outlook.at",
+            "outlook.be",
+            "outlook.cl",
+            "outlook.co.il",
+            "outlook.co.nz",
+            "outlook.co.th",
+            "outlook.co.uk",
+            "outlook.com.ar",
+            "outlook.com.au",
+            "outlook.com.br",
+            "outlook.com.gr",
+            "outlook.com.pe",
+            "outlook.com.tr",
+            "outlook.com.vn",
+            "outlook.cz",
+            "outlook.de",
+            "outlook.dk",
+            "outlook.es",
+            "outlook.fr",
+            "outlook.hu",
+            "outlook.id",
+            "outlook.ie",
+            "outlook.in",
+            "outlook.it",
+            "outlook.jp",
+            "outlook.kr",
+            "outlook.lv",
+            "outlook.my",
+            "outlook.ph",
+            "outlook.pt",
+            "outlook.sa",
+            "outlook.sg",
+            "outlook.sk",
+            "hotmail.com",
+            "hotmail.at",
+            "hotmail.be",
+            "hotmail.ca",
+            "hotmail.cl",
+            "hotmail.co.il",
+            "hotmail.co.nz",
+            "hotmail.co.th",
+            "hotmail.co.uk",
+            "hotmail.com.ar",
+            "hotmail.com.au",
+            "hotmail.com.br",
+            "hotmail.com.gr",
+            "hotmail.com.mx",
+            "hotmail.com.pe",
+            "hotmail.com.tr",
+            "hotmail.com.vn",
+            "hotmail.cz",
+            "hotmail.de",
+            "hotmail.dk",
+            "hotmail.es",
+            "hotmail.fr",
+            "hotmail.hu",
+            "hotmail.id",
+            "hotmail.ie",
+            "hotmail.in",
+            "hotmail.it",
+            "hotmail.jp",
+            "hotmail.kr",
+            "hotmail.lv",
+            "hotmail.my",
+            "hotmail.ph",
+            "hotmail.pt",
+            "hotmail.sa",
+            "hotmail.sg",
+            "hotmail.sk",
+            "live.com",
+            "live.be",
+            "live.co.uk",
+            "live.com.ar",
+            "live.com.mx",
+            "live.de",
+            "live.es",
+            "live.eu",
+            "live.fr",
+            "live.it",
+            "live.nl",
+            "msn.com",
+            "passport.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

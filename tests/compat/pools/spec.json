@@ -1,0 +1,301 @@
+{
+  "lib": "pools",
+  "description": "utopia-php/pools: fixed-capacity pools of lazily created resources over the Stack and Swoole (waiting) adapters, groups, upkeep and telemetry.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/pools/src"
+    ],
+    "tests": [
+      "packages/pools/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/pools"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "pool.new": {
+      "doc": "new Pool(adapter (stack|swoole), name, size, init, timeout, telemetry?) where init makes resources from creation behaviours (see Adapter.php)",
+      "covers": [
+        "Utopia\\Pools\\Pool::__construct",
+        "Utopia\\Pools\\Adapter\\Stack::initialize",
+        "Utopia\\Pools\\Adapter\\Swoole::initialize"
+      ]
+    },
+    "pool.info": {
+      "doc": "{name, size, timeout}"
+    },
+    "pool.pop": {
+      "doc": "$pool->pop() as a connection handle",
+      "covers": [
+        "Utopia\\Pools\\Pool::pop",
+        "Utopia\\Pools\\Connection::__construct",
+        "Utopia\\Pools\\Adapter\\Stack::pop",
+        "Utopia\\Pools\\Adapter\\Swoole::pop",
+        "Utopia\\Pools\\Adapter\\Stack::synchronized",
+        "Utopia\\Pools\\Adapter\\Swoole::synchronized"
+      ]
+    },
+    "pool.push": {
+      "doc": "$pool->push(connection)",
+      "covers": [
+        "Utopia\\Pools\\Pool::push",
+        "Utopia\\Pools\\Adapter\\Stack::push",
+        "Utopia\\Pools\\Adapter\\Swoole::push"
+      ]
+    },
+    "pool.reclaim": {
+      "doc": "$pool->reclaim(connection?)",
+      "covers": [
+        "Utopia\\Pools\\Pool::reclaim"
+      ]
+    },
+    "pool.destroy": {
+      "doc": "$pool->destroy(connection?)",
+      "covers": [
+        "Utopia\\Pools\\Pool::destroy"
+      ]
+    },
+    "pool.release": {
+      "doc": "$pool->release(connection, failed)",
+      "covers": [
+        "Utopia\\Pools\\Pool::release"
+      ]
+    },
+    "pool.maintain": {
+      "doc": "$pool->maintain()",
+      "covers": [
+        "Utopia\\Pools\\Pool::maintain"
+      ]
+    },
+    "pool.counts": {
+      "doc": "{count: count(), empty: isEmpty(), full: isFull()}",
+      "covers": [
+        "Utopia\\Pools\\Pool::count",
+        "Utopia\\Pools\\Pool::isEmpty",
+        "Utopia\\Pools\\Pool::isFull",
+        "Utopia\\Pools\\Adapter\\Stack::count",
+        "Utopia\\Pools\\Adapter\\Swoole::count"
+      ]
+    },
+    "pool.use": {
+      "doc": "$pool->use(callback) where the callback runs `during` actions ({op: counts, pool} | {op: sleep, ms} | {op: arm}), then throws `throw` ({class, message}) or returns {resources, during}",
+      "covers": [
+        "Utopia\\Pools\\Pool::use"
+      ]
+    },
+    "pool.scenario": {
+      "doc": "a pool made like pool.new, then each of `steps` (pop, reclaim, destroy, release_ok, release_failed on the last popped; reclaim_all and destroy_all, which also forget the popped connections, maintain, use_ok, use_failed): [result, count] after each",
+      "covers": [
+        "Utopia\\Pools\\Pool::pop",
+        "Utopia\\Pools\\Pool::reclaim",
+        "Utopia\\Pools\\Pool::destroy",
+        "Utopia\\Pools\\Pool::release",
+        "Utopia\\Pools\\Pool::maintain",
+        "Utopia\\Pools\\Pool::use",
+        "Utopia\\Pools\\Pool::count"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": { "gen": "pick", "from": ["stack", "swoole"] },
+              "name": { "gen": "pick", "from": ["db", "cache"] },
+              "size": { "gen": "int", "min": 0, "max": 4 },
+              "timeout": { "gen": "pick", "from": [0.0, 0.001, -1.0] },
+              "init": {
+                "gen": "array",
+                "min": 1,
+                "max": 4,
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    { "gen": "const", "value": { "value": "x" } },
+                    { "gen": "const", "value": { "object": "o" } },
+                    { "gen": "const", "value": { "object": "r", "reconnect": true } },
+                    { "gen": "const", "value": { "object": "f", "reconnect": false } },
+                    { "gen": "const", "value": { "object": "t", "reconnect": "throw" } },
+                    { "gen": "const", "value": { "ticking": true } },
+                    { "gen": "const", "value": { "ticking": true, "tick_throws": true } },
+                    { "gen": "const", "value": { "stream": "s" } },
+                    { "gen": "const", "value": { "throw": "refused", "class": "RuntimeException" } }
+                  ]
+                }
+              },
+              "steps": {
+                "gen": "array",
+                "min": 0,
+                "max": 20,
+                "items": { "gen": "pick", "from": ["pop", "pop", "reclaim", "destroy", "release_ok", "release_failed", "reclaim_all", "destroy_all", "maintain", "use_ok", "use_failed"] }
+              }
+            }
+          },
+          "iterations": 400
+        }
+      ]
+    },
+    "pool.pop_elapsed": {
+      "doc": "pop() and whether the time it took is in [at_least, below): {error, within}"
+    },
+    "connection.get": {
+      "doc": "{resource, id: {prefixed: starts with `pool_name-`, length after it}}"
+    },
+    "connection.reclaim": {
+      "doc": "$connection->reclaim()",
+      "covers": [
+        "Utopia\\Pools\\Connection::reclaim"
+      ]
+    },
+    "connection.destroy": {
+      "doc": "$connection->destroy()",
+      "covers": [
+        "Utopia\\Pools\\Connection::destroy"
+      ]
+    },
+    "connection.orphan": {
+      "doc": "ConnectionTestScope::testAConnectionOutlivesItsPoolWithoutReclaimingFailing: pop from a pool made like pool.new and dropped, reclaim and destroy: the resource"
+    },
+    "pool.dropped_frees": {
+      "doc": "ConnectionTestScope::testDroppingAPoolFreesTheResourcesItWasHolding: resources freed after a pool of three idle resources is dropped"
+    },
+    "adapter.new": {
+      "doc": "a bare adapter (stack|swoole), initialize(size)"
+    },
+    "adapter.push": {
+      "doc": "$adapter->push(connection)",
+      "covers": [
+        "Utopia\\Pools\\Adapter\\Stack::push",
+        "Utopia\\Pools\\Adapter\\Swoole::push"
+      ]
+    },
+    "adapter.pop": {
+      "doc": "$adapter->pop(timeout): the resource or null",
+      "covers": [
+        "Utopia\\Pools\\Adapter\\Stack::pop",
+        "Utopia\\Pools\\Adapter\\Swoole::pop"
+      ]
+    },
+    "adapter.count": {
+      "doc": "$adapter->count()",
+      "covers": [
+        "Utopia\\Pools\\Adapter\\Stack::count",
+        "Utopia\\Pools\\Adapter\\Swoole::count"
+      ]
+    },
+    "adapter.unblock": {
+      "doc": "$adapter->unblock()",
+      "covers": [
+        "Utopia\\Pools\\Adapter::unblock",
+        "Utopia\\Pools\\Adapter\\Swoole::unblock"
+      ]
+    },
+    "adapter.synchronized": {
+      "doc": "$adapter->synchronized(fn => value)",
+      "covers": [
+        "Utopia\\Pools\\Adapter\\Stack::synchronized",
+        "Utopia\\Pools\\Adapter\\Swoole::synchronized"
+      ]
+    },
+    "group.new": {
+      "doc": "new Group() (Rust: of one adapter kind)"
+    },
+    "group.add": {
+      "doc": "$group->add(pool)",
+      "covers": [
+        "Utopia\\Pools\\Group::add"
+      ]
+    },
+    "group.get": {
+      "doc": "$group->get(name)->name",
+      "covers": [
+        "Utopia\\Pools\\Group::get"
+      ]
+    },
+    "group.remove": {
+      "doc": "$group->remove(name)",
+      "covers": [
+        "Utopia\\Pools\\Group::remove"
+      ]
+    },
+    "group.reclaim": {
+      "doc": "$group->reclaim()",
+      "covers": [
+        "Utopia\\Pools\\Group::reclaim"
+      ]
+    },
+    "group.use": {
+      "doc": "$group->use(names, callback) with pool.use's callback",
+      "covers": [
+        "Utopia\\Pools\\Group::use"
+      ]
+    },
+    "telemetry.new": {
+      "doc": "fixture: the Test telemetry backend"
+    },
+    "telemetry.dump": {
+      "doc": "fixture: {histograms: [[name, points]], observableGauges: [[name, callbacks]]}"
+    },
+    "telemetry.observe": {
+      "doc": "fixture: runs the callbacks of observable gauge `gauge`: [[value, attribute pairs], ...]"
+    },
+    "pool.concurrency": {
+      "doc": "`tasks` coroutines (Rust: tasks) on one pool, mode pop_reclaim | use | hold, holding hold_ms (or 1-5 ms): {success, errors, created, count, distinct, duplicates}"
+    },
+    "waiter.handoff": {
+      "doc": "WaiterTest::testReturningABorrowerCannotUntrackItsWaitingSuccessor, as the values it asserts"
+    },
+    "waiter.discard": {
+      "doc": "WaiterTest::testDiscardingAFailedBorrowerWakesAnExistingWaiter"
+    },
+    "waiter.creation": {
+      "doc": "WaiterTest::testFailedCreationWakesAnExistingWaiterWithoutRetryingTheCreator"
+    },
+    "waiter.deadline": {
+      "doc": "WaiterTest::testReleasedWaitsDoNotExtendTheOriginalDeadline"
+    },
+    "waiter.capacity": {
+      "doc": "WaiterTest::testSeveralWaitersCompeteForFreedCapacityWithoutOversubscribing"
+    }
+  },
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Pools\\Pool::push",
+      "description": "push() and reclaim() do not check that the connection is checked out: one handed back twice is idle twice, so count() exceeds the size and destroying both copies drives the reserved capacity below zero.",
+      "case": "scenarios.json#a connection reclaimed twice is idle twice, and the count goes past the size"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Pools\\Adapter\\Swoole::push",
+      "php": "The Swoole channel holds `size` connections: pushing one more (a connection handed back twice) blocks the coroutine until another is popped, a deadlock when nothing will.",
+      "reason": "The Rust Channel adapter grows instead of blocking a task forever; handing a connection back twice is a caller bug either way, and the Stack adapter (which PHP lets grow too) has a pinned case."
+    },
+    {
+      "symbol": "Utopia\\Pools\\Pool::__construct",
+      "php": "Observable gauge callbacks hold the pool, so a pool bound to telemetry lives as long as the telemetry adapter and keeps reporting.",
+      "reason": "Rust callbacks hold the pool weakly: a dropped pool frees its resources and stops reporting, which no case can observe from PHP without leaking it."
+    },
+    {
+      "symbol": "Utopia\\Pools\\Adapter\\Stack::synchronized",
+      "php": "An adapter's synchronized() can throw (a subclass failing to lock), and the pool then forgets the connection (PoolTestScope::testUseForgetsConnectionWhenDestroyCleanupFails).",
+      "reason": "The Rust pool keeps its bookkeeping under its own lock, which cannot fail: the failing-lock fixture (`arm`) does nothing in Rust, and the case shows the same outcome (a fresh resource on the next use)."
+    },
+    {
+      "symbol": "Utopia\\Pools\\Pool::release",
+      "php": "release() can be overridden by a subclass to throw, and Group::use() still releases every other connection and rethrows the first failure (GroupTestScope::testGroupUseReleasesEveryConnectionWhenCleanupThrows).",
+      "reason": "Pool is not subclassable in Rust and its release cannot fail, so there is no cleanup failure to propagate; the case is replaced by one where the callback throws."
+    },
+    {
+      "symbol": "Utopia\\Pools\\Group::add",
+      "php": "A group holds pools of any resources, and use() hands their resources to a variadic callback.",
+      "reason": "A Rust Group holds pools of one resource type and adapter (use an enum resource for mixed pools); with() hands the callback a Vec."
+    }
+  ]
+}

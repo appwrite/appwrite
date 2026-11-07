@@ -1,0 +1,329 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/SQLiteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteTest::testIndexNamesUseTheFilteredTenant",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true,
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_tenant",
+          "args": {
+            "tenant": "acme.1",
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "tenantIndexNames",
+                        "name": "tenantIndexNames",
+                        "attributes": [
+                          {
+                            "$id": "email",
+                            "key": "email",
+                            "type": "string",
+                            "size": 64,
+                            "required": true,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_index",
+                  "args": {
+                    "collection": "tenantIndexNames",
+                    "index": {
+                      "$value": "Index",
+                      "fields": {
+                        "key": "email",
+                        "type": {
+                          "$enum": "Query\\Schema\\IndexType::Unique"
+                        },
+                        "attributes": [
+                          "email"
+                        ],
+                        "lengths": [],
+                        "orders": [],
+                        "ttl": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "createIndex",
+                    "args": {
+                      "collection": "tenantIndexNames",
+                      "index": {
+                        "$value": "Index",
+                        "fields": {
+                          "key": "email",
+                          "type": {
+                            "$enum": "Query\\Schema\\IndexType::Unique"
+                          },
+                          "attributes": [
+                            "email"
+                          ],
+                          "lengths": [],
+                          "orders": [],
+                          "ttl": null
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_namespace",
+                  "args": {}
+                },
+                {
+                  "op": "database.get_namespace",
+                  "args": {}
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "rawQuery",
+                    "args": {
+                      "query": "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ?",
+                      "bindings": [
+                        "_tenantIndexNames"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "op": "database.delete_index",
+                  "args": {
+                    "collection": "tenantIndexNames",
+                    "key": "email"
+                  }
+                },
+                {
+                  "op": "database.get_namespace",
+                  "args": {}
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "rawQuery",
+                    "args": {
+                      "query": "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ?",
+                      "bindings": [
+                        "_tenantIndexNames"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "tenantIndexNames",
+                    "document": {
+                      "$document": {
+                        "email": "user@example.com"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "tenantIndexNames",
+                    "document": {
+                      "$document": {
+                        "email": "user@example.com"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "tenantIndexNames"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "tenantIndexNames",
+                        "name": "tenantIndexNames",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "email",
+                              "key": "email",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "acme.1",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Index",
+                      "fields": {
+                        "key": "email",
+                        "type": {
+                          "$enum": "Query\\Schema\\IndexType::Unique"
+                        },
+                        "attributes": [
+                          "email"
+                        ],
+                        "lengths": [],
+                        "orders": [],
+                        "ttl": null
+                      }
+                    },
+                    true,
+                    "",
+                    "",
+                    [
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__index1"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__created_at"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__updated_at"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__tenant_id"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames_email"
+                        }
+                      }
+                    ],
+                    null,
+                    "",
+                    [
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__index1"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__created_at"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__updated_at"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "_acme1_tenantIndexNames__tenant_id"
+                        }
+                      }
+                    ],
+                    {
+                      "$document": {
+                        "email": "user@example.com",
+                        "$id": "<uniqid>",
+                        "$collection": "tenantIndexNames",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$tenant": "acme.1",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "email": "user@example.com",
+                        "$id": "<uniqid>",
+                        "$collection": "tenantIndexNames",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$tenant": "acme.1",
+                        "$sequence": "2"
+                      }
+                    },
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

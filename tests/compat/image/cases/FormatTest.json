@@ -1,0 +1,277 @@
+{
+  "source": "packages/image/tests/FormatTest.php",
+  "cases": [
+    {
+      "name": "detect: jpeg",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          {
+            "$bytes": "/9j/4A=="
+          }
+        ]
+      },
+      "expect": "JPEG"
+    },
+    {
+      "name": "detect: png",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          {
+            "$bytes": "iVBORw0KGgo="
+          }
+        ]
+      },
+      "expect": "PNG"
+    },
+    {
+      "name": "detect: gif87a",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "GIF87a"
+        ]
+      },
+      "expect": "GIF"
+    },
+    {
+      "name": "detect: gif89a",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "GIF89a"
+        ]
+      },
+      "expect": "GIF"
+    },
+    {
+      "name": "detect: webp",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "RIFF\u0000\u0000\u0000\u0000WEBPVP8 "
+        ]
+      },
+      "expect": "WEBP"
+    },
+    {
+      "name": "detect: avif",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u001cftypavif\u0000\u0000\u0000\u0000avifmif1miaf"
+        ]
+      },
+      "expect": "AVIF"
+    },
+    {
+      "name": "detect: avif sequence",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0018ftypavis\u0000\u0000\u0000\u0000avismsf1"
+        ]
+      },
+      "expect": "AVIF"
+    },
+    {
+      "name": "detect: avif compatible with a heif major brand",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0018ftypmif1\u0000\u0000\u0000\u0000avifmif1"
+        ]
+      },
+      "expect": "AVIF"
+    },
+    {
+      "name": "detect: heic",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0018ftypheic\u0000\u0000\u0000\u0000mif1heic"
+        ]
+      },
+      "expect": "HEIC"
+    },
+    {
+      "name": "detect: heif",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0018ftypmif1\u0000\u0000\u0000\u0000mif1heic"
+        ]
+      },
+      "expect": "HEIC"
+    },
+    {
+      "name": "detect: avif with an extended box size",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0001ftyp\u0000\u0000\u0000\u0000\u0000\u0000\u0000 avif\u0000\u0000\u0000\u0000avifmif1"
+        ]
+      },
+      "expect": "AVIF"
+    },
+    {
+      "name": "detect: heic with an extended box size",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0001ftyp\u0000\u0000\u0000\u0000\u0000\u0000\u0000 heic\u0000\u0000\u0000\u0000mif1heic"
+        ]
+      },
+      "expect": "HEIC"
+    },
+    {
+      "name": "detect rejects: empty",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          ""
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: riff without webp",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "RIFF\u0000\u0000\u0000\u0000AVI LIST"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: mp4",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0018ftypisom\u0000\u0000\u0000\u0000isommp41"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: brand past the file type box",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0014ftypisom\u0000\u0000\u0000\u0000isomavif"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: brand past an extended file type box",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0001ftyp\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u001cisom\u0000\u0000\u0000\u0000isomavif"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: a major brand in the minor version slot",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0010ftypisomavif"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect rejects: truncated extended size",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          "\u0000\u0000\u0000\u0001ftyp\u0000\u0000\u0000"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect reads only the start of an oversized file type box",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          {
+            "N": 20000012
+          },
+          "ftyp",
+          {
+            "repeat": "isom",
+            "times": 5000000
+          },
+          "avif"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "detect finds a brand at the start of an oversized file type box",
+      "op": "format.detect",
+      "args": {
+        "data": [
+          {
+            "N": 20000020
+          },
+          "ftyp",
+          "mif1",
+          "\u0000\u0000\u0000\u0000",
+          "avif",
+          {
+            "repeat": "isom",
+            "times": 5000000
+          }
+        ]
+      },
+      "expect": "AVIF"
+    }
+  ]
+}

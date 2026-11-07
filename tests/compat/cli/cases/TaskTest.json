@@ -1,0 +1,155 @@
+{
+  "source": "packages/cli/tests/TaskTest.php",
+  "cases": [
+    {
+      "name": "testName",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "get": "name"
+          }
+        ]
+      },
+      "expect": [
+        "test"
+      ]
+    },
+    {
+      "name": "testDescription",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "desc": "test task"
+          },
+          {
+            "get": "desc"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        "test task"
+      ]
+    },
+    {
+      "name": "testAction",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "action": true
+          },
+          {
+            "get": "action"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true
+      ]
+    },
+    {
+      "name": "testLabel",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "label": {
+              "key": "key",
+              "value": "value"
+            }
+          },
+          {
+            "label_of": {
+              "key": "key",
+              "default": "default"
+            }
+          },
+          {
+            "label_of": {
+              "key": "unknown",
+              "default": "default"
+            }
+          }
+        ]
+      },
+      "expect": [
+        true,
+        "value",
+        "default"
+      ]
+    },
+    {
+      "name": "testParam",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "param": {
+              "key": "email",
+              "default": "me@example.com",
+              "validator": {
+                "text": [
+                  0
+                ]
+              },
+              "description": "Param with valid email address",
+              "optional": false
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        [
+          "email"
+        ]
+      ]
+    },
+    {
+      "name": "testResources",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "get": "dependencies"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "time"
+          },
+          {
+            "action": true
+          },
+          {
+            "get": "dependencies"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        true,
+        [
+          "user",
+          "time"
+        ]
+      ]
+    }
+  ]
+}

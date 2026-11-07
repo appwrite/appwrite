@@ -1,0 +1,66 @@
+{
+  "source": "packages/nats/tests/InboxTest.php",
+  "cases": [
+    {
+      "name": "create with the default prefix",
+      "steps": [
+        {
+          "op": "inbox.create",
+          "expect": {
+            "prefix": "_INBOX",
+            "length": 22,
+            "alnum": true,
+            "unique": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a custom prefix",
+      "steps": [
+        {
+          "op": "inbox.create",
+          "args": {
+            "prefix": "MY_INBOX"
+          },
+          "expect": {
+            "prefix": "MY_INBOX",
+            "length": 22,
+            "alnum": true,
+            "unique": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a dotted prefix",
+      "steps": [
+        {
+          "op": "inbox.create",
+          "args": {
+            "prefix": "a.b"
+          },
+          "expect": {
+            "prefix": "a.b",
+            "length": 22,
+            "alnum": true,
+            "unique": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "generate id",
+      "steps": [
+        {
+          "op": "inbox.generate_id",
+          "expect": {
+            "length": 22,
+            "alnum": true,
+            "unique": true
+          }
+        }
+      ]
+    }
+  ]
+}

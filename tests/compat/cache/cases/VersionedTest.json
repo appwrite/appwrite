@@ -1,0 +1,912 @@
+{
+  "source": "packages/cache/tests/E2E/VersionedTest.php",
+  "cases": [
+    {
+      "name": "testNamespacedViewsShareExistingDataVersionsAndPurges (redis)",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "namespace": "v2:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace",
+            "data": "warm"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace",
+            "ttl": 60
+          },
+          "expect": "warm"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace"
+          },
+          "bind": "s1",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "warm"
+          }
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace"
+          },
+          "bind": "s2",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "warm"
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s1"
+            },
+            "b": {
+              "$ref": "s2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace",
+            "data": "stale",
+            "hash": "",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace",
+            "data": [
+              [
+                "documents",
+                [
+                  "row"
+                ]
+              ],
+              [
+                "total",
+                "1"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace",
+            "ttl": 60,
+            "fields": [
+              "documents",
+              "total"
+            ]
+          },
+          "expect": {
+            "documents": [
+              "row"
+            ],
+            "total": "1"
+          }
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace",
+            "data": [
+              [
+                "total",
+                "2"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace",
+            "ttl": 60,
+            "hash": "total"
+          },
+          "expect": "2"
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace"
+          },
+          "expect": [
+            "v2:${ns}:namespace",
+            "documents",
+            "total"
+          ]
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "${ns}:namespace",
+                "hash": "documents"
+              }
+            ]
+          },
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "${ns}:namespace",
+                  {
+                    "$array": [
+                      [
+                        "documents",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              true
+            ]
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace",
+            "ttl": 60,
+            "hash": "documents"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace",
+            "ttl": 60,
+            "hash": "total"
+          },
+          "expect": "2"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "warm"
+          }
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:namespace",
+            "data": {
+              "owners": []
+            },
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "bind": "version",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:${ns}:namespace"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": {
+              "$array": [
+                [
+                  "owners",
+                  []
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "after",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "version"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "raw.del",
+          "args": {
+            "key": "v2:${ns}:namespace"
+          },
+          "expect": 1
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testEvictionRejectsAnOldLeaseAndAllowsAFreshFill (redis)",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "expect": false
+        },
+        {
+          "op": "raw.del",
+          "args": {
+            "key": "${ns}:versioned"
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "bind": "fresh",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "stale",
+            "hash": "",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "lease"
+            },
+            "b": {
+              "$ref": "fresh"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "fresh",
+            "hash": "",
+            "version": {
+              "$ref": "fresh"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "ttl": 60
+          },
+          "expect": "fresh"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "fresh"
+          }
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "next",
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "bind": "committed",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "next"
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "after",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "committed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "lost update",
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "ttl": 60
+          },
+          "expect": "next"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "bind": "snap2",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "next"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "ordinary write"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "data": "stale snapshot",
+            "version": {
+              "$ref": "snap2",
+              "path": "/version"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned",
+            "ttl": 60
+          },
+          "expect": "ordinary write"
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:versioned"
+          },
+          "expect": [
+            "${ns}:versioned"
+          ]
+        },
+        {
+          "op": "raw.del",
+          "args": {
+            "key": "${ns}:versioned"
+          },
+          "expect": 1
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testEvictionRejectsAnOldLeaseAndAllowsAFreshFill (multiplexing)",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "stale",
+                  "hash": "",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "same",
+                "args": {
+                  "a": {
+                    "$result": 0
+                  },
+                  "b": {
+                    "$result": 2
+                  }
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "fresh",
+                  "hash": "",
+                  "version": {
+                    "$result": 2
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "ttl": 60
+                }
+              },
+              {
+                "op": "load_versioned",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "compare_and_swap",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "next",
+                  "version": {
+                    "$result": 7,
+                    "field": "version"
+                  }
+                }
+              },
+              {
+                "op": "load_versioned",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "same",
+                "args": {
+                  "a": {
+                    "$result": 8
+                  },
+                  "b": {
+                    "$result": 9,
+                    "field": "version"
+                  }
+                }
+              },
+              {
+                "op": "compare_and_swap",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "lost update",
+                  "version": {
+                    "$result": 7,
+                    "field": "version"
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "ttl": 60
+                }
+              },
+              {
+                "op": "load_versioned",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "ordinary write"
+                }
+              },
+              {
+                "op": "compare_and_swap",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "data": "stale snapshot",
+                  "version": {
+                    "$result": 13,
+                    "field": "version"
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:muxversioned",
+                  "ttl": 60
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:muxversioned"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/0",
+              "/2",
+              "/7/version",
+              "/8",
+              "/9/version",
+              "/13/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            "<masked>",
+            false,
+            "<masked>",
+            false,
+            false,
+            true,
+            "fresh",
+            {
+              "version": "<masked>",
+              "value": "fresh"
+            },
+            "<masked>",
+            {
+              "version": "<masked>",
+              "value": "next"
+            },
+            true,
+            false,
+            "next",
+            {
+              "version": "<masked>",
+              "value": "next"
+            },
+            true,
+            false,
+            "ordinary write",
+            [
+              "${ns}:muxversioned"
+            ]
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    }
+  ]
+}

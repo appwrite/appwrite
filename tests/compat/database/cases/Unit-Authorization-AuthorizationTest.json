@@ -1,0 +1,3493 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Authorization/AuthorizationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AuthorizationTest::testDefaultRolesContainAny",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1268"
+          },
+          "bind": "s3722",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1268"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithMatchingRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1269"
+          },
+          "bind": "s3724",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1269"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1270"
+          },
+          "bind": "s3726",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1269"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1270"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithNonMatchingRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1271"
+          },
+          "bind": "s3728",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1271"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:456"
+              ]
+            },
+            "as": "o1272"
+          },
+          "bind": "s3730",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1271"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1272"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithAnyRoleMatchesAllPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1273"
+          },
+          "bind": "s3732",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "any"
+              ]
+            },
+            "as": "o1274"
+          },
+          "bind": "s3733",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1273"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1274"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidReturnsFalseWithEmptyPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1275"
+          },
+          "bind": "s3735",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": []
+            },
+            "as": "o1276"
+          },
+          "bind": "s3736",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1275"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1276"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1275"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "No permissions provided for action 'read'"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidReturnsFalseWithInvalidInput",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1277"
+          },
+          "bind": "s3739",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1277"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "not-an-input"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1277"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid input provided"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testAddRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1278"
+          },
+          "bind": "s3742",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1278"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1278"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1278"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "user:123"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testRemoveRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1279"
+          },
+          "bind": "s3746",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1279"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1279"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1279"
+            },
+            "method": "removeRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1279"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testGetRolesReturnsAllRoles",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1280"
+          },
+          "bind": "s3751",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1280"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1280"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:456"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1280"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1280"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "user:123",
+            "team:456",
+            "users"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testSkipBypassesAuthorization",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1281"
+          },
+          "bind": "s3756",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1281"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:999"
+              ]
+            },
+            "as": "o1282"
+          },
+          "bind": "s3758",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1281"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1282"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1281"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1281"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o1282"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testSkipRestoresStatusAfterCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1283"
+          },
+          "bind": "s3761",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1283"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1283"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1283"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1283"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testSkipRestoresStatusOnException",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1284"
+          },
+          "bind": "s3765",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1284"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1284"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "RuntimeException",
+                      "message": "test"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1284"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithMultipleRoles",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1285"
+          },
+          "bind": "s3769",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1285"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1285"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:456"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:456"
+              ]
+            },
+            "as": "o1286"
+          },
+          "bind": "s3772",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1285"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1286"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithMultiplePermissionsMatchesFirst",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1287"
+          },
+          "bind": "s3774",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1287"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:456"
+              ]
+            },
+            "as": "o1288"
+          },
+          "bind": "s3776",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1287"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1288"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithMultiplePermissionsMatchesLast",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1289"
+          },
+          "bind": "s3778",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1289"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:456"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:456"
+              ]
+            },
+            "as": "o1290"
+          },
+          "bind": "s3780",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1289"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1290"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithGuestsRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1291"
+          },
+          "bind": "s3782",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1291"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "guests"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "guests"
+              ]
+            },
+            "as": "o1292"
+          },
+          "bind": "s3784",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1291"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1292"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithUsersRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1293"
+          },
+          "bind": "s3786",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1293"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "users"
+              ]
+            },
+            "as": "o1294"
+          },
+          "bind": "s3788",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1293"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1294"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithDimensionalRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1295"
+          },
+          "bind": "s3790",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1295"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123/admin"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123/admin"
+              ]
+            },
+            "as": "o1296"
+          },
+          "bind": "s3792",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1295"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1296"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testDimensionalRoleDoesNotMatchWithoutDimension",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1297"
+          },
+          "bind": "s3794",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1297"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123/admin"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1298"
+          },
+          "bind": "s3796",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1297"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1298"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testNonDimensionalRoleDoesNotMatchWithDimension",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1299"
+          },
+          "bind": "s3798",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1299"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123/admin"
+              ]
+            },
+            "as": "o1300"
+          },
+          "bind": "s3800",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1299"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1300"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testGetDescriptionOnFailure",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1301"
+          },
+          "bind": "s3802",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1301"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1301"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:456"
+              ]
+            },
+            "as": "o1302"
+          },
+          "bind": "s3805",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1301"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1302"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1301"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Missing \"read\" permission for role \"team:456\". Only \"[\"user:123\"]\" scopes are allowed and \"[\"team:456\"]\" was given."
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testGetDescriptionOnEmptyPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1303"
+          },
+          "bind": "s3808",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Write"
+              },
+              "permissions": []
+            },
+            "as": "o1304"
+          },
+          "bind": "s3809",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1303"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1304"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1303"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "No permissions provided for action 'write'"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testCleanRolesRemovesAll",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1305"
+          },
+          "bind": "s3812",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:456"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "user:123",
+            "team:456"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1305"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testDisableAndEnable",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1306"
+          },
+          "bind": "s3819",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1306"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1306"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1306"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1306"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1306"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testDisabledAuthorizationBypassesAllChecks",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1307"
+          },
+          "bind": "s3825",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1307"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1307"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:999"
+              ]
+            },
+            "as": "o1308"
+          },
+          "bind": "s3828",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1307"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1308"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testConstructorSetsTheDefaultStatus",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1309"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {
+              "defaultStatus": false
+            },
+            "as": "o1310"
+          },
+          "bind": "s3831",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1310"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1310"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1310"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1310"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testResetRestoresDefaultStatus",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1311"
+          },
+          "bind": "s3836",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1311"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1311"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1311"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1311"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testPermissionTypeMatchingRead",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1312"
+          },
+          "bind": "s3841",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1312"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1313"
+          },
+          "bind": "s3843",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1312"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1313"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testPermissionTypeMatchingCreate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1314"
+          },
+          "bind": "s3845",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1314"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Create"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1315"
+          },
+          "bind": "s3847",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1314"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1315"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testPermissionTypeMatchingUpdate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1316"
+          },
+          "bind": "s3849",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1316"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Update"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1317"
+          },
+          "bind": "s3851",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1316"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1317"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testPermissionTypeMatchingDelete",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1318"
+          },
+          "bind": "s3853",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1318"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Delete"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1319"
+          },
+          "bind": "s3855",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1318"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1319"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testPermissionTypeMatchingWrite",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1320"
+          },
+          "bind": "s3857",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1320"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Write"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1321"
+          },
+          "bind": "s3859",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1321"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testHasRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1322"
+          },
+          "bind": "s3861",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1322"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1322"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1322"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1322"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1323"
+          },
+          "bind": "s3866",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1323"
+            },
+            "method": "isArray",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testGetType",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1324"
+          },
+          "bind": "s3868",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1324"
+            },
+            "method": "getType",
+            "args": {}
+          },
+          "expect": "array"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testInputSettersAndGetters",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1325"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123"
+              ]
+            },
+            "as": "o1326"
+          },
+          "bind": "s3871",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "getAction",
+            "args": {}
+          },
+          "expect": "read"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "user:123"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "setAction",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Write"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "getAction",
+            "args": {}
+          },
+          "expect": "write"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "team:456"
+              ]
+            }
+          },
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1326"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "team:456"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testIsValidWithTeamDimensionRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1327"
+          },
+          "bind": "s3878",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1327"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:abc/owner"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:abc/owner"
+              ]
+            },
+            "as": "o1328"
+          },
+          "bind": "s3880",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1327"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1328"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:abc/member"
+              ]
+            },
+            "as": "o1329"
+          },
+          "bind": "s3882",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1327"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1329"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testAddingDuplicateRoleDoesNotDuplicate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1330"
+          },
+          "bind": "s3884",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1330"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1330"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1330"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "user:123"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testRemovingNonExistentRoleDoesNotThrow",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1331"
+          },
+          "bind": "s3888",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1331"
+            },
+            "method": "removeRole",
+            "args": {
+              "role": "nonexistent"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1331"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "nonexistent"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testLabelRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1332"
+          },
+          "bind": "s3891",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1332"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "label:vip"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "label:vip"
+              ]
+            },
+            "as": "o1333"
+          },
+          "bind": "s3893",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1332"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1333"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "label:premium"
+              ]
+            },
+            "as": "o1334"
+          },
+          "bind": "s3895",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1332"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1334"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::testMemberRole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1335"
+          },
+          "bind": "s3897",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1335"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "member:abc123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "member:abc123"
+              ]
+            },
+            "as": "o1336"
+          },
+          "bind": "s3899",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1335"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1336"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "member:def456"
+              ]
+            },
+            "as": "o1337"
+          },
+          "bind": "s3901",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1335"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1337"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1611 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "igbinary: a document",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "name",
+                  "Ana"
+                ],
+                [
+                  "prefs",
+                  {}
+                ],
+                [
+                  "emails",
+                  [
+                    "a@b.c",
+                    "a@b.c"
+                  ]
+                ],
+                [
+                  "labels",
+                  []
+                ],
+                [
+                  "age",
+                  30
+                ],
+                [
+                  "score",
+                  1.5
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "AAAAAhQJEQMkaWQRBXVzZXIxEQwkcGVybWlzc2lvbnMUABEEbmFtZREDQW5hEQVwcmVmcxcIc3RkQ2xhc3MUABEGZW1haWxzFAIGABEFYUBiLmMGAQ4IEQZsYWJlbHMBAREDYWdlBh4RBXNjb3JlDD/4AAAAAAAAEQRtZXRhGgYUAhEBaxEBdhEBMQA="
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.unserialize",
+          "args": {
+            "s": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "value": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "name",
+                  "Ana"
+                ],
+                [
+                  "prefs",
+                  {
+                    "$object": []
+                  }
+                ],
+                [
+                  "emails",
+                  [
+                    "a@b.c",
+                    "a@b.c"
+                  ]
+                ],
+                [
+                  "labels",
+                  []
+                ],
+                [
+                  "age",
+                  30
+                ],
+                [
+                  "score",
+                  1.5
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "name",
+                  "Ana"
+                ],
+                [
+                  "prefs",
+                  {}
+                ],
+                [
+                  "emails",
+                  [
+                    "a@b.c",
+                    "a@b.c"
+                  ]
+                ],
+                [
+                  "labels",
+                  []
+                ],
+                [
+                  "age",
+                  30
+                ],
+                [
+                  "score",
+                  1.5
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$bytes": "AAAAAhQJEQMkaWQRBXVzZXIxEQwkcGVybWlzc2lvbnMUABEEbmFtZREDQW5hEQVwcmVmcxcIc3RkQ2xhc3MUABEGZW1haWxzFAIGABEFYUBiLmMGAQ4IEQZsYWJlbHMBAREDYWdlBh4RBXNjb3JlDD/4AAAAAAAAEQRtZXRhGgYUAhEBaxEBdhEBMQA="
+          }
+        },
+        {
+          "side": "a",
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "igbinary: binary and numbers",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  -1,
+                  -9223372036854775808
+                ],
+                [
+                  "f",
+                  -0.0
+                ],
+                [
+                  "n",
+                  {
+                    "$float": "NAN"
+                  }
+                ],
+                [
+                  {
+                    "$bytes": "gA=="
+                  },
+                  "x"
+                ]
+              ]
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "AAAAAhQFBgARA/8A/gcBIYAAAAAAAAAAEQFmDIAAAAAAAAAAEQFuDH/4AAAAAAAAEQGAEQF4"
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.unserialize",
+          "args": {
+            "s": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "value": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  -1,
+                  -9223372036854775808
+                ],
+                [
+                  "f",
+                  {
+                    "$float": "-0"
+                  }
+                ],
+                [
+                  "n",
+                  {
+                    "$float": "NAN"
+                  }
+                ],
+                [
+                  {
+                    "$bytes": "gA=="
+                  },
+                  "x"
+                ]
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  -1,
+                  -9223372036854775808
+                ],
+                [
+                  "f",
+                  -0.0
+                ],
+                [
+                  "n",
+                  {
+                    "$float": "NAN"
+                  }
+                ],
+                [
+                  {
+                    "$bytes": "gA=="
+                  },
+                  "x"
+                ]
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$bytes": "AAAAAhQFBgARA/8A/gcBIYAAAAAAAAAAEQFmDIAAAAAAAAAAEQFuDH/4AAAAAAAAEQGAEQF4"
+          }
+        },
+        {
+          "side": "a",
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "igbinary: wide",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": [
+              -150,
+              -149,
+              -148,
+              -147,
+              -146,
+              -145,
+              -144,
+              -143,
+              -142,
+              -141,
+              -140,
+              -139,
+              -138,
+              -137,
+              -136,
+              -135,
+              -134,
+              -133,
+              -132,
+              -131,
+              -130,
+              -129,
+              -128,
+              -127,
+              -126,
+              -125,
+              -124,
+              -123,
+              -122,
+              -121,
+              -120,
+              -119,
+              -118,
+              -117,
+              -116,
+              -115,
+              -114,
+              -113,
+              -112,
+              -111,
+              -110,
+              -109,
+              -108,
+              -107,
+              -106,
+              -105,
+              -104,
+              -103,
+              -102,
+              -101,
+              -100,
+              -99,
+              -98,
+              -97,
+              -96,
+              -95,
+              -94,
+              -93,
+              -92,
+              -91,
+              -90,
+              -89,
+              -88,
+              -87,
+              -86,
+              -85,
+              -84,
+              -83,
+              -82,
+              -81,
+              -80,
+              -79,
+              -78,
+              -77,
+              -76,
+              -75,
+              -74,
+              -73,
+              -72,
+              -71,
+              -70,
+              -69,
+              -68,
+              -67,
+              -66,
+              -65,
+              -64,
+              -63,
+              -62,
+              -61,
+              -60,
+              -59,
+              -58,
+              -57,
+              -56,
+              -55,
+              -54,
+              -53,
+              -52,
+              -51,
+              -50,
+              -49,
+              -48,
+              -47,
+              -46,
+              -45,
+              -44,
+              -43,
+              -42,
+              -41,
+              -40,
+              -39,
+              -38,
+              -37,
+              -36,
+              -35,
+              -34,
+              -33,
+              -32,
+              -31,
+              -30,
+              -29,
+              -28,
+              -27,
+              -26,
+              -25,
+              -24,
+              -23,
+              -22,
+              -21,
+              -20,
+              -19,
+              -18,
+              -17,
+              -16,
+              -15,
+              -14,
+              -13,
+              -12,
+              -11,
+              -10,
+              -9,
+              -8,
+              -7,
+              -6,
+              -5,
+              -4,
+              -3,
+              -2,
+              -1,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              108,
+              109,
+              110,
+              111,
+              112,
+              113,
+              114,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              126,
+              127,
+              128,
+              129,
+              130,
+              131,
+              132,
+              133,
+              134,
+              135,
+              136,
+              137,
+              138,
+              139,
+              140,
+              141,
+              142,
+              143,
+              144,
+              145,
+              146,
+              147,
+              148,
+              149
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "AAAAAhUBLAYAB5YGAQeVBgIHlAYDB5MGBAeSBgUHkQYGB5AGBwePBggHjgYJB40GCgeMBgsHiwYMB4oGDQeJBg4HiAYPB4cGEAeGBhEHhQYSB4QGEweDBhQHggYVB4EGFgeABhcHfwYYB34GGQd9BhoHfAYbB3sGHAd6Bh0HeQYeB3gGHwd3BiAHdgYhB3UGIgd0BiMHcwYkB3IGJQdxBiYHcAYnB28GKAduBikHbQYqB2wGKwdrBiwHagYtB2kGLgdoBi8HZwYwB2YGMQdlBjIHZAYzB2MGNAdiBjUHYQY2B2AGNwdfBjgHXgY5B10GOgdcBjsHWwY8B1oGPQdZBj4HWAY/B1cGQAdWBkEHVQZCB1QGQwdTBkQHUgZFB1EGRgdQBkcHTwZIB04GSQdNBkoHTAZLB0sGTAdKBk0HSQZOB0gGTwdHBlAHRgZRB0UGUgdEBlMHQwZUB0IGVQdBBlYHQAZXBz8GWAc+BlkHPQZaBzwGWwc7BlwHOgZdBzkGXgc4Bl8HNwZgBzYGYQc1BmIHNAZjBzMGZAcyBmUHMQZmBzAGZwcvBmgHLgZpBy0GagcsBmsHKwZsByoGbQcpBm4HKAZvBycGcAcmBnEHJQZyByQGcwcjBnQHIgZ1ByEGdgcgBncHHwZ4Bx4GeQcdBnoHHAZ7BxsGfAcaBn0HGQZ+BxgGfwcXBoAHFgaBBxUGggcUBoMHEwaEBxIGhQcRBoYHEAaHBw8GiAcOBokHDQaKBwwGiwcLBowHCgaNBwkGjgcIBo8HBwaQBwYGkQcFBpIHBAaTBwMGlAcCBpUHAQaWBgAGlwYBBpgGAgaZBgMGmgYEBpsGBQacBgYGnQYHBp4GCAafBgkGoAYKBqEGCwaiBgwGowYNBqQGDgalBg8GpgYQBqcGEQaoBhIGqQYTBqoGFAarBhUGrAYWBq0GFwauBhgGrwYZBrAGGgaxBhsGsgYcBrMGHQa0Bh4GtQYfBrYGIAa3BiEGuAYiBrkGIwa6BiQGuwYlBrwGJga9BicGvgYoBr8GKQbABioGwQYrBsIGLAbDBi0GxAYuBsUGLwbGBjAGxwYxBsgGMgbJBjMGygY0BssGNQbMBjYGzQY3Bs4GOAbPBjkG0AY6BtEGOwbSBjwG0wY9BtQGPgbVBj8G1gZABtcGQQbYBkIG2QZDBtoGRAbbBkUG3AZGBt0GRwbeBkgG3wZJBuAGSgbhBksG4gZMBuMGTQbkBk4G5QZPBuYGUAbnBlEG6AZSBukGUwbqBlQG6wZVBuwGVgbtBlcG7gZYBu8GWQbwBloG8QZbBvIGXAbzBl0G9AZeBvUGXwb2BmAG9wZhBvgGYgb5BmMG+gZkBvsGZQb8BmYG/QZnBv4GaAb/BmkIAQAGaggBAQZrCAECBmwIAQMGbQgBBAZuCAEFBm8IAQYGcAgBBwZxCAEIBnIIAQkGcwgBCgZ0CAELBnUIAQwGdggBDQZ3CAEOBngIAQ8GeQgBEAZ6CAERBnsIARIGfAgBEwZ9CAEUBn4IARUGfwgBFgaACAEXBoEIARgGgggBGQaDCAEaBoQIARsGhQgBHAaGCAEdBocIAR4GiAgBHwaJCAEgBooIASEGiwgBIgaMCAEjBo0IASQGjggBJQaPCAEmBpAIAScGkQgBKAaSCAEpBpMIASoGlAgBKwaV"
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.unserialize",
+          "args": {
+            "s": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "value": [
+              -150,
+              -149,
+              -148,
+              -147,
+              -146,
+              -145,
+              -144,
+              -143,
+              -142,
+              -141,
+              -140,
+              -139,
+              -138,
+              -137,
+              -136,
+              -135,
+              -134,
+              -133,
+              -132,
+              -131,
+              -130,
+              -129,
+              -128,
+              -127,
+              -126,
+              -125,
+              -124,
+              -123,
+              -122,
+              -121,
+              -120,
+              -119,
+              -118,
+              -117,
+              -116,
+              -115,
+              -114,
+              -113,
+              -112,
+              -111,
+              -110,
+              -109,
+              -108,
+              -107,
+              -106,
+              -105,
+              -104,
+              -103,
+              -102,
+              -101,
+              -100,
+              -99,
+              -98,
+              -97,
+              -96,
+              -95,
+              -94,
+              -93,
+              -92,
+              -91,
+              -90,
+              -89,
+              -88,
+              -87,
+              -86,
+              -85,
+              -84,
+              -83,
+              -82,
+              -81,
+              -80,
+              -79,
+              -78,
+              -77,
+              -76,
+              -75,
+              -74,
+              -73,
+              -72,
+              -71,
+              -70,
+              -69,
+              -68,
+              -67,
+              -66,
+              -65,
+              -64,
+              -63,
+              -62,
+              -61,
+              -60,
+              -59,
+              -58,
+              -57,
+              -56,
+              -55,
+              -54,
+              -53,
+              -52,
+              -51,
+              -50,
+              -49,
+              -48,
+              -47,
+              -46,
+              -45,
+              -44,
+              -43,
+              -42,
+              -41,
+              -40,
+              -39,
+              -38,
+              -37,
+              -36,
+              -35,
+              -34,
+              -33,
+              -32,
+              -31,
+              -30,
+              -29,
+              -28,
+              -27,
+              -26,
+              -25,
+              -24,
+              -23,
+              -22,
+              -21,
+              -20,
+              -19,
+              -18,
+              -17,
+              -16,
+              -15,
+              -14,
+              -13,
+              -12,
+              -11,
+              -10,
+              -9,
+              -8,
+              -7,
+              -6,
+              -5,
+              -4,
+              -3,
+              -2,
+              -1,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              108,
+              109,
+              110,
+              111,
+              112,
+              113,
+              114,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              126,
+              127,
+              128,
+              129,
+              130,
+              131,
+              132,
+              133,
+              134,
+              135,
+              136,
+              137,
+              138,
+              139,
+              140,
+              141,
+              142,
+              143,
+              144,
+              145,
+              146,
+              147,
+              148,
+              149
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "side": "b",
+          "op": "igbinary.serialize",
+          "args": {
+            "v": [
+              -150,
+              -149,
+              -148,
+              -147,
+              -146,
+              -145,
+              -144,
+              -143,
+              -142,
+              -141,
+              -140,
+              -139,
+              -138,
+              -137,
+              -136,
+              -135,
+              -134,
+              -133,
+              -132,
+              -131,
+              -130,
+              -129,
+              -128,
+              -127,
+              -126,
+              -125,
+              -124,
+              -123,
+              -122,
+              -121,
+              -120,
+              -119,
+              -118,
+              -117,
+              -116,
+              -115,
+              -114,
+              -113,
+              -112,
+              -111,
+              -110,
+              -109,
+              -108,
+              -107,
+              -106,
+              -105,
+              -104,
+              -103,
+              -102,
+              -101,
+              -100,
+              -99,
+              -98,
+              -97,
+              -96,
+              -95,
+              -94,
+              -93,
+              -92,
+              -91,
+              -90,
+              -89,
+              -88,
+              -87,
+              -86,
+              -85,
+              -84,
+              -83,
+              -82,
+              -81,
+              -80,
+              -79,
+              -78,
+              -77,
+              -76,
+              -75,
+              -74,
+              -73,
+              -72,
+              -71,
+              -70,
+              -69,
+              -68,
+              -67,
+              -66,
+              -65,
+              -64,
+              -63,
+              -62,
+              -61,
+              -60,
+              -59,
+              -58,
+              -57,
+              -56,
+              -55,
+              -54,
+              -53,
+              -52,
+              -51,
+              -50,
+              -49,
+              -48,
+              -47,
+              -46,
+              -45,
+              -44,
+              -43,
+              -42,
+              -41,
+              -40,
+              -39,
+              -38,
+              -37,
+              -36,
+              -35,
+              -34,
+              -33,
+              -32,
+              -31,
+              -30,
+              -29,
+              -28,
+              -27,
+              -26,
+              -25,
+              -24,
+              -23,
+              -22,
+              -21,
+              -20,
+              -19,
+              -18,
+              -17,
+              -16,
+              -15,
+              -14,
+              -13,
+              -12,
+              -11,
+              -10,
+              -9,
+              -8,
+              -7,
+              -6,
+              -5,
+              -4,
+              -3,
+              -2,
+              -1,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80,
+              81,
+              82,
+              83,
+              84,
+              85,
+              86,
+              87,
+              88,
+              89,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              98,
+              99,
+              100,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              108,
+              109,
+              110,
+              111,
+              112,
+              113,
+              114,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              126,
+              127,
+              128,
+              129,
+              130,
+              131,
+              132,
+              133,
+              134,
+              135,
+              136,
+              137,
+              138,
+              139,
+              140,
+              141,
+              142,
+              143,
+              144,
+              145,
+              146,
+              147,
+              148,
+              149
+            ]
+          },
+          "bind": "t",
+          "expect": {
+            "$bytes": "AAAAAhUBLAYAB5YGAQeVBgIHlAYDB5MGBAeSBgUHkQYGB5AGBwePBggHjgYJB40GCgeMBgsHiwYMB4oGDQeJBg4HiAYPB4cGEAeGBhEHhQYSB4QGEweDBhQHggYVB4EGFgeABhcHfwYYB34GGQd9BhoHfAYbB3sGHAd6Bh0HeQYeB3gGHwd3BiAHdgYhB3UGIgd0BiMHcwYkB3IGJQdxBiYHcAYnB28GKAduBikHbQYqB2wGKwdrBiwHagYtB2kGLgdoBi8HZwYwB2YGMQdlBjIHZAYzB2MGNAdiBjUHYQY2B2AGNwdfBjgHXgY5B10GOgdcBjsHWwY8B1oGPQdZBj4HWAY/B1cGQAdWBkEHVQZCB1QGQwdTBkQHUgZFB1EGRgdQBkcHTwZIB04GSQdNBkoHTAZLB0sGTAdKBk0HSQZOB0gGTwdHBlAHRgZRB0UGUgdEBlMHQwZUB0IGVQdBBlYHQAZXBz8GWAc+BlkHPQZaBzwGWwc7BlwHOgZdBzkGXgc4Bl8HNwZgBzYGYQc1BmIHNAZjBzMGZAcyBmUHMQZmBzAGZwcvBmgHLgZpBy0GagcsBmsHKwZsByoGbQcpBm4HKAZvBycGcAcmBnEHJQZyByQGcwcjBnQHIgZ1ByEGdgcgBncHHwZ4Bx4GeQcdBnoHHAZ7BxsGfAcaBn0HGQZ+BxgGfwcXBoAHFgaBBxUGggcUBoMHEwaEBxIGhQcRBoYHEAaHBw8GiAcOBokHDQaKBwwGiwcLBowHCgaNBwkGjgcIBo8HBwaQBwYGkQcFBpIHBAaTBwMGlAcCBpUHAQaWBgAGlwYBBpgGAgaZBgMGmgYEBpsGBQacBgYGnQYHBp4GCAafBgkGoAYKBqEGCwaiBgwGowYNBqQGDgalBg8GpgYQBqcGEQaoBhIGqQYTBqoGFAarBhUGrAYWBq0GFwauBhgGrwYZBrAGGgaxBhsGsgYcBrMGHQa0Bh4GtQYfBrYGIAa3BiEGuAYiBrkGIwa6BiQGuwYlBrwGJga9BicGvgYoBr8GKQbABioGwQYrBsIGLAbDBi0GxAYuBsUGLwbGBjAGxwYxBsgGMgbJBjMGygY0BssGNQbMBjYGzQY3Bs4GOAbPBjkG0AY6BtEGOwbSBjwG0wY9BtQGPgbVBj8G1gZABtcGQQbYBkIG2QZDBtoGRAbbBkUG3AZGBt0GRwbeBkgG3wZJBuAGSgbhBksG4gZMBuMGTQbkBk4G5QZPBuYGUAbnBlEG6AZSBukGUwbqBlQG6wZVBuwGVgbtBlcG7gZYBu8GWQbwBloG8QZbBvIGXAbzBl0G9AZeBvUGXwb2BmAG9wZhBvgGYgb5BmMG+gZkBvsGZQb8BmYG/QZnBv4GaAb/BmkIAQAGaggBAQZrCAECBmwIAQMGbQgBBAZuCAEFBm8IAQYGcAgBBwZxCAEIBnIIAQkGcwgBCgZ0CAELBnUIAQwGdggBDQZ3CAEOBngIAQ8GeQgBEAZ6CAERBnsIARIGfAgBEwZ9CAEUBn4IARUGfwgBFgaACAEXBoEIARgGgggBGQaDCAEaBoQIARsGhQgBHAaGCAEdBocIAR4GiAgBHwaJCAEgBooIASEGiwgBIgaMCAEjBo0IASQGjggBJQaPCAEmBpAIAScGkQgBKAaSCAEpBpMIASoGlAgBKwaV"
+          }
+        },
+        {
+          "side": "a",
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "serialize: a document",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "serialize.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "prefs",
+                  {}
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "score",
+                  0.1
+                ],
+                [
+                  5,
+                  true
+                ]
+              ]
+            }
+          },
+          "bind": "s",
+          "expect": "a:6:{s:3:\"$id\";s:5:\"user1\";s:12:\"$permissions\";a:0:{}s:5:\"prefs\";O:8:\"stdClass\":0:{}s:4:\"meta\";O:8:\"stdClass\":2:{s:1:\"k\";s:1:\"v\";s:1:\"1\";N;}s:5:\"score\";d:0.1;i:5;b:1;}"
+        },
+        {
+          "side": "b",
+          "op": "serialize.unserialize_typed",
+          "args": {
+            "s": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "value": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "prefs",
+                  {
+                    "$object": []
+                  }
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "score",
+                  0.1
+                ],
+                [
+                  5,
+                  true
+                ]
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "side": "b",
+          "op": "serialize.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  "$id",
+                  "user1"
+                ],
+                [
+                  "$permissions",
+                  []
+                ],
+                [
+                  "prefs",
+                  {}
+                ],
+                [
+                  "meta",
+                  {
+                    "$object": [
+                      [
+                        "k",
+                        "v"
+                      ],
+                      [
+                        "1",
+                        null
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "score",
+                  0.1
+                ],
+                [
+                  5,
+                  true
+                ]
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": "a:6:{s:3:\"$id\";s:5:\"user1\";s:12:\"$permissions\";a:0:{}s:5:\"prefs\";O:8:\"stdClass\":0:{}s:4:\"meta\";O:8:\"stdClass\":2:{s:1:\"k\";s:1:\"v\";s:1:\"1\";N;}s:5:\"score\";d:0.1;i:5;b:1;}"
+        },
+        {
+          "side": "a",
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "serialize: binary and floats",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "serialize.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  "f",
+                  -0.0
+                ],
+                [
+                  "i",
+                  {
+                    "$float": "INF"
+                  }
+                ],
+                [
+                  "e",
+                  1e+25
+                ]
+              ]
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "YTo0OntpOjA7czozOiL/AP4iO3M6MToiZiI7ZDotMDtzOjE6ImkiO2Q6SU5GO3M6MToiZSI7ZDoxLjBFKzI1O30="
+          }
+        },
+        {
+          "side": "b",
+          "op": "serialize.unserialize_typed",
+          "args": {
+            "s": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "value": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  "f",
+                  {
+                    "$float": "-0"
+                  }
+                ],
+                [
+                  "i",
+                  {
+                    "$float": "INF"
+                  }
+                ],
+                [
+                  "e",
+                  1e+25
+                ]
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "side": "b",
+          "op": "serialize.serialize",
+          "args": {
+            "v": {
+              "$array": [
+                [
+                  0,
+                  {
+                    "$bytes": "/wD+"
+                  }
+                ],
+                [
+                  "f",
+                  -0.0
+                ],
+                [
+                  "i",
+                  {
+                    "$float": "INF"
+                  }
+                ],
+                [
+                  "e",
+                  1e+25
+                ]
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$bytes": "YTo0OntpOjA7czozOiL/AP4iO3M6MToiZiI7ZDotMDtzOjE6ImkiO2Q6SU5GO3M6MToiZSI7ZDoxLjBFKzI1O30="
+          }
+        },
+        {
+          "side": "a",
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

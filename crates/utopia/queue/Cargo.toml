@@ -1,0 +1,40 @@
+[package]
+name = "utopia-queue"
+description = "A task queue: messages, publishers and consumers on Redis, Redis Cluster and NATS JetStream, and a worker server with hooks, retries and concurrency."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/queue"
+publish.workspace = true
+
+[features]
+default = ["cluster", "nats"]
+# Redis Cluster connection.
+cluster = ["redis/cluster-async"]
+# NATS JetStream broker.
+nats = ["dep:async-nats", "dep:xxhash-rust"]
+
+[dependencies]
+async-nats = { workspace = true, optional = true }
+bytes.workspace = true
+futures-util.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+redis.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+utopia-dsn.workspace = true
+utopia-lock.workspace = true
+utopia-validators.workspace = true
+xxhash-rust = { workspace = true, optional = true }
+
+
+[package.metadata.utopia]
+category = "servers"
+php-sync = "9b01b3da56433061bbdac7a20ec5ba8424d65106"

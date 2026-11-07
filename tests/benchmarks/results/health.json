@@ -1,0 +1,370 @@
+{
+  "service": "health",
+  "file": "tests/benchmarks/results/health.json",
+  "workload": {
+    "script": "tests/benchmarks/api/health.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "health-20261012-004859"
+  },
+  "environment": {
+    "date": "2026-10-11T23:51:15Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 3.678,
+        "p50": 2.734,
+        "p90": 5.429,
+        "p95": 7.266,
+        "p99": 17.642,
+        "max": 109.701
+      },
+      "cpu_ms_per_request": 2.723,
+      "db_cpu_ms_per_request": 1.681,
+      "memory_mib": {
+        "baseline": 3346.4,
+        "avg": 3350.3,
+        "peak": 3358.7
+      },
+      "endpoints": {
+        "health.get": {
+          "route": "GET /v1/health",
+          "count": 1045,
+          "rps": 17.42,
+          "avg": 2.797,
+          "p50": 2.599,
+          "p90": 3.82,
+          "p95": 4.409,
+          "p99": 6.292,
+          "max": 11.011
+        },
+        "health.antiVirus.get": {
+          "route": "GET /v1/health/anti-virus",
+          "note": "ClamAV is disabled in the dev stack",
+          "count": 108,
+          "rps": 1.8,
+          "avg": 2.952,
+          "p50": 2.511,
+          "p90": 3.853,
+          "p95": 4.67,
+          "p99": 11.884,
+          "max": 12.764
+        },
+        "health.cache.get": {
+          "route": "GET /v1/health/cache",
+          "count": 297,
+          "rps": 4.95,
+          "avg": 2.964,
+          "p50": 2.694,
+          "p90": 4.077,
+          "p95": 4.781,
+          "p99": 6.208,
+          "max": 9.557
+        },
+        "health.db.get": {
+          "route": "GET /v1/health/db",
+          "count": 322,
+          "rps": 5.37,
+          "avg": 3.134,
+          "p50": 2.793,
+          "p90": 4.253,
+          "p95": 4.788,
+          "p99": 8.419,
+          "max": 16.052
+        },
+        "health.geo.get": {
+          "route": "GET /v1/health/geo",
+          "count": 109,
+          "rps": 1.82,
+          "avg": 5.822,
+          "p50": 5.704,
+          "p90": 7.047,
+          "p95": 7.612,
+          "p99": 9.359,
+          "max": 11.204
+        },
+        "health.pubsub.get": {
+          "route": "GET /v1/health/pubsub",
+          "count": 96,
+          "rps": 1.6,
+          "avg": 2.908,
+          "p50": 2.644,
+          "p90": 3.736,
+          "p95": 4.09,
+          "p99": 7.046,
+          "max": 7.28
+        },
+        "health.queue.failed.get": {
+          "route": "GET /v1/health/queue/failed/:name",
+          "count": 293,
+          "rps": 4.88,
+          "avg": 3.159,
+          "p50": 2.849,
+          "p90": 4.191,
+          "p95": 4.892,
+          "p99": 7.675,
+          "max": 19.872
+        },
+        "health.stats.get": {
+          "route": "GET /v1/health/stats",
+          "note": "measured on its unauthorized path: no role or API key carries the `root` scope it requires",
+          "count": 102,
+          "rps": 1.7,
+          "avg": 2.929,
+          "p50": 2.716,
+          "p90": 3.991,
+          "p95": 4.37,
+          "p99": 6.328,
+          "max": 7.385
+        },
+        "health.storage.get": {
+          "route": "GET /v1/health/storage",
+          "count": 110,
+          "rps": 1.83,
+          "avg": 7.014,
+          "p50": 5.484,
+          "p90": 7.706,
+          "p95": 8.808,
+          "p99": 26.695,
+          "max": 109.701
+        },
+        "health.storage.local.get": {
+          "route": "GET /v1/health/storage/local",
+          "count": 100,
+          "rps": 1.67,
+          "avg": 2.9,
+          "p50": 2.676,
+          "p90": 4.048,
+          "p95": 4.847,
+          "p99": 6.182,
+          "max": 7.424
+        },
+        "health.usage.get": {
+          "route": "GET /v1/health/usage",
+          "count": 103,
+          "rps": 1.72,
+          "avg": 17.269,
+          "p50": 16.467,
+          "p90": 20.938,
+          "p95": 22.736,
+          "p99": 28.604,
+          "max": 33.74
+        },
+        "health.version.get": {
+          "route": "GET /v1/health/version",
+          "count": 315,
+          "rps": 5.25,
+          "avg": 2.941,
+          "p50": 2.595,
+          "p90": 4.19,
+          "p95": 4.807,
+          "p99": 9.474,
+          "max": 16.34
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 2634.6,
+      "requests": 158074,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 18.843,
+        "p50": 13.117,
+        "p90": 38.297,
+        "p95": 53.027,
+        "p99": 89.494,
+        "max": 305.266
+      },
+      "cpu_ms_per_request": 2.715,
+      "db_cpu_ms_per_request": 0.607,
+      "memory_mib": {
+        "baseline": 3357.7,
+        "avg": 3420.9,
+        "peak": 3437.6
+      },
+      "endpoints": {
+        "health.get": {
+          "route": "GET /v1/health",
+          "count": 54520,
+          "rps": 908.67,
+          "avg": 15.533,
+          "p50": 11.78,
+          "p90": 29.947,
+          "p95": 39.461,
+          "p99": 61.18,
+          "max": 171.309
+        },
+        "health.antiVirus.get": {
+          "route": "GET /v1/health/anti-virus",
+          "note": "ClamAV is disabled in the dev stack",
+          "count": 5426,
+          "rps": 90.43,
+          "avg": 15.735,
+          "p50": 12.044,
+          "p90": 30.752,
+          "p95": 39.91,
+          "p99": 61.047,
+          "max": 139.901
+        },
+        "health.cache.get": {
+          "route": "GET /v1/health/cache",
+          "count": 16367,
+          "rps": 272.78,
+          "avg": 16.883,
+          "p50": 12.782,
+          "p90": 32.521,
+          "p95": 43.129,
+          "p99": 67.561,
+          "max": 206.288
+        },
+        "health.db.get": {
+          "route": "GET /v1/health/db",
+          "count": 16206,
+          "rps": 270.1,
+          "avg": 17.305,
+          "p50": 13.035,
+          "p90": 33.431,
+          "p95": 44.451,
+          "p99": 70.037,
+          "max": 156.23
+        },
+        "health.geo.get": {
+          "route": "GET /v1/health/geo",
+          "count": 5411,
+          "rps": 90.18,
+          "avg": 22.953,
+          "p50": 18.194,
+          "p90": 41.881,
+          "p95": 52.874,
+          "p99": 80.52,
+          "max": 155.889
+        },
+        "health.pubsub.get": {
+          "route": "GET /v1/health/pubsub",
+          "count": 5674,
+          "rps": 94.57,
+          "avg": 16.932,
+          "p50": 12.8,
+          "p90": 32.675,
+          "p95": 43.32,
+          "p99": 66.57,
+          "max": 148.622
+        },
+        "health.queue.failed.get": {
+          "route": "GET /v1/health/queue/failed/:name",
+          "count": 16265,
+          "rps": 271.08,
+          "avg": 18.256,
+          "p50": 14.028,
+          "p90": 34.561,
+          "p95": 45.782,
+          "p99": 69.824,
+          "max": 193.859
+        },
+        "health.stats.get": {
+          "route": "GET /v1/health/stats",
+          "note": "measured on its unauthorized path: no role or API key carries the `root` scope it requires",
+          "count": 5405,
+          "rps": 90.08,
+          "avg": 15.678,
+          "p50": 11.698,
+          "p90": 30.248,
+          "p95": 40.112,
+          "p99": 63.351,
+          "max": 187.418
+        },
+        "health.storage.get": {
+          "route": "GET /v1/health/storage",
+          "count": 5396,
+          "rps": 89.93,
+          "avg": 28.56,
+          "p50": 22.619,
+          "p90": 52.557,
+          "p95": 65.76,
+          "p99": 100.256,
+          "max": 256.62
+        },
+        "health.storage.local.get": {
+          "route": "GET /v1/health/storage/local",
+          "count": 5350,
+          "rps": 89.17,
+          "avg": 15.564,
+          "p50": 11.671,
+          "p90": 29.064,
+          "p95": 39.542,
+          "p99": 62.415,
+          "max": 186.834
+        },
+        "health.usage.get": {
+          "route": "GET /v1/health/usage",
+          "count": 5556,
+          "rps": 92.6,
+          "avg": 71.214,
+          "p50": 65.56,
+          "p90": 105.859,
+          "p95": 124.66,
+          "p99": 169.9,
+          "max": 305.266
+        },
+        "health.version.get": {
+          "route": "GET /v1/health/version",
+          "count": 16498,
+          "rps": 274.97,
+          "avg": 15.43,
+          "p50": 11.546,
+          "p90": 29.744,
+          "p95": 39.455,
+          "p99": 62.455,
+          "max": 143.82
+        }
+      }
+    }
+  ]
+}

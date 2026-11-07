@@ -1,0 +1,2042 @@
+{
+  "source": "packages/nats/tests/E2E/JetStreamPublishManyTest.php",
+  "cases": [
+    {
+      "name": "an empty batch publishes nothing",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": []
+          },
+          "expect": []
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "file",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 0,
+              "bytes": false,
+              "first_seq": 0,
+              "last_seq": 0,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 0
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a window below one is refused",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a"
+              }
+            ],
+            "window": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Publish window must be at least 1, got 0"
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "each acknowledgement belongs to its own message",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-0"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-1"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-2"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-3"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-4"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-5"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-6"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-7"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-8"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-9"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-10"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-11"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-12"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-13"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-14"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-15"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-16"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-17"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-18"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-19"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-20"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-21"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-22"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-23"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-24"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-25"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-26"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-27"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-28"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-29"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-30"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-31"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-32"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-33"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-34"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-35"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-36"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-37"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-38"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-39"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-40"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-41"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-42"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-43"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-44"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-45"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-46"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-47"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-48"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-49"
+              }
+            ],
+            "window": 8
+          },
+          "expect": [
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 1,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 2,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 3,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 4,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 5,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 6,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 7,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 8,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 9,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 10,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 11,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 12,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 13,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 14,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 15,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 16,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 17,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 18,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 19,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 20,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 21,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 22,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 23,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 24,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 25,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 26,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 27,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 28,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 29,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 30,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 31,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 32,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 33,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 34,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 35,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 36,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 37,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 38,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 39,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 40,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 41,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 42,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 43,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 44,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 45,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 46,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 47,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 48,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 49,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 50,
+              "domain": null,
+              "duplicate": false
+            }
+          ]
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 1
+          },
+          "expect": {
+            "subject": "publishmany.${ns}.a",
+            "seq": 1,
+            "data": "payload-0",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 8
+          },
+          "expect": {
+            "subject": "publishmany.${ns}.a",
+            "seq": 8,
+            "data": "payload-7",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 9
+          },
+          "expect": {
+            "subject": "publishmany.${ns}.a",
+            "seq": 9,
+            "data": "payload-8",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 50
+          },
+          "expect": {
+            "subject": "publishmany.${ns}.a",
+            "seq": 50,
+            "data": "payload-49",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "republished message ids come back as duplicates",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-0",
+                "msg_id": "id-0"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-1",
+                "msg_id": "id-1"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-2",
+                "msg_id": "id-2"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-3",
+                "msg_id": "id-3"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-4",
+                "msg_id": "id-4"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-5",
+                "msg_id": "id-5"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-6",
+                "msg_id": "id-6"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-7",
+                "msg_id": "id-7"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-8",
+                "msg_id": "id-8"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-9",
+                "msg_id": "id-9"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 1,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 2,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 3,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 4,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 5,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 6,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 7,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 8,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 9,
+              "domain": null,
+              "duplicate": false
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 10,
+              "domain": null,
+              "duplicate": false
+            }
+          ]
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-0",
+                "msg_id": "id-0"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-1",
+                "msg_id": "id-1"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-2",
+                "msg_id": "id-2"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-3",
+                "msg_id": "id-3"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-4",
+                "msg_id": "id-4"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-5",
+                "msg_id": "id-5"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-6",
+                "msg_id": "id-6"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-7",
+                "msg_id": "id-7"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-8",
+                "msg_id": "id-8"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "payload-9",
+                "msg_id": "id-9"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 1,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 2,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 3,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 4,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 5,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 6,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 7,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 8,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 9,
+              "domain": null,
+              "duplicate": true
+            },
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 10,
+              "domain": null,
+              "duplicate": true
+            }
+          ]
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "file",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 10,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 10,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 1
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "headers reach the stream",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "with-headers",
+                "headers": [
+                  [
+                    "set",
+                    "X-Trace",
+                    "abc123"
+                  ]
+                ],
+                "ttl": "never"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "per-message TTL is disabled"
+            }
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "no message found"
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a rejected message throws",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "fine"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "rejected",
+                "expected_stream": "NO_SUCH_STREAM"
+              },
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "also-fine"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "expected stream does not match"
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the connection stays usable after a rejection",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PUBLISH_MANY_${ns}",
+              "subjects": [
+                "publishmany.${ns}.>"
+              ],
+              "storage": "file",
+              "duplicateWindow": 120
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PUBLISH_MANY_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "file",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "publishmany.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "rejected",
+                "expected_stream": "NO_SUCH_STREAM"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "expected stream does not match"
+            }
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "publishmany.${ns}.a",
+                "data": "after"
+              }
+            ]
+          },
+          "bind": "acks",
+          "expect": [
+            {
+              "stream": "PUBLISH_MANY_${ns}",
+              "seq": 1,
+              "domain": null,
+              "duplicate": false
+            }
+          ]
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PUBLISH_MANY_${ns}",
+            "seq": 1
+          },
+          "expect": {
+            "subject": "publishmany.${ns}.a",
+            "seq": 1,
+            "data": "after",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PUBLISH_MANY_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "no stream answers",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.publish_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "subject": "nostream.${ns}",
+                "data": "x"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

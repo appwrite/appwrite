@@ -1,0 +1,105 @@
+{
+  "source": "packages/span/tests/Storage/CoroutineTest.php",
+  "cases": [
+    {
+      "name": "testGetReturnsNullOutsideCoroutine",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "coroutine"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetDoesNothingOutsideCoroutine",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "coroutine"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetNullDoesNothingOutsideCoroutine",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "coroutine"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

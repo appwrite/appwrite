@@ -1,0 +1,3103 @@
+{
+  "source": "packages/migration/tests/Destinations/LocalTest.php",
+  "cases": [
+    {
+      "name": "nested and dotted names land under files",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "nested_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "nested",
+              "bucket": {
+                "$ref": "nested_bucket"
+              },
+              "name": "images/photo.png",
+              "data": "nested-bytes",
+              "start": 0,
+              "end": 12
+            }
+          },
+          "bind": "nested",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "dotted_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "dotted",
+              "bucket": {
+                "$ref": "dotted_bucket"
+              },
+              "name": "my.file.tar.gz",
+              "data": "dotted-bytes",
+              "start": 0,
+              "end": 12
+            }
+          },
+          "bind": "dotted",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "nested"
+              },
+              {
+                "$ref": "dotted"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "nested",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "file",
+                "id": "dotted",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/images/photo.png"
+          },
+          "expect": "nested-bytes"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/my.file.tar.gz"
+          },
+          "expect": "dotted-bytes"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #parent",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "../migration-escape.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/../migration-escape.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #grandparent",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "../../migration-escape.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/../../migration-escape.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #nestedParent",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "foo/../../migration-escape.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/foo/../../migration-escape.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #absolute",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "/tmp/migration-escape.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files//tmp/migration-escape.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #backslash",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "foo\\bar.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/foo\\bar.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #dot",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "./a.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/./a.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #empty segment",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "a//b.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/a//b.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #nul",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "a\u0000b.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/a\u0000b.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "traversal name leaves the outside file untouched #empty",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/migration-escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a symlinked directory does not redirect the write",
+      "state": [],
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}",
+            "link": "/tmp/compat-fs/${ns}/export/files/link"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "f_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "via-link",
+              "bucket": {
+                "$ref": "f_bucket"
+              },
+              "name": "link/outside.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "f"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "via-link",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "via-link",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "via-link",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a symlinked file does not redirect the write",
+      "state": [],
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/outside.txt",
+            "link": "/tmp/compat-fs/${ns}/export/files/linked.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "f_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "via-file-link",
+              "bucket": {
+                "$ref": "f_bucket"
+              },
+              "name": "linked.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "f"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "via-file-link",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "via-file-link",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "via-file-link",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a file in the directory is replaced then appended",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/chunked.bin",
+            "contents": "stale"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "first_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "chunked",
+              "bucket": {
+                "$ref": "first_bucket"
+              },
+              "name": "chunked.bin",
+              "data": "one",
+              "start": 0,
+              "end": 3
+            }
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "second_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "chunked",
+              "bucket": {
+                "$ref": "second_bucket"
+              },
+              "name": "chunked.bin",
+              "data": "two",
+              "start": 3,
+              "end": 6
+            }
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "first"
+              },
+              {
+                "$ref": "second"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "chunked",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "file",
+                "id": "chunked",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/chunked.bin"
+          },
+          "expect": "onetwo"
+        }
+      ]
+    },
+    {
+      "name": "a bad file in a batch does not stop a good file",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "bad_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "bad",
+              "bucket": {
+                "$ref": "bad_bucket"
+              },
+              "name": "../escape.txt",
+              "data": "owned",
+              "start": 0,
+              "end": 5
+            }
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "good_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "good",
+              "bucket": {
+                "$ref": "good_bucket"
+              },
+              "name": "safe.txt",
+              "data": "safe-bytes",
+              "start": 0,
+              "end": 10
+            }
+          },
+          "bind": "good",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "bad"
+              },
+              {
+                "$ref": "good"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "bad",
+                "status": "error",
+                "message": "Invalid export path"
+              },
+              {
+                "$resource": "file",
+                "id": "good",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/safe.txt"
+          },
+          "expect": "safe-bytes"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "bad",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "bad",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/escape.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a deployment id traversal does not escape",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "Function",
+              "runtime": "node-18.0"
+            }
+          },
+          "bind": "dep_fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "../../x",
+              "func": {
+                "$ref": "dep_fn"
+              },
+              "size": 7,
+              "entrypoint": "index.js",
+              "start": 0,
+              "end": 7,
+              "data": "payload"
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "dep"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "deployment",
+                "id": "../../x",
+                "status": "error",
+                "message": "Invalid export path"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt"
+          },
+          "expect": "original"
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/x.tar.gz"
+          },
+          "expect": false
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid export path",
+              "resourceName": "deployment",
+              "resourceGroup": "functions",
+              "resourceId": "../../x",
+              "json": {
+                "code": 400,
+                "message": "Invalid export path",
+                "resourceName": "deployment",
+                "resourceGroup": "functions",
+                "resourceId": "../../x",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Exception",
+                "message": "Invalid export path"
+              }
+            }
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/backup.json"
+          },
+          "expect": "{\n    \"functions\": {\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"..\\\\\\/..\\\\\\/x\\\",\\\"func\\\":{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"fn\\\",\\\"name\\\":\\\"Function\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0},\\\"size\\\":7,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":7,\\\"data\\\":\\\"payload\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "a deployment writes under the deployments directory",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "Function",
+              "runtime": "node-18.0"
+            }
+          },
+          "bind": "dep_fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "dep123",
+              "func": {
+                "$ref": "dep_fn"
+              },
+              "size": 13,
+              "entrypoint": "index.js",
+              "start": 0,
+              "end": 13,
+              "data": "archive-bytes"
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "dep"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "deployment",
+                "id": "dep123",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/deployments/dep123.tar.gz"
+          },
+          "expect": "archive-bytes"
+        }
+      ]
+    },
+    {
+      "name": "a file write onto a directory marks an error",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/blocked.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "f_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "blocked",
+              "bucket": {
+                "$ref": "f_bucket"
+              },
+              "name": "blocked.txt",
+              "data": "owned",
+              "start": 1,
+              "end": 5
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "f"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "blocked",
+                "status": "error",
+                "message": "Unable to write export file"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/files/blocked.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Unable to write export file",
+              "resourceName": "file",
+              "resourceGroup": "storage",
+              "resourceId": "blocked",
+              "json": {
+                "code": 500,
+                "message": "Unable to write export file",
+                "resourceName": "file",
+                "resourceGroup": "storage",
+                "resourceId": "blocked",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Migration\\Exception",
+                "message": "Unable to write export file"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a deployment write onto a directory marks an error",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/deployments/dep123.tar.gz"
+          },
+          "expect": true
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "Function",
+              "runtime": "node-18.0"
+            }
+          },
+          "bind": "dep_fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "dep123",
+              "func": {
+                "$ref": "dep_fn"
+              },
+              "size": 13,
+              "entrypoint": "index.js",
+              "start": 0,
+              "end": 13,
+              "data": "archive-bytes"
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "dep"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "deployment",
+                "id": "dep123",
+                "status": "error",
+                "message": "Unable to write export file"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/export/deployments/dep123.tar.gz"
+          },
+          "expect": true
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Unable to write export file",
+              "resourceName": "deployment",
+              "resourceGroup": "functions",
+              "resourceId": "dep123",
+              "json": {
+                "code": 500,
+                "message": "Unable to write export file",
+                "resourceName": "deployment",
+                "resourceGroup": "functions",
+                "resourceId": "dep123",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Migration\\Exception",
+                "message": "Unable to write export file"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a symlinked export root outside the destination is rejected #files",
+      "state": [],
+      "steps": [
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked-outside/marker.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/linked-outside",
+            "link": "/tmp/compat-fs/${ns}/linked/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked/deployments"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to resolve export directories"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked-outside/marker.txt"
+          },
+          "expect": "original"
+        }
+      ]
+    },
+    {
+      "name": "a symlinked export root outside the destination is rejected #deployments",
+      "state": [],
+      "steps": [
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked-outside/marker.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/linked-outside",
+            "link": "/tmp/compat-fs/${ns}/linked/deployments"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to resolve export directories"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/linked-outside/marker.txt"
+          },
+          "expect": "original"
+        }
+      ]
+    },
+    {
+      "name": "a symlinked export root inside the destination is accepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner-outside.txt",
+            "contents": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner/storage"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner/archives"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/inner/storage",
+            "link": "/tmp/compat-fs/${ns}/inner/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/inner/archives",
+            "link": "/tmp/compat-fs/${ns}/inner/deployments"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": ""
+            }
+          },
+          "bind": "f_bucket",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\File",
+            "args": {
+              "id": "nested",
+              "bucket": {
+                "$ref": "f_bucket"
+              },
+              "name": "images/photo.png",
+              "data": "nested-bytes",
+              "start": 0,
+              "end": 12
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "fn",
+              "name": "Function",
+              "runtime": "node-18.0"
+            }
+          },
+          "bind": "dep_fn",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Deployment",
+            "args": {
+              "id": "dep123",
+              "func": {
+                "$ref": "dep_fn"
+              },
+              "size": 13,
+              "entrypoint": "index.js",
+              "start": 0,
+              "end": 13,
+              "data": "archive-bytes"
+            }
+          },
+          "bind": "dep",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "f"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "file",
+                "id": "nested",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "dep"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "deployment",
+                "id": "dep123",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner/storage/images/photo.png"
+          },
+          "expect": "nested-bytes"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner/archives/dep123.tar.gz"
+          },
+          "expect": "archive-bytes"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/inner-outside.txt"
+          },
+          "expect": "original"
+        }
+      ]
+    },
+    {
+      "name": "a missing export directory is created with files and deployments",
+      "steps": [
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/fresh/a/b"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/fresh/a/b/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/fresh/a/b/deployments"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "an existing export directory gains files and deployments",
+      "steps": [
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/existing"
+          },
+          "expect": true
+        },
+        {
+          "op": "local_destination.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/existing"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/existing/files"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/existing/deployments"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "source": "packages/query/tests/Exception/ValidationExceptionTest.php",
+  "cases": [
+    {
+      "name": "testExtendsBaseException",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\ValidationException",
+            "args": [
+              "test"
+            ]
+          },
+          {
+            "is": "Exception",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\ValidationException",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 0
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testCatchAllCompatibility",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\ValidationException",
+            "args": [
+              "caught by base"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\ValidationException",
+          "id": 1,
+          "props": {
+            "message": "caught by base",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMessagePreserved",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception\\ValidationException",
+            "args": [
+              "Missing table"
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception\\ValidationException",
+          "id": 1,
+          "props": {
+            "message": "Missing table",
+            "code": 0
+          }
+        },
+        "Missing table"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,448 @@
+{
+  "source": "packages/usage/tests/SampleTest.php",
+  "cases": [
+    {
+      "name": "identity is stable and payload changes are detectable",
+      "steps": [
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 42,
+            "eventVersion": 1,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "dadbc87dbbe5fecba1e96f6c9c608c4ca09447566745c8e3e35bf06f76766568"
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 42,
+            "eventVersion": 1,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "dadbc87dbbe5fecba1e96f6c9c608c4ca09447566745c8e3e35bf06f76766568"
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 43,
+            "eventVersion": 1
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 43,
+            "eventVersion": 1,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "ff3c639d8bdcdcef779cc76ebc72e7d23cb7979cf935c4050e7618f972fa1dff"
+          }
+        }
+      ]
+    },
+    {
+      "name": "event version changes the payload but not the identity",
+      "steps": [
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 42,
+            "eventVersion": 1,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "dadbc87dbbe5fecba1e96f6c9c608c4ca09447566745c8e3e35bf06f76766568"
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 2
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 42,
+            "eventVersion": 2,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "9481206d91afff341f035a6f60c648f9d1554e0423e47cdd235c644915931720"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects an invalid interval",
+      "op": "sample.new",
+      "args": {
+        "environment": "production",
+        "region": "fra1",
+        "projectInternalId": "101",
+        "databaseInternalId": "202",
+        "member": "mysql-0",
+        "generation": "generation-1",
+        "sequence": 7,
+        "metric": "bandwidth.inbound",
+        "intervalStart": "2026-08-01T00:01:00Z",
+        "intervalEnd": "2026-08-01T00:00:00Z",
+        "value": 42,
+        "eventVersion": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "intervalStart must be before intervalEnd"
+        }
+      }
+    },
+    {
+      "name": "rejects empty fields, negative sequences and out-of-range versions",
+      "steps": [
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "environment cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "metric cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": -1,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "sequence cannot be negative"
+            }
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "eventVersion must fit an unsigned 32-bit integer"
+            }
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 4294967296
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "eventVersion must fit an unsigned 32-bit integer"
+            }
+          }
+        },
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T00:00:00Z",
+            "intervalEnd": "2026-08-01T00:01:00Z",
+            "value": 42,
+            "eventVersion": 4294967295
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:01:00.000",
+            "value": 42,
+            "eventVersion": 4294967295,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "bb0f09ab2bfd862d4b3a4b8a51905853783b477e56919308a1c6c472f6a45fc2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "intervals are formatted in UTC",
+      "steps": [
+        {
+          "op": "sample.new",
+          "args": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01T02:00:00+02:00",
+            "intervalEnd": "2026-08-01T00:00:00.5Z",
+            "value": 42,
+            "eventVersion": 1
+          },
+          "expect": {
+            "environment": "production",
+            "region": "fra1",
+            "projectInternalId": "101",
+            "databaseInternalId": "202",
+            "member": "mysql-0",
+            "generation": "generation-1",
+            "sequence": 7,
+            "metric": "bandwidth.inbound",
+            "intervalStart": "2026-08-01 00:00:00.000",
+            "intervalEnd": "2026-08-01 00:00:00.500",
+            "value": 42,
+            "eventVersion": 1,
+            "id": "a8e0eebf28f6eb0e2f632fd59b40734624d5c46a83edd2ba0530b0d83fbf3249",
+            "payloadHash": "65bcfb20f464342d4be0a872a10a2a6eb6121bddf24d9f3822a14a0c2752a775"
+          }
+        }
+      ]
+    },
+    {
+      "name": "gaps",
+      "steps": [
+        {
+          "op": "gap.new",
+          "args": {
+            "first": 0,
+            "last": 0
+          },
+          "expect": {
+            "first": 0,
+            "last": 0
+          }
+        },
+        {
+          "op": "gap.new",
+          "args": {
+            "first": 3,
+            "last": 9
+          },
+          "expect": {
+            "first": 3,
+            "last": 9
+          }
+        },
+        {
+          "op": "gap.new",
+          "args": {
+            "first": -1,
+            "last": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid sample gap"
+            }
+          }
+        },
+        {
+          "op": "gap.new",
+          "args": {
+            "first": 5,
+            "last": 4
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid sample gap"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

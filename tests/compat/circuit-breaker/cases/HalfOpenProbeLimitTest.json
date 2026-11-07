@@ -1,0 +1,341 @@
+{
+  "source": "packages/circuit-breaker/tests/HalfOpenProbeLimitTest.php",
+  "cases": [
+    {
+      "name": "a second caller is refused while the probe is still running",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 1,
+            "success_threshold": 5,
+            "half_open_permitted_calls": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "probe ran",
+              "during": [
+                {
+                  "op": "state"
+                },
+                {
+                  "op": "call",
+                  "close": {
+                    "result": "reached dependency"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "probe ran",
+            "during": [
+              "half_open",
+              "fallback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the cap counts concurrent probes, not total probes",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 1,
+            "success_threshold": 5,
+            "half_open_permitted_calls": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "reached dependency"
+            }
+          },
+          "expect": "reached dependency"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "reached dependency"
+            }
+          },
+          "expect": "reached dependency"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "reached dependency"
+            }
+          },
+          "expect": "reached dependency"
+        }
+      ]
+    },
+    {
+      "name": "the cap is configurable",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 1,
+            "success_threshold": 5,
+            "half_open_permitted_calls": 2
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "reached dependency",
+              "during": [
+                {
+                  "op": "call",
+                  "close": {
+                    "result": "reached dependency",
+                    "during": [
+                      {
+                        "op": "call",
+                        "close": {
+                          "result": "reached dependency"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "reached dependency",
+            "during": [
+              {
+                "result": "reached dependency",
+                "during": [
+                  "fallback"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a closed circuit is not capped",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "half_open_permitted_calls": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "reached dependency",
+              "during": [
+                {
+                  "op": "call",
+                  "close": {
+                    "result": "reached dependency"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "reached dependency",
+            "during": [
+              "reached dependency"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a refused caller does not count as a probe failure",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 1,
+            "success_threshold": 5,
+            "half_open_permitted_calls": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "probe ran",
+              "during": [
+                {
+                  "op": "call",
+                  "close": {
+                    "result": "reached dependency"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "probe ran",
+            "during": [
+              "fallback"
+            ]
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "half-open permitted calls must be at least one",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "half_open_permitted_calls": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Half-open permitted calls must be at least 1."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

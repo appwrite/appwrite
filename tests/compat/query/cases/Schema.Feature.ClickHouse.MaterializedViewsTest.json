@@ -1,0 +1,457 @@
+{
+  "source": "packages/query/tests/Schema/Feature/ClickHouse/MaterializedViewsTest.php",
+  "cases": [
+    {
+      "name": "testCreateMaterializedViewFromRawBody",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "createMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "usage_events_daily_mv",
+              "SELECT metric, sum(value) AS value, toStartOfDay(time) AS d FROM `events` GROUP BY metric, d",
+              "usage_events_daily"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, sum(value) AS value, toStartOfDay(time) AS d FROM `events` GROUP BY metric, d",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, sum(value) AS value, toStartOfDay(time) AS d FROM `events` GROUP BY metric, d",
+        [],
+        [],
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, sum(value) AS value, toStartOfDay(time) AS d FROM `events` GROUP BY metric, d",
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, sum(value) AS value, toStartOfDay(time) AS d FROM `events` GROUP BY metric, d"
+      ]
+    },
+    {
+      "name": "testCreateMaterializedViewWithoutIfNotExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "createMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "daily_mv",
+              "SELECT * FROM `events`",
+              "daily",
+              false
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE MATERIALIZED VIEW `daily_mv` TO `daily` AS SELECT * FROM `events`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE MATERIALIZED VIEW `daily_mv` TO `daily` AS SELECT * FROM `events`"
+      ]
+    },
+    {
+      "name": "testCreateMaterializedViewFromBuilder",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "createMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active_events_mv",
+              {
+                "$o": 2
+              },
+              "active_events"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "active"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE MATERIALIZED VIEW IF NOT EXISTS `active_events_mv` TO `active_events` AS SELECT * FROM `events` WHERE `status` IN (?)",
+            "bindings": [
+              "active"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `active_events_mv` TO `active_events` AS SELECT * FROM `events` WHERE `status` IN (?)",
+        [
+          "active"
+        ]
+      ]
+    },
+    {
+      "name": "testCreateMaterializedViewWithoutTargetTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "createMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "snapshot_mv",
+              "SELECT * FROM `events`"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE MATERIALIZED VIEW IF NOT EXISTS `snapshot_mv` AS SELECT * FROM `events`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `snapshot_mv` AS SELECT * FROM `events`"
+      ]
+    },
+    {
+      "name": "testCreateMaterializedViewDropInReplacementForUsageAdapter",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "createMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "usage_events_daily_mv",
+              "SELECT metric, value, d as time FROM ( SELECT metric, sum(value) as value, toStartOfDay(time) as d FROM `usage`.`usage_events` GROUP BY metric, d )",
+              "usage_events_daily"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, value, d as time FROM ( SELECT metric, sum(value) as value, toStartOfDay(time) as d FROM `usage`.`usage_events` GROUP BY metric, d )",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS `usage_events_daily_mv` TO `usage_events_daily` AS SELECT metric, value, d as time FROM ( SELECT metric, sum(value) as value, toStartOfDay(time) as d FROM `usage`.`usage_events` GROUP BY metric, d )"
+      ]
+    },
+    {
+      "name": "testDropMaterializedView",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "dropMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "usage_events_daily_mv"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "DROP VIEW IF EXISTS `usage_events_daily_mv`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP VIEW IF EXISTS `usage_events_daily_mv`",
+        [],
+        [],
+        "DROP VIEW IF EXISTS `usage_events_daily_mv`",
+        "DROP VIEW IF EXISTS `usage_events_daily_mv`"
+      ]
+    },
+    {
+      "name": "testDropMaterializedViewWithoutIfExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "dropMaterializedView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "daily_mv",
+              false
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "DROP VIEW `daily_mv`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP VIEW `daily_mv`"
+      ]
+    }
+  ]
+}

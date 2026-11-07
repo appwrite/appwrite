@@ -1,0 +1,1131 @@
+//! Running cases and fuzz inputs against both drivers and comparing them.
+
+use std::collections::HashMap;
+use std::path::Path;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+use serde_json::{Value, json};
+
+use super::cases::{self, Case, CaseFile, Step};
+use super::compare::{diff, mask, normalize, settle, short, sort_keys, sort_rows, substitute};
+use super::config::Config;
+use super::generate::{self, Rng};
+use super::process::Driver;
+use super::scrub::Scrubber;
+use super::snapshot;
+use super::spec::{self, Mask, Spec};
+use crate::adapter::{Fault, OpResult, Outcome, Session};
+
+/// What went wrong in a run: behaviour differences and harness faults.
+#[derive(Default)]
+pub struct Report {
+    pub passed: usize,
+    pub differences: Vec<String>,
+    pub faults: Vec<String>,
+}
+
+impl Report {
+    pub fn ok(&self) -> bool {
+        self.differences.is_empty() && self.faults.is_empty()
+    }
+
+    pub fn merge(&mut self, other: Report) {
+        self.passed += other.passed;
+        self.differences.extend(other.differences);
+        self.faults.extend(other.faults);
+    }
+}
+
+pub struct FuzzOptions {
+    pub op: Option<String>,
+    pub iterations: Option<u64>,
+    pub seed: u64,
+    pub save: bool,
+}
+
+pub struct Engine {
+    pub cfg: Config,
+    php: Option<Driver>,
+    rust: Option<Driver>,
+    run: String,
+    counter: u64,
+    pub verbose: bool,
+    trace: Option<Trace>,
+    /// The PHP error of the running case that matched one of its spec's
+    /// `flakes`, if any.
+    flaked: Option<String>,
+}
+
+/// What `compat report` keeps of a run: every step of every case with both
+/// runtimes' results, and every fuzz profile's outcome.
+#[derive(Default)]
+pub struct Trace {
+    pub cases: Vec<Value>,
+    pub fuzz: Vec<Value>,
+    steps: Vec<Value>,
+}
+
+/// Long strings and lists cut for a report: keys and tokens stay readable,
+/// megabytes of generated data do not travel to the page.
+pub fn clip(v: &Value) -> Value {
+    const TEXT: usize = 2000;
+    const ITEMS: usize = 200;
+    match v {
+        Value::String(s) if s.len() > TEXT => {
+            let mut end = TEXT;
+            while !s.is_char_boundary(end) {
+                end -= 1;
+            }
+            Value::String(format!("{}… ({} more bytes)", &s[..end], s.len() - end))
+        }
+        Value::Array(a) => {
+            let mut out: Vec<Value> = a.iter().take(ITEMS).map(clip).collect();
+            if a.len() > ITEMS {
+                out.push(Value::String(format!("… ({} more items)", a.len() - ITEMS)));
+            }
+            Value::Array(out)
+        }
+        Value::Object(o) => Value::Object(o.iter().map(|(k, v)| (k.clone(), clip(v))).collect()),
+        other => other.clone(),
+    }
+}
+
+/// The comparable JSON of one step's outcome.
+fn comparable(result: &Outcome, ns: &str, masks: &[&Mask], scrub: &Scrubber) -> Value {
+    let mut v = normalize(&result.to_json(), ns);
+    scrub.apply(&mut v);
+    for m in masks {
+        if m.tolerance.is_some() {
+            // Applied against the recording only (`off_record`).
+        } else if m.order {
+            sort_keys(&mut v, &m.paths);
+        } else if m.rows {
+            sort_rows(&mut v, &m.paths);
+        } else {
+            mask(&mut v, &m.paths);
+        }
+    }
+    v
+}
+
+/// The first difference between a step's recording and a result, after its
+/// tolerance masks accept floats close to the recorded ones.
+fn off_record(expect: &Value, got: &Value, masks: &[&Mask]) -> Option<String> {
+    if masks.iter().all(|m| m.tolerance.is_none()) {
+        return diff(expect, got);
+    }
+    let mut expect = expect.clone();
+    for m in masks {
+        if let Some(t) = m.tolerance {
+            settle(&mut expect, got, &m.paths, t);
+        }
+    }
+    diff(&expect, got)
+}
+
+fn step_masks<'a>(spec: &'a Spec, step: &'a Step) -> Vec<&'a Mask> {
+    spec.ops.get(&step.op).and_then(|o| o.mask.as_ref()).into_iter().chain(step.mask.as_ref()).collect()
+}
+
+fn label(lib: &str, file: &CaseFile, case: &Case) -> String {
+    let name = file.path.file_name().and_then(|n| n.to_str()).unwrap_or("?");
+    format!("{lib}/{name}#{}", case.name)
+}
+
+/// Whether a case's recording expects one of its spec's `flakes` (a case
+/// that tests that failure on purpose).
+fn expects_flake(spec: &Spec, case: &Case) -> bool {
+    case.steps.iter().filter_map(|s| s.expect.as_ref()).any(|e| {
+        let text = e.to_string();
+        spec.flakes.keys().any(|f| text.contains(f.as_str()))
+    })
+}
+
+fn fault_text(side: &str, f: &Fault) -> String {
+    format!("{side} fault: {f}")
+}
+
+impl Engine {
+    pub fn new(cfg: Config) -> Self {
+        let nanos = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+        let mut seed = (nanos as u64) ^ ((std::process::id() as u64) << 32);
+        let mut run = String::new();
+        for _ in 0..5 {
+            run.push(char::from_digit((seed % 36) as u32, 36).unwrap_or('0'));
+            seed /= 36;
+        }
+        Self { cfg, php: None, rust: None, run, counter: 0, verbose: false, trace: None, flaked: None }
+    }
+
+    fn ensure(&mut self, side: &'static str) -> Result<(), String> {
+        let slot = if side == "php" { &mut self.php } else { &mut self.rust };
+        if slot.is_none() {
+            let command = if side == "php" { &self.cfg.php } else { &self.cfg.rust };
+            *slot = Some(Driver::spawn(side, command, &self.cfg.root)?);
+        }
+        Ok(())
+    }
+
+    fn drivers(&mut self) -> Result<(&mut Driver, &mut Driver), String> {
+        self.ensure("php")?;
+        self.ensure("rust")?;
+        match (self.php.as_mut(), self.rust.as_mut()) {
+            (Some(p), Some(r)) => Ok((p, r)),
+            _ => Err("drivers not started".into()),
+        }
+    }
+
+    pub fn driver(&mut self, side: &'static str) -> Result<&mut Driver, String> {
+        self.ensure(side)?;
+        let slot = if side == "php" { &mut self.php } else { &mut self.rust };
+        slot.as_mut().ok_or_else(|| "driver not started".into())
+    }
+
+    /// A fresh namespace: short, lowercase, safe as a key, table or schema name.
+    fn ns(&mut self, tag: char) -> String {
+        self.counter += 1;
+        // Fixed width: both runtimes' namespaces have the same length, so
+        // server messages that cut a statement at a length (MariaDB/MySQL
+        // syntax errors) cut them at the same place.
+        format!("cx{}{:06}{tag}", self.run, self.counter)
+    }
+
+    /// Drops both drivers, so the next call starts fresh processes. Each
+    /// library's run, fuzz and record starts from them: none inherits the
+    /// process-wide state another left behind (PHP's PCRE cache and JIT
+    /// switch, which a pattern that fails to JIT-compile turns off for good),
+    /// and a library behaves in `ci` exactly as it does alone.
+    fn restart(&mut self) {
+        self.php = None;
+        self.rust = None;
+    }
+
+    /// Starts keeping a [`Trace`] of everything that runs.
+    pub fn start_trace(&mut self) {
+        self.trace = Some(Trace::default());
+    }
+
+    /// The trace kept since [`Engine::start_trace`], which stops.
+    pub fn take_trace(&mut self) -> Trace {
+        self.trace.take().unwrap_or_default()
+    }
+
+    fn trace_step(&mut self, step: impl FnOnce() -> Value) {
+        if let Some(t) = &mut self.trace {
+            t.steps.push(step());
+        }
+    }
+
+    fn configure(&mut self, side: &'static str, ns: &str) -> Result<(), String> {
+        let services = self.cfg.services_for(side);
+        self.driver(side)?.configure(ns, &services)
+    }
+
+    fn state_kinds(spec: &Spec, case: &Case) -> Vec<String> {
+        case.state.clone().unwrap_or_else(|| spec.state.clone())
+    }
+
+    /// A normalized, masked snapshot of one kind of state.
+    fn state(&self, spec: &Spec, kind: &str, ns: &str) -> Result<Value, String> {
+        let mut v = normalize(&snapshot::snapshot(&self.cfg, kind, ns)?, ns);
+        Scrubber::new(&spec.scrub).apply(&mut v);
+        if let Some(m) = spec.state_mask.get(kind) {
+            mask(&mut v, &m.paths);
+        }
+        Ok(v)
+    }
+
+    fn cleanup(&self, kinds: &[String], ns: &str) -> Result<(), String> {
+        kinds.iter().try_for_each(|k| snapshot::cleanup(&self.cfg, k, ns))
+    }
+
+    /// Builds `spec`'s task binaries into the Rust driver's own target
+    /// directory before any case runs. The driver builds them on first use
+    /// too (`crate::task::run`), but there the build counts against the
+    /// driver's reply timeout, which a cold build (CI) can exceed; here it
+    /// leaves the driver an up-to-date binary. A driver run by command
+    /// (`COMPAT_RUST`, a container) builds its own.
+    fn build_tasks(&self, spec: &spec::Spec) -> Result<(), String> {
+        let Some(driver) = self.cfg.rust.first().map(std::path::PathBuf::from) else { return Ok(()) };
+        if spec.tasks.is_empty()
+            || self.cfg.rust_in_container
+            || driver.file_name().is_none_or(|n| n != "compat-driver")
+        {
+            return Ok(());
+        }
+        let profile = driver.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+        let release = profile.file_name().is_some_and(|n| n == "release");
+        let target = profile.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+        for task in spec.tasks.values() {
+            let mut cargo = std::process::Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned()));
+            cargo
+                .args(["build", "--quiet", "-p", &task.rust.package, "--bin", &task.rust.bin, "--target-dir"])
+                .arg(&target);
+            if release {
+                cargo.arg("--release");
+            }
+            let status = cargo
+                .current_dir(&self.cfg.root)
+                .status()
+                .map_err(|e| format!("cargo build {}: {e}", task.rust.bin))?;
+            if !status.success() {
+                return Err(format!("cargo build -p {} --bin {} failed", task.rust.package, task.rust.bin));
+            }
+        }
+        Ok(())
+    }
+
+    /// Runs every case of `lib` (optionally only those whose label contains `filter`).
+    pub fn run_lib(&mut self, lib: &str, filter: Option<&str>, fail_fast: bool) -> Result<Report, String> {
+        self.run_lib_files(lib, filter, None, fail_fast)
+    }
+
+    /// [`Engine::run_lib`] over the case files of one CI shard (see
+    /// [`spec::Spec::shards`]) when `shard` is given.
+    pub fn run_lib_files(
+        &mut self,
+        lib: &str,
+        filter: Option<&str>,
+        shard: Option<&str>,
+        fail_fast: bool,
+    ) -> Result<Report, String> {
+        self.restart();
+        let spec = spec::load(&self.cfg.root, lib)?;
+        self.build_tasks(&spec)?;
+        let paths = cases::paths(&spec::lib_dir(&self.cfg.root, lib).join("cases"));
+        if let Some(shard) = shard
+            && !spec.shards.contains_key(shard)
+        {
+            return Err(format!("{lib}: no shard `{shard}` (spec.json `shards`)"));
+        }
+        let mut report = Report::default();
+        for path in &paths {
+            let file_name = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+            if shard.is_some_and(|s| spec.shard_of(&file_name) != Some(s)) {
+                continue;
+            }
+            let file = &cases::load_file(path)?;
+            let started = Instant::now();
+            let mut ran = 0;
+            for case in &file.cases {
+                let name = label(lib, file, case);
+                if filter.is_some_and(|f| !cases::selected(f, &name)) {
+                    continue;
+                }
+                if let Some(why) = cases::unmet(&case.requires) {
+                    eprintln!("skip  {name}: {why}");
+                    continue;
+                }
+                let mut r =
+                    if case.interop { self.interop_case(lib, &spec, case)? } else { self.diff_case(lib, &spec, case)? };
+                // The PHP library giving way under load (spec `flakes`) is
+                // not a difference: such a case runs once more, unless its
+                // recording expects that very failure.
+                if let Some(error) = self.flaked.take()
+                    && (!r.differences.is_empty() || !r.faults.is_empty())
+                    && !expects_flake(&spec, case)
+                {
+                    eprintln!("retry {name}: PHP failed under load ({error}); running the case again");
+                    if let Some(t) = &mut self.trace {
+                        t.steps.clear();
+                    }
+                    r = self.diff_case(lib, &spec, case)?;
+                    self.flaked = None;
+                }
+                ran += 1;
+                let failed = !r.differences.is_empty() || !r.faults.is_empty();
+                if let Some(t) = &mut self.trace {
+                    t.cases.push(json!({
+                        "file": file.path.file_name().map(|f| f.to_string_lossy().into_owned()),
+                        "name": case.name,
+                        "interop": case.interop,
+                        "ok": !failed,
+                        "differences": r.differences,
+                        "faults": r.faults,
+                        "steps": std::mem::take(&mut t.steps),
+                    }));
+                }
+                if failed {
+                    for d in &r.differences {
+                        report.differences.push(format!("{name}: {d}"));
+                    }
+                    for f in &r.faults {
+                        report.faults.push(format!("{name}: {f}"));
+                    }
+                    if fail_fast {
+                        return Ok(report);
+                    }
+                } else {
+                    report.passed += 1;
+                    if self.verbose {
+                        eprintln!("  ok  {name}");
+                    }
+                }
+            }
+            // A CI shard reports each file's time as it goes, so a slow
+            // shard's log shows where its time went before the job's limit.
+            if let Some(shard) = shard {
+                eprintln!("{lib}@{shard} {file_name}: {ran} cases in {:.0}s", started.elapsed().as_secs_f64());
+            }
+        }
+        Ok(report)
+    }
+
+    /// Both runtimes run every step, each in its own namespace; results and
+    /// final state must match each other and the recorded expectations.
+    fn diff_case(&mut self, lib: &str, spec: &Spec, case: &Case) -> Result<Report, String> {
+        let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
+        let kinds = Self::state_kinds(spec, case);
+        let (ns_p, ns_r) = (self.ns('p'), self.ns('r'));
+        self.cleanup(&kinds, &ns_p)?;
+        self.cleanup(&kinds, &ns_r)?;
+        self.configure("php", &ns_p)?;
+        self.configure("rust", &ns_r)?;
+        let (mut bp, mut br) = (HashMap::new(), HashMap::new());
+        for (i, step) in case.steps.iter().enumerate() {
+            let at = format!("step {} `{}`", i + 1, step.op);
+            let ap = match substitute(&step.args, &bp, &ns_p) {
+                Ok(a) => a,
+                Err(e) => {
+                    report.faults.push(format!("{at}: {e}"));
+                    break;
+                }
+            };
+            let ar = match substitute(&step.args, &br, &ns_r) {
+                Ok(a) => a,
+                Err(e) => {
+                    report.faults.push(format!("{at}: rust: {e}"));
+                    break;
+                }
+            };
+            let (php, rust) = self.drivers()?;
+            let idp = php.send(lib, &step.op, &ap)?;
+            let idr = rust.send(lib, &step.op, &ar)?;
+            let (rp, rr) = (php.recv(idp)?, rust.recv(idr)?);
+            let swallowed = php.swallowed.take();
+            if let Ok(Outcome::Err { message, .. }) = &rp
+                && let Some(message) = message.as_str()
+                && self.flaked.is_none()
+                && spec.flakes.keys().any(|f| message.contains(f.as_str()))
+            {
+                self.flaked = Some(message.to_owned());
+            }
+            // A failure the library caught (a Mirror's replication) counts too.
+            if let Some(message) = swallowed
+                && self.flaked.is_none()
+                && spec.flakes.keys().any(|f| message.contains(f.as_str()))
+            {
+                self.flaked = Some(message);
+            }
+            let (op, or) = match (rp, rr) {
+                (Ok(p), Ok(r)) => (p, r),
+                (p, r) => {
+                    let mut faults = Vec::new();
+                    for (side, res) in [("php", &p), ("rust", &r)] {
+                        if let Err(f) = res {
+                            faults.push(format!("{at}: {}", fault_text(side, f)));
+                        }
+                    }
+                    self.trace_step(
+                        || json!({ "op": step.op, "args": clip(&step.args), "status": "fault", "faults": faults }),
+                    );
+                    report.faults.extend(faults);
+                    break;
+                }
+            };
+            let masks = step_masks(spec, step);
+            let (cp, cr) = (comparable(&op, &ns_p, &masks, &scrub), comparable(&or, &ns_r, &masks, &scrub));
+            let differs = diff(&cp, &cr);
+            let off = step.expect.as_ref().and_then(|e| off_record(e, &cp, &masks));
+            if let Some(d) = &differs {
+                report.differences.push(format!(
+                    "{at}: php and rust differ at {d}\n      php:  {}\n      rust: {}",
+                    short(&cp),
+                    short(&cr)
+                ));
+            } else if let (Some(expect), Some(d)) = (&step.expect, &off) {
+                report.differences.push(format!(
+                    "{at}: both runtimes differ from the recorded expectation at {d}\n      expect: {}\n      got:    {}\n      (re-record with `bin/compat record {lib}` if PHP changed on purpose)",
+                    short(expect),
+                    short(&cp)
+                ));
+            }
+            self.trace_step(|| {
+                let status = if differs.is_some() {
+                    "differ"
+                } else if off.is_some() {
+                    "expect"
+                } else {
+                    "match"
+                };
+                json!({
+                    "op": step.op,
+                    "args": clip(&step.args),
+                    "bind": step.bind,
+                    "masks": masks.iter().map(|m| json!({ "paths": m.paths, "reason": m.reason })).collect::<Vec<_>>(),
+                    "php": clip(&cp),
+                    "rust": clip(&cr),
+                    "expect": step.expect.as_ref().map(clip),
+                    "status": status,
+                    "at": differs.or(off),
+                })
+            });
+            if let Some(name) = &step.bind {
+                bp.insert(name.clone(), op.to_json());
+                br.insert(name.clone(), or.to_json());
+            }
+        }
+        for kind in &kinds {
+            let sp = self.state(spec, kind, &ns_p)?;
+            let sr = self.state(spec, kind, &ns_r)?;
+            if let Some(d) = diff(&sp, &sr) {
+                report.differences.push(format!(
+                    "`{kind}` state differs at {d}\n      php:  {}\n      rust: {}",
+                    short(&sp),
+                    short(&sr)
+                ));
+            }
+        }
+        self.cleanup(&kinds, &ns_p)?;
+        self.cleanup(&kinds, &ns_r)?;
+        Ok(report)
+    }
+
+    /// Runs the steps with sides a/b as php/rust, then as rust/php, each time on
+    /// one namespace shared by both runtimes. Both executions must agree with
+    /// each other (results and state) and with the recorded expectations.
+    fn interop_case(&mut self, lib: &str, spec: &Spec, case: &Case) -> Result<Report, String> {
+        let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
+        let kinds = Self::state_kinds(spec, case);
+        let mut runs: Vec<(Vec<Value>, Vec<Value>)> = Vec::new();
+        for (a, b) in [("php", "rust"), ("rust", "php")] {
+            let ns = self.ns('x');
+            self.cleanup(&kinds, &ns)?;
+            self.configure("php", &ns)?;
+            self.configure("rust", &ns)?;
+            let mut binds = HashMap::new();
+            let mut results = Vec::new();
+            for (i, step) in case.steps.iter().enumerate() {
+                let side: &'static str = if step.side.as_deref() == Some("a") { a } else { b };
+                let at =
+                    format!("step {} `{}` (side {} = {side})", i + 1, step.op, step.side.as_deref().unwrap_or("?"));
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{at}: {e}"));
+                        break;
+                    }
+                };
+                match self.driver(side)?.call(lib, &step.op, &args)? {
+                    Ok(out) => {
+                        let masks = step_masks(spec, step);
+                        let c = comparable(&out, &ns, &masks, &scrub);
+                        if let Some(expect) = &step.expect
+                            && let Some(d) = off_record(expect, &c, &masks)
+                        {
+                            report.differences.push(format!(
+                                "{at}: differs from the recorded expectation at {d}\n      expect: {}\n      got:    {}",
+                                short(expect),
+                                short(&c)
+                            ));
+                        }
+                        if let Some(name) = &step.bind {
+                            binds.insert(name.clone(), out.to_json());
+                        }
+                        results.push(c);
+                    }
+                    Err(f) => {
+                        report.faults.push(format!("{at}: {}", fault_text(side, &f)));
+                        break;
+                    }
+                }
+            }
+            let mut states = Vec::new();
+            for kind in &kinds {
+                states.push(self.state(spec, kind, &ns)?);
+            }
+            self.cleanup(&kinds, &ns)?;
+            runs.push((results, states));
+        }
+        if let [(r1, s1), (r2, s2)] = runs.as_slice() {
+            for (i, (x, y)) in r1.iter().zip(r2).enumerate() {
+                if let Some(d) = diff(x, y) {
+                    report.differences.push(format!(
+                        "step {}: php→rust and rust→php disagree at {d}\n      a=php:  {}\n      a=rust: {}",
+                        i + 1,
+                        short(x),
+                        short(y)
+                    ));
+                }
+            }
+            for (kind, (x, y)) in kinds.iter().zip(s1.iter().zip(s2)) {
+                if let Some(d) = diff(x, y) {
+                    report.differences.push(format!("`{kind}` state disagrees between directions at {d}"));
+                }
+            }
+            // Side a is PHP in the first run and Rust in the second: each
+            // step's PHP and Rust results, fed by the other runtime's writes.
+            for (i, step) in case.steps.iter().enumerate() {
+                let (Some(x), Some(y)) = (r1.get(i), r2.get(i)) else {
+                    break;
+                };
+                let (php, rust) = if step.side.as_deref() == Some("a") { (x, y) } else { (y, x) };
+                let differs = diff(php, rust);
+                let off = step.expect.as_ref().and_then(|e| off_record(e, php, &step_masks(spec, step)));
+                self.trace_step(|| {
+                    json!({
+                        "op": step.op,
+                        "side": step.side,
+                        "args": clip(&step.args),
+                        "bind": step.bind,
+                        "php": clip(php),
+                        "rust": clip(rust),
+                        "expect": step.expect.as_ref().map(clip),
+                        "status": if differs.is_some() { "differ" } else if off.is_some() { "expect" } else { "match" },
+                        "at": differs.or(off),
+                    })
+                });
+            }
+        }
+        Ok(report)
+    }
+
+    /// Runs the cases on PHP only and writes the results as `expect`.
+    pub fn record_lib(&mut self, lib: &str, filter: Option<&str>) -> Result<(usize, usize, Vec<String>), String> {
+        self.restart();
+        let spec = spec::load(&self.cfg.root, lib)?;
+        let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
+        let (mut written, mut changed, mut faults) = (0, 0, Vec::new());
+        let scrub = Scrubber::new(&spec.scrub);
+        for file in &files {
+            let mut results: Vec<Vec<Option<Value>>> = Vec::new();
+            for case in &file.cases {
+                let name = label(lib, file, case);
+                if filter.is_some_and(|f| !cases::selected(f, &name)) || cases::unmet(&case.requires).is_some() {
+                    results.push(vec![None; case.steps.len()]);
+                    continue;
+                }
+                let kinds = Self::state_kinds(&spec, case);
+                let ns = self.ns('p');
+                self.cleanup(&kinds, &ns)?;
+                self.configure("php", &ns)?;
+                let mut binds = HashMap::new();
+                let mut out = Vec::new();
+                for (i, step) in case.steps.iter().enumerate() {
+                    let args = match substitute(&step.args, &binds, &ns) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            faults.push(format!("{name}: step {} `{}`: {e}", i + 1, step.op));
+                            break;
+                        }
+                    };
+                    match self.driver("php")?.call(lib, &step.op, &args)? {
+                        Ok(o) => {
+                            let c = comparable(&o, &ns, &step_masks(&spec, step), &scrub);
+                            if step.expect.as_ref() != Some(&c) {
+                                changed += 1;
+                            }
+                            if let Some(name) = &step.bind {
+                                binds.insert(name.clone(), o.to_json());
+                            }
+                            written += 1;
+                            out.push(Some(c));
+                        }
+                        Err(f) => {
+                            faults.push(format!("{name}: step {} `{}`: {}", i + 1, step.op, fault_text("php", &f)));
+                            out.resize(case.steps.len(), None);
+                            break;
+                        }
+                    }
+                }
+                out.resize(case.steps.len(), None);
+                self.cleanup(&kinds, &ns)?;
+                results.push(out);
+            }
+            // A file none of whose cases ran stays untouched, so records of
+            // disjoint filters can run side by side.
+            if results.iter().any(|r| r.iter().any(Option::is_some)) {
+                cases::write_expectations(file, &results)?;
+            }
+        }
+        Ok((written, changed, faults))
+    }
+
+    /// Generates inputs for every fuzz profile and compares both runtimes.
+    pub fn fuzz_lib(&mut self, lib: &str, opts: &FuzzOptions) -> Result<Report, String> {
+        self.restart();
+        let spec = spec::load(&self.cfg.root, lib)?;
+        self.build_tasks(&spec)?;
+        let (ns_p, ns_r) = (self.ns('p'), self.ns('r'));
+        self.configure("php", &ns_p)?;
+        self.configure("rust", &ns_r)?;
+        let mut report = Report::default();
+        let scrub = Scrubber::new(&spec.scrub);
+        for (op_name, op) in &spec.ops {
+            if opts.op.as_ref().is_some_and(|o| o != op_name) {
+                continue;
+            }
+            for (pi, profile) in op.fuzz.iter().enumerate() {
+                let title = if profile.name.is_empty() {
+                    format!("{op_name}[{pi}]")
+                } else {
+                    format!("{op_name}[{}]", profile.name)
+                };
+                if profile.isolate {
+                    self.restart();
+                    self.configure("php", &ns_p)?;
+                    self.configure("rust", &ns_r)?;
+                }
+                let scrub = if profile.scrub.is_empty() {
+                    scrub.clone()
+                } else {
+                    Scrubber::new(&[spec.scrub.as_slice(), profile.scrub.as_slice()].concat())
+                };
+                let iterations = opts.iterations.unwrap_or(profile.iterations);
+                let mut rng = Rng::new(opts.seed ^ fnv(&title));
+                let masks: Vec<&Mask> = op.mask.iter().collect();
+                let mut done = 0u64;
+                let mut stop = false;
+                while done < iterations && !stop {
+                    let n = (iterations - done).min(256);
+                    let mut batch = Vec::with_capacity(n as usize);
+                    for _ in 0..n {
+                        batch.push((op_name.clone(), generate::generate(&profile.args, &spec.generators, &mut rng)?));
+                    }
+                    // COMPAT_FUZZ_DUMP=<file>: every generated input, as JSON lines, to replay a crash.
+                    if let Ok(path) = std::env::var("COMPAT_FUZZ_DUMP") {
+                        use std::io::Write as _;
+                        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                            for (op, args) in &batch {
+                                let _ = writeln!(f, "{}", json!({ "title": title, "op": op, "args": args }));
+                            }
+                        }
+                    }
+                    // A driver that dies on a batch is replayed input by
+                    // input to name the one that kills it.
+                    let rp = self.driver("php")?.batch(lib, &batch);
+                    let rp = match rp {
+                        Ok(rp) => rp,
+                        Err(e) => {
+                            report.faults.push(self.killer("php", &ns_p, &ns_r, lib, &title, done, &batch, &e));
+                            break;
+                        }
+                    };
+                    let rr = self.driver("rust")?.batch(lib, &batch);
+                    let rr = match rr {
+                        Ok(rr) => rr,
+                        Err(e) => {
+                            report.faults.push(self.killer("rust", &ns_p, &ns_r, lib, &title, done, &batch, &e));
+                            break;
+                        }
+                    };
+                    for (k, ((_, args), (p, r))) in batch.iter().zip(rp.into_iter().zip(rr)).enumerate() {
+                        let (p, r) = match (p, r) {
+                            (Ok(p), Ok(r)) => (p, r),
+                            (p, r) => {
+                                let side = if p.is_err() { "php" } else { "rust" };
+                                let f = p.err().or(r.err()).unwrap_or(Fault::new("?"));
+                                report.faults.push(format!(
+                                    "{lib} fuzz {title} input {}: {} (fix the generator or the adapter)\n      args: {}",
+                                    done + k as u64 + 1,
+                                    fault_text(side, &f),
+                                    short(args)
+                                ));
+                                stop = true;
+                                break;
+                            }
+                        };
+                        let (cp, cr) = (comparable(&p, &ns_p, &masks, &scrub), comparable(&r, &ns_r, &masks, &scrub));
+                        if diff(&cp, &cr).is_some() {
+                            let (min_args, mp, mr) =
+                                self.shrink(lib, op_name, args.clone(), (cp, cr), (&ns_p, &ns_r), &masks, &scrub)?;
+                            let d = diff(&mp, &mr).unwrap_or_default();
+                            report.differences.push(format!(
+                                "{lib} fuzz {title} (seed {}, input {}): php and rust differ at {d}\n      args: {}\n      php:  {}\n      rust: {}",
+                                opts.seed,
+                                done + k as u64 + 1,
+                                short(&min_args),
+                                short(&mp),
+                                short(&mr)
+                            ));
+                            if opts.save {
+                                save_regression(&self.cfg.root, lib, op_name, &min_args, &mp)?;
+                            }
+                            stop = true;
+                            break;
+                        }
+                        report.passed += 1;
+                    }
+                    done += n;
+                }
+                if let Some(t) = &mut self.trace {
+                    let problem = if stop { report.differences.last().or(report.faults.last()).cloned() } else { None };
+                    t.fuzz.push(json!({
+                        "op": op_name,
+                        "profile": if profile.name.is_empty() { pi.to_string() } else { profile.name.clone() },
+                        "inputs": done,
+                        "iterations": profile.iterations,
+                        "isolate": profile.isolate,
+                        "ok": !stop,
+                        "problem": problem,
+                    }));
+                }
+                if self.verbose || !stop {
+                    eprintln!(
+                        "  {lib} fuzz {title}: {done} inputs{}",
+                        if stop { ", stopped at the first problem" } else { ", no differences" }
+                    );
+                }
+            }
+        }
+        Ok(report)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn shrink(
+        &mut self,
+        lib: &str,
+        op: &str,
+        mut args: Value,
+        mut outs: (Value, Value),
+        (ns_p, ns_r): (&str, &str),
+        masks: &[&Mask],
+        scrub: &Scrubber,
+    ) -> Result<(Value, Value, Value), String> {
+        // COMPAT_NO_SHRINK=1 reports the generated input as it is: shrinking
+        // keeps any difference, which can hide the one that was found.
+        let mut budget = if std::env::var_os("COMPAT_NO_SHRINK").is_some() { 0 } else { 400 };
+        'outer: loop {
+            for candidate in generate::shrink(&args) {
+                if budget == 0 {
+                    break 'outer;
+                }
+                budget -= 1;
+                let (php, rust) = self.drivers()?;
+                let p = php.call(lib, op, &candidate)?;
+                let r = rust.call(lib, op, &candidate)?;
+                if let (Ok(p), Ok(r)) = (p, r) {
+                    let (cp, cr) = (comparable(&p, ns_p, masks, scrub), comparable(&r, ns_r, masks, scrub));
+                    if diff(&cp, &cr).is_some() {
+                        args = candidate;
+                        outs = (cp, cr);
+                        continue 'outer;
+                    }
+                }
+            }
+            break;
+        }
+        Ok((args, outs.0, outs.1))
+    }
+
+    /// After `side`'s driver died on a fuzz batch: restarts the drivers and
+    /// replays the batch on `side` one input at a time, naming the input that
+    /// kills it again (the drivers are restarted after it as well). A driver
+    /// whose heap an earlier input corrupted dies on a later, harmless one:
+    /// `COMPAT_FUZZ_DUMP` keeps the inputs to replay them one by one.
+    #[allow(clippy::too_many_arguments)]
+    fn killer(
+        &mut self,
+        side: &'static str,
+        ns_p: &str,
+        ns_r: &str,
+        lib: &str,
+        title: &str,
+        done: u64,
+        batch: &[(String, Value)],
+        error: &str,
+    ) -> String {
+        let reset = |e: &mut Self| {
+            e.restart();
+            e.configure("php", ns_p).and_then(|()| e.configure("rust", ns_r))
+        };
+        let mut found = None;
+        if reset(self).is_ok() {
+            for (k, (op, args)) in batch.iter().enumerate() {
+                let died = match self.driver(side) {
+                    Ok(d) => d.call(lib, op, args).is_err(),
+                    Err(_) => true,
+                };
+                if died {
+                    found = Some((k, args.clone()));
+                    break;
+                }
+            }
+        }
+        let _ = reset(self);
+        match found {
+            Some((k, args)) => format!(
+                "{lib} fuzz {title} input {}: the {side} driver dies at it, after the inputs before it in the batch ({error})\n      args: {}",
+                done + k as u64 + 1,
+                short(&args)
+            ),
+            None => format!(
+                "{lib} fuzz {title}: the {side} driver died on a batch ({error}), but no single input of it kills it again"
+            ),
+        }
+    }
+
+    /// Runs one operation on the chosen runtimes and returns their results.
+    pub fn call(
+        &mut self,
+        lib: &str,
+        op: &str,
+        args: &Value,
+        sides: &[&'static str],
+    ) -> Result<Vec<(String, Value)>, String> {
+        let mut out = Vec::new();
+        for side in sides {
+            let ns = self.ns(side.chars().next().unwrap_or('x'));
+            self.configure(side, &ns)?;
+            let args = substitute(args, &HashMap::new(), &ns)?;
+            let v = match self.driver(side)?.call(lib, op, &args)? {
+                Ok(o) => normalize(&o.to_json(), &ns),
+                Err(f) => json!({ "$fault": f.0 }),
+            };
+            out.push(((*side).to_owned(), v));
+        }
+        Ok(out)
+    }
+
+    /// The PHP library's public API, by reflection.
+    /// Each PHP symbol's signature, docblock and location (the PHP driver's
+    /// `$docs`), for `compat report`.
+    pub fn php_docs(&mut self, symbols: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$docs", &json!({ "symbols": symbols }))? {
+            Ok(Outcome::Ok(docs)) => Ok(docs),
+            other => Err(format!("php $docs failed: {other:?}")),
+        }
+    }
+
+    pub fn inventory(&mut self, spec: &Spec) -> Result<Vec<String>, String> {
+        self.inventory_of(&spec.php.src)
+    }
+
+    /// The public PHP API declared under `src` (directories from the repository root).
+    pub fn inventory_of(&mut self, src: &[String]) -> Result<Vec<String>, String> {
+        match self.driver("php")?.call("", "$inventory", &json!({ "src": src }))? {
+            Ok(Outcome::Ok(Value::Array(items))) => {
+                Ok(items.into_iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
+            }
+            other => Err(format!("php $inventory failed: {other:?}")),
+        }
+    }
+
+    /// PHP test files (`*Test.php`, `*Tests.php`) under `dirs`, as the PHP
+    /// driver's image has them (repository paths): for directories that only
+    /// exist there, such as `vendor/`.
+    pub fn php_tests(&mut self, dirs: &[String]) -> Result<Vec<String>, String> {
+        match self.driver("php")?.call("", "$tests", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(Value::Array(items))) => {
+                Ok(items.into_iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
+            }
+            other => Err(format!("php $tests failed: {other:?}")),
+        }
+    }
+
+    /// What task discovery reads of the PHP package directories `dirs` in the
+    /// PHP driver's image (see [`super::tasks::discover_listed`]), by directory.
+    pub fn php_programs(&mut self, dirs: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$programs", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            other => Err(format!("php $programs failed: {other:?}")),
+        }
+    }
+
+    /// The PHP files under `dirs` in the PHP driver's image, by directory then
+    /// relative path: for packages only installed there, such as `vendor/`.
+    pub fn php_sources(&mut self, dirs: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$sources", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            other => Err(format!("php $sources failed: {other:?}")),
+        }
+    }
+
+    /// `$bench` on one runtime: `{}` lists `lib`'s benchmarks, `{"name": ...}` times one.
+    pub fn bench(&mut self, side: &'static str, lib: &str, args: &Value) -> Result<Value, String> {
+        let ns = self.ns(side.chars().next().unwrap_or('x'));
+        self.configure(side, &ns)?;
+        match self.driver(side)?.call(lib, "$bench", args)? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            Ok(Outcome::Err { class, message }) => Err(format!("{side} {lib} $bench: {class}: {message}")),
+            Err(f) => Err(format!("{side} {lib} $bench: {}", f.0)),
+        }
+    }
+
+    /// What a driver reports about itself (`$hello` without the operations).
+    pub fn hello_info(&mut self, side: &'static str) -> Result<Value, String> {
+        match self.driver(side)?.call("", "$hello", &json!({}))? {
+            Ok(Outcome::Ok(mut v)) => {
+                if let Some(o) = v.as_object_mut() {
+                    o.remove("libs");
+                }
+                Ok(v)
+            }
+            other => Err(format!("{side} $hello failed: {other:?}")),
+        }
+    }
+
+    /// Operations each driver implements for `lib`.
+    pub fn hello(&mut self, side: &'static str, lib: &str) -> Result<Vec<String>, String> {
+        match self.driver(side)?.call("", "$hello", &json!({}))? {
+            Ok(Outcome::Ok(v)) => Ok(v
+                .get("libs")
+                .and_then(|l| l.get(lib))
+                .and_then(Value::as_array)
+                .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+                .unwrap_or_default()),
+            other => Err(format!("{side} $hello failed: {other:?}")),
+        }
+    }
+}
+
+fn fnv(s: &str) -> u64 {
+    s.bytes().fold(0xcbf2_9ce4_8422_2325u64, |h, b| (h ^ b as u64).wrapping_mul(0x100_0000_01b3))
+}
+
+fn save_regression(root: &Path, lib: &str, op: &str, args: &Value, expect: &Value) -> Result<(), String> {
+    let path = spec::lib_dir(root, lib).join("cases").join("fuzz.json");
+    let mut file: Value = std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_else(|| json!({ "source": "fuzz", "cases": [] }));
+    let cases = file.get_mut("cases").and_then(Value::as_array_mut).ok_or("bad fuzz.json")?;
+    let name = format!("{op} {}", short(args));
+    if !cases.iter().any(|c| c.get("name").and_then(Value::as_str) == Some(name.as_str())) {
+        cases.push(json!({ "name": name, "op": op, "args": args, "expect": expect }));
+    }
+    std::fs::create_dir_all(path.parent().ok_or("bad path")?).map_err(|e| e.to_string())?;
+    let mut text = serde_json::to_string_pretty(&file).map_err(|e| e.to_string())?;
+    text.push('\n');
+    std::fs::write(&path, text).map_err(|e| e.to_string())
+}
+
+/// Replays recorded expectations against the Rust adapter in-process, with no
+/// PHP: what `cargo test -p compat` runs. Cases needing services
+/// ([`Spec::case_needs_services`]) are skipped unless `COMPAT_SERVICES=1`.
+pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
+    let spec = spec::load(&cfg.root, lib)?;
+    let services = std::env::var("COMPAT_SERVICES").is_ok_and(|v| v == "1");
+    let mut report = Report::default();
+    let scrub = Scrubber::new(&spec.scrub);
+    // `COMPAT_CASE` keeps only the cases whose label contains it.
+    let only = std::env::var("COMPAT_CASE").ok().filter(|f| !f.is_empty());
+    let mut counter = 0;
+    for path in cases::paths(&spec::lib_dir(&cfg.root, lib).join("cases")) {
+        let file = &cases::load_file(&path)?;
+        for case in &file.cases {
+            if only.as_deref().is_some_and(|f| !label(lib, file, case).contains(f)) {
+                continue;
+            }
+            let kinds = Engine::state_kinds(&spec, case);
+            // Replay runs the adapters in this process, not in a driver.
+            if (spec.case_needs_services(case, &kinds) && !services)
+                || cases::unmet(&case.requires).is_some()
+                || case.requires.iter().any(|r| r == "driver-process")
+            {
+                continue;
+            }
+            counter += 1;
+            // The width of `Engine::ns()`'s: a recorded result that depends on
+            // the namespace's length (a message size, a cut-off server message)
+            // replays unchanged.
+            let ns = format!("cx{:05}{counter:06}r", std::process::id() % 100_000);
+            for k in &kinds {
+                snapshot::cleanup(cfg, k, &ns)?;
+            }
+            let mut session = Session::new(&ns, cfg.services_for("rust"));
+            let mut binds = HashMap::new();
+            let mut failed = false;
+            for (i, step) in case.steps.iter().enumerate() {
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{}: step {}: {e}", label(lib, file, case), i + 1));
+                        failed = true;
+                        break;
+                    }
+                };
+                let request = json!({ "lib": lib, "op": step.op, "args": args });
+                let result: OpResult = crate::driver::handle(&request, &mut session).await;
+                match result {
+                    Ok(out) => {
+                        let masks = step_masks(&spec, step);
+                        let c = comparable(&out, &ns, &masks, &scrub);
+                        if let Some(expect) = &step.expect
+                            && let Some(d) = off_record(expect, &c, &masks)
+                        {
+                            report.differences.push(format!(
+                                "{}: step {} `{}` differs from PHP's recorded result at {d}\n      expect: {}\n      rust:   {}",
+                                label(lib, file, case),
+                                i + 1,
+                                step.op,
+                                short(expect),
+                                short(&c)
+                            ));
+                            failed = true;
+                        }
+                        if let Some(name) = &step.bind {
+                            binds.insert(name.clone(), out.to_json());
+                        }
+                    }
+                    Err(f) => {
+                        report.faults.push(format!(
+                            "{}: step {}: {}",
+                            label(lib, file, case),
+                            i + 1,
+                            fault_text("rust", &f)
+                        ));
+                        failed = true;
+                        break;
+                    }
+                }
+            }
+            for k in &kinds {
+                snapshot::cleanup(cfg, k, &ns)?;
+            }
+            if !failed {
+                report.passed += 1;
+            }
+        }
+    }
+    Ok(report)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn step(expect: Value) -> Step {
+        Step {
+            op: "database.create_collection".into(),
+            args: json!({}),
+            bind: None,
+            expect: Some(expect),
+            side: None,
+            mask: None,
+        }
+    }
+
+    fn case(steps: Vec<Step>) -> Case {
+        Case { name: "c".into(), steps, interop: false, state: None, short: false, requires: Vec::new() }
+    }
+
+    #[test]
+    fn a_case_recorded_with_a_flake_is_not_retried() {
+        let spec: Spec = serde_json::from_value(json!({
+            "lib": "x", "php": { "src": [] }, "ops": {},
+            "flakes": { "the transaction was lost before it could commit": "load" },
+        }))
+        .unwrap();
+        let lost = json!({ "$error": { "class": "Utopia\\Database\\Exception\\Transaction",
+            "message": "Failed to execute transaction: the transaction was lost before it could commit" } });
+
+        assert!(expects_flake(&spec, &case(vec![step(json!(true)), step(lost)])));
+        assert!(!expects_flake(
+            &spec,
+            &case(vec![step(json!(true)), step(json!({ "$error": { "message": "other" } }))])
+        ));
+    }
+}

@@ -1,0 +1,238 @@
+{
+  "source": "packages/queue/tests/RedisRetryTest.php",
+  "cases": [
+    {
+      "name": "testJobStaysFailedWhenTheSweepDiesBeforeMovingIt: requeued",
+      "steps": [
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "ACL",
+              "SETUSER",
+              "${ns}",
+              "on",
+              ">sweep",
+              "~*",
+              "&*",
+              "+@all",
+              "-evalsha",
+              "-eval"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis",
+            "user": "${ns}",
+            "password": "sweep"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "receive": {
+              "$ref": "c"
+            },
+            "commands": {
+              "$ref": "c"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.failed.mail",
+              "job-1"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.jobs.mail.job-1",
+              "{\"pid\":\"job-1\",\"queue\":\"mail\",\"timestamp\":1699999940,\"payload\":{\"to\":\"a@example.com\"},\"attempts\":0}"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOPERM User ${ns} has no permissions to run the 'evalsha' command"
+            }
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.mail",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "job-1"
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "ACL",
+              "DELUSER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testJobStaysFailedWhenTheSweepDiesBeforeMovingIt: parked on the dead queue",
+      "steps": [
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "ACL",
+              "SETUSER",
+              "${ns}",
+              "on",
+              ">sweep",
+              "~*",
+              "&*",
+              "+@all",
+              "-evalsha",
+              "-eval"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis",
+            "user": "${ns}",
+            "password": "sweep"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "receive": {
+              "$ref": "c"
+            },
+            "commands": {
+              "$ref": "c"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.failed.mail",
+              "job-1"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.jobs.mail.job-1",
+              "{\"pid\":\"job-1\",\"queue\":\"mail\",\"timestamp\":1699999940,\"payload\":{\"to\":\"a@example.com\"},\"attempts\":3}"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            },
+            "max_attempts": 3
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOPERM User ${ns} has no permissions to run the 'evalsha' command"
+            }
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.mail",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "job-1"
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "ACL",
+              "DELUSER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

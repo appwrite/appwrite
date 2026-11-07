@@ -1,0 +1,1448 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "query and response",
+      "steps": [
+        {
+          "op": "message.query",
+          "args": {
+            "question": {
+              "name": "Example.COM",
+              "type": 28
+            },
+            "id": 0
+          },
+          "expect": {
+            "header": {
+              "id": 0,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 28,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.query",
+          "args": {
+            "question": {
+              "name": "example.com",
+              "type": 15
+            },
+            "id": 65535,
+            "recursionDesired": false
+          },
+          "expect": {
+            "header": {
+              "id": 65535,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.query",
+          "args": {
+            "question": {
+              "name": "example.com",
+              "type": 1
+            }
+          },
+          "mask": {
+            "paths": [
+              "/header/id"
+            ],
+            "reason": "Message::query() draws a random id"
+          },
+          "expect": {
+            "header": {
+              "id": "<masked>",
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 0,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 1,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 1,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 2,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 2,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 3,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 3,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 4,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 4,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 5,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 5,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 15,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 15,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 2,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 16,
+            "recursionAvailable": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Response code must be 0-15"
+            }
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 16,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Opcode must be 0-15"
+            }
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 3,
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1
+              }
+            ],
+            "authoritative": true
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NXDOMAIN requires SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 3,
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1
+              }
+            ],
+            "authoritative": true,
+            "truncated": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": true,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 0,
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1
+              }
+            ],
+            "authoritative": true
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NODATA should include SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 0,
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1
+              }
+            ],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            ],
+            "authoritative": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.response",
+          "args": {
+            "header": {
+              "id": 7,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "responseCode": 2,
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1
+              }
+            ],
+            "authoritative": true
+          },
+          "expect": {
+            "header": {
+              "id": 7,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 2,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "a.test",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.new",
+          "args": {
+            "message": {
+              "header": {
+                "id": 1,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": false,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 0,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              }
+            }
+          },
+          "expect": {
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode and encode edge cases",
+      "steps": [
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid DNS response: header too short"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": ""
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+            "message": "Invalid DNS response: header too short",
+            "code": 0,
+            "header": null
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "header": {
+              "id": 0,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": null
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid DNS response: header too short"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+            "message": "Invalid DNS response: header too short",
+            "code": 0,
+            "header": null
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": "\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": "\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+            "message": "Unexpected end of data while decoding domain name",
+            "code": 1,
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAGAAAAAAAAAAQAA"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAGAAAAAAAAAAQAA"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+            "message": "Unexpected end of data while decoding domain name",
+            "code": 1,
+            "header": {
+              "id": 1,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAEAAAABAAAAAAAAwAwAAQAB"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+              "message": "Compression pointer must reference earlier position in packet"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAEAAAABAAAAAAAAwAwAAQAB"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+            "message": "Compression pointer must reference earlier position in packet",
+            "code": 1,
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAEAAAABAAAAAAAAAWEAAAEAAf8="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+              "message": "Invalid packet length"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAEAAAABAAAAAAAAAWEAAAEAAf8="
+            }
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+            "message": "Invalid packet length",
+            "code": 1,
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAwAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NXDOMAIN requires SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAwAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NXDOMAIN requires SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAGGAwAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "header": {
+              "id": 1,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": true,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAGGAwAAAAAAAAAA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAAAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NODATA should include SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAAAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "NODATA should include SOA in authority"
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAAAAAAEAAAAAAWEAAAYAAQAAAAEAAQA="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "AAGEAAAAAAEAAAAAAWEAAAYAAQAAAAEAAQA="
+            }
+          },
+          "expect": {
+            "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+            "message": "Unexpected end of data while decoding domain name",
+            "code": 1,
+            "header": {
+              "id": 1,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          }
+        },
+        {
+          "op": "message.decode",
+          "args": {
+            "packet": {
+              "$bytes": "/////wAAAAAAAAAA"
+            }
+          },
+          "expect": {
+            "header": {
+              "id": 65535,
+              "isResponse": true,
+              "opcode": 15,
+              "authoritative": true,
+              "truncated": true,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 15,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "message.decode_error",
+          "args": {
+            "packet": {
+              "$bytes": "/////wAAAAAAAAAA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "maxSize": 0
+          },
+          "expect": "\u0000\t\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0007example\u0003com\u0000\u0000\u0001\u0000\u0001"
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "maxSize": 12
+          },
+          "expect": "\u0000\t\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0007example\u0003com\u0000\u0000\u0001\u0000\u0001"
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a..b",
+                  "type": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "bad"
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: bad"
+            }
+          }
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "authority": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "bad"
+                }
+              ],
+              "additional": []
+            },
+            "maxSize": 40
+          },
+          "expect": {
+            "$bytes": "AAmDAAABAAAAAAAAAWEEdGVzdAAAAQAB"
+          }
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 1
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "example.com",
+                  "type": 6,
+                  "ttl": 3600,
+                  "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+                }
+              ],
+              "additional": [
+                {
+                  "name": "x.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ]
+            },
+            "maxSize": 40
+          },
+          "expect": {
+            "$bytes": "AAmBAwABAAAAAAAAAWEEdGVzdAAAAQAB"
+          }
+        },
+        {
+          "op": "message.encode",
+          "args": {
+            "message": {
+              "header": {
+                "id": 9,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 1
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "example.com",
+                  "type": 6,
+                  "ttl": 3600,
+                  "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+                }
+              ],
+              "additional": [
+                {
+                  "name": "x.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ]
+            },
+            "maxSize": 120
+          },
+          "expect": {
+            "$bytes": "AAmFAwABAAAAAQAAAWEEdGVzdAAAAQABB2V4YW1wbGUDY29tAAAGAAEAAA4QAD0DbnMxB2V4YW1wbGUDY29tAApob3N0bWFzdGVyB2V4YW1wbGUDY29tAAAAAAEAABwgAAAOEAASdQAAAAEs"
+          }
+        }
+      ]
+    }
+  ]
+}

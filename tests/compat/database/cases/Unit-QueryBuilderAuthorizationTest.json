@@ -1,0 +1,3580 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/QueryBuilderAuthorizationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryBuilderAuthorizationTest::testDirectReadsHideWhatBobMayNotRead",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o180"
+          },
+          "bind": "s1540",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o181"
+          },
+          "bind": "s1541",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o181"
+              },
+              "cache": "none"
+            },
+            "as": "o182"
+          },
+          "bind": "s1542",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o180"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "builder"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "authorization"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o183"
+          },
+          "bind": "s1546",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o183"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o180"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o184"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "users",
+                      "args": {},
+                      "as": "o185"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o185"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "posts",
+                        "attributes": [
+                          {
+                            "$obj": "o184"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"users\")"
+                        ],
+                        "documentSecurity": true
+                      },
+                      "as": "o186"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o182"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o186"
+                        }
+                      },
+                      "as": "o187"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o188"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "private",
+                        "attributes": [
+                          {
+                            "$obj": "o188"
+                          }
+                        ],
+                        "permissions": [],
+                        "documentSecurity": false
+                      },
+                      "as": "o189"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o182"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o189"
+                        }
+                      },
+                      "as": "o190"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o191"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o191"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o192"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "update",
+                      "args": {
+                        "role": {
+                          "$obj": "o192"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "secret",
+                          "$permissions": [
+                            "read(\"user:alice\")",
+                            "update(\"user:alice\")"
+                          ],
+                          "title": "alice only"
+                        }
+                      },
+                      "as": "o193"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o182"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "posts",
+                        "document": {
+                          "$obj": "o193"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "hidden",
+                          "title": "private row"
+                        }
+                      },
+                      "as": "o194"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o182"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "private",
+                        "document": {
+                          "$obj": "o194"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1549",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"users\")",
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"user:alice\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "update(\"user:alice\")",
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only",
+                        "$collection": "posts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row",
+                        "$collection": "private",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o195"
+          },
+          "bind": "s1550",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o195"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o180"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o196"
+          },
+          "bind": "s1553",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o180"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "bob"
+            },
+            "as": "o197"
+          },
+          "bind": "s1556",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o197"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:bob"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o180"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:bob"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "posts",
+              "id": "secret"
+            },
+            "as": "o198"
+          },
+          "bind": "s1560",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o198"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "find",
+            "args": {
+              "collection": "private"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'read'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryBuilderAuthorizationTest::testFromIsRefusedWhileAuthorizationIsEnabled",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o199"
+          },
+          "bind": "s1563",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o200"
+          },
+          "bind": "s1564",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o200"
+              },
+              "cache": "none"
+            },
+            "as": "o201"
+          },
+          "bind": "s1565",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o199"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "builder"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "authorization"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o202"
+          },
+          "bind": "s1569",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o202"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o203"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "users",
+                      "args": {},
+                      "as": "o204"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o204"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "posts",
+                        "attributes": [
+                          {
+                            "$obj": "o203"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"users\")"
+                        ],
+                        "documentSecurity": true
+                      },
+                      "as": "o205"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o201"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o205"
+                        }
+                      },
+                      "as": "o206"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o207"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "private",
+                        "attributes": [
+                          {
+                            "$obj": "o207"
+                          }
+                        ],
+                        "permissions": [],
+                        "documentSecurity": false
+                      },
+                      "as": "o208"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o201"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o208"
+                        }
+                      },
+                      "as": "o209"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o210"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o210"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o211"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "update",
+                      "args": {
+                        "role": {
+                          "$obj": "o211"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "secret",
+                          "$permissions": [
+                            "read(\"user:alice\")",
+                            "update(\"user:alice\")"
+                          ],
+                          "title": "alice only"
+                        }
+                      },
+                      "as": "o212"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o201"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "posts",
+                        "document": {
+                          "$obj": "o212"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "hidden",
+                          "title": "private row"
+                        }
+                      },
+                      "as": "o213"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o201"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "private",
+                        "document": {
+                          "$obj": "o213"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1572",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"users\")",
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"user:alice\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "update(\"user:alice\")",
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only",
+                        "$collection": "posts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row",
+                        "$collection": "private",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o214"
+          },
+          "bind": "s1573",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o214"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o215"
+          },
+          "bind": "s1576",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "bob"
+            },
+            "as": "o216"
+          },
+          "bind": "s1579",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o216"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:bob"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:bob"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "from",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "from",
+            "args": {
+              "collection": "private"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryBuilderAuthorizationTest::testStatementsBuiltInsideSkipDoNotRunOutsideIt",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o217"
+          },
+          "bind": "s1584",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o218"
+          },
+          "bind": "s1585",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o218"
+              },
+              "cache": "none"
+            },
+            "as": "o219"
+          },
+          "bind": "s1586",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o217"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "builder"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "authorization"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o220"
+          },
+          "bind": "s1590",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o220"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o221"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "users",
+                      "args": {},
+                      "as": "o222"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o222"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "posts",
+                        "attributes": [
+                          {
+                            "$obj": "o221"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"users\")"
+                        ],
+                        "documentSecurity": true
+                      },
+                      "as": "o223"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o223"
+                        }
+                      },
+                      "as": "o224"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o225"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "private",
+                        "attributes": [
+                          {
+                            "$obj": "o225"
+                          }
+                        ],
+                        "permissions": [],
+                        "documentSecurity": false
+                      },
+                      "as": "o226"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o226"
+                        }
+                      },
+                      "as": "o227"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o228"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o228"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o229"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "update",
+                      "args": {
+                        "role": {
+                          "$obj": "o229"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "secret",
+                          "$permissions": [
+                            "read(\"user:alice\")",
+                            "update(\"user:alice\")"
+                          ],
+                          "title": "alice only"
+                        }
+                      },
+                      "as": "o230"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "posts",
+                        "document": {
+                          "$obj": "o230"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "hidden",
+                          "title": "private row"
+                        }
+                      },
+                      "as": "o231"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "private",
+                        "document": {
+                          "$obj": "o231"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1593",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"users\")",
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"user:alice\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "update(\"user:alice\")",
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only",
+                        "$collection": "posts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row",
+                        "$collection": "private",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o232"
+          },
+          "bind": "s1594",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o232"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o233"
+          },
+          "bind": "s1597",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o233"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "bob"
+            },
+            "as": "o234"
+          },
+          "bind": "s1600",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o234"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:bob"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:bob"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "posts"
+                      },
+                      "as": "o235"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o235"
+                      },
+                      "method": "select",
+                      "args": {
+                        "columns": [
+                          "$id",
+                          "title"
+                        ]
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1603",
+          "expect": {
+            "result": {
+              "$builder": true
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$builder": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o235"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o236"
+          },
+          "bind": "s1604",
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT `_uid`, `title` FROM `authorization_posts`",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o217"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o219"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "posts"
+                      },
+                      "as": "o237"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o237"
+                      },
+                      "method": "set",
+                      "args": {
+                        "row": {
+                          "title": "defaced"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "equal",
+                      "args": {
+                        "attribute": "$id",
+                        "values": [
+                          "secret"
+                        ]
+                      },
+                      "as": "o238"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o237"
+                      },
+                      "method": "filter",
+                      "args": {
+                        "queries": [
+                          {
+                            "$obj": "o238"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o237"
+                      },
+                      "method": "update",
+                      "args": {},
+                      "as": "o239"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1605",
+          "expect": {
+            "result": {
+              "$value": "Query\\Builder\\Statement",
+              "fields": {
+                "query": "UPDATE `authorization_posts` SET `title` = ? WHERE `_uid` COLLATE NOCASE IN (?)",
+                "bindings": [
+                  "defaced",
+                  "secret"
+                ],
+                "readOnly": false,
+                "namedBindings": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "$id",
+                        "values": [
+                          "secret"
+                        ]
+                      }
+                    },
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$value": "Query\\Builder\\Statement",
+                      "fields": {
+                        "query": "UPDATE `authorization_posts` SET `title` = ? WHERE `_uid` COLLATE NOCASE IN (?)",
+                        "bindings": [
+                          "defaced",
+                          "secret"
+                        ],
+                        "readOnly": false,
+                        "namedBindings": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o235"
+            },
+            "method": "execute",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o236"
+            },
+            "method": "execute",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "query",
+            "args": {
+              "query": {
+                "$obj": "o236"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "query",
+            "args": {
+              "query": {
+                "$obj": "o235"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o239"
+            },
+            "method": "execute",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "mutate",
+            "args": {
+              "query": {
+                "$obj": "o239"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryBuilderAuthorizationTest::testTheBuilderReadsAndWritesPastPermissionsInsideSkip",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o240"
+          },
+          "bind": "s1612",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o241"
+          },
+          "bind": "s1613",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o241"
+              },
+              "cache": "none"
+            },
+            "as": "o242"
+          },
+          "bind": "s1614",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o240"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "builder"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "authorization"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o243"
+          },
+          "bind": "s1618",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o243"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o244"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "users",
+                      "args": {},
+                      "as": "o245"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o245"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "posts",
+                        "attributes": [
+                          {
+                            "$obj": "o244"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"users\")"
+                        ],
+                        "documentSecurity": true
+                      },
+                      "as": "o246"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o246"
+                        }
+                      },
+                      "as": "o247"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 64,
+                        "required": true
+                      },
+                      "as": "o248"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "private",
+                        "attributes": [
+                          {
+                            "$obj": "o248"
+                          }
+                        ],
+                        "permissions": [],
+                        "documentSecurity": false
+                      },
+                      "as": "o249"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o249"
+                        }
+                      },
+                      "as": "o250"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o251"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o251"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "alice"
+                      },
+                      "as": "o252"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "update",
+                      "args": {
+                        "role": {
+                          "$obj": "o252"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "secret",
+                          "$permissions": [
+                            "read(\"user:alice\")",
+                            "update(\"user:alice\")"
+                          ],
+                          "title": "alice only"
+                        }
+                      },
+                      "as": "o253"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "posts",
+                        "document": {
+                          "$obj": "o253"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "hidden",
+                          "title": "private row"
+                        }
+                      },
+                      "as": "o254"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "private",
+                        "document": {
+                          "$obj": "o254"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1621",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"users\")",
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "posts",
+                        "name": "posts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": true,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "private",
+                        "name": "private",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": true,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"user:alice\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "update(\"user:alice\")",
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "secret",
+                        "$permissions": [
+                          "read(\"user:alice\")",
+                          "update(\"user:alice\")"
+                        ],
+                        "title": "alice only",
+                        "$collection": "posts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hidden",
+                        "title": "private row",
+                        "$collection": "private",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o255"
+          },
+          "bind": "s1622",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o255"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o256"
+          },
+          "bind": "s1625",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o256"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "bob"
+            },
+            "as": "o257"
+          },
+          "bind": "s1628",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o257"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:bob"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:bob"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "posts"
+                      },
+                      "as": "o258"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o258"
+                      },
+                      "method": "select",
+                      "args": {
+                        "columns": [
+                          "$id",
+                          "title"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o258"
+                      },
+                      "method": "execute",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1631",
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "_uid": "secret",
+                  "title": "alice only"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$builder": true
+                    },
+                    [
+                      {
+                        "$document": {
+                          "_uid": "secret",
+                          "title": "alice only"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "_uid": "secret",
+                "title": "alice only"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "alice only"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o242"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "posts"
+                      },
+                      "as": "o259"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o259"
+                      },
+                      "method": "set",
+                      "args": {
+                        "row": {
+                          "title": "edited"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "equal",
+                      "args": {
+                        "attribute": "$id",
+                        "values": [
+                          "secret"
+                        ]
+                      },
+                      "as": "o260"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o259"
+                      },
+                      "method": "filter",
+                      "args": {
+                        "queries": [
+                          {
+                            "$obj": "o260"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o259"
+                      },
+                      "method": "update",
+                      "args": {},
+                      "as": "o261"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o261"
+                      },
+                      "method": "execute",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1633",
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "$id",
+                        "values": [
+                          "secret"
+                        ]
+                      }
+                    },
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$value": "Query\\Builder\\Statement",
+                      "fields": {
+                        "query": "UPDATE `authorization_posts` SET `title` = ? WHERE `_uid` COLLATE NOCASE IN (?)",
+                        "bindings": [
+                          "edited",
+                          "secret"
+                        ],
+                        "readOnly": false,
+                        "namedBindings": null
+                      }
+                    },
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

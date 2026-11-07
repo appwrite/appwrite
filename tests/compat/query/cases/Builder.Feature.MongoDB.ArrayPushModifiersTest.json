@@ -1,0 +1,854 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MongoDB/ArrayPushModifiersTest.php",
+  "cases": [
+    {
+      "name": "testPushEachBasicEmitsEachPlaceholders",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              [
+                "a",
+                "b",
+                "c"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\",\"?\"]}}}}",
+            "bindings": [
+              "x",
+              "a",
+              "b",
+              "c"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\",\"?\"]}}}}",
+        [
+          "x",
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "x",
+          "a",
+          "b",
+          "c"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\",\"?\"]}}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\",\"?\"]}}}}"
+      ]
+    },
+    {
+      "name": "testPushEachWithAllModifiersSetsEachKey",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores",
+              [
+                85,
+                92
+              ],
+              0,
+              5,
+              {
+                "score": -1
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"scores\":{\"$each\":[\"?\",\"?\"],\"$position\":0,\"$slice\":5,\"$sort\":{\"score\":-1}}}}}",
+            "bindings": [
+              "x",
+              85,
+              92
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"scores\":{\"$each\":[\"?\",\"?\"],\"$position\":0,\"$slice\":5,\"$sort\":{\"score\":-1}}}}}",
+        [
+          "x",
+          85,
+          92
+        ],
+        [
+          "x",
+          85,
+          92
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"scores\":{\"$each\":[\"?\",\"?\"],\"$position\":0,\"$slice\":5,\"$sort\":{\"score\":-1}}}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"scores\":{\"$each\":[\"?\",\"?\"],\"$position\":0,\"$slice\":5,\"$sort\":{\"score\":-1}}}}}"
+      ]
+    },
+    {
+      "name": "testPushEachEmptyArrayStillEmitsEachKey",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              []
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[]}}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[]}}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[]}}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[]}}}}"
+      ]
+    },
+    {
+      "name": "testPushEachBindsValuesBeforeFilterBinding",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "ID"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "ID"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\"]}}}}",
+            "bindings": [
+              "ID",
+              "a",
+              "b"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\"]}}}}",
+        [
+          "ID",
+          "a",
+          "b"
+        ],
+        [
+          "ID",
+          "a",
+          "b"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\",\"?\"]}}}}",
+        [
+          "ID",
+          "a",
+          "b"
+        ],
+        [
+          "ID",
+          "a",
+          "b"
+        ],
+        [
+          "ID",
+          "a",
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "testPushEachWithOnlySliceOmitsPositionAndSort",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              [
+                "a"
+              ],
+              null,
+              3
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\"],\"$slice\":3}}}}",
+            "bindings": [
+              "x",
+              "a"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\"],\"$slice\":3}}}}",
+        [
+          "x",
+          "a"
+        ],
+        [
+          "x",
+          "a"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\"],\"$slice\":3}}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$push\":{\"tags\":{\"$each\":[\"?\"],\"$slice\":3}}}}"
+      ]
+    },
+    {
+      "name": "testPushEachRejectsDollarPrefixedField",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pushEach",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$evil",
+              [
+                "x"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: $evil"
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

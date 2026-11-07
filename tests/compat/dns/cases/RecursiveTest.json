@@ -1,0 +1,299 @@
+{
+  "source": "packages/dns/tests/Lookup/RecursiveTest.php",
+  "cases": [
+    {
+      "name": "servers must be IP addresses",
+      "steps": [
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": []
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "At least one DNS server is required."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "dns.google"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: 'dns.google'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "8.8.8.8",
+              "resolver:53"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: 'resolver:53'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[::1]:x"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '[::1]:x'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[::1"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '[::1'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[::1]53"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '[::1]53'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.1.1.1:"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '1.1.1.1:'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.1.1.1:65536"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '1.1.1.1:65536'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.1.1.1:-1"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '1.1.1.1:-1'."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "accepts addresses with and without ports",
+      "steps": [
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.1.1.1",
+              "1.1.1.1:5353",
+              "2606:4700:4700::1111",
+              "[2606:4700:4700::1111]",
+              "[::1]:5353"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "fails over past a failing or unreachable server",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "*": {
+                      "rcode": 2
+                    }
+                  }
+                }
+              },
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "1": {
+                      "rcode": 0,
+                      "answer": "93.184.215.14"
+                    },
+                    "28": {
+                      "rcode": 0,
+                      "answer": "2606:2800:21f:cb07:6820:80da:af6b:8b2c"
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "recursive",
+                "servers": [
+                  "unreachable",
+                  0,
+                  1
+                ],
+                "hostname": "example.test"
+              }
+            ]
+          },
+          "expect": [
+            [
+              "93.184.215.14",
+              "2606:2800:21f:cb07:6820:80da:af6b:8b2c"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fails closed when one address family fails",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "1": {
+                      "rcode": 0,
+                      "answer": "93.184.215.14"
+                    },
+                    "*": {
+                      "rcode": 5
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "recursive",
+                "servers": [
+                  0
+                ],
+                "hostname": "example.test"
+              }
+            ]
+          },
+          "expect": [
+            []
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a name that does not exist resolves to nothing",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "*": {
+                      "rcode": 3
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "recursive",
+                "servers": [
+                  0
+                ],
+                "hostname": "nowhere.test"
+              }
+            ]
+          },
+          "expect": [
+            []
+          ]
+        }
+      ]
+    }
+  ]
+}

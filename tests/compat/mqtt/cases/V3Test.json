@@ -1,0 +1,304 @@
+{
+  "source": "packages/mqtt/tests/V3Test.php",
+  "cases": [
+    {
+      "name": "testConnackIsAckFlagsAndReturnCode",
+      "steps": [
+        {
+          "op": "v3.connack",
+          "args": {
+            "code": 0
+          },
+          "expect": " \u0002\u0000\u0000"
+        },
+        {
+          "op": "v3.connack",
+          "args": {
+            "code": 5
+          },
+          "expect": " \u0002\u0000\u0005"
+        }
+      ]
+    },
+    {
+      "name": "testAckEncoders",
+      "steps": [
+        {
+          "op": "v3.puback",
+          "args": {
+            "packet_id": "\u0000\u0007"
+          },
+          "expect": "@\u0002\u0000\u0007"
+        },
+        {
+          "op": "v3.suback",
+          "args": {
+            "packet_id": "\u0000\u0001",
+            "codes": "\u0001"
+          },
+          "expect": {
+            "$bytes": "kAMAAQE="
+          }
+        },
+        {
+          "op": "v3.unsuback",
+          "args": {
+            "packet_id": "\u0000\u0001"
+          },
+          "expect": {
+            "$bytes": "sAIAAQ=="
+          }
+        },
+        {
+          "op": "v3.disconnect",
+          "args": {},
+          "expect": {
+            "$bytes": "4AA="
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPublishHasNoPropertyBlock",
+      "steps": [
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "sport/tennis",
+            "payload": "hello",
+            "qos": 1,
+            "packet_id": 7
+          },
+          "bind": "b",
+          "expect": "2\u0015\u0000\fsport/tennis\u0000\u0007hello"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 3,
+            "flags": 2,
+            "body": "\u0000\fsport/tennis\u0000\u0007hello",
+            "name": "publish",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "string.read",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 0
+          },
+          "expect": [
+            "sport/tennis",
+            14
+          ]
+        },
+        {
+          "op": "publish.decode",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "protocol": 4
+          },
+          "expect": {
+            "topic": "sport/tennis",
+            "payload": "hello",
+            "qos": 1,
+            "dup": false,
+            "retain": false,
+            "packet_id": 7,
+            "properties": null,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSubackFailureMarker",
+      "op": "v3.suback",
+      "args": {
+        "packet_id": "\u0000\u0002",
+        "codes": {
+          "$bytes": "gA=="
+        }
+      },
+      "expect": {
+        "$bytes": "kAMAAoA="
+      }
+    },
+    {
+      "name": "testConnectCarriesCredentials",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "v3-client",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "user",
+            "password": "secret"
+          },
+          "bind": "b",
+          "expect": {
+            "$bytes": "ECMABE1RVFQEwgA8AAl2My1jbGllbnQABHVzZXIABnNlY3JldA=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": {
+              "$bytes": "AARNUVRUBMIAPAAJdjMtY2xpZW50AAR1c2VyAAZzZWNyZXQ="
+            },
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "connect.decode",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": {
+            "protocol_level": 4,
+            "client_id": "v3-client",
+            "clean_start": true,
+            "keep_alive": 60,
+            "username": "user",
+            "password": "secret",
+            "will": null,
+            "auth_method": null,
+            "auth_data": null,
+            "properties": null,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSubscribeAndUnsubscribeAreFlagged",
+      "steps": [
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "news/tech"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "gg4AAQAJbmV3cy90ZWNoAQ=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "bind": "ps",
+          "expect": {
+            "type": 8,
+            "flags": 2,
+            "body": "\u0000\u0001\u0000\tnews/tech\u0001",
+            "name": "subscribe",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "subscribe.decode",
+          "args": {
+            "body": {
+              "$ref": "ps",
+              "path": "/body"
+            },
+            "protocol": 4
+          },
+          "expect": {
+            "packet_id": 1,
+            "filters": [
+              [
+                "news/tech",
+                1
+              ]
+            ],
+            "properties": null
+          }
+        },
+        {
+          "op": "v3.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "news/tech"
+            ]
+          },
+          "bind": "u",
+          "expect": {
+            "$bytes": "og0AAgAJbmV3cy90ZWNo"
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "u"
+            }
+          },
+          "bind": "pu",
+          "expect": {
+            "type": 10,
+            "flags": 2,
+            "body": "\u0000\u0002\u0000\tnews/tech",
+            "name": "unsubscribe",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "unsubscribe.decode",
+          "args": {
+            "body": {
+              "$ref": "pu",
+              "path": "/body"
+            },
+            "protocol": 4
+          },
+          "expect": {
+            "packet_id": 2,
+            "filters": [
+              "news/tech"
+            ],
+            "properties": null
+          }
+        }
+      ]
+    }
+  ]
+}

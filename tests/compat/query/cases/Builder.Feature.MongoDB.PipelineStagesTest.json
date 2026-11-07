@@ -1,0 +1,746 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MongoDB/PipelineStagesTest.php",
+  "cases": [
+    {
+      "name": "testBucketEmitsBucketStageWithGroupByAndBoundaries",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "sales"
+            ]
+          },
+          {
+            "call": "bucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "price",
+              [
+                0,
+                100,
+                200
+              ],
+              "Other",
+              {
+                "count": {
+                  "$sum": 1
+                }
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$price\",\"boundaries\":[0,100,200],\"default\":\"Other\",\"output\":{\"count\":{\"$sum\":1}}}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$price\",\"boundaries\":[0,100,200],\"default\":\"Other\",\"output\":{\"count\":{\"$sum\":1}}}}]}",
+        [],
+        [],
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$price\",\"boundaries\":[0,100,200],\"default\":\"Other\",\"output\":{\"count\":{\"$sum\":1}}}}]}",
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$price\",\"boundaries\":[0,100,200],\"default\":\"Other\",\"output\":{\"count\":{\"$sum\":1}}}}]}"
+      ]
+    },
+    {
+      "name": "testBucketWithoutDefaultOrOutputOmitsKeys",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "sales"
+            ]
+          },
+          {
+            "call": "bucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "amount",
+              [
+                0,
+                50
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$amount\",\"boundaries\":[0,50]}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$amount\",\"boundaries\":[0,50]}}]}",
+        [],
+        [],
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$amount\",\"boundaries\":[0,50]}}]}",
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucket\":{\"groupBy\":\"$amount\",\"boundaries\":[0,50]}}]}"
+      ]
+    },
+    {
+      "name": "testBucketAutoEmitsBucketAutoWithBucketCount",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "sales"
+            ]
+          },
+          {
+            "call": "bucketAuto",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "price",
+              5
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucketAuto\":{\"groupBy\":\"$price\",\"buckets\":5}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucketAuto\":{\"groupBy\":\"$price\",\"buckets\":5}}]}",
+        [],
+        [],
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucketAuto\":{\"groupBy\":\"$price\",\"buckets\":5}}]}",
+        "{\"collection\":\"sales\",\"operation\":\"aggregate\",\"pipeline\":[{\"$bucketAuto\":{\"groupBy\":\"$price\",\"buckets\":5}}]}"
+      ]
+    },
+    {
+      "name": "testFacetEmitsFacetStageWithSubPipelines",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "facet",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "a": {
+                  "$o": 1
+                },
+                "b": {
+                  "$o": 2
+                }
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"collection\":\"events\",\"operation\":\"aggregate\",\"pipeline\":[{\"$facet\":{\"a\":[],\"b\":[]}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"events\",\"operation\":\"aggregate\",\"pipeline\":[{\"$facet\":{\"a\":[],\"b\":[]}}]}",
+        [],
+        [],
+        "{\"collection\":\"events\",\"operation\":\"aggregate\",\"pipeline\":[{\"$facet\":{\"a\":[],\"b\":[]}}]}",
+        "{\"collection\":\"events\",\"operation\":\"aggregate\",\"pipeline\":[{\"$facet\":{\"a\":[],\"b\":[]}}]}"
+      ]
+    },
+    {
+      "name": "testGraphLookupEmitsGraphLookupStage",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "graphLookup",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "$manager",
+              "manager",
+              "_id",
+              "chain"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"aggregate\",\"pipeline\":[{\"$graphLookup\":{\"from\":\"users\",\"startWith\":\"$$manager\",\"connectFromField\":\"manager\",\"connectToField\":\"_id\",\"as\":\"chain\"}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"aggregate\",\"pipeline\":[{\"$graphLookup\":{\"from\":\"users\",\"startWith\":\"$$manager\",\"connectFromField\":\"manager\",\"connectToField\":\"_id\",\"as\":\"chain\"}}]}",
+        [],
+        [],
+        "{\"collection\":\"users\",\"operation\":\"aggregate\",\"pipeline\":[{\"$graphLookup\":{\"from\":\"users\",\"startWith\":\"$$manager\",\"connectFromField\":\"manager\",\"connectToField\":\"_id\",\"as\":\"chain\"}}]}",
+        "{\"collection\":\"users\",\"operation\":\"aggregate\",\"pipeline\":[{\"$graphLookup\":{\"from\":\"users\",\"startWith\":\"$$manager\",\"connectFromField\":\"manager\",\"connectToField\":\"_id\",\"as\":\"chain\"}}]}"
+      ]
+    },
+    {
+      "name": "testOutputToCollectionEmitsOutStage",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "outputToCollection",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "archive"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$out\":\"archive\"}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$out\":\"archive\"}]}",
+        [],
+        [],
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$out\":\"archive\"}]}",
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$out\":\"archive\"}]}"
+      ]
+    },
+    {
+      "name": "testReplaceRootEmitsReplaceRootStage",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "replaceRoot",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$user"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$replaceRoot\":{\"newRoot\":\"$user\"}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$replaceRoot\":{\"newRoot\":\"$user\"}}]}",
+        [],
+        [],
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$replaceRoot\":{\"newRoot\":\"$user\"}}]}",
+        "{\"collection\":\"orders\",\"operation\":\"aggregate\",\"pipeline\":[{\"$replaceRoot\":{\"newRoot\":\"$user\"}}]}"
+      ]
+    }
+  ]
+}

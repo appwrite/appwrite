@@ -1,0 +1,578 @@
+{
+  "source": "packages/client/tests/Decorator/Retry/BackoffTest.php",
+  "cases": [
+    {
+      "name": "retries transient transport failures",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "error": "NetworkException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "does not retry request exceptions",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "error": "InvalidUriException"
+      },
+      "expect": null
+    },
+    {
+      "name": "does not retry non-idempotent methods",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "POST",
+        "attempt": 1,
+        "error": "NetworkException"
+      },
+      "expect": null
+    },
+    {
+      "name": "does not retry successful responses",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 200
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "retries overloaded status responses",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 503
+        }
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "stops at max attempts",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 3,
+        "error": "NetworkException"
+      },
+      "expect": null
+    },
+    {
+      "name": "grows the delay exponentially: attempt 2",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 2,
+        "error": "NetworkException"
+      },
+      "expect": 0.2
+    },
+    {
+      "name": "honours numeric retry-after capped to max delay",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 503,
+          "headers": [
+            [
+              "Retry-After",
+              "999"
+            ]
+          ]
+        }
+      },
+      "expect": 10.0
+    },
+    {
+      "name": "ignores non-numeric retry-after",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 503,
+          "headers": [
+            [
+              "Retry-After",
+              "Wed, 21 Oct 2025 07:28:00 GMT"
+            ]
+          ]
+        }
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "applies full jitter within the ceiling",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.25
+        },
+        "method": "GET",
+        "attempt": 1,
+        "error": "NetworkException"
+      },
+      "expect": 0.025
+    },
+    {
+      "name": "a fractional retry-after",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 429,
+          "headers": [
+            [
+              "Retry-After",
+              " 1.5 "
+            ]
+          ]
+        }
+      },
+      "expect": 1.5
+    },
+    {
+      "name": "a negative retry-after is zero",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 429,
+          "headers": [
+            [
+              "Retry-After",
+              "-3"
+            ]
+          ]
+        }
+      },
+      "expect": 0.0
+    },
+    {
+      "name": "retry-after on a non-retryable status",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "response": {
+          "status": 500,
+          "headers": [
+            [
+              "Retry-After",
+              "1"
+            ]
+          ]
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "lowercase method is not idempotent",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "get",
+        "attempt": 1,
+        "error": "TimeoutException"
+      },
+      "expect": null
+    },
+    {
+      "name": "the ceiling caps the exponential growth",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0,
+          "max_attempts": 20,
+          "max_delay": 3.0
+        },
+        "method": "DELETE",
+        "attempt": 10,
+        "error": "DnsException"
+      },
+      "expect": 3.0
+    },
+    {
+      "name": "a custom multiplier",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.5,
+          "max_attempts": 5,
+          "base_delay": 0.3,
+          "multiplier": 3.0
+        },
+        "method": "PUT",
+        "attempt": 3,
+        "response": {
+          "status": 502
+        }
+      },
+      "expect": 1.3499999999999999
+    },
+    {
+      "name": "zero max attempts never retries",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0,
+          "max_attempts": 0
+        },
+        "method": "GET",
+        "attempt": 1,
+        "error": "NetworkException"
+      },
+      "expect": null
+    },
+    {
+      "name": "retries after ConnectionException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "ConnectionException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "retries after DestinationException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "DestinationException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "retries after ProtocolException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "ProtocolException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "retries after ProxyException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "ProxyException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "retries after TlsException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "TlsException"
+      },
+      "expect": 0.1
+    },
+    {
+      "name": "retries after AdapterInitializationException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "AdapterInitializationException"
+      },
+      "expect": null
+    },
+    {
+      "name": "retries after InvalidResponseException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "InvalidResponseException"
+      },
+      "expect": null
+    },
+    {
+      "name": "retries after RequestException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "RequestException"
+      },
+      "expect": null
+    },
+    {
+      "name": "retries after AdapterPreconditionException?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "OPTIONS",
+        "attempt": 1,
+        "error": "AdapterPreconditionException"
+      },
+      "expect": null
+    },
+    {
+      "name": "retries status 429?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 429
+        }
+      },
+      "expect": 0.2
+    },
+    {
+      "name": "retries status 502?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 502
+        }
+      },
+      "expect": 0.2
+    },
+    {
+      "name": "retries status 504?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 504
+        }
+      },
+      "expect": 0.2
+    },
+    {
+      "name": "retries status 500?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 500
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "retries status 501?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 501
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "retries status 404?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 404
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "retries status 301?",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 1.0
+        },
+        "method": "TRACE",
+        "attempt": 2,
+        "response": {
+          "status": 301
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "pow rounds as musl: a negative exponent",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.19550078062177023,
+          "max_attempts": 3,
+          "base_delay": 0.181726801163816,
+          "max_delay": 1.0,
+          "multiplier": 1.099702633231285
+        },
+        "method": "OPTIONS",
+        "attempt": 0,
+        "response": {
+          "status": 502
+        }
+      },
+      "expect": 0.03230667128897491
+    },
+    {
+      "name": "pow rounds as musl: a fourth power",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.1598959060908306,
+          "max_attempts": 6,
+          "base_delay": 0.07696866257134816,
+          "max_delay": 19.043637839366383,
+          "multiplier": 3.6809483682989628
+        },
+        "method": "DELETE",
+        "attempt": 5,
+        "response": {
+          "status": 503
+        }
+      },
+      "expect": 2.2593847214269163
+    },
+    {
+      "name": "pow rounds as musl: a small base",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.048047885707847904,
+          "max_attempts": 6,
+          "base_delay": 0.40720084952235625,
+          "max_delay": 15.387347409220904,
+          "multiplier": 0.017880444165957243
+        },
+        "method": "GET",
+        "attempt": 5,
+        "response": {
+          "status": 502
+        }
+      },
+      "expect": 1.999844226556087e-9
+    },
+    {
+      "name": "a NAN ceiling",
+      "op": "backoff.delay",
+      "args": {
+        "strategy": {
+          "random": 0.0,
+          "max_attempts": 1,
+          "base_delay": -0.0,
+          "max_delay": 5.0,
+          "multiplier": -0.0
+        },
+        "method": "OPTIONS",
+        "attempt": 0,
+        "response": {
+          "status": 503
+        }
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    }
+  ]
+}

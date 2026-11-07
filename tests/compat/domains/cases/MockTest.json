@@ -1,0 +1,2477 @@
+{
+  "source": "packages/domains/tests/Registrar/MockTest.php",
+  "cases": [
+    {
+      "name": "getName",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getName",
+            "args": {}
+          },
+          "expect": {
+            "result": "mock"
+          }
+        }
+      ]
+    },
+    {
+      "name": "available",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.com",
+                "google.com",
+                "kqzxwvbnmt.com"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.com": true,
+              "google.com": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPurchasedDomains",
+            "args": {}
+          },
+          "expect": {
+            "result": [
+              "kqzxwvbnmt.com"
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.com"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.com": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase taken domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "google.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Domain google.com is not available for registration",
+              "code": 485
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with invalid contact",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": [
+                {
+                  "firstname": "John",
+                  "lastname": "Doe",
+                  "phone": "+1234567890",
+                  "email": "invalid-email",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "InvalidCountry",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidContactException",
+              "message": "Invalid contact: invalid email format",
+              "code": 465
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with a missing field",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contact": {
+                "firstname": "Test",
+                "lastname": "Tester",
+                "phone": "+18031234567",
+                "email": "testing@test.com",
+                "address1": "123 Main St",
+                "address2": "Suite 100",
+                "address3": "",
+                "city": "0",
+                "state": "CA",
+                "country": "US",
+                "postalcode": "94105",
+                "org": "Test Inc"
+              }
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidContactException",
+              "message": "Invalid contact: missing required field 'city'",
+              "code": 465
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain info",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "owned.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result/createdAt",
+              "/result/expiresAt"
+            ],
+            "reason": "Mock dates are the current time"
+          },
+          "expect": {
+            "result": {
+              "domain": "owned.com",
+              "createdAt": "<masked>",
+              "expiresAt": "<masked>",
+              "autoRenew": false,
+              "nameservers": [
+                "ns1.example.com",
+                "ns2.example.com"
+              ]
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "other.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Domain other.com not found in mock registry",
+              "code": 404
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "cancelPurchase",
+            "args": {}
+          },
+          "expect": {
+            "result": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "tlds",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "tlds",
+            "args": {}
+          },
+          "expect": {
+            "result": [
+              "com",
+              "net",
+              "org",
+              "io",
+              "dev",
+              "app"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "tlds": [
+                "com",
+                "net",
+                "org"
+              ],
+              "limit": 5
+            }
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.org": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "business.com": {
+                "available": true,
+                "price": 10000.0,
+                "type": "premium"
+              }
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": [
+                "my",
+                "app"
+              ],
+              "tlds": [
+                ".io"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "my-app.io": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "business.com": {
+                "available": true,
+                "price": 10000.0,
+                "type": "premium"
+              },
+              "shop.net": {
+                "available": true,
+                "price": 2500.0,
+                "type": "premium"
+              }
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "filterType": "premium",
+              "priceMax": 6000,
+              "priceMin": 1000
+            }
+          },
+          "expect": {
+            "result": {
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "shop.net": {
+                "available": true,
+                "price": 2500.0,
+                "type": "premium"
+              }
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "filterType": "suggestion",
+              "limit": 2
+            }
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              }
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "limit": 0
+            }
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "periodYears": 1,
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "periodYears": 3,
+              "regType": "renewal"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 42.867000000000004,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.io",
+              "periodYears": 2,
+              "regType": "trade"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 31.176,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "regType": "transfer"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "premium.com",
+              "periodYears": 2
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 10000.0,
+              "premium": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with invalid domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "invalid.invalidtld",
+              "periodYears": 1,
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "TLD .invalidtld is not supported",
+              "code": 400
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "nodot"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Invalid domain format: nodot",
+              "code": 400
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "ttl": 3600
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "ttl": 3600
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with custom ttl",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.com",
+              "ttl": 7200
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price after available",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.com",
+                "google.com"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.com": true,
+              "google.com": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "regType": "renewal"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "google.com",
+              "regType": "transfer"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "periodYears": 3,
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get premium price after available",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "premium.com"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "premium.com": true
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "premium.com",
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 5000.0,
+              "premium": true
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "premium.com",
+              "regType": "new",
+              "periodYears": 5
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 5000.0,
+              "premium": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update nameservers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "owned.com",
+              "nameservers": [
+                "ns1.example.com",
+                "ns2.example.com"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "successful": true,
+              "nameservers": [
+                "ns1.example.com",
+                "ns2.example.com"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "owned.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "owned.com",
+              "autoRenew": true
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Details must include autoRenew",
+              "code": 400
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "other.com",
+              "autoRenew": false
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Domain other.com not found in mock registry",
+              "code": 404
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "owned.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "owned.com",
+              "periodYears": 1
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result/orderId",
+              "/result/expiresAt"
+            ],
+            "reason": "Mock order ids and dates follow the current time"
+          },
+          "expect": {
+            "result": {
+              "orderId": "<masked>",
+              "expiresAt": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "other.com",
+              "periodYears": 1
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Domain other.com not found in mock registry",
+              "code": 404
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "test-auth-code"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getTransferredDomains",
+            "args": {}
+          },
+          "expect": {
+            "result": [
+              "kqzxwvbnmt.com"
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kqzxwvbnmt.com"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result/timestamp"
+            ],
+            "reason": "Mock timestamps are the current time"
+          },
+          "expect": {
+            "result": {
+              "status": "pending_registry",
+              "reason": "Transfer in progress",
+              "timestamp": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get auth code",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "owned.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "expect": {
+            "result": "mock_e38c84aa"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "other.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Domain other.com not found in mock registry",
+              "code": 404
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "check transfer status",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "owned.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result/timestamp"
+            ],
+            "reason": "Mock timestamps are the current time"
+          },
+          "expect": {
+            "result": {
+              "status": "completed",
+              "reason": "Domain already exists in mock account",
+              "timestamp": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "example.com"
+            }
+          },
+          "expect": {
+            "result": {
+              "status": "transferrable",
+              "reason": null,
+              "timestamp": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with nameservers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "testdomain.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1,
+              "nameservers": [
+                "ns1.example.com",
+                "ns2.example.com"
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer already exists",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "alreadyexists.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "alreadyexists.com",
+              "authCode": "test-auth-code-12345"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Domain alreadyexists.com is already in this account",
+              "code": 485
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "state helpers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "mock",
+              "taken": [
+                "mine.com"
+              ],
+              "tlds": [
+                "xyz"
+              ],
+              "price": 5
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "mine.com",
+                "free.xyz"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "mine.com": false,
+              "free.xyz": true
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "addTakenDomain",
+            "args": {
+              "domain": "free.xyz"
+            }
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "addTakenDomain",
+            "args": {
+              "domain": "free.xyz"
+            }
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "free.xyz"
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "free.xyz": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "addPremiumDomain",
+            "args": {
+              "domain": "gold.xyz",
+              "price": 99.5
+            }
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "gold.xyz"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 99.5,
+              "premium": true
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "cheap.xyz",
+              "periodYears": 2
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 10.0,
+              "premium": false
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "cheap.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "TLD .com is not supported",
+              "code": 400
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "tlds",
+            "args": {}
+          },
+          "expect": {
+            "result": [
+              "xyz"
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "gold"
+            }
+          },
+          "expect": {
+            "result": {
+              "gold.xyz": {
+                "available": true,
+                "price": 99.5,
+                "type": "premium"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "business.com": {
+                "available": true,
+                "price": 10000.0,
+                "type": "premium"
+              },
+              "shop.net": {
+                "available": true,
+                "price": 2500.0,
+                "type": "premium"
+              }
+            }
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "in.xyz",
+              "authCode": "x"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "Mock order ids hash the current time"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPurchasedDomains",
+            "args": {}
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getTransferredDomains",
+            "args": {}
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    }
+  ]
+}

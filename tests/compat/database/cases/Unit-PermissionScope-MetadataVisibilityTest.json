@@ -1,0 +1,1559 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/PermissionScope/MetadataVisibilityTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MetadataVisibilityTest::testListCollectionsReturnsOnlyReadableDefinitions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o7954"
+          },
+          "bind": "s28046",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o7954"
+              },
+              "cache": "none"
+            },
+            "as": "o7955"
+          },
+          "bind": "s28047",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "metadata_visibility"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "metadata_visibility_u000000000006"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o7956"
+          },
+          "bind": "s28050",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o7956"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o7957"
+          },
+          "bind": "s28052",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o7957"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7958"
+          },
+          "bind": "s28055",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7958"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "public",
+              "permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "o7959"
+          },
+          "bind": "s28057",
+          "expect": {
+            "$document": {
+              "$id": "public",
+              "name": "public",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o7959"
+              }
+            },
+            "as": "o7960"
+          },
+          "expect": {
+            "$document": {
+              "$id": "public",
+              "name": "public",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "admin"
+            },
+            "as": "o7961"
+          },
+          "bind": "s28059",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7961"
+              }
+            }
+          },
+          "expect": "read(\"user:admin\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "private",
+              "permissions": [
+                "read(\"user:admin\")"
+              ]
+            },
+            "as": "o7962"
+          },
+          "bind": "s28061",
+          "expect": {
+            "$document": {
+              "$id": "private",
+              "name": "private",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"user:admin\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o7962"
+              }
+            },
+            "as": "o7963"
+          },
+          "expect": {
+            "$document": {
+              "$id": "private",
+              "name": "private",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7964"
+          },
+          "bind": "s28063",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o7964"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "unlisted",
+              "permissions": [
+                "create(\"any\")"
+              ]
+            },
+            "as": "o7965"
+          },
+          "bind": "s28065",
+          "expect": {
+            "$document": {
+              "$id": "unlisted",
+              "name": "unlisted",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o7965"
+              }
+            },
+            "as": "o7966"
+          },
+          "expect": {
+            "$document": {
+              "$id": "unlisted",
+              "name": "unlisted",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7956"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7967"
+          },
+          "bind": "s28069",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7967"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7956"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "listCollections",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "public"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "find",
+            "args": {
+              "collection": "_metadata"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "public"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "count",
+            "args": {
+              "collection": "_metadata"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "admin"
+            },
+            "as": "o7968"
+          },
+          "bind": "s28077",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7968"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:admin"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7956"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:admin"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "listCollections",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            {
+              "$document": {
+                "name": "private",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "private",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "public"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "private",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "private",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "private"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7955"
+            },
+            "method": "count",
+            "args": {
+              "collection": "_metadata"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7956"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o7955"
+                      },
+                      "method": "listCollections",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "name": "public",
+                  "attributes": [],
+                  "indexes": [],
+                  "documentSecurity": true,
+                  "$id": "public",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "_metadata"
+                },
+                "$class": "Collection"
+              },
+              {
+                "$document": {
+                  "name": "private",
+                  "attributes": [],
+                  "indexes": [],
+                  "documentSecurity": true,
+                  "$id": "private",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:admin\")"
+                  ],
+                  "$collection": "_metadata"
+                },
+                "$class": "Collection"
+              },
+              {
+                "$document": {
+                  "name": "unlisted",
+                  "attributes": [],
+                  "indexes": [],
+                  "documentSecurity": true,
+                  "$id": "unlisted",
+                  "$sequence": "3",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "create(\"any\")"
+                  ],
+                  "$collection": "_metadata"
+                },
+                "$class": "Collection"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "public",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$id": "public",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "_metadata"
+                        },
+                        "$class": "Collection"
+                      },
+                      {
+                        "$document": {
+                          "name": "private",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$id": "private",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"user:admin\")"
+                          ],
+                          "$collection": "_metadata"
+                        },
+                        "$class": "Collection"
+                      },
+                      {
+                        "$document": {
+                          "name": "unlisted",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$id": "unlisted",
+                          "$sequence": "3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "create(\"any\")"
+                          ],
+                          "$collection": "_metadata"
+                        },
+                        "$class": "Collection"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "public",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "public",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "public"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "private",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "private",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "private"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "unlisted",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "unlisted",
+                "$sequence": "3",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "create(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "unlisted"
+        }
+      ]
+    },
+    {
+      "name": "MetadataVisibilityTest::testTenantlessDefinitionsStayReadableFromEveryTenantOfASharedPool",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o7969"
+          },
+          "bind": "s28088",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o7969"
+              },
+              "cache": "none"
+            },
+            "as": "o7970"
+          },
+          "bind": "s28089",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "metadata_visibility"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "metadata_visibility_u000000000007"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o7971"
+          },
+          "bind": "s28092",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o7971"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o7972"
+          },
+          "bind": "s28094",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o7972"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": null
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7973"
+          },
+          "bind": "s28099",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7973"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "pooled",
+              "permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "o7974"
+          },
+          "bind": "s28101",
+          "expect": {
+            "$document": {
+              "$id": "pooled",
+              "name": "pooled",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o7974"
+              }
+            },
+            "as": "o7975"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pooled",
+              "name": "pooled",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": null,
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7976"
+          },
+          "bind": "s28104",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7976"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "owned",
+              "permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "o7977"
+          },
+          "bind": "s28106",
+          "expect": {
+            "$document": {
+              "$id": "owned",
+              "name": "owned",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o7977"
+              }
+            },
+            "as": "o7978"
+          },
+          "expect": {
+            "$document": {
+              "$id": "owned",
+              "name": "owned",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 990
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "pooled"
+              ]
+            },
+            "as": "o7979"
+          },
+          "bind": "s28109",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "pooled"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "count",
+            "args": {
+              "collection": "_metadata",
+              "queries": [
+                {
+                  "$obj": "o7979"
+                }
+              ]
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "find",
+            "args": {
+              "collection": "_metadata",
+              "queries": [
+                {
+                  "$obj": "o7979"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "pooled",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "pooled",
+                "$sequence": "1",
+                "$tenant": null,
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "pooled",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "pooled",
+                "$sequence": "1",
+                "$tenant": null,
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "pooled"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7970"
+            },
+            "method": "listCollections",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "pooled",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "pooled",
+                "$sequence": "1",
+                "$tenant": null,
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "pooled",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$id": "pooled",
+                "$sequence": "1",
+                "$tenant": null,
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "pooled"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1423 @@
+{
+  "cases": [
+    {
+      "name": "openai over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256,
+              "endpoint": "${fixture}/v1/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "479"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"system\",\"content\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\\n\\n# Rules\\n\\nOne\\nTwo\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"temperature\":0.5,\"stream\":true,\"max_completion_tokens\":256}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openrouter over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openrouter",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256,
+              "endpoint": "${fixture}/api/v1/chat/completions",
+              "httpReferer": "https://example.test",
+              "xTitle": "Compat é"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "HTTP-Referer",
+                  "https://example.test"
+                ],
+                [
+                  "X-Title",
+                  "Compat é"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "475"
+                ]
+              ],
+              "body": "{\"model\":\"openai\\/gpt-4o\",\"messages\":[{\"role\":\"system\",\"content\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\\n\\n# Rules\\n\\nOne\\nTwo\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"temperature\":0.5,\"stream\":true,\"max_tokens\":256}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "perplexity over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "perplexity",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256,
+              "endpoint": "${fixture}/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "466"
+                ]
+              ],
+              "body": "{\"model\":\"sonar\",\"messages\":[{\"role\":\"system\",\"content\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\\n\\n# Rules\\n\\nOne\\nTwo\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"temperature\":0.5,\"stream\":true,\"max_tokens\":256}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xai over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "xai",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256,
+              "endpoint": "${fixture}/v1/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "472"
+                ]
+              ],
+              "body": "{\"model\":\"grok-3-mini\",\"messages\":[{\"role\":\"system\",\"content\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\\n\\n# Rules\\n\\nOne\\nTwo\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"temperature\":0.5,\"stream\":true,\"max_tokens\":256}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "deepseek over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "deepseek",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "474"
+                ]
+              ],
+              "body": "{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"system\",\"content\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\\n\\n# Rules\\n\\nOne\\nTwo\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"max_tokens\":256,\"temperature\":0.5,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anthropic over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Hi\"}}\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/messages",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "599"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# Rules\\n\\nOne\\nTwo\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"type\":\"image\",\"source\":{\"type\":\"base64\",\"media_type\":\"image\\/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"assistant\",\"content\":\"Sure\"}],\"max_tokens\":256,\"temperature\":0.5,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gemini over the wire, with an image and the listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "gemini",
+            "args": {
+              "temperature": 0.5,
+              "maxTokens": 256,
+              "endpoint": "${fixture}/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-api-key"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Describe what you see. é / \"quoted\""
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "One",
+                  "Two"
+                ]
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {",
+                  "\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Hi\"}]}}]}\r\n\r\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              {
+                "content": "Look: café 😀 </script>",
+                "attachments": [
+                  {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  }
+                ]
+              },
+              {
+                "content": "Sure",
+                "role": "assistant"
+              }
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hi",
+            "role": "user",
+            "tokens": [
+              "Hi"
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-api-key",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "459"
+                ]
+              ],
+              "body": "{\"system_instruction\":{\"parts\":[{\"text\":\"Describe what you see. \\u00e9 \\/ \\\"quoted\\\"\"},{\"text\":\"# Rules\\n\\nOne\\nTwo\"}]},\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Look: caf\\u00e9 \\ud83d\\ude00 <\\/script>\"},{\"inline_data\":{\"mime_type\":\"image\\/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=\"}}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Sure\"}]}],\"generationConfig\":{\"maxOutputTokens\":256,\"temperature\":0.5}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an error status from the server",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "endpoint": "${fixture}/v1/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 429,
+                "chunks": [
+                  "{\"error\":{\"code\":\"rate_limit_exceeded\",\"message\":\"Rate limit reached\"}}"
+                ]
+              },
+              {
+                "status": 401,
+                "body": "{\"error\":{\"code\":\"invalid_api_key\",\"message\":\"Incorrect API key\"}}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: (rate_limit_exceeded) Rate limit reached",
+            "code": 429,
+            "tokens": []
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "The result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: (invalid_api_key) Incorrect API key",
+            "code": 401,
+            "tokens": []
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "122"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "392"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"Result\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"ok\":{\"type\":\"boolean\",\"description\":\"ok\"},\"list\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"ok\"],\"additionalProperties\":false}}},\"stream\":false,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "connection reuse across sends and a timeout change",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "xai",
+            "args": {
+              "endpoint": "${fixture}/v1/chat/completions"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"choices\":[{\"delta\":{\"content\":\"1\"}}]}\n\n"
+                ]
+              },
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"choices\":[{\"delta\":{\"content\":\"2\"}}]}\n\n"
+                ]
+              },
+              {
+                "status": 200,
+                "chunks": [
+                  "data: {\"choices\":[{\"delta\":{\"content\":\"3\"}}]}\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "a"
+            ]
+          },
+          "expect": {
+            "content": "1",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "b"
+            ]
+          },
+          "expect": {
+            "content": "2",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 30000
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "c"
+            ]
+          },
+          "expect": {
+            "content": "3",
+            "role": "user"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "114"
+                ]
+              ],
+              "body": "{\"model\":\"grok-3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"a\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "114"
+                ]
+              ],
+              "body": "{\"model\":\"grok-3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"b\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/chat/completions",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "authorization",
+                  "Bearer test-api-key"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "114"
+                ]
+              ],
+              "body": "{\"model\":\"grok-3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"c\"}],\"temperature\":1,\"stream\":true,\"max_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

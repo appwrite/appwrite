@@ -1,0 +1,1250 @@
+{
+  "source": "packages/nats/tests/E2E/OrderedConsumerTest.php",
+  "cases": [
+    {
+      "name": "a reset recreates the consumer and recovers in order",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "OC_${ns}",
+              "subjects": [
+                "orderedreset.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "OC_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "orderedreset.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-1"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-2"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-3"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-4"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 4,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-5"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 5,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-6"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 6,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-7"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 7,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-8"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 8,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-9"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 9,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-10"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 10,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-11"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 11,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-12"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 12,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-13"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 13,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-14"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 14,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-15"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 15,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-16"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 16,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-17"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 17,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-18"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 18,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-19"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 19,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "orderedreset.${ns}",
+            "data": "msg-20"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 20,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.ordered_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "OC_${ns}"
+          },
+          "bind": "oc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-1",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 1,
+            "consumer_seq": 1
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-2",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 2,
+            "consumer_seq": 2
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-3",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 3,
+            "consumer_seq": 3
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-4",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 4,
+            "consumer_seq": 4
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-5",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 5,
+            "consumer_seq": 5
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-6",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 6,
+            "consumer_seq": 6
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-7",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 7,
+            "consumer_seq": 7
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-8",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 8,
+            "consumer_seq": 8
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-9",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 9,
+            "consumer_seq": 9
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-10",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 10,
+            "consumer_seq": 10
+          }
+        },
+        {
+          "op": "ordered.name",
+          "args": {
+            "ordered": {
+              "$ref": "oc"
+            },
+            "raw": true
+          },
+          "bind": "before",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an ephemeral consumer name the server generates"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "ordered.skip",
+          "args": {
+            "ordered": {
+              "$ref": "oc"
+            },
+            "by": 1
+          },
+          "expect": 12
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-11",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 11,
+            "consumer_seq": 1
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-12",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 12,
+            "consumer_seq": 2
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-13",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 13,
+            "consumer_seq": 3
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-14",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 14,
+            "consumer_seq": 4
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-15",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 15,
+            "consumer_seq": 5
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-16",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 16,
+            "consumer_seq": 6
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-17",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 17,
+            "consumer_seq": 7
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-18",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 18,
+            "consumer_seq": 8
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-19",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 19,
+            "consumer_seq": 9
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "orderedreset.${ns}",
+            "data": "msg-20",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 20,
+            "consumer_seq": 10
+          }
+        },
+        {
+          "op": "ordered.name",
+          "args": {
+            "ordered": {
+              "$ref": "oc"
+            },
+            "raw": true
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an ephemeral consumer name the server generates"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "before"
+            },
+            "b": {
+              "$ref": "after"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "ordered.name",
+          "args": {
+            "ordered": {
+              "$ref": "oc"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an ephemeral consumer name the server generates"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "ordered.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "OC_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an ordered consumer from the last message, filtered",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "OC_${ns}",
+              "subjects": [
+                "of.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "OC_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "of.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "of.${ns}.a",
+            "data": "1"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "of.${ns}.b",
+            "data": "2"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "of.${ns}.a",
+            "data": "3"
+          },
+          "expect": {
+            "stream": "OC_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.ordered_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "OC_${ns}",
+            "deliver_policy": "last_per_subject",
+            "filter": "of.${ns}.a",
+            "heartbeat": 1.0
+          },
+          "bind": "oc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "of.${ns}.a",
+            "data": "3",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 3,
+            "consumer_seq": 1
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "ordered.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "OC_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "source": "packages/queue/tests/RedisReapLimitsTest.php",
+  "cases": [
+    {
+      "name": "testRefusesAnAttemptCeilingBelowOne",
+      "op": "broker.redis",
+      "args": {
+        "reap_max_attempts": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "reapMaxAttempts must be at least 1, or null to requeue unbounded"
+        }
+      }
+    },
+    {
+      "name": "testRefusesAnAgeCeilingAtOrBelowReapAfter",
+      "op": "broker.redis",
+      "args": {
+        "reap_after": 3600,
+        "reap_max_age": 3600
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "reapMaxAge (3600) must exceed reapAfter (3600), or be null to requeue at any age"
+        }
+      }
+    },
+    {
+      "name": "testAcceptsAnAgeCeilingAboveReapAfter",
+      "op": "broker.redis",
+      "args": {
+        "reap_after": 3600,
+        "reap_max_age": 3601,
+        "reap_max_attempts": 1
+      },
+      "expect": {
+        "$handle": "*"
+      }
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Hook/TenancyHookTest.php"
+  ],
+  "cases": [
+    {
+      "name": "TenancyHookTest::testDecorateRowStoresTheRowsTenant#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Tenancy",
+            "args": {},
+            "as": "o12680"
+          },
+          "bind": "s66217",
+          "expect": {
+            "$hook": "Tenancy"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\RowMetadata",
+            "args": {
+              "tenant": 5
+            },
+            "as": "o12681"
+          },
+          "bind": "s66218",
+          "expect": {
+            "$value": "Hook\\RowMetadata",
+            "fields": {
+              "tenant": 5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12680"
+            },
+            "method": "decorateRow",
+            "args": {
+              "row": {
+                "title": "x"
+              },
+              "metadata": {
+                "$obj": "o12681"
+              }
+            }
+          },
+          "expect": {
+            "title": "x",
+            "_tenant": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "TenancyHookTest::testDecorateRowStoresTheRowsTenant#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Tenancy",
+            "args": {},
+            "as": "o12682"
+          },
+          "bind": "s66220",
+          "expect": {
+            "$hook": "Tenancy"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\RowMetadata",
+            "args": {
+              "tenant": "tenant-a"
+            },
+            "as": "o12683"
+          },
+          "bind": "s66221",
+          "expect": {
+            "$value": "Hook\\RowMetadata",
+            "fields": {
+              "tenant": "tenant-a"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12682"
+            },
+            "method": "decorateRow",
+            "args": {
+              "row": {
+                "title": "x"
+              },
+              "metadata": {
+                "$obj": "o12683"
+              }
+            }
+          },
+          "expect": {
+            "title": "x",
+            "_tenant": "tenant-a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TenancyHookTest::testDecorateRowStoresTheRowsTenant#per document",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Tenancy",
+            "args": {},
+            "as": "o12684"
+          },
+          "bind": "s66223",
+          "expect": {
+            "$hook": "Tenancy"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\RowMetadata",
+            "args": {
+              "tenant": null
+            },
+            "as": "o12685"
+          },
+          "bind": "s66224",
+          "expect": {
+            "$value": "Hook\\RowMetadata",
+            "fields": {
+              "tenant": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12684"
+            },
+            "method": "decorateRow",
+            "args": {
+              "row": {
+                "title": "x"
+              },
+              "metadata": {
+                "$obj": "o12685"
+              }
+            }
+          },
+          "expect": {
+            "title": "x",
+            "_tenant": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "TenancyHookTest::testDecorateRowStoresTheTenantInTheGivenColumn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Tenancy",
+            "args": {
+              "column": "owner"
+            },
+            "as": "o12686"
+          },
+          "bind": "s66226",
+          "expect": {
+            "$hook": "Tenancy"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\RowMetadata",
+            "args": {
+              "tenant": 5
+            },
+            "as": "o12687"
+          },
+          "bind": "s66227",
+          "expect": {
+            "$value": "Hook\\RowMetadata",
+            "fields": {
+              "tenant": 5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12686"
+            },
+            "method": "decorateRow",
+            "args": {
+              "row": {
+                "title": "x"
+              },
+              "metadata": {
+                "$obj": "o12687"
+              }
+            }
+          },
+          "expect": {
+            "title": "x",
+            "owner": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "TenancyHookTest::testDecorateRowReplacesATenantTheRowAlreadyHolds",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Tenancy",
+            "args": {},
+            "as": "o12688"
+          },
+          "bind": "s66229",
+          "expect": {
+            "$hook": "Tenancy"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\RowMetadata",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o12689"
+          },
+          "bind": "s66230",
+          "expect": {
+            "$value": "Hook\\RowMetadata",
+            "fields": {
+              "tenant": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12688"
+            },
+            "method": "decorateRow",
+            "args": {
+              "row": {
+                "_tenant": 5
+              },
+              "metadata": {
+                "$obj": "o12689"
+              }
+            }
+          },
+          "expect": {
+            "_tenant": 7
+          }
+        }
+      ]
+    }
+  ]
+}

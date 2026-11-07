@@ -1,0 +1,180 @@
+//! [`Accumulator`]: metrics buffered in memory and written in batches.
+
+use indexmap::IndexMap;
+use php_std::datetime::DateTime;
+use php_std::json::{self, Flags};
+use php_std::sort::{SortFlags, ksort};
+use utopia_query::{Array, Value};
+
+use crate::adapter::{Entry, Time};
+use crate::error::{Error, Result};
+use crate::metric::Kind;
+use crate::usage::{BATCH_SIZE, Usage};
+
+/// A buffered metric.
+#[derive(Debug, Clone)]
+struct Buffered {
+    entry: Entry,
+    kind: Kind,
+    time: Option<DateTime>,
+}
+
+/// Buffers metrics and writes them to a [`Usage`] in batches: events with
+/// the same tenant, metric and tags are summed (the earliest time wins),
+/// gauges keep the last write. It reports how much is buffered and for
+/// how long; the caller decides when to [`Accumulator::flush`].
+///
+/// PHP: `Utopia\Usage\Accumulator`.
+#[derive(Debug)]
+pub struct Accumulator {
+    usage: Usage,
+    buffer: IndexMap<String, Buffered>,
+    flushed_at: f64,
+}
+
+impl Accumulator {
+    /// An empty accumulator writing to `usage`.
+    ///
+    /// PHP: `new Accumulator($usage)`.
+    pub fn new(usage: Usage) -> Accumulator {
+        Accumulator { usage, buffer: IndexMap::new(), flushed_at: php_std::datetime::microtime_float() }
+    }
+
+    /// Buffers one metric. Negative values are refused unless
+    /// `allow_negative` (a signed delta); a folded entry keeps the opt-in
+    /// of any call that folded into it.
+    ///
+    /// PHP: `collect($tenant, $metric, $value, $type, $tags, $time, $allowNegative)`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn collect(
+        &mut self,
+        tenant: &str,
+        metric: &str,
+        value: i64,
+        kind: Kind,
+        tags: Array,
+        time: Option<DateTime>,
+        allow_negative: bool,
+    ) -> Result<&mut Self> {
+        if tenant.is_empty() {
+            return Err(Error::invalid_argument("Tenant cannot be empty"));
+        }
+        if metric.is_empty() {
+            return Err(Error::invalid_argument("Metric name cannot be empty"));
+        }
+        if value < 0 && !allow_negative {
+            return Err(Error::invalid_argument("Value cannot be negative"));
+        }
+
+        let key = key(tenant, metric, kind, &tags)?;
+
+        if kind == Kind::Event
+            && let Some(buffered) = self.buffer.get_mut(&key)
+        {
+            buffered.entry.value = buffered.entry.value.saturating_add(value);
+            buffered.entry.allow_negative = buffered.entry.allow_negative || allow_negative;
+            if let Some(time) = time
+                && buffered.time.as_ref().is_none_or(|current| time < *current)
+            {
+                buffered.time = Some(time);
+            }
+            return Ok(self);
+        }
+
+        let entry = Entry {
+            tenant: Some(tenant.to_owned()),
+            metric: metric.to_owned(),
+            value,
+            tags,
+            time: None,
+            allow_negative,
+        };
+        self.buffer.insert(key, Buffered { entry, kind, time });
+        Ok(self)
+    }
+
+    /// Writes the buffer: events, then gauges, at most [`BATCH_SIZE`]
+    /// entries per batch, each removed from the buffer as soon as it is
+    /// written. A batch the adapter refused stays buffered, so a retry never
+    /// writes an earlier batch twice; an error leaves the batches written
+    /// before it cleared.
+    ///
+    /// PHP: `flush()`.
+    pub async fn flush(&mut self) -> Result<bool> {
+        let mut written = true;
+        for kind in [Kind::Event, Kind::Gauge] {
+            let keys: Vec<String> =
+                self.buffer.iter().filter(|(_, b)| b.kind == kind).map(|(k, _)| k.clone()).collect();
+            for batch in keys.chunks(BATCH_SIZE as usize) {
+                written = self.write(kind, batch).await? && written;
+            }
+        }
+        if self.buffer.is_empty() {
+            self.flushed_at = php_std::datetime::microtime_float();
+        }
+        Ok(written)
+    }
+
+    /// Writes the entries under `keys` as one batch and removes them from
+    /// the buffer when the adapter accepts it.
+    ///
+    /// PHP: `write()` (private).
+    async fn write(&mut self, kind: Kind, keys: &[String]) -> Result<bool> {
+        let entries: Vec<Entry> = keys
+            .iter()
+            .filter_map(|k| self.buffer.get(k))
+            .map(|b| {
+                let mut entry = b.entry.clone();
+                entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
+                entry
+            })
+            .collect();
+        if !self.usage.add_batch(&entries, kind, BATCH_SIZE).await? {
+            return Ok(false);
+        }
+        for key in keys {
+            self.buffer.shift_remove(key);
+        }
+        Ok(true)
+    }
+
+    /// How many distinct entries are buffered.
+    ///
+    /// PHP: `count()`.
+    pub fn count(&self) -> usize {
+        self.buffer.len()
+    }
+
+    /// Seconds since the last flush that emptied the buffer.
+    ///
+    /// PHP: `elapsedSeconds()`.
+    pub fn elapsed_seconds(&self) -> f64 {
+        php_std::datetime::microtime_float() - self.flushed_at
+    }
+
+    /// The buffered entries and their kinds, in buffer order (the time an
+    /// entry will be written with is its [`Entry::time`]).
+    pub fn entries(&self) -> impl Iterator<Item = (Entry, Kind)> + '_ {
+        self.buffer.values().map(|b| {
+            let mut entry = b.entry.clone();
+            entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
+            (entry, b.kind)
+        })
+    }
+}
+
+/// `json_encode([$tenant, $metric, $type, ksort($tags)])`, which PHP keys
+/// its buffer by the MD5 of: the identity of an entry, tags in key order.
+fn key(tenant: &str, metric: &str, kind: Kind, tags: &Array) -> Result<String> {
+    let mut canonical = tags.clone();
+    ksort(&mut canonical, SortFlags::Regular);
+    let identity = Value::Array(Array::from_list(vec![
+        Value::from(tenant),
+        Value::from(metric),
+        Value::from(kind.as_str()),
+        Value::Array(canonical),
+    ]));
+    // PHP keys the buffer by the MD5 of this JSON; the JSON itself is the
+    // same identity, without hashing it.
+    json::encode(&identity, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(|e| Error::Json(e.message().into()))
+}

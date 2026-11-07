@@ -1,0 +1,177 @@
+{
+  "source": "packages/config/tests/RegistryTest.php",
+  "cases": [
+    {
+      "name": "testGetParamResolvesFlatAndDottedKeys",
+      "steps": [
+        {
+          "op": "config.reset_params",
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "key",
+            "value": "value"
+          },
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "nested",
+            "value": {
+              "child": {
+                "leaf": "leafValue"
+              },
+              "zero": 0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "key"
+          },
+          "expect": "value"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.child.leaf"
+          },
+          "expect": "leafValue"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.child"
+          },
+          "expect": {
+            "$array": [
+              [
+                "leaf",
+                "leafValue"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.zero"
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testGetParamFallsBackToTheDefault",
+      "steps": [
+        {
+          "op": "config.reset_params",
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "nested",
+            "value": {
+              "child": "value",
+              "empty": null
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "null",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "missing"
+          },
+          "expect": null
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "missing",
+            "default": "default"
+          },
+          "expect": "default"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "null",
+            "default": "default"
+          },
+          "expect": "default"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.missing",
+            "default": "default"
+          },
+          "expect": "default"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.empty",
+            "default": "default"
+          },
+          "expect": "default"
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "nested.child.deeper",
+            "default": "default"
+          },
+          "expect": "default"
+        }
+      ]
+    },
+    {
+      "name": "testSetParamOverwrites",
+      "steps": [
+        {
+          "op": "config.reset_params",
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "key",
+            "value": "first"
+          },
+          "expect": null
+        },
+        {
+          "op": "config.set_param",
+          "args": {
+            "key": "key",
+            "value": "second"
+          },
+          "expect": null
+        },
+        {
+          "op": "config.get_param",
+          "args": {
+            "key": "key"
+          },
+          "expect": "second"
+        }
+      ]
+    }
+  ]
+}

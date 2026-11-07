@@ -1,0 +1,57 @@
+[package]
+name = "utopia-database"
+description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL, MariaDB, MySQL, SQLite, in-memory, Redis, Pool, Mirror)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/database"
+publish.workspace = true
+
+[features]
+default = ["postgres", "memory"]
+# The PostgreSQL adapter.
+postgres = ["dep:postgres-protocol", "dep:fallible-iterator"]
+# The MariaDB adapter.
+mariadb = ["dep:mysql_async"]
+# The MySQL adapter (MariaDB's, with MySQL's differences).
+mysql = ["mariadb"]
+# The Pool adapter: each call on a connection of a utopia-pools pool of adapters.
+pool = ["dep:utopia-pools"]
+# The Redis adapter: documents stored in Redis (redis-rs, as utopia-cache uses).
+redis = ["dep:redis"]
+# The SQLite adapter (rusqlite, with SQLite built in).
+sqlite = ["dep:rusqlite"]
+# The in-memory adapter.
+memory = []
+# The MongoDB adapter, on utopia-mongo (the official driver).
+mongo = ["dep:utopia-mongo"]
+
+[dependencies]
+async-trait.workspace = true
+bytes.workspace = true
+fallible-iterator = { workspace = true, optional = true }
+postgres-protocol = { workspace = true, optional = true }
+redis = { workspace = true, optional = true }
+futures-util.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+md-5.workspace = true
+mysql_async = { workspace = true, optional = true }
+php-std.workspace = true
+rusqlite = { workspace = true, optional = true }
+serde_json.workspace = true
+utopia-async.workspace = true
+tracing.workspace = true
+utopia-cache.workspace = true
+utopia-pools = { workspace = true, optional = true }
+utopia-mongo = { workspace = true, optional = true }
+utopia-validators.workspace = true
+utopia-query.workspace = true
+xxhash-rust.workspace = true
+
+[dev-dependencies]
+indexmap.workspace = true
+
+[package.metadata.utopia]
+category = "data"

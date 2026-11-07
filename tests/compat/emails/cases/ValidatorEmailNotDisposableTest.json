@@ -1,0 +1,313 @@
+{
+  "source": "packages/emails/tests/Validator/EmailNotDisposableTest.php",
+  "cases": [
+    {
+      "name": "valid non disposable email",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "test@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@company.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@business.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid disposable email",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@tempmail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@guerrillamail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@mailinator.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@yopmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@temp-mail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@throwaway.email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@getnada.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@maildrop.cc"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@sharklasers.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@test.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@business.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@enterprise.net"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid email format",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "invalid-email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@example@com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "user@"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "non string input",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": false
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validatordescription",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "not_disposable"
+          },
+          "expect": {
+            "description": "Value must be a valid email address that is not from a disposable email service",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validatortype",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "not_disposable"
+          },
+          "expect": {
+            "description": "Value must be a valid email address that is not from a disposable email service",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validator is array",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "not_disposable"
+          },
+          "expect": {
+            "description": "Value must be a valid email address that is not from a disposable email service",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

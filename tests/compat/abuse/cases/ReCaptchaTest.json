@@ -1,0 +1,474 @@
+{
+  "source": "packages/abuse/tests/ReCaptchaTest.php",
+  "cases": [
+    {
+      "name": "sends form to siteverify",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "s3cret&key",
+            "response": "token/with+chars",
+            "ip": "203.0.113.7",
+            "body": "{\"success\": true, \"score\": 0.9}"
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=s3cret%26key&response=token%2Fwith%2Bchars&remoteip=203.0.113.7"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the endpoint",
+      "steps": [
+        {
+          "op": "recaptcha.url",
+          "args": {},
+          "expect": "https://www.google.com/recaptcha/api/siteverify"
+        }
+      ]
+    },
+    {
+      "name": "verdict: above threshold",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 0.9}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: at threshold",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 0.5}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: below threshold",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 0.4}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: custom threshold",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 0.7}",
+            "score": 0.8
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: integer score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 1}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: unsuccessful",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": false, \"score\": 0.9}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: truthy success",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": 1, \"score\": 0.9}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: missing score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: non-numeric score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": \"0.9\"}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: error codes",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": false, \"error-codes\": [\"invalid-input-secret\"]}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: invalid json",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "<html></html>",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: empty body",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "",
+            "score": 0.0
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: a list",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "[true, 0.9]",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: a scalar",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "true",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: default threshold",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 0.5}"
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: negative threshold and score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": -1}",
+            "score": -1.5
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: huge integer score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": 99999999999999999999}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": true,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: nested success",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": {\"ok\": true}, \"score\": 0.9}",
+            "score": 0.5
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verdict: null score",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "secret",
+            "response": "token",
+            "ip": "127.0.0.1",
+            "body": "{\"success\": true, \"score\": null}",
+            "score": 0.0
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=secret&response=token&remoteip=127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "encodes every reserved character",
+      "steps": [
+        {
+          "op": "recaptcha.verify",
+          "args": {
+            "secret": "a b~c*d'e(f)!",
+            "response": "ü/é?&=#%",
+            "ip": "::1",
+            "body": "{}"
+          },
+          "expect": {
+            "verdict": false,
+            "method": "POST",
+            "url": "https://www.google.com/recaptcha/api/siteverify",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "secret=a%20b~c%2Ad%27e%28f%29%21&response=%C3%BC%2F%C3%A9%3F%26%3D%23%25&remoteip=%3A%3A1"
+          }
+        }
+      ]
+    }
+  ]
+}

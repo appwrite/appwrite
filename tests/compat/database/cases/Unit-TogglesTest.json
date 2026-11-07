@@ -1,0 +1,6556 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/TogglesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#validation",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o462"
+          },
+          "bind": "s887",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o463"
+          },
+          "bind": "s888",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o462"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o463"
+                }
+              ]
+            },
+            "as": "o464"
+          },
+          "bind": "s889",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o465"
+          },
+          "bind": "s890",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o465"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000021"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValidating",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setValidation",
+            "args": {
+              "validation": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValidating",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setValidation",
+            "args": {
+              "validation": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValidating",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#filtering",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o466"
+          },
+          "bind": "s899",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o467"
+          },
+          "bind": "s900",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o466"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o467"
+                }
+              ]
+            },
+            "as": "o468"
+          },
+          "bind": "s901",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o469"
+          },
+          "bind": "s902",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o469"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000022"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isFiltering",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "setFiltering",
+            "args": {
+              "filtering": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isFiltering",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "setFiltering",
+            "args": {
+              "filtering": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isFiltering",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#profiling",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o470"
+          },
+          "bind": "s911",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o471"
+          },
+          "bind": "s912",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o470"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o471"
+                }
+              ]
+            },
+            "as": "o472"
+          },
+          "bind": "s913",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o473"
+          },
+          "bind": "s914",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o473"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000023"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "isProfiling",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "isProfiling",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o472"
+            },
+            "method": "isProfiling",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#preserve dates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o474"
+          },
+          "bind": "s923",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o475"
+          },
+          "bind": "s924",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o474"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o475"
+                }
+              ]
+            },
+            "as": "o476"
+          },
+          "bind": "s925",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o477"
+          },
+          "bind": "s926",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o477"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000024"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "isPreservingDates",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "setPreserveDates",
+            "args": {
+              "preserve": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "isPreservingDates",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "setPreserveDates",
+            "args": {
+              "preserve": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o476"
+            },
+            "method": "isPreservingDates",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#preserve sequence",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o478"
+          },
+          "bind": "s935",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o479"
+          },
+          "bind": "s936",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o478"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o479"
+                }
+              ]
+            },
+            "as": "o480"
+          },
+          "bind": "s937",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o481"
+          },
+          "bind": "s938",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o481"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000025"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "isPreservingSequence",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "setPreserveSequence",
+            "args": {
+              "preserve": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "isPreservingSequence",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "setPreserveSequence",
+            "args": {
+              "preserve": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o480"
+            },
+            "method": "isPreservingSequence",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#migrating",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o482"
+          },
+          "bind": "s947",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o483"
+          },
+          "bind": "s948",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o482"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o483"
+                }
+              ]
+            },
+            "as": "o484"
+          },
+          "bind": "s949",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o485"
+          },
+          "bind": "s950",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o485"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000026"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "isMigrating",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "setMigrating",
+            "args": {
+              "migrating": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "isMigrating",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "setMigrating",
+            "args": {
+              "migrating": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o484"
+            },
+            "method": "isMigrating",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#drop unknown attributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o486"
+          },
+          "bind": "s959",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o487"
+          },
+          "bind": "s960",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o486"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o487"
+                }
+              ]
+            },
+            "as": "o488"
+          },
+          "bind": "s961",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o489"
+          },
+          "bind": "s962",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o489"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000027"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "setDropUnknownAttributes",
+            "args": {
+              "drop": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "setDropUnknownAttributes",
+            "args": {
+              "drop": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#shared tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o490"
+          },
+          "bind": "s971",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o491"
+          },
+          "bind": "s972",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o490"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o491"
+                }
+              ]
+            },
+            "as": "o492"
+          },
+          "bind": "s973",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o493"
+          },
+          "bind": "s974",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o493"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000028"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "hasSharedTables",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "hasSharedTables",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "hasSharedTables",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSetterReturnsTheDatabaseAndTheReaderFollowsIt#tenant per document",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o494"
+          },
+          "bind": "s983",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o495"
+          },
+          "bind": "s984",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o494"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o495"
+                }
+              ]
+            },
+            "as": "o496"
+          },
+          "bind": "s985",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o497"
+          },
+          "bind": "s986",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o497"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000029"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "isTenantPerDocument",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "setTenantPerDocument",
+            "args": {
+              "enabled": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "isTenantPerDocument",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "setTenantPerDocument",
+            "args": {
+              "enabled": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o496"
+            },
+            "method": "isTenantPerDocument",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testConfigurationSettersReturnTheDatabase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o498"
+          },
+          "bind": "s995",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o499"
+          },
+          "bind": "s996",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o498"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o499"
+                }
+              ]
+            },
+            "as": "o500"
+          },
+          "bind": "s997",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o501"
+          },
+          "bind": "s998",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o501"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000030"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o502"
+          },
+          "bind": "s1002",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o502"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setMaxQueryValues",
+            "args": {
+              "max": 10
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "getMaxQueryValues",
+            "args": {}
+          },
+          "expect": 10
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setLocks",
+            "args": {
+              "locks": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "getTenant",
+            "args": {}
+          },
+          "expect": 7
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeAppliesTheGivenValueOnlyInsideTheCallback#withValidation",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o503"
+          },
+          "bind": "s1009",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o504"
+          },
+          "bind": "s1010",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o503"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o504"
+                }
+              ]
+            },
+            "as": "o505"
+          },
+          "bind": "s1011",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o506"
+          },
+          "bind": "s1012",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o506"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000031"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "withValidation",
+            "args": {
+              "validation": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o505"
+                      },
+                      "method": "isValidating",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "isValidating",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "withValidation",
+            "args": {
+              "validation": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o505"
+                      },
+                      "method": "isValidating",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeAppliesTheGivenValueOnlyInsideTheCallback#withFiltering",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o507"
+          },
+          "bind": "s1019",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o508"
+          },
+          "bind": "s1020",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o507"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o508"
+                }
+              ]
+            },
+            "as": "o509"
+          },
+          "bind": "s1021",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o510"
+          },
+          "bind": "s1022",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o510"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000032"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o509"
+                      },
+                      "method": "isFiltering",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "isFiltering",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o509"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o509"
+                      },
+                      "method": "isFiltering",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeAppliesTheGivenValueOnlyInsideTheCallback#withPreserveDates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o511"
+          },
+          "bind": "s1029",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o512"
+          },
+          "bind": "s1030",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o511"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o512"
+                }
+              ]
+            },
+            "as": "o513"
+          },
+          "bind": "s1031",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o514"
+          },
+          "bind": "s1032",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o514"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000033"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o513"
+                      },
+                      "method": "isPreservingDates",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "isPreservingDates",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o513"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o513"
+                      },
+                      "method": "isPreservingDates",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeAppliesTheGivenValueOnlyInsideTheCallback#withPreserveSequence",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o515"
+          },
+          "bind": "s1039",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o516"
+          },
+          "bind": "s1040",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o515"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o516"
+                }
+              ]
+            },
+            "as": "o517"
+          },
+          "bind": "s1041",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o518"
+          },
+          "bind": "s1042",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o518"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000034"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "withPreserveSequence",
+            "args": {
+              "preserve": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o517"
+                      },
+                      "method": "isPreservingSequence",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "isPreservingSequence",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "withPreserveSequence",
+            "args": {
+              "preserve": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o517"
+                      },
+                      "method": "isPreservingSequence",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeCanTurnBackOnWhatTheHandleTurnedOff#withValidation",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o519"
+          },
+          "bind": "s1049",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o520"
+          },
+          "bind": "s1050",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o519"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o520"
+                }
+              ]
+            },
+            "as": "o521"
+          },
+          "bind": "s1051",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o522"
+          },
+          "bind": "s1052",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o522"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000035"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "withValidation",
+            "args": {
+              "validation": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o521"
+                      },
+                      "method": "withValidation",
+                      "args": {
+                        "validation": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o521"
+                                },
+                                "method": "isValidating",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": true,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "withValidation",
+            "args": {
+              "validation": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o521"
+                      },
+                      "method": "withValidation",
+                      "args": {
+                        "validation": false,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o521"
+                                },
+                                "method": "isValidating",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": false,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              false
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeCanTurnBackOnWhatTheHandleTurnedOff#withFiltering",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o523"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o524"
+          },
+          "bind": "s1059",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o523"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o524"
+                }
+              ]
+            },
+            "as": "o525"
+          },
+          "bind": "s1060",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o526"
+          },
+          "bind": "s1061",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o525"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o526"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o525"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o525"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000036"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o525"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o525"
+                      },
+                      "method": "withFiltering",
+                      "args": {
+                        "filtering": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o525"
+                                },
+                                "method": "isFiltering",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": true,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o525"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o525"
+                      },
+                      "method": "withFiltering",
+                      "args": {
+                        "filtering": false,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o525"
+                                },
+                                "method": "isFiltering",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": false,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              false
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeCanTurnBackOnWhatTheHandleTurnedOff#withPreserveDates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o527"
+          },
+          "bind": "s1067",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o528"
+          },
+          "bind": "s1068",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o527"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o528"
+                }
+              ]
+            },
+            "as": "o529"
+          },
+          "bind": "s1069",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o530"
+          },
+          "bind": "s1070",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o530"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000037"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o529"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": false,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o529"
+                                },
+                                "method": "isPreservingDates",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": false,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              false
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o529"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o529"
+                                },
+                                "method": "isPreservingDates",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": true,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testScopeCanTurnBackOnWhatTheHandleTurnedOff#withPreserveSequence",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o531"
+          },
+          "bind": "s1076",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o532"
+          },
+          "bind": "s1077",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o531"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o532"
+                }
+              ]
+            },
+            "as": "o533"
+          },
+          "bind": "s1078",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o534"
+          },
+          "bind": "s1079",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o534"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000038"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "withPreserveSequence",
+            "args": {
+              "preserve": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o533"
+                      },
+                      "method": "withPreserveSequence",
+                      "args": {
+                        "preserve": false,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o533"
+                                },
+                                "method": "isPreservingSequence",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": false,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              false
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "withPreserveSequence",
+            "args": {
+              "preserve": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o533"
+                      },
+                      "method": "withPreserveSequence",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o533"
+                                },
+                                "method": "isPreservingSequence",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": true,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testSkipValidationAndSkipFiltersTurnTheirToggleOffInsideTheCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o535"
+          },
+          "bind": "s1085",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o536"
+          },
+          "bind": "s1086",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o535"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o536"
+                }
+              ]
+            },
+            "as": "o537"
+          },
+          "bind": "s1087",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o538"
+          },
+          "bind": "s1088",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o538"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000039"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o537"
+                      },
+                      "method": "isValidating",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "skipFilters",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o537"
+                      },
+                      "method": "isFiltering",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "isValidating",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "isFiltering",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testFilteringOffReadsTheStoredValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o539"
+          },
+          "bind": "s1096",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "quiet"
+                    }
+                  }
+                ]
+              },
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "QUIET"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o540"
+          },
+          "bind": "s1097",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o539"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o540"
+                }
+              ]
+            },
+            "as": "o541"
+          },
+          "bind": "s1098",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o542"
+          },
+          "bind": "s1099",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o542"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000040"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64,
+              "filters": [
+                "shout"
+              ]
+            },
+            "as": "o543"
+          },
+          "bind": "s1104",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "shout"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o544"
+          },
+          "bind": "s1105",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o544"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o545"
+          },
+          "bind": "s1107",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o545"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o543"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o546"
+          },
+          "bind": "s1109",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o546"
+              }
+            },
+            "as": "o547"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "title": "Quiet"
+              }
+            },
+            "as": "o548"
+          },
+          "bind": "s1111",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "Quiet"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o548"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "QUIET",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o549"
+          },
+          "bind": "s1113",
+          "expect": {
+            "$document": {
+              "title": "QUIET",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o549"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "QUIET"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o541"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "notes",
+                        "id": "note"
+                      },
+                      "as": "o550"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o550"
+                      },
+                      "method": "getAttribute",
+                      "args": {
+                        "name": "title"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1115",
+          "expect": {
+            "result": "quiet",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "title": "quiet",
+                        "$sequence": "1",
+                        "$id": "note",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "notes"
+                      }
+                    },
+                    "quiet"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "setFiltering",
+            "args": {
+              "filtering": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o551"
+          },
+          "bind": "s1117",
+          "expect": {
+            "$document": {
+              "title": "quiet",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o551"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "quiet"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o541"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "notes",
+                        "id": "note"
+                      },
+                      "as": "o552"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o552"
+                      },
+                      "method": "getAttribute",
+                      "args": {
+                        "name": "title"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1119",
+          "expect": {
+            "result": "QUIET",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "title": "QUIET",
+                        "$sequence": "1",
+                        "$id": "note",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "notes"
+                      }
+                    },
+                    "QUIET"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testNamedFiltersAreTurnedOffAndBackOn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o553"
+          },
+          "bind": "s1120",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "quiet"
+                    }
+                  }
+                ]
+              },
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "QUIET"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o554"
+          },
+          "bind": "s1121",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o553"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o554"
+                }
+              ]
+            },
+            "as": "o555"
+          },
+          "bind": "s1122",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o556"
+          },
+          "bind": "s1123",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o556"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000041"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64,
+              "filters": [
+                "shout"
+              ]
+            },
+            "as": "o557"
+          },
+          "bind": "s1128",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "shout"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o558"
+          },
+          "bind": "s1129",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o558"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o559"
+          },
+          "bind": "s1131",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o559"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o557"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o560"
+          },
+          "bind": "s1133",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o560"
+              }
+            },
+            "as": "o561"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "title": "Quiet"
+              }
+            },
+            "as": "o562"
+          },
+          "bind": "s1135",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "Quiet"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o562"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "QUIET",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o555"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "notes",
+                        "id": "note"
+                      },
+                      "as": "o563"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o563"
+                      },
+                      "method": "getAttribute",
+                      "args": {
+                        "name": "title"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              },
+              "filters": [
+                "shout"
+              ]
+            }
+          },
+          "bind": "s1137",
+          "expect": {
+            "result": "quiet",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "title": "quiet",
+                        "$sequence": "1",
+                        "$id": "note",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "notes"
+                      }
+                    },
+                    "quiet"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "withFiltering",
+            "args": {
+              "filtering": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o555"
+                      },
+                      "method": "isFiltering",
+                      "args": {}
+                    },
+                    "return": true
+                  }
+                ]
+              },
+              "filters": [
+                "shout"
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "skipFilters",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o555"
+                      },
+                      "method": "withFiltering",
+                      "args": {
+                        "filtering": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o555"
+                                },
+                                "method": "getDocument",
+                                "args": {
+                                  "collection": "notes",
+                                  "id": "note"
+                                },
+                                "as": "o564"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o564"
+                                },
+                                "method": "getAttribute",
+                                "args": {
+                                  "name": "title"
+                                }
+                              },
+                              "return": true
+                            }
+                          ]
+                        },
+                        "filters": [
+                          "shout"
+                        ]
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              },
+              "filters": [
+                "shout"
+              ]
+            }
+          },
+          "bind": "s1139",
+          "expect": {
+            "result": "QUIET",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": "QUIET",
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "title": "QUIET",
+                                  "$sequence": "1",
+                                  "$id": "note",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "notes"
+                                }
+                              },
+                              "QUIET"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testPreservedDatesKeepTheGivenCreationTime",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o565"
+          },
+          "bind": "s1140",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "quiet"
+                    }
+                  }
+                ]
+              },
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "QUIET"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o566"
+          },
+          "bind": "s1141",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o565"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o566"
+                }
+              ]
+            },
+            "as": "o567"
+          },
+          "bind": "s1142",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o568"
+          },
+          "bind": "s1143",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o568"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000042"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64,
+              "filters": [
+                "shout"
+              ]
+            },
+            "as": "o569"
+          },
+          "bind": "s1148",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "shout"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o570"
+          },
+          "bind": "s1149",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o570"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o571"
+          },
+          "bind": "s1151",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o571"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o569"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o572"
+          },
+          "bind": "s1153",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o572"
+              }
+            },
+            "as": "o573"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "title": "Quiet"
+              }
+            },
+            "as": "o574"
+          },
+          "bind": "s1155",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "Quiet"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o574"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "QUIET",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": true,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "preserved",
+                          "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                          "title": "preserved"
+                        }
+                      },
+                      "as": "o575"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o567"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "notes",
+                        "document": {
+                          "$obj": "o575"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1157",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "preserved",
+                "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                "title": "QUIET",
+                "$collection": "notes",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "preserved",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "title": "preserved"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "preserved",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "title": "QUIET",
+                        "$collection": "notes",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o567"
+            },
+            "method": "withPreserveDates",
+            "args": {
+              "preserve": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "stamped",
+                          "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                          "title": "stamped"
+                        }
+                      },
+                      "as": "o576"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o567"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "notes",
+                        "document": {
+                          "$obj": "o576"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1158",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "stamped",
+                "$createdAt": "<now>",
+                "title": "QUIET",
+                "$collection": "notes",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "3"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "stamped",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "title": "stamped"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "stamped",
+                        "$createdAt": "<now>",
+                        "title": "QUIET",
+                        "$collection": "notes",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o575"
+            },
+            "method": "getCreatedAt",
+            "args": {}
+          },
+          "expect": "2000-01-01T00:00:00.000+00:00"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o576"
+            },
+            "method": "getCreatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testIgnoreDuplicatesSkipsAnExistingIdOnlyInsideTheCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o577"
+          },
+          "bind": "s1161",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "quiet"
+                    }
+                  }
+                ]
+              },
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "QUIET"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o578"
+          },
+          "bind": "s1162",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o577"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o578"
+                }
+              ]
+            },
+            "as": "o579"
+          },
+          "bind": "s1163",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o580"
+          },
+          "bind": "s1164",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o580"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000043"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64,
+              "filters": [
+                "shout"
+              ]
+            },
+            "as": "o581"
+          },
+          "bind": "s1169",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "shout"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o582"
+          },
+          "bind": "s1170",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o582"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o583"
+          },
+          "bind": "s1172",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o583"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o581"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o584"
+          },
+          "bind": "s1174",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o584"
+              }
+            },
+            "as": "o585"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "shout"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "title": "Quiet"
+              }
+            },
+            "as": "o586"
+          },
+          "bind": "s1176",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "Quiet"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o586"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "QUIET",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "ignoreDuplicates",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "note",
+                          "title": "again"
+                        }
+                      },
+                      "as": "o587"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o579"
+                      },
+                      "method": "createDocuments",
+                      "args": {
+                        "collection": "notes",
+                        "documents": [
+                          {
+                            "$obj": "o587"
+                          }
+                        ]
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1178",
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "note",
+                        "title": "again"
+                      }
+                    },
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o588"
+          },
+          "bind": "s1179",
+          "expect": {
+            "$document": {
+              "title": "QUIET",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o588"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "QUIET"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "title": "again"
+              }
+            },
+            "as": "o589"
+          },
+          "bind": "s1181",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "title": "again"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o579"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "notes",
+              "documents": [
+                {
+                  "$obj": "o589"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TogglesTest::testClearDocumentTypesKeepsTheMetadataCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o590"
+          },
+          "bind": "s1183",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "shout",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o591"
+          },
+          "bind": "s1184",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o590"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o591"
+                }
+              ]
+            },
+            "as": "o592"
+          },
+          "bind": "s1185",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o593"
+          },
+          "bind": "s1186",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o593"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "toggles"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "toggles_u000000000044"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "setDocumentType",
+            "args": {
+              "collection": "notes",
+              "className": "Tests\\Unit\\TogglesNote"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class Tests\\Unit\\TogglesNote does not exist"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "clearDocumentType",
+            "args": {
+              "collection": "notes"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "getDocumentType",
+            "args": {
+              "collection": "notes"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "setDocumentType",
+            "args": {
+              "collection": "notes",
+              "className": "Tests\\Unit\\TogglesNote"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class Tests\\Unit\\TogglesNote does not exist"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "clearDocumentTypes",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "getDocumentType",
+            "args": {
+              "collection": "notes"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "getDocumentType",
+            "args": {
+              "collection": "_metadata"
+            }
+          },
+          "expect": "Utopia\\Database\\Collection"
+        }
+      ]
+    }
+  ]
+}

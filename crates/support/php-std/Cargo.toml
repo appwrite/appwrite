@@ -1,0 +1,46 @@
+[package]
+name = "php-std"
+description = "PHP engine semantics (the value model, juggling and comparison, string, number, JSON, serialize, igbinary, sorting, filter and URL functions) for crates that must behave exactly like PHP."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/php-std"
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+# crypt(), password_*() and hash(): Argon2, Blowfish (EksBlowfish), MD5, SHA-1, SHA-2 and SHA-3 (RustCrypto).
+argon2.workspace = true
+blowfish.workspace = true
+foldhash.workspace = true
+getrandom.workspace = true
+gost94.workspace = true
+hashbrown.workspace = true
+indexmap.workspace = true
+md-5.workspace = true
+md2.workspace = true
+icu_normalizer.workspace = true
+icu_properties.workspace = true
+ripemd.workspace = true
+rustix.workspace = true
+# Shortest round-trip float digits (serialize_precision = -1).
+ryu.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+sha2.workspace = true
+sha3.workspace = true
+whirlpool.workspace = true
+xxhash-rust.workspace = true
+# yaml_parse(): libyaml 0.2.5 translated to Rust, the parser ext-yaml links, so
+# documents are accepted, refused and split into events exactly as in PHP.
+unsafe-libyaml.workspace = true
+
+[build-dependencies]
+# PCRE2 10.44 with its JIT, from the sources PHP 8.5 bundles (pcre2/): the
+# preg_* functions run user patterns, which must behave exactly as in PHP, and
+# no Rust engine does (see src/pcre.rs).
+cc.workspace = true
+
+[package.metadata.utopia]
+category = "platform"

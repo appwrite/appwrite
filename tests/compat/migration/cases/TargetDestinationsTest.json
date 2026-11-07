@@ -1,0 +1,610 @@
+{
+  "source": "packages/migration/tests/General/TargetDestinationsTest.php",
+  "cases": [
+    {
+      "name": "a target connects anywhere by default",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a target refuses an address its destinations do not allow",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "destinations": "public"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": null,
+              "message": "not an allowed destination"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "dst-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a target reaches a range its destinations admit",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "destinations": "service"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a target applies destinations set after a request",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "destinations": "public"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": null,
+              "message": "not an allowed destination"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the SDK client refuses an address its destinations do not allow",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "destinations": "public"
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Appwrite\\AppwriteException",
+              "code": null,
+              "message": "not an allowed destination"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the SDK client reaches a range its destinations admit",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "destinations": "service"
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the Appwrite source passes its destinations to the SDK client",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "dst-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/dst-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "project": "project",
+            "endpoint": "{api}/p/dst-${ns}"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "destinations": "public"
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Appwrite\\AppwriteException",
+              "code": null,
+              "message": "not an allowed destination"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5420 @@
+{
+  "source": "packages/validators/tests/GlobstarTest.php",
+  "cases": [
+    {
+      "name": "testEmptyPatternsAlwaysPass",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": []
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/anything"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/deep/nested/file.php"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSingleExactInclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main-extra"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testMultipleExactInclusionsOr",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main",
+                "develop",
+                "staging"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "staging"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "production"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSingleWildcardInclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/bar"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo/bar"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSingleWildcardWithDirectoryPrefix",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "baz/*.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "baz/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "baz/*.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "a/baz/file.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "baz/*.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "baz/file.log"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testWildcardWithDash",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/test-*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/test-1"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/test-abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/other"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/test"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testQuestionMarkWildcard",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "v?.?"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1.0"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v2.5"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v10.0"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1/0"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testQuestionMarkDoesNotCrossSlash",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/?"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/a"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/z"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/ab"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/a/b"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testQuestionMarkMixedWithStar",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "fix-?.*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "fix-1.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "fix-a.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "fix-12.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "fix-.php"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testQuestionMarkSuffix",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "qux?"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "qux1"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "qux?"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "quxa"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "qux?"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "qux"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "qux?"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "qux12"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardAtEnd",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/foo.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/a/b/c.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/deep/nested/file.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "lib/foo.js"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardInMiddle",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/x/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/x/y/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "x/a/b"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardAtStart",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/foo"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "foobar"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/foobar"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testMixedExactAndWildcardInclusions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main",
+                "feature/*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo/bar"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSingleExactExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!main"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testMultipleExactExclusionsAnd",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!main",
+                "!develop"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "staging"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testWildcardExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!feature/*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/bar"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "hotfix/urgent"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!src/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/foo.js"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/a/b/c.js"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "lib/foo.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testInclusionTakesPrecedenceWhenBothMatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!feature/*",
+                "feature/abc"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/xyz"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInclusionWithNoMatchFails",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main",
+                "!develop"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "staging"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testExclusionBlocksWhenInclusionDoesNotMatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/*",
+                "!hotfix/*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "hotfix/urgent"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testMultipleInclusionsWithSingleExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main",
+                "develop",
+                "feature/*",
+                "!feature/wip"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/wip"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "hotfix/urgent"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSingleInclusionWithMultipleExclusions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/**",
+                "!feature/wip",
+                "!feature/experimental"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/a/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/wip"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/experimental"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testMultipleInclusionsWithMultipleExclusions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main",
+                "feature/**",
+                "!feature/wip",
+                "!feature/experimental"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/a/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/wip"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/experimental"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testWildcardExclusionOverridesWildcardInclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**",
+                "!src/generated/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/components/Button.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/utils/helper.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/generated/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/generated/bar/Baz.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "lib/other.php"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSpecificInclusionOverridesWildcardExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/hotfix/critical",
+                "!feature/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/hotfix/critical"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/hotfix/other"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testOnlyExclusionsDefaultToTrueUnlessExcluded",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!main",
+                "!develop"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "staging"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testStarAloneMatchesSingleSegmentOnly",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleStarAloneMatchesEverything",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/a/b/c/d/file.php"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testStarDotExtMatchesRootLevelOnly",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.php"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "index.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Foo.js"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleStarSlashExtMatchesAnyDepth",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/*.php"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/components/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c/d/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Foo.js"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Foo.js"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDirPrefixDoubleStarExtPattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/*.php"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/components/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/a/b/c/Foo.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "lib/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Foo.js"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardAtStartAlternateFilename",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/temp.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "temp.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/temp.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "a/temp.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/temp.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "a/b/temp.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardAtEndNoExtension",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "src/a/file.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardLogExtension",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/*.log"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/error.log"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/*.log"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "src/a/debug.log"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardMiddleWithTwoSegmentTail",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b/c"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b/c"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "a/x/b/c"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b/c"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "a/x/y/b/c"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b/c"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "a/b/d"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardBothSides",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/d/e/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "d/e/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/d/e/**"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "x/d/e/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/d/e/**"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "x/y/d/e/z/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/d/e/**"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "d/f/file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardWithJsExtension",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/foo/**/*.js"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/foo/app/file.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/foo/**/*.js"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "src/foo/file.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/foo/**/*.js"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "src/bar/app/file.js"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardDeepNesting",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "deep/**/logs/*.log"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "deep/level1/level2/level3/level4/level5/level6/level7/logs/app.log"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDotsInPatternAreLiteral",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "release-1.0.0"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release-1.0.0"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release-1X0Y0"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release-1.0.0-hotfix"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVersionWildcardBranchPattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "v*.*.*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1.2.3"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v10.20.30"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1.2.3.4"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1.2"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "1.2.3"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "v1/2/3"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDottedFilenamePattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.test.js"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Button.test.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "App.test.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "ButtonXtestYjs"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/Button.test.js"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Button.test.ts"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPrefixWildcardBranchPattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main-extra"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "mainline"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main/branch"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardInMiddleDeepNesting",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "a/**/b"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/x/y/z/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/p/q/r/s/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/1/2/3/4/5/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/x/y/z/b/extra"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "prefix/a/x/b"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleWildcardAtStartDeepNesting",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/README.md"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "README.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "docs/README.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c/d/README.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "x/y/z/w/v/README.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c/README.md.bak"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "a/b/c/README.md/extra"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testGeneratedFilesAnywhereExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!**/generated/**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "generated/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/generated/Foo.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/api/generated/Bar.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "generated/sub/deep/File.php"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/components/Button.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testMultipleExtensionInclusions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/*.php",
+                "**/*.js"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "index.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/App.php"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "index.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/components/App.js"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "styles.css"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/styles.css"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "README.md"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testReleaseBranchPattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "release/*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release/1.0"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release/hotfix"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release/2024-01-15"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release/1.0/patch"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "release"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPatternMatchingIsCaseSensitive",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Main"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "MAIN"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "feature/*"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "feature/foo"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "Feature/foo"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "FEATURE/foo"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCharacterClassInclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[Mm]ain"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Main"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "MAIN"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "develop"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCharacterClassInclusionWithWildcardExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[Mm]ain",
+                "!**"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Main"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCharacterClassExclusion",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "!feature/[0-9]*"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/123"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/9fix"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feature/abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "main"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValidatorMetadata",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": []
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsNonStringValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "main"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              "main"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testLiteralsExact",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "file.txt.bak"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSingleAsteriskDoesNotCrossSlash",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "another.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "file.txt.bak"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "dir/file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testQuestionMarkSingleChar",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file.?xt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file.?xt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "file.dxt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file.?xt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "file.xtt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleStarPrefixFileMatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/file.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "dir/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/file.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "dir/subdir/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/file.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "file.txt.bak"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDoubleStarMiddleFileMatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "src/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/file.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "src/dir/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/file.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "src/dir/subdir/file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "src/**/file.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "other/file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEscapedAsteriskIsLiteral",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file\\*.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file*.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file\\*.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "fileX.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEscapedHashIsNotComment",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "\\#not_a_comment.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "#not_a_comment.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEscapedQuestionMarkIsLiteral",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file\\?.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file?.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testBasicCharacterClasses",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a]bc.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "abc.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a]bc.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "bbc.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z]est.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "test.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z]est.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "Test.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[A-Z]est.txt"
+              ]
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "value": "Test.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[A-Z]est.txt"
+              ]
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "test.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file[0-9].log"
+              ]
+            }
+          },
+          "bind": "v7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v7"
+            },
+            "value": "file5.log"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file[0-9].log"
+              ]
+            }
+          },
+          "bind": "v8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v8"
+            },
+            "value": "fileA.log"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-zA-Z]file.txt"
+              ]
+            }
+          },
+          "bind": "v9",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "afile.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-zA-Z]file.txt"
+              ]
+            }
+          },
+          "bind": "v10",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v10"
+            },
+            "value": "Afile.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-zA-Z]file.txt"
+              ]
+            }
+          },
+          "bind": "v11",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v11"
+            },
+            "value": "1file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testNegatedCharacterClasses",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Afile.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "afile.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "^[^a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "^1file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[^a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "afile.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!a-z0-9]file.txt"
+              ]
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "value": "#file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!a-z0-9]file.txt"
+              ]
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "afile.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!a-z0-9]file.txt"
+              ]
+            }
+          },
+          "bind": "v7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v7"
+            },
+            "value": "5file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCaretNegatedCharacterClass",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[^a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "1file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[^a-z]file.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "afile.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSpecialCharsInsideCharacterClasses",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file[.+]name.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.name.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file[.+]name.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "file+name.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "file[.+]name.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "filename.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[_!@#]special.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "_special.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[_!@#]special.txt"
+              ]
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "value": "@special.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[_!@#]special.txt"
+              ]
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "xspecial.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[-abc]dash.txt"
+              ]
+            }
+          },
+          "bind": "v7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v7"
+            },
+            "value": "-dash.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[-abc]dash.txt"
+              ]
+            }
+          },
+          "bind": "v8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v8"
+            },
+            "value": "adash.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[abc-]dash.txt"
+              ]
+            }
+          },
+          "bind": "v9",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "-dash.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCharacterClassCombinedWithGlobstar",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z]*.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "abc.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z]*.txt"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "Abc.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/[a-z]*.txt"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "dir/abc.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/[a-z]*.txt"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "dir/subdir/abc.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "**/[a-z]*.txt"
+              ]
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "value": "dir/Abc.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z][0-9]*.txt"
+              ]
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "a1file.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z][0-9]*.txt"
+              ]
+            }
+          },
+          "bind": "v7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v7"
+            },
+            "value": "ab.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[a-z][0-9]*.txt"
+              ]
+            }
+          },
+          "bind": "v8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v8"
+            },
+            "value": "A1file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEdgeCaseEmptyCharacterClass",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[]file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEdgeCaseUnclosedBracket",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[abc"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[abc"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "abc"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEdgeCaseExclamationOnlyClass",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[!]file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "!file.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEdgeCaseCaretOnlyClass",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "[^]file.txt"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "^file.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testComplexNegationChainPattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.md",
+                "!README*.md",
+                "README-private*.md"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "documentation.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.md",
+                "!README*.md",
+                "README-private*.md"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "README.md"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.md",
+                "!README*.md",
+                "README-private*.md"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "README-public.md"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.md",
+                "!README*.md",
+                "README-private*.md"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "README-private.md"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Globstar",
+            "args": {
+              "patterns": [
+                "*.md",
+                "!README*.md",
+                "README-private*.md"
+              ]
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "value": "README-private-draft.md"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

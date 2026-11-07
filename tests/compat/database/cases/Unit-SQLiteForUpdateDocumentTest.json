@@ -1,0 +1,684 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLiteForUpdateDocumentTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteForUpdateDocumentTest::testForUpdateReadOnRawSqlitePdoDoesNotTreatColumnIndexesAsAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o516"
+          },
+          "bind": "s1015",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o516"
+              },
+              "cache": "none"
+            },
+            "as": "o517"
+          },
+          "bind": "s1016",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "for_update"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "for_update_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o518"
+          },
+          "bind": "s1019",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o518"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "status"
+            },
+            "as": "o519"
+          },
+          "bind": "s1022",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "status",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "stage"
+            },
+            "as": "o520"
+          },
+          "bind": "s1023",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "stage",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o521"
+          },
+          "bind": "s1024",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o521"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o522"
+          },
+          "bind": "s1026",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o522"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o523"
+          },
+          "bind": "s1028",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o523"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o524"
+          },
+          "bind": "s1030",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o524"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "migrations",
+              "attributes": [
+                {
+                  "$obj": "o519"
+                },
+                {
+                  "$obj": "o520"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "delete(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o525"
+          },
+          "bind": "s1032",
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "stage",
+                    "key": "stage",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "delete(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o525"
+              }
+            },
+            "as": "o526"
+          },
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "stage",
+                    "key": "stage",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "delete(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "migration",
+                "status": "processing",
+                "stage": "processing"
+              }
+            },
+            "as": "o527"
+          },
+          "bind": "s1034",
+          "expect": {
+            "$document": {
+              "$id": "migration",
+              "status": "processing",
+              "stage": "processing"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "migrations",
+              "document": {
+                "$obj": "o527"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "migration",
+              "status": "processing",
+              "stage": "processing",
+              "$collection": "migrations",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o527"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "migration"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "migrations",
+              "id": "migration",
+              "forUpdate": true
+            },
+            "as": "o528"
+          },
+          "bind": "s1037",
+          "expect": {
+            "$document": {
+              "status": "processing",
+              "stage": "processing",
+              "$sequence": "1",
+              "$id": "migration",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "migrations"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o528"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "status": "processing",
+            "stage": "processing",
+            "$sequence": "1",
+            "$id": "migration",
+            "$createdAt": "<now>",
+            "$updatedAt": "<now>",
+            "$permissions": [],
+            "$collection": "migrations"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o528"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "setPreserveDates",
+            "args": {
+              "preserve": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o527"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "migration"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o527"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "stage": "migrating"
+              }
+            },
+            "as": "o529"
+          },
+          "bind": "s1043",
+          "expect": {
+            "$document": {
+              "$updatedAt": "<now>",
+              "stage": "migrating"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "migrations",
+              "id": "migration",
+              "document": {
+                "$obj": "o529"
+              }
+            },
+            "as": "o530"
+          },
+          "bind": "s1044",
+          "expect": {
+            "$document": {
+              "status": "processing",
+              "stage": "migrating",
+              "$sequence": "1",
+              "$id": "migration",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "migrations"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "stage"
+            }
+          },
+          "expect": "migrating"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "status"
+            }
+          },
+          "expect": "processing"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o527"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        }
+      ]
+    }
+  ]
+}

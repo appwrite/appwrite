@@ -1,0 +1,540 @@
+{
+  "source": "packages/cdn/src",
+  "cases": [
+    {
+      "name": "cloudflare purges through the default client",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone-id",
+            "token": "token",
+            "transport": "http"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "Example.com",
+            "paths": [
+              "/a",
+              "/café b?x=1",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p",
+              "/p"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/caf\\u00e9 b?x=1\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\",\"https:\\/\\/example.com\\/p\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/p\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 400,
+                "body": "{\"success\":false,\"errors\":[{\"message\":\"Invalid zone\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 400: Invalid zone"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fastly purges through the default client",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service-id",
+            "soft": true,
+            "transport": "http"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/hello world?x=1",
+              "/café"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/purge/example.com/hello%20world?x=1",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "/purge/example.com/caf%C3%A9",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"domain-example.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 403,
+                "body": "{\"msg\":\"nope\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 403: nope"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "/service/service-id/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "certificates through the default client",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token",
+            "transport": "http"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "cf"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"id\":\"h 1\",\"hostname\":\"example.com\"}]}"
+              },
+              {
+                "status": 204,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "/zones/zone/custom_hostnames/h%201",
+                "headers": {
+                  "accept": "*/*",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1",
+            "tls_config": "cfg",
+            "transport": "http"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "f"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 201,
+                "body": "{}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 201,
+                "body": "{\"data\":{\"id\":\"sub_1\",\"attributes\":{\"state\":\"pending\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "/domain-management/v1/domains",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": "{\"fqdn\":\"example.com\",\"service_id\":\"service_1\"}"
+              },
+              {
+                "method": "GET",
+                "url": "/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "/tls/subscriptions",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"certainly\"},\"relationships\":{\"tls_domains\":{\"data\":[{\"type\":\"tls_domain\",\"id\":\"example.com\"}]},\"common_name\":{\"data\":{\"type\":\"tls_domain\",\"id\":\"example.com\"}},\"tls_configuration\":{\"data\":{\"type\":\"tls_configuration\",\"id\":\"cfg\"}}}}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "cfg",
+            "transport": "http"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "t"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_123\",\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"certainly\",\"state\":\"issued\",\"has_active_order\":true},\"relationships\":{\"tls_authorizations\":{\"data\":[{\"id\":\"auth_1\",\"type\":\"tls_authorization\"}]},\"tls_certificates\":{\"data\":[{\"type\":\"tls_certificate\",\"id\":\"cert_1\"}]},\"tls_domains\":{\"data\":[{\"id\":\"example.com\",\"type\":\"tls_domain\"}]}}}],\"included\":[{\"id\":\"auth_1\",\"type\":\"tls_authorization\",\"attributes\":{\"challenges\":[{\"type\":\"managed-dns\",\"record_type\":\"CNAME\",\"record_name\":\"_acme-challenge.example.com\",\"values\":[\"token.fastly-validations.com\"]}],\"state\":\"blocked\",\"warnings\":[]},\"relationships\":{\"tls_domain\":{\"data\":{\"id\":\"example.com\",\"type\":\"tls_domain\"}}}}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 201,
+                "body": "{\"data\":{\"id\":\"act_1\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "issued",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "/tls/activations?filter%5Btls_configuration.id%5D=cfg&filter%5Btls_domain.id%5D=example.com&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "/tls/activations",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"type\":\"tls_activation\",\"relationships\":{\"tls_certificate\":{\"data\":{\"type\":\"tls_certificate\",\"id\":\"cert_1\"}},\"tls_configuration\":{\"data\":{\"type\":\"tls_configuration\",\"id\":\"cfg\"}},\"tls_domain\":{\"data\":{\"type\":\"tls_domain\",\"id\":\"example.com\"}}}}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

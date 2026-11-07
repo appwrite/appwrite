@@ -1,0 +1,301 @@
+{
+  "source": "packages/validators/tests/RangeTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateIntegerRange",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Range",
+            "args": {
+              "min": 0,
+              "max": 5,
+              "format": "integer"
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 4
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 5
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "5"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "1.5"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 6
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": -1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "min"
+          },
+          "expect": 0
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "max"
+          },
+          "expect": 5
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "format"
+          },
+          "expect": "integer"
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "integer"
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateFloatRange",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Range",
+            "args": {
+              "min": 0,
+              "max": 1,
+              "format": "double"
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 0.0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1.0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 0.5
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "0.5"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "0.6"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 4
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": -1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "min"
+          },
+          "expect": 0
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "max"
+          },
+          "expect": 1
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "format"
+          },
+          "expect": "double"
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "double"
+        }
+      ]
+    }
+  ]
+}

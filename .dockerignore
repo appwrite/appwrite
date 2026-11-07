@@ -11,3 +11,5 @@ packages/*/docs
 packages/*/docker-compose.yml
 packages/*/vendor
 apps
+crates
+target

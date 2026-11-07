@@ -1,0 +1,410 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/CursorDocumentTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CursorDocumentTest::testADocumentIsAccepted#after",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie1"
+              }
+            },
+            "as": "o444"
+          },
+          "bind": "s768",
+          "expect": {
+            "$document": {
+              "$id": "movie1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o444"
+              }
+            },
+            "as": "o445"
+          },
+          "bind": "s769",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "movie1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o448"
+          },
+          "bind": "s772",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o448"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o445"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CursorDocumentTest::testADocumentIsAccepted#before",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie1"
+              }
+            },
+            "as": "o446"
+          },
+          "bind": "s770",
+          "expect": {
+            "$document": {
+              "$id": "movie1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$obj": "o446"
+              }
+            },
+            "as": "o447"
+          },
+          "bind": "s771",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "movie1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o449"
+          },
+          "bind": "s774",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o449"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o447"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CursorDocumentTest::testADocumentIdIsAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o450"
+          },
+          "bind": "s776",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorAfter"
+              },
+              "values": [
+                "movie1"
+              ]
+            },
+            "as": "o451"
+          },
+          "bind": "s777",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                "movie1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o450"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o451"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorBefore"
+              },
+              "values": [
+                "movie1"
+              ]
+            },
+            "as": "o452"
+          },
+          "bind": "s779",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                "movie1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o450"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o452"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CursorDocumentTest::testAnArrayIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o453"
+          },
+          "bind": "s781",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorAfter"
+              },
+              "values": [
+                {
+                  "$id": "movie1"
+                }
+              ]
+            },
+            "as": "o454"
+          },
+          "bind": "s782",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$id": "movie1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o453"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o454"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o453"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorBefore"
+              },
+              "values": [
+                {
+                  "$id": "movie1"
+                }
+              ]
+            },
+            "as": "o455"
+          },
+          "bind": "s785",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$id": "movie1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o453"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o455"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

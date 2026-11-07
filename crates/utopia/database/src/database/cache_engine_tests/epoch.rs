@@ -1,0 +1,611 @@
+//! PHP: `Documents\DocumentCacheEpochTest` (its Memory cases) and
+//! `Documents\DocumentCacheActivationTest`.
+
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, Weak};
+
+use crate::adapter::Adapter;
+use crate::cache::Query as QueryCache;
+use crate::cache::testing::{Leasable, over};
+use crate::database::cache_fixtures::run;
+use crate::database::cache_fixtures::{collection, doc, string, uncached_twin, unique};
+use crate::database::observed::{Observed, Op};
+use crate::database::{Database, METADATA, TTL};
+use crate::error::Result;
+use crate::permission::Permission;
+use crate::query::Query;
+use crate::role::Role;
+use crate::value::Value;
+
+fn permissions() -> Vec<String> {
+    let any = Role::any();
+    vec![Permission::read(&any), Permission::create(&any), Permission::update(&any)]
+}
+
+/// `createDatabaseWithCache()`.
+async fn with_cache(cache: &Arc<Leasable>, namespace: Option<&str>, adapter: Option<Arc<dyn Adapter>>) -> Database {
+    let adapter = adapter.unwrap_or_else(|| Observed::memory());
+    let database = Database::new(adapter, over(cache));
+    database.set_database("utopiaTests").set_namespace(&namespace.map_or_else(|| unique("epoch_"), str::to_owned));
+    database.create(None).await.unwrap();
+    database.authorization().add_role(&Role::any().to_string());
+    database
+        .create_collection(collection("webhooks", vec![string("name")], vec![], Some(permissions()), true))
+        .await
+        .unwrap();
+    database
+}
+
+/// `createCountedDatabase()`: with `hook` named `original`, read once.
+async fn counted(cache: &Arc<Leasable>) -> (Database, Arc<Observed>) {
+    let adapter = Observed::memory();
+    let database = with_cache(cache, None, Some(adapter.clone())).await;
+    create_hook(&database).await;
+    (database, adapter)
+}
+
+async fn create_hook(database: &Database) {
+    database
+        .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+        .await
+        .unwrap();
+    assert_eq!(name(database, "webhooks", "hook").await, Value::from("original"));
+}
+
+async fn name(database: &Database, collection: &str, id: &str) -> Value {
+    database.get_document(collection, id, vec![], false).await.unwrap().get("name").cloned().unwrap_or(Value::Null)
+}
+
+/// `renameDocument()`: a batch update of one document.
+async fn rename(database: &Database, collection: &str, id: &str, name: &str) -> Result<i64> {
+    database
+        .update_documents(
+            collection,
+            doc(vec![("name", Value::from(name))]),
+            vec![Query::equal("$id", [id])],
+            100,
+            None,
+        )
+        .await
+}
+
+async fn change(database: &Database, collection: &str, id: &str) {
+    uncached_twin(database).update_document(collection, id, doc(vec![("name", Value::from("changed"))])).await.unwrap();
+}
+
+fn document_reads(adapter: &Observed) -> usize {
+    adapter.count(|op| matches!(op, Op::GetDocument { collection, .. } if collection != METADATA))
+}
+
+/// `FailDocumentEpochMemory`: a Memory cache whose registrations (a
+/// `#state` record with owners) or completions (one without) can be refused;
+/// `failActivations()` refuses the next three completions.
+struct FailEpochs {
+    blocks: AtomicBool,
+    activations: Mutex<Option<(String, usize)>>,
+}
+
+impl FailEpochs {
+    fn fail_activations(&self, fragment: &str) {
+        *self.activations.lock().unwrap() = Some((fragment.to_owned(), 3));
+    }
+}
+
+fn fail_epochs() -> (Arc<Leasable>, Arc<FailEpochs>) {
+    let cache = Leasable::plain();
+    let fails = Arc::new(FailEpochs { blocks: AtomicBool::new(false), activations: Mutex::new(None) });
+    let state = fails.clone();
+    cache.on_save(move |key, _, data| {
+        let php_std::Value::Array(data) = data else { return None };
+        if !key.ends_with("#state") {
+            return None;
+        }
+        let owners = matches!(data.get_str("owners"), Some(php_std::Value::Array(o)) if !o.is_empty());
+        if owners && state.blocks.load(Ordering::SeqCst) {
+            return Some(Ok(false));
+        }
+        let mut activations = state.activations.lock().unwrap();
+        match activations.as_mut() {
+            Some((fragment, left)) if !owners && *left > 0 && key.contains(fragment.as_str()) => {
+                *left -= 1;
+                Some(Ok(false))
+            }
+            _ => None,
+        }
+    });
+    (cache, fails)
+}
+
+#[test]
+fn purge_cached_collection_retires_its_cached_documents() {
+    run(|| async {
+        let database = with_cache(&Leasable::new(), None, None).await;
+        create_hook(&database).await;
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("original"));
+        database.purge_cached_collection("webhooks").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+    });
+}
+
+#[test]
+fn a_block_failure_rolls_back_the_mutation() {
+    run(|| async {
+        let (cache, fails) = fail_epochs();
+        let database = with_cache(&cache, None, None).await;
+        create_hook(&database).await;
+        fails.blocks.store(true, Ordering::SeqCst);
+        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
+        assert!(error.message().contains("Unable to save cache snapshot"), "{}", error.message());
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("original"));
+    });
+}
+
+#[test]
+fn an_activation_failure_after_commit_leaves_the_epoch_blocked() {
+    run(|| async {
+        let (cache, fails) = fail_epochs();
+        let database = with_cache(&cache, None, None).await;
+        create_hook(&database).await;
+        fails.fail_activations("#state");
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"), "it stays uncached");
+    });
+}
+
+#[test]
+fn an_activation_failure_does_not_strand_other_collection_epochs() {
+    run(|| async {
+        let (cache, fails) = fail_epochs();
+        let adapter = Observed::memory();
+        let database = with_cache(&cache, None, Some(adapter.clone())).await;
+        database
+            .create_collection(collection("logs", vec![string("name")], vec![], Some(permissions()), true))
+            .await
+            .unwrap();
+        create_hook(&database).await;
+        database
+            .create_document("logs", doc(vec![("$id", Value::from("log")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
+        assert_eq!(name(&database, "logs", "log").await, Value::from("original"));
+        fails.fail_activations("collection:webhooks#state");
+        database
+            .with_transaction(|| async {
+                rename(&database, "webhooks", "hook", "updated").await?;
+                rename(&database, "logs", "log", "updated").await?;
+                Ok(())
+            })
+            .await
+            .unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+        assert_eq!(name(&database, "logs", "log").await, Value::from("updated"));
+        adapter.reset();
+        assert_eq!(name(&database, "logs", "log").await, Value::from("updated"));
+        assert_eq!(document_reads(&adapter), 0, "the other collection is cached again");
+    });
+}
+
+/// `FlushDuringActivationMemory`.
+fn flush_during_activation() -> Arc<Leasable> {
+    Leasable::plain_leased()
+}
+
+#[test]
+fn a_cache_flush_during_activation_does_not_fail_the_committed_mutation() {
+    run(|| async {
+        let cache = flush_during_activation();
+        let database = with_cache(&cache, None, None).await;
+        create_hook(&database).await;
+        cache.flush_now();
+        let weak: Weak<Leasable> = Arc::downgrade(&cache);
+        let armed = AtomicBool::new(true);
+        cache.on_purge(move |key, _| {
+            (key.ends_with("#finished") && armed.swap(false, Ordering::SeqCst)).then(|| {
+                weak.upgrade().unwrap().flush_now();
+                Ok(true)
+            })
+        });
+        assert_eq!(rename(&database, "webhooks", "hook", "updated").await.unwrap(), 1);
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+    });
+}
+
+#[test]
+fn a_cache_flush_after_activation_reads_generations_does_not_fail_the_committed_mutation() {
+    run(|| async {
+        let cache = flush_during_activation();
+        let database = with_cache(&cache, None, None).await;
+        cache.flush_now();
+        database.purge_cached_collection("webhooks").await.unwrap();
+        let weak: Weak<Leasable> = Arc::downgrade(&cache);
+        let armed = AtomicBool::new(true);
+        cache.on_generation(move |key| {
+            (key.ends_with("collection:webhooks#finished") && armed.swap(false, Ordering::SeqCst)).then(|| {
+                let cache = weak.upgrade().unwrap();
+                let generation = cache.version_now(key);
+                cache.flush_now();
+                Ok(generation)
+            })
+        });
+        database.delete_collection("webhooks").await.unwrap();
+        assert!(database.find_collection("webhooks").await.unwrap().is_none());
+    });
+}
+
+#[test]
+fn a_lost_finish_after_commit_does_not_fail_the_write() {
+    run(|| async {
+        let cache = flush_during_activation();
+        let database = with_cache(&cache, None, None).await;
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
+        cache.flush_now();
+        cache.on_purge(|key, _| key.ends_with("#finished").then_some(Ok(false)));
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+    });
+}
+
+#[test]
+fn writes_do_not_add_keys_to_a_cache_that_keeps_purged_keys() {
+    run(|| async {
+        let cache = Leasable::new();
+        let database = with_cache(&cache, None, None).await;
+        database.set_query_cache(Some(Arc::new(QueryCache::new(over(&cache), QueryCache::SLOTS).unwrap())));
+        for index in 0..=20 {
+            database
+                .create_document(
+                    "webhooks",
+                    doc(vec![
+                        ("$id", Value::from(format!("hook{index}").as_str())),
+                        ("name", Value::from(format!("hook {index}").as_str())),
+                    ]),
+                )
+                .await
+                .unwrap();
+        }
+        let read_every_hook = || async {
+            for index in 0..=20 {
+                assert!(
+                    !database
+                        .get_document("webhooks", &format!("hook{index}"), vec![], false)
+                        .await
+                        .unwrap()
+                        .is_empty()
+                );
+            }
+        };
+        read_every_hook().await;
+        let mut keys = 0;
+        for round in 1..=3 {
+            let updated = format!("updated {round}");
+            database
+                .with_transaction(|| async {
+                    database
+                        .update_document("webhooks", "hook1", doc(vec![("name", Value::from(updated.as_str()))]))
+                        .await?;
+                    database
+                        .update_document("webhooks", "hook2", doc(vec![("name", Value::from(updated.as_str()))]))
+                        .await?;
+                    Ok(())
+                })
+                .await
+                .unwrap();
+            rename(&database, "webhooks", "hook3", &updated).await.unwrap();
+            read_every_hook().await;
+            if round == 1 {
+                keys = cache.keys().len();
+            }
+        }
+        assert_eq!(keys, cache.keys().len(), "writes and the reads between them leave no keys of their own");
+        assert_eq!(name(&database, "webhooks", "hook1").await, Value::from("updated 3"));
+    });
+}
+
+#[test]
+fn overlapping_writes_succeed_on_a_cache_without_fields() {
+    run(|| async {
+        let (cache, fails) = fail_epochs();
+        let writer = with_cache(&cache, None, None).await;
+        let other = with_cache(&cache, Some(&writer.namespace()), None).await;
+        for database in [&writer, &other] {
+            database
+                .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+                .await
+                .unwrap();
+        }
+        writer
+            .with_transaction(|| async {
+                rename(&writer, "webhooks", "hook", "updated").await?;
+                fails.blocks.store(true, Ordering::SeqCst);
+                let error = rename(&other, "webhooks", "hook", "updated").await.unwrap_err();
+                fails.blocks.store(false, Ordering::SeqCst);
+                assert!(error.message().contains("Unable to save cache snapshot"), "{}", error.message());
+                Ok(())
+            })
+            .await
+            .unwrap();
+        assert_eq!(name(&writer, "webhooks", "hook").await, Value::from("updated"));
+    });
+}
+
+#[test]
+fn a_corrupted_owner_registration_does_not_fail_the_committed_write() {
+    run(|| async {
+        let cache = Leasable::new();
+        let database = with_cache(&cache, None, None).await;
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
+        cache.corrupt_field_writes(true);
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
+        cache.corrupt_field_writes(false);
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+    });
+}
+
+#[test]
+fn an_owner_release_failure_does_not_fail_the_committed_write() {
+    run(|| async {
+        let cache = Leasable::new();
+        let database = with_cache(&cache, None, None).await;
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
+        cache.fail_completions();
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+    });
+}
+
+#[test]
+fn a_lost_activation_does_not_keep_the_collection_uncached() {
+    run(|| async {
+        let (cache, fails) = fail_epochs();
+        let (database, adapter) = counted(&cache).await;
+        fails.fail_activations("#state");
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+        database.set_cache_writer_timeout(0);
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+        adapter.reset();
+        for _ in 0..3 {
+            assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+        }
+        assert_eq!(document_reads(&adapter), 0, "past the writer timeout the lost activation lapses");
+    });
+}
+
+/// `AbandoningCache`: refuses the completion that releases the next write
+/// to finish, and every later completion releasing only that write, as the
+/// completion is retried.
+fn abandoning() -> (Arc<Leasable>, Arc<AtomicBool>) {
+    let cache = Leasable::new();
+    let abandoning = Arc::new(AtomicBool::new(false));
+    let flag = abandoning.clone();
+    let abandoned = Arc::new(Mutex::new(String::new()));
+    let weak: Weak<Leasable> = Arc::downgrade(&cache);
+    let owners = |value: Option<&php_std::Value>| -> Option<Vec<String>> {
+        match value {
+            Some(php_std::Value::Array(state)) => match state.get_str("owners") {
+                Some(php_std::Value::Array(owners)) => Some(
+                    owners
+                        .iter()
+                        .map(|(k, _)| match k {
+                            php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                            php_std::types::KeyRef::Int(i) => i.to_string(),
+                        })
+                        .collect(),
+                ),
+                _ => None,
+            },
+            _ => None,
+        }
+    };
+    cache.on_swap(move |key, data, _| {
+        if !key.ends_with("#state") {
+            return None;
+        }
+        let before = weak.upgrade().unwrap().raw(key, "");
+        let removed: Vec<String> = match (owners(before.as_ref()), owners(Some(data))) {
+            (Some(before), Some(after)) => before.into_iter().filter(|o| !after.contains(o)).collect(),
+            _ => Vec::new(),
+        };
+        let mut abandoned = abandoned.lock().unwrap();
+        if !removed.is_empty() && flag.swap(false, Ordering::SeqCst) {
+            *abandoned = removed[0].clone();
+        }
+        (!abandoned.is_empty() && removed.len() == 1 && removed[0] == *abandoned).then(|| {
+            Err(utopia_cache::Error::Unavailable { message: "Completion unavailable".to_owned(), previous: None })
+        })
+    });
+    (cache, abandoning)
+}
+
+#[test]
+fn a_write_after_an_abandoned_write_reenables_the_collection() {
+    run(|| async {
+        let (cache, abandon) = abandoning();
+        let (database, adapter) = counted(&cache).await;
+        abandon.store(true, Ordering::SeqCst);
+        rename(&database, "webhooks", "hook", "abandoned").await.unwrap();
+        rename(&database, "webhooks", "hook", "second").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("second"));
+        change(&database, "webhooks", "hook").await;
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
+        database.set_cache_writer_timeout(0);
+        rename(&database, "webhooks", "hook", "third").await.unwrap();
+        database.set_cache_writer_timeout(3600);
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("third"));
+        adapter.reset();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("third"));
+        assert_eq!(document_reads(&adapter), 0, "the first write past the writer timeout re-enables the collection");
+    });
+}
+
+#[test]
+fn a_transaction_reads_its_batch_write_after_another_reader_refilled_the_definition() {
+    run(|| async {
+        let cache = Leasable::plain();
+        let database = with_cache(&cache, None, None).await;
+        create_hook(&database).await;
+        let definition_key = database.cache_base_keys(METADATA, Some("webhooks")).await.unwrap().1.to_lowercase();
+        let definition = database.cache().load(&definition_key, TTL, "").await.unwrap();
+        let Some(definition @ php_std::Value::Array(_)) = definition else {
+            panic!("no cached definition under '{definition_key}'");
+        };
+        let read = database
+            .with_transaction(|| async {
+                rename(&database, "webhooks", "hook", "updated").await?;
+                database.cache().save(&definition_key, &definition, "", 0).await?;
+                Ok(name(&database, "webhooks", "hook").await)
+            })
+            .await
+            .unwrap();
+        assert_eq!(read, Value::from("updated"));
+    });
+}
+
+#[test]
+fn a_definition_filled_across_a_write_on_a_cache_without_generations_is_dropped() {
+    run(|| async {
+        let cache = Leasable::plain();
+        let database = with_cache(&cache, None, None).await;
+        create_hook(&database).await;
+        database.purge_cached_document(METADATA, "webhooks").await.unwrap();
+        let writer = database.clone();
+        cache.before_next_save(":_metadata:webhooks", async move {
+            rename(&writer, "webhooks", "hook", "updated").await.unwrap();
+        });
+        database.get_collection("webhooks").await.unwrap();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+    });
+}
+
+#[test]
+fn a_registration_released_just_before_its_own_release_finishes_the_write() {
+    run(|| async {
+        let cache = Leasable::new();
+        let weak: Weak<Leasable> = Arc::downgrade(&cache);
+        let racing = AtomicBool::new(false);
+        let (database, adapter) = counted(&cache).await;
+        racing.store(true, Ordering::SeqCst);
+        cache.on_purge(move |key, hash| {
+            if !hash.is_empty() && key.ends_with("#owners") && racing.swap(false, Ordering::SeqCst) {
+                weak.upgrade().unwrap().purge_now(key, hash);
+            }
+            None
+        });
+        assert_eq!(rename(&database, "webhooks", "hook", "updated").await.unwrap(), 1);
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        adapter.reset();
+        assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
+        assert_eq!(document_reads(&adapter), 0, "a registration another worker released is not a failed release");
+    });
+}
+
+// ---- DocumentCacheActivationTest ---------------------------------------
+
+async fn activation_database(adapter: Arc<Observed>, cache: Arc<utopia_cache::Cache>, namespace: &str) -> Database {
+    let database = Database::new(adapter, cache);
+    database.set_database("activation").set_namespace(namespace);
+    database.create(None).await.unwrap();
+    database.authorization().add_role(&Role::any().to_string());
+    database
+        .create_collection(collection(
+            "webhooks",
+            vec![crate::Attribute::string("name", 32)],
+            vec![],
+            Some(permissions()),
+            true,
+        ))
+        .await
+        .unwrap();
+    database
+        .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+        .await
+        .unwrap();
+    database
+}
+
+#[test]
+fn a_writer_activating_while_another_is_in_flight_leaves_its_barrier_in_place() {
+    for flush in [false, true] {
+        run(move || async move {
+            let adapter = if flush { Leasable::lenient() } else { Leasable::plain() };
+            let cache = over(&adapter);
+            let namespace = unique("activation_");
+            let first_adapter = Observed::memory();
+            let first = activation_database(first_adapter.clone(), cache.clone(), &namespace).await;
+            cache.flush().await.unwrap();
+            let second = activation_database(Observed::memory(), cache.clone(), &namespace).await;
+            cache.flush().await.unwrap();
+
+            second
+                .with_transaction(|| async {
+                    first
+                        .with_transaction(|| async {
+                            first
+                                .update_documents(
+                                    "webhooks",
+                                    doc(vec![("name", Value::from("first"))]),
+                                    vec![],
+                                    100,
+                                    None,
+                                )
+                                .await?;
+                            if flush {
+                                cache.flush().await?;
+                            }
+                            second
+                                .update_documents(
+                                    "webhooks",
+                                    doc(vec![("name", Value::from("second"))]),
+                                    vec![],
+                                    100,
+                                    None,
+                                )
+                                .await?;
+                            Ok(())
+                        })
+                        .await?;
+                    assert_eq!(name(&first, "webhooks", "hook").await, Value::from("first"));
+                    uncached_twin(&first)
+                        .update_document("webhooks", "hook", doc(vec![("name", Value::from("changed"))]))
+                        .await?;
+                    assert_eq!(
+                        name(&first, "webhooks", "hook").await,
+                        Value::from("changed"),
+                        "no read is cached meanwhile"
+                    );
+                    Ok(())
+                })
+                .await
+                .unwrap();
+
+            assert_eq!(name(&first, "webhooks", "hook").await, Value::from("changed"));
+            first_adapter.reset();
+            assert_eq!(name(&first, "webhooks", "hook").await, Value::from("changed"));
+            assert_eq!(
+                document_reads(&first_adapter),
+                0,
+                "caching resumes once no writer is in flight (flush: {flush})"
+            );
+        });
+    }
+}

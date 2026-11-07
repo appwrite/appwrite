@@ -1,0 +1,1449 @@
+{
+  "source": "packages/cdn/tests/Cache/Adapter/CloudFrontTest.php",
+  "cases": [
+    {
+      "name": "purges paths on the domain's tenant",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgePaths",
+        "responses": [
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Customizations><Certificate><Arn>arn:aws:acm:us-east-1:1:certificate/x</Arn></Certificate></Customizations><DistributionId>EDFDVBD6EXAMPLE</DistributionId><Id>dt_example</Id></DistributionTenant>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "domain": "example.com",
+        "paths": [
+          "/hello world",
+          "/assets/*"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_example/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/hello%20world</Path><Path>/assets/*</Path></Items><Quantity>2</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "literal percent signs are encoded but escapes are kept",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgePaths",
+        "responses": [
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Customizations><Certificate><Arn>arn:aws:acm:us-east-1:1:certificate/x</Arn></Certificate></Customizations><DistributionId>EDFDVBD6EXAMPLE</DistributionId><Id>dt_example</Id></DistributionTenant>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "domain": "example.com",
+        "paths": [
+          "/files/100%.png",
+          "/caf%C3%A9",
+          "/%4"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_example/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/files/100%25.png</Path><Path>/caf%C3%A9</Path><Path>/%254</Path></Items><Quantity>3</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "path purge refuses dot segments before sending",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgePaths",
+        "responses": [],
+        "domain": "example.com",
+        "paths": [
+          "/../x"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "domain purge invalidates the domain's tag on its tenant",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgeDomain",
+        "responses": [
+          {
+            "status": 200,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Customizations><Certificate><Arn>arn:aws:acm:us-east-1:1:certificate/x</Arn></Certificate></Customizations><DistributionId>EDFDVBD6EXAMPLE</DistributionId><Id>dt_example</Id></DistributionTenant>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "domain": "Example.com"
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_example/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#domain-example.com</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "domain without a tenant has nothing to purge",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgeDomain",
+        "responses": [
+          {
+            "status": 404,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message>The entity was not found.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          }
+        ],
+        "domain": "example.com"
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "failed tenant lookup is an error",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgeDomain",
+        "responses": [
+          {
+            "status": 403,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>AccessDenied</Code><Message>Access denied.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          }
+        ],
+        "domain": "example.com"
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront tenant lookup failed with status 403: AccessDenied: Access denied."
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "purges keys as tags on the configured tenant",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "keys": [
+          "host-deadbeef",
+          "deployment-12345"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#host-deadbeef</Path><Path>#deployment-12345</Path></Items><Quantity>2</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "refuses keys CloudFront cannot store before sending: space",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [],
+        "keys": [
+          "valid",
+          "summer sale"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "CloudFront cache tags may contain only visible ASCII characters other than \",\"."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "refuses keys CloudFront cannot store before sending: comma",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [],
+        "keys": [
+          "valid",
+          "a,b"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "CloudFront cache tags may contain only visible ASCII characters other than \",\"."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "refuses keys CloudFront cannot store before sending: too long",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [],
+        "keys": [
+          "valid",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "CloudFront cache tags must be 1 to 256 characters long."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "refuses keys CloudFront cannot store before sending: empty",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [],
+        "keys": [
+          "valid",
+          ""
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "CloudFront cache tags must be 1 to 256 characters long."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "keys are invalidated in batches",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "keys": [
+          "key-1",
+          "key-2",
+          "key-3",
+          "key-4",
+          "key-5",
+          "key-6",
+          "key-7",
+          "key-8",
+          "key-9",
+          "key-10",
+          "key-11",
+          "key-12",
+          "key-13",
+          "key-14",
+          "key-15",
+          "key-16",
+          "key-17",
+          "key-18",
+          "key-19",
+          "key-20",
+          "key-21",
+          "key-22",
+          "key-23",
+          "key-24",
+          "key-25",
+          "key-26",
+          "key-27",
+          "key-28",
+          "key-29",
+          "key-30",
+          "key-31",
+          "key-32",
+          "key-33",
+          "key-34",
+          "key-35",
+          "key-36",
+          "key-37",
+          "key-38",
+          "key-39",
+          "key-40",
+          "key-41",
+          "key-42",
+          "key-43",
+          "key-44",
+          "key-45",
+          "key-46",
+          "key-47",
+          "key-48",
+          "key-49",
+          "key-50",
+          "key-51",
+          "key-52",
+          "key-53",
+          "key-54",
+          "key-55",
+          "key-56",
+          "key-57",
+          "key-58",
+          "key-59",
+          "key-60",
+          "key-61",
+          "key-62",
+          "key-63",
+          "key-64",
+          "key-65",
+          "key-66",
+          "key-67",
+          "key-68",
+          "key-69",
+          "key-70",
+          "key-71",
+          "key-72",
+          "key-73",
+          "key-74",
+          "key-75",
+          "key-76",
+          "key-77",
+          "key-78",
+          "key-79",
+          "key-80",
+          "key-81",
+          "key-82",
+          "key-83",
+          "key-84",
+          "key-85",
+          "key-86",
+          "key-87",
+          "key-88",
+          "key-89",
+          "key-90",
+          "key-91",
+          "key-92",
+          "key-93",
+          "key-94",
+          "key-95",
+          "key-96",
+          "key-97",
+          "key-98",
+          "key-99",
+          "key-100",
+          "key-101",
+          "key-102",
+          "key-103",
+          "key-104",
+          "key-105",
+          "key-106",
+          "key-107",
+          "key-108",
+          "key-109",
+          "key-110",
+          "key-111",
+          "key-112",
+          "key-113",
+          "key-114",
+          "key-115",
+          "key-116",
+          "key-117",
+          "key-118",
+          "key-119",
+          "key-120",
+          "key-121",
+          "key-122",
+          "key-123",
+          "key-124",
+          "key-125",
+          "key-126",
+          "key-127",
+          "key-128",
+          "key-129",
+          "key-130",
+          "key-131",
+          "key-132",
+          "key-133",
+          "key-134",
+          "key-135",
+          "key-136",
+          "key-137",
+          "key-138",
+          "key-139",
+          "key-140",
+          "key-141",
+          "key-142",
+          "key-143",
+          "key-144",
+          "key-145",
+          "key-146",
+          "key-147",
+          "key-148",
+          "key-149",
+          "key-150",
+          "key-151"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#key-1</Path><Path>#key-2</Path><Path>#key-3</Path><Path>#key-4</Path><Path>#key-5</Path><Path>#key-6</Path><Path>#key-7</Path><Path>#key-8</Path><Path>#key-9</Path><Path>#key-10</Path><Path>#key-11</Path><Path>#key-12</Path><Path>#key-13</Path><Path>#key-14</Path><Path>#key-15</Path><Path>#key-16</Path><Path>#key-17</Path><Path>#key-18</Path><Path>#key-19</Path><Path>#key-20</Path><Path>#key-21</Path><Path>#key-22</Path><Path>#key-23</Path><Path>#key-24</Path><Path>#key-25</Path><Path>#key-26</Path><Path>#key-27</Path><Path>#key-28</Path><Path>#key-29</Path><Path>#key-30</Path><Path>#key-31</Path><Path>#key-32</Path><Path>#key-33</Path><Path>#key-34</Path><Path>#key-35</Path><Path>#key-36</Path><Path>#key-37</Path><Path>#key-38</Path><Path>#key-39</Path><Path>#key-40</Path><Path>#key-41</Path><Path>#key-42</Path><Path>#key-43</Path><Path>#key-44</Path><Path>#key-45</Path><Path>#key-46</Path><Path>#key-47</Path><Path>#key-48</Path><Path>#key-49</Path><Path>#key-50</Path><Path>#key-51</Path><Path>#key-52</Path><Path>#key-53</Path><Path>#key-54</Path><Path>#key-55</Path><Path>#key-56</Path><Path>#key-57</Path><Path>#key-58</Path><Path>#key-59</Path><Path>#key-60</Path><Path>#key-61</Path><Path>#key-62</Path><Path>#key-63</Path><Path>#key-64</Path><Path>#key-65</Path><Path>#key-66</Path><Path>#key-67</Path><Path>#key-68</Path><Path>#key-69</Path><Path>#key-70</Path><Path>#key-71</Path><Path>#key-72</Path><Path>#key-73</Path><Path>#key-74</Path><Path>#key-75</Path><Path>#key-76</Path><Path>#key-77</Path><Path>#key-78</Path><Path>#key-79</Path><Path>#key-80</Path><Path>#key-81</Path><Path>#key-82</Path><Path>#key-83</Path><Path>#key-84</Path><Path>#key-85</Path><Path>#key-86</Path><Path>#key-87</Path><Path>#key-88</Path><Path>#key-89</Path><Path>#key-90</Path><Path>#key-91</Path><Path>#key-92</Path><Path>#key-93</Path><Path>#key-94</Path><Path>#key-95</Path><Path>#key-96</Path><Path>#key-97</Path><Path>#key-98</Path><Path>#key-99</Path><Path>#key-100</Path><Path>#key-101</Path><Path>#key-102</Path><Path>#key-103</Path><Path>#key-104</Path><Path>#key-105</Path><Path>#key-106</Path><Path>#key-107</Path><Path>#key-108</Path><Path>#key-109</Path><Path>#key-110</Path><Path>#key-111</Path><Path>#key-112</Path><Path>#key-113</Path><Path>#key-114</Path><Path>#key-115</Path><Path>#key-116</Path><Path>#key-117</Path><Path>#key-118</Path><Path>#key-119</Path><Path>#key-120</Path><Path>#key-121</Path><Path>#key-122</Path><Path>#key-123</Path><Path>#key-124</Path><Path>#key-125</Path><Path>#key-126</Path><Path>#key-127</Path><Path>#key-128</Path><Path>#key-129</Path><Path>#key-130</Path><Path>#key-131</Path><Path>#key-132</Path><Path>#key-133</Path><Path>#key-134</Path><Path>#key-135</Path><Path>#key-136</Path><Path>#key-137</Path><Path>#key-138</Path><Path>#key-139</Path><Path>#key-140</Path><Path>#key-141</Path><Path>#key-142</Path><Path>#key-143</Path><Path>#key-144</Path><Path>#key-145</Path><Path>#key-146</Path><Path>#key-147</Path><Path>#key-148</Path><Path>#key-149</Path><Path>#key-150</Path></Items><Quantity>150</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-2</CallerReference><Paths><Items><Path>#key-151</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "batches are spaced out under the quota",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 50,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "keys": [
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key",
+          "key"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path><Path>#key</Path></Items><Quantity>150</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-2</CallerReference><Paths><Items><Path>#key</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "zone purge invalidates everything on the tenant",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeZone",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "key purge requires tenant ID",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgeKeys",
+        "responses": [],
+        "keys": [
+          "key"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+          "message": "CloudFront distribution tenant ID is required for cache key purging."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "zone purge requires tenant ID",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "method": "purgeZone",
+        "responses": []
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+          "message": "CloudFront distribution tenant ID is required for zone purging."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "empty tenant ID is no tenant",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "",
+        "method": "purgeZone",
+        "responses": []
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+          "message": "CloudFront distribution tenant ID is required for zone purging."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "throttled invalidation is retried with the same batch",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeKeys",
+        "responses": [
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Too many in progress.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 429,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>Throttling</Code><Message>Rate exceeded.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "keys": [
+          "key"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#key</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#key</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#key</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "throttling that outlasts the retries is reported",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeZone",
+        "responses": [
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Too many in progress.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Too many in progress.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Too many in progress.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          },
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message>Too many in progress.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront invalidation failed with status 400: TooManyInvalidationsInProgress: Too many in progress."
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          },
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rejected invalidation is not retried",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "method": "purgeZone",
+        "responses": [
+          {
+            "status": 400,
+            "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>InvalidArgument</Code><Message>Bad path.</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront invalidation failed with status 400: InvalidArgument: Bad path."
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "failed invalidation without a body or with a transport error",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudfront",
+            "access_key_id": "key",
+            "secret_access_key": "secret",
+            "prefix": "domain-",
+            "batch_interval": 0,
+            "tenant": "dt_main"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 503
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront invalidation failed with status 503: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "content-type": "application/xml",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "error": "Connection refused"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront invalidation failed with status 0: Connection refused"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "content-type": "application/xml",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code></Code><Message>Only a message</Message></Error><RequestId>r</RequestId></ErrorResponse>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront invalidation failed with status 500: Only a message"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "content-type": "application/xml",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "<DistributionTenant/>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "CloudFront tenant lookup for example.com returned no tenant ID."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [],
+            "responses": []
+          },
+          "expect": {
+            "result": null,
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "requests are signed for CloudFront",
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "session_token": "session-token",
+        "method": "purgeZone",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter",
+              "x-amz-date": "<date>",
+              "x-amz-security-token": "session-token"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/*</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "through the default client",
+      "requires": [
+        "services"
+      ],
+      "op": "cache.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
+        "prefix": "domain-",
+        "batch_interval": 0,
+        "tenant": "dt_main",
+        "transport": "http",
+        "method": "purgeKeys",
+        "responses": [
+          {
+            "status": 201,
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+          }
+        ],
+        "keys": [
+          "tag"
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "/2020-05-31/distribution-tenant/dt_main/invalidation",
+            "headers": {
+              "accept": "application/xml",
+              "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+              "content-type": "application/xml",
+              "user-agent": "Utopia CDN CloudFront Adapter"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>#tag</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "through the facade",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudfront",
+            "access_key_id": "key",
+            "secret_access_key": "secret",
+            "prefix": "domain-",
+            "batch_interval": 0,
+            "tenant": "dt_main"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "c"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "EXAMPLE.com",
+            "paths": [
+              "/a b"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Customizations><Certificate><Arn>arn:aws:acm:us-east-1:1:certificate/x</Arn></Certificate></Customizations><DistributionId>EDFDVBD6EXAMPLE</DistributionId><Id>dt_1</Id></DistributionTenant>"
+              },
+              {
+                "status": 201,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_1/invalidation",
+                "headers": {
+                  "accept": "application/xml",
+                  "authorization": "AWS4-HMAC-SHA256 Credential=key/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=<signature>",
+                  "content-type": "application/xml",
+                  "user-agent": "Utopia CDN CloudFront Adapter",
+                  "x-amz-date": "<date>"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InvalidationBatch xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CallerReference>ref-1</CallerReference><Paths><Items><Path>/a%20b</Path></Items><Quantity>1</Quantity></Paths></InvalidationBatch>"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

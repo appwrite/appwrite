@@ -1,0 +1,2972 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/FilterObjectPathTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#one key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1160"
+          },
+          "bind": "s1923",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1168"
+          },
+          "bind": "s1931",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1169"
+          },
+          "bind": "s1932",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1168"
+                },
+                {
+                  "$obj": "o1169"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1170"
+          },
+          "bind": "s1933",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1170"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1160"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1170"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#nested keys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.user-info.home_city2",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1161"
+          },
+          "bind": "s1924",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.user-info.home_city2",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1171"
+          },
+          "bind": "s1936",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1172"
+          },
+          "bind": "s1937",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1171"
+                },
+                {
+                  "$obj": "o1172"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1173"
+          },
+          "bind": "s1938",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1173"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1161"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1173"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#starts with",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.user.email",
+              "value": "alice@"
+            },
+            "as": "o1162"
+          },
+          "bind": "s1925",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.user.email",
+              "values": [
+                "alice@"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1174"
+          },
+          "bind": "s1941",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1175"
+          },
+          "bind": "s1942",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1174"
+                },
+                {
+                  "$obj": "o1175"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1176"
+          },
+          "bind": "s1943",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1176"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1162"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1176"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#is null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNull",
+            "args": {
+              "attribute": "meta.a"
+            },
+            "as": "o1163"
+          },
+          "bind": "s1926",
+          "expect": {
+            "$query": {
+              "method": "isNull",
+              "attribute": "meta.a",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1177"
+          },
+          "bind": "s1946",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1178"
+          },
+          "bind": "s1947",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1177"
+                },
+                {
+                  "$obj": "o1178"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1179"
+          },
+          "bind": "s1948",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1179"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1163"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1179"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#inside or",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1164"
+          },
+          "bind": "s1927",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.b",
+              "values": [
+                "y"
+              ]
+            },
+            "as": "o1165"
+          },
+          "bind": "s1928",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.b",
+              "values": [
+                "y"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1164"
+                },
+                {
+                  "$obj": "o1165"
+                }
+              ]
+            },
+            "as": "o1166"
+          },
+          "bind": "s1929",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.b",
+                    "values": [
+                      "y"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1180"
+          },
+          "bind": "s1951",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1181"
+          },
+          "bind": "s1952",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1180"
+                },
+                {
+                  "$obj": "o1181"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1182"
+          },
+          "bind": "s1953",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1182"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1166"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1182"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testAcceptsPathsOfPlainKeys#base attribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta",
+              "values": [
+                {
+                  "a": "x"
+                }
+              ]
+            },
+            "as": "o1167"
+          },
+          "bind": "s1930",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta",
+              "values": [
+                {
+                  "a": "x"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1183"
+          },
+          "bind": "s1956",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1184"
+          },
+          "bind": "s1957",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1183"
+                },
+                {
+                  "$obj": "o1184"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1185"
+          },
+          "bind": "s1958",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1167"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#quote in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1186"
+          },
+          "bind": "s1961",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1203"
+          },
+          "bind": "s1978",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1204"
+          },
+          "bind": "s1979",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1203"
+                },
+                {
+                  "$obj": "o1204"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1205"
+          },
+          "bind": "s1980",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1205"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1186"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#operator in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a'||(select 1)||'",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1187"
+          },
+          "bind": "s1962",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a'||(select 1)||'",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1206"
+          },
+          "bind": "s1982",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1207"
+          },
+          "bind": "s1983",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1206"
+                },
+                {
+                  "$obj": "o1207"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1208"
+          },
+          "bind": "s1984",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1187"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#comment in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a' OR 1=1 --",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1188"
+          },
+          "bind": "s1963",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a' OR 1=1 --",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1209"
+          },
+          "bind": "s1986",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1210"
+          },
+          "bind": "s1987",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1209"
+                },
+                {
+                  "$obj": "o1210"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1211"
+          },
+          "bind": "s1988",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1211"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1188"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#quote in a middle key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a'b.c",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1189"
+          },
+          "bind": "s1964",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a'b.c",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1212"
+          },
+          "bind": "s1990",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1213"
+          },
+          "bind": "s1991",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1212"
+                },
+                {
+                  "$obj": "o1213"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1214"
+          },
+          "bind": "s1992",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1214"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1189"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#space in a key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.first name",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1190"
+          },
+          "bind": "s1965",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.first name",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1215"
+          },
+          "bind": "s1994",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1216"
+          },
+          "bind": "s1995",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1215"
+                },
+                {
+                  "$obj": "o1216"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1217"
+          },
+          "bind": "s1996",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1217"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1190"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#empty key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta..a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1191"
+          },
+          "bind": "s1966",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta..a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1218"
+          },
+          "bind": "s1998",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1219"
+          },
+          "bind": "s1999",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1218"
+                },
+                {
+                  "$obj": "o1219"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1220"
+          },
+          "bind": "s2000",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1191"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#trailing dot",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1192"
+          },
+          "bind": "s1967",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1221"
+          },
+          "bind": "s2002",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1222"
+          },
+          "bind": "s2003",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1221"
+                },
+                {
+                  "$obj": "o1222"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1223"
+          },
+          "bind": "s2004",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1223"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1192"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#trailing newline",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a\n",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1193"
+          },
+          "bind": "s1968",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a\n",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1224"
+          },
+          "bind": "s2006",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1225"
+          },
+          "bind": "s2007",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1224"
+                },
+                {
+                  "$obj": "o1225"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1226"
+          },
+          "bind": "s2008",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1226"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1193"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#less than",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "meta.a'",
+              "value": "5"
+            },
+            "as": "o1194"
+          },
+          "bind": "s1969",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "meta.a'",
+              "values": [
+                "5"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1227"
+          },
+          "bind": "s2010",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1228"
+          },
+          "bind": "s2011",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1227"
+                },
+                {
+                  "$obj": "o1228"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1229"
+          },
+          "bind": "s2012",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1229"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1194"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#starts with",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.a'",
+              "value": "x"
+            },
+            "as": "o1195"
+          },
+          "bind": "s1970",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.a'",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1230"
+          },
+          "bind": "s2014",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1231"
+          },
+          "bind": "s2015",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1230"
+                },
+                {
+                  "$obj": "o1231"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1232"
+          },
+          "bind": "s2016",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1232"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1195"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#is null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNull",
+            "args": {
+              "attribute": "meta.a'"
+            },
+            "as": "o1196"
+          },
+          "bind": "s1971",
+          "expect": {
+            "$query": {
+              "method": "isNull",
+              "attribute": "meta.a'",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1233"
+          },
+          "bind": "s2018",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1234"
+          },
+          "bind": "s2019",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1233"
+                },
+                {
+                  "$obj": "o1234"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1235"
+          },
+          "bind": "s2020",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1235"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1196"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#inside or",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1197"
+          },
+          "bind": "s1972",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.b'",
+              "values": [
+                "y"
+              ]
+            },
+            "as": "o1198"
+          },
+          "bind": "s1973",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.b'",
+              "values": [
+                "y"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1197"
+                },
+                {
+                  "$obj": "o1198"
+                }
+              ]
+            },
+            "as": "o1199"
+          },
+          "bind": "s1974",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.b'",
+                    "values": [
+                      "y"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1236"
+          },
+          "bind": "s2022",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1237"
+          },
+          "bind": "s2023",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1236"
+                },
+                {
+                  "$obj": "o1237"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1238"
+          },
+          "bind": "s2024",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1199"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesPathsWithKeysOutsideTheAllowedChars#inside and",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1200"
+          },
+          "bind": "s1975",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNotNull",
+            "args": {
+              "attribute": "meta.b'"
+            },
+            "as": "o1201"
+          },
+          "bind": "s1976",
+          "expect": {
+            "$query": {
+              "method": "isNotNull",
+              "attribute": "meta.b'",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1200"
+                },
+                {
+                  "$obj": "o1201"
+                }
+              ]
+            },
+            "as": "o1202"
+          },
+          "bind": "s1977",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "isNotNull",
+                    "attribute": "meta.b'",
+                    "values": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1239"
+          },
+          "bind": "s2026",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1240"
+          },
+          "bind": "s2027",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1239"
+                },
+                {
+                  "$obj": "o1240"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1241"
+          },
+          "bind": "s2028",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1241"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1202"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterObjectPathTest::testRefusesUnsafePathsWithoutDefinedAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1242"
+          },
+          "bind": "s2030",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "secret",
+              "size": 64
+            },
+            "as": "o1243"
+          },
+          "bind": "s2031",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1242"
+                },
+                {
+                  "$obj": "o1243"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1244"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1245"
+          },
+          "bind": "s2033",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1245"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": false
+            },
+            "as": "o1246"
+          },
+          "bind": "s2034",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1247"
+          },
+          "bind": "s2035",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1246"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1247"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a' OR 'x",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1248"
+          },
+          "bind": "s2037",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a' OR 'x",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1246"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1248"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

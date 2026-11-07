@@ -1,0 +1,759 @@
+{
+  "source": "packages/query/tests/Builder/Feature/PostgreSQL/AggregateFilterTest.php",
+  "cases": [
+    {
+      "name": "testSelectAggregateFilterWithAliasEmitsQuotedAlias",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "status = ?",
+              "active_count",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\" FROM \"orders\"",
+            "bindings": [
+              "active"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\" FROM \"orders\"",
+        [
+          "active"
+        ],
+        [
+          "active"
+        ],
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\" FROM \"orders\"",
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\" FROM \"orders\"",
+        [
+          "active"
+        ]
+      ]
+    },
+    {
+      "name": "testSelectAggregateFilterWithoutAliasOmitsAsClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "status = ?",
+              "",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) FILTER (WHERE status = ?) FROM \"orders\"",
+            "bindings": [
+              "active"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) FILTER (WHERE status = ?) FROM \"orders\"",
+        [
+          "active"
+        ],
+        [
+          "active"
+        ],
+        "SELECT COUNT(*) FILTER (WHERE status = ?) FROM \"orders\"",
+        "SELECT COUNT(*) FILTER (WHERE status = ?) FROM \"orders\"",
+        "SELECT COUNT(*) FILTER (WHERE status = ?) FROM \"orders\""
+      ]
+    },
+    {
+      "name": "testSelectAggregateFilterWithNoBindingsDoesNotAddBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "total > 100",
+              "big_count"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) FILTER (WHERE total > 100) AS \"big_count\" FROM \"orders\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) FILTER (WHERE total > 100) AS \"big_count\" FROM \"orders\"",
+        [],
+        [],
+        "SELECT COUNT(*) FILTER (WHERE total > 100) AS \"big_count\" FROM \"orders\"",
+        "SELECT COUNT(*) FILTER (WHERE total > 100) AS \"big_count\" FROM \"orders\"",
+        []
+      ]
+    },
+    {
+      "name": "testMultipleAggregateFiltersCommaSeparated",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "status = ?",
+              "active_count",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "status = ?",
+              "cancelled_count",
+              [
+                "cancelled"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\", COUNT(*) FILTER (WHERE status = ?) AS \"cancelled_count\" FROM \"orders\"",
+            "bindings": [
+              "active",
+              "cancelled"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\", COUNT(*) FILTER (WHERE status = ?) AS \"cancelled_count\" FROM \"orders\"",
+        [
+          "active",
+          "cancelled"
+        ],
+        [
+          "active",
+          "cancelled"
+        ],
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\", COUNT(*) FILTER (WHERE status = ?) AS \"cancelled_count\" FROM \"orders\"",
+        "SELECT COUNT(*) FILTER (WHERE status = ?) AS \"active_count\", COUNT(*) FILTER (WHERE status = ?) AS \"cancelled_count\" FROM \"orders\"",
+        [
+          "active",
+          "cancelled"
+        ]
+      ]
+    },
+    {
+      "name": "testSelectAggregateFilterWithMultiArgAggregate",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(\"amount\")",
+              "status = ?",
+              "active_total",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT SUM(\"amount\") FILTER (WHERE status = ?) AS \"active_total\" FROM \"orders\"",
+            "bindings": [
+              "active"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT SUM(\"amount\") FILTER (WHERE status = ?) AS \"active_total\" FROM \"orders\"",
+        [
+          "active"
+        ],
+        [
+          "active"
+        ],
+        "SELECT SUM(\"amount\") FILTER (WHERE status = ?) AS \"active_total\" FROM \"orders\"",
+        "SELECT SUM(\"amount\") FILTER (WHERE status = ?) AS \"active_total\" FROM \"orders\""
+      ]
+    },
+    {
+      "name": "testSelectAggregateFilterBindingsAppendInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "kind = ? AND level >= ?",
+              "hits",
+              [
+                "click",
+                2
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) FILTER (WHERE kind = ? AND level >= ?) AS \"hits\" FROM \"events\"",
+            "bindings": [
+              "click",
+              2
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) FILTER (WHERE kind = ? AND level >= ?) AS \"hits\" FROM \"events\"",
+        [
+          "click",
+          2
+        ],
+        [
+          "click",
+          2
+        ],
+        "SELECT COUNT(*) FILTER (WHERE kind = ? AND level >= ?) AS \"hits\" FROM \"events\"",
+        [
+          "click",
+          2
+        ]
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "selectAggregateFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "COUNT(*)",
+              "status = ?",
+              "",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

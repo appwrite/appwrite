@@ -1,0 +1,245 @@
+{
+  "source": "packages/agents/tests/MessageTest.php",
+  "cases": [
+    {
+      "name": "with role creates clone with requested role",
+      "op": "message.with_role",
+      "args": {
+        "message": "hello",
+        "role": "assistant"
+      },
+      "expect": {
+        "copy": {
+          "role": "assistant",
+          "content": "hello",
+          "mime": "text/plain",
+          "hasAttachments": false,
+          "attachments": []
+        },
+        "original": {
+          "role": "user",
+          "content": "hello",
+          "mime": "text/plain",
+          "hasAttachments": false,
+          "attachments": []
+        }
+      }
+    },
+    {
+      "name": "can add and read attachments",
+      "op": "message.inspect",
+      "args": {
+        "message": {
+          "content": "describe this",
+          "add": [
+            {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            }
+          ]
+        }
+      },
+      "expect": {
+        "role": "user",
+        "content": "describe this",
+        "mime": "text/plain",
+        "hasAttachments": true,
+        "attachments": [
+          {
+            "role": "user",
+            "content": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            },
+            "mime": "image/png",
+            "hasAttachments": false,
+            "attachments": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "get mime type returns null for empty content",
+      "op": "message.mime",
+      "args": {
+        "content": ""
+      },
+      "expect": null
+    },
+    {
+      "name": "get mime type detects text payload",
+      "op": "message.mime",
+      "args": {
+        "content": "hello world"
+      },
+      "expect": "text/plain"
+    },
+    {
+      "name": "set attachments replaces them",
+      "op": "message.inspect",
+      "args": {
+        "message": {
+          "content": "x",
+          "attachments": [
+            {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            }
+          ],
+          "set": [
+            {
+              "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            },
+            {
+              "$bytes": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+            }
+          ]
+        }
+      },
+      "expect": {
+        "role": "user",
+        "content": "x",
+        "mime": "application/octet-stream",
+        "hasAttachments": true,
+        "attachments": [
+          {
+            "role": "user",
+            "content": {
+              "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            },
+            "mime": "image/gif",
+            "hasAttachments": false,
+            "attachments": []
+          },
+          {
+            "role": "user",
+            "content": {
+              "$bytes": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+            },
+            "mime": "image/jpeg",
+            "hasAttachments": false,
+            "attachments": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "constructor with role and attachments",
+      "op": "message.inspect",
+      "args": {
+        "message": {
+          "content": "x",
+          "role": "assistant",
+          "attachments": [
+            {
+              "$bytes": "UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAQAcJaQAA3AA/v3AgAA="
+            }
+          ]
+        }
+      },
+      "expect": {
+        "role": "assistant",
+        "content": "x",
+        "mime": "application/octet-stream",
+        "hasAttachments": true,
+        "attachments": [
+          {
+            "role": "user",
+            "content": {
+              "$bytes": "UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAQAcJaQAA3AA/v3AgAA="
+            },
+            "mime": "image/webp",
+            "hasAttachments": false,
+            "attachments": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "mime types of common formats",
+      "steps": [
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+            }
+          },
+          "expect": "image/png"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            }
+          },
+          "expect": "image/gif"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+            }
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAQAcJaQAA3AA/v3AgAA="
+            }
+          },
+          "expect": "image/webp"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg=="
+            }
+          },
+          "expect": "application/pdf"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": "0"
+          },
+          "expect": null
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": "{\"a\": 1}"
+          },
+          "expect": "application/json"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": "café"
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "Y2Fm6Q=="
+            }
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "message.mime",
+          "args": {
+            "content": {
+              "$bytes": "AAECAw=="
+            }
+          },
+          "expect": "application/octet-stream"
+        }
+      ]
+    }
+  ]
+}

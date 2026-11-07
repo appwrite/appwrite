@@ -1,0 +1,282 @@
+{
+  "source": "packages/mqtt/tests/DisconnectTest.php",
+  "cases": [
+    {
+      "name": "testRefuseWithoutAReasonEncodesJustTheCode",
+      "steps": [
+        {
+          "op": "disconnect.new",
+          "args": {
+            "kind": "refuse",
+            "reason_code": 135
+          },
+          "expect": {
+            "reason_code": 135,
+            "properties": null
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 135,
+            "properties": []
+          },
+          "bind": "w",
+          "expect": {
+            "$bytes": "4AKHAA=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "w"
+            }
+          },
+          "bind": "wp",
+          "expect": {
+            "type": 14,
+            "flags": 0,
+            "body": {
+              "$bytes": "hwA="
+            },
+            "name": "disconnect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "wp",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [],
+            "offset": 2,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRefuseEncodesTheReasonString",
+      "steps": [
+        {
+          "op": "disconnect.new",
+          "args": {
+            "kind": "refuse",
+            "reason_code": 135,
+            "reason": "Re-auth changed the resolved user"
+          },
+          "expect": {
+            "reason_code": 135,
+            "properties": [
+              [
+                31,
+                "Re-auth changed the resolved user"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 135,
+            "properties": [
+              {
+                "id": 31,
+                "value": "Re-auth changed the resolved user"
+              }
+            ]
+          },
+          "bind": "w",
+          "expect": {
+            "$bytes": "4CaHJB8AIVJlLWF1dGggY2hhbmdlZCB0aGUgcmVzb2x2ZWQgdXNlcg=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "w"
+            }
+          },
+          "bind": "wp",
+          "expect": {
+            "type": 14,
+            "flags": 0,
+            "body": {
+              "$bytes": "hyQfACFSZS1hdXRoIGNoYW5nZWQgdGhlIHJlc29sdmVkIHVzZXI="
+            },
+            "name": "disconnect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "wp",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [
+              [
+                31,
+                "Re-auth changed the resolved user"
+              ]
+            ],
+            "offset": 38,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNormalEncodesReasonCodeZeroWithAnOptionalString",
+      "steps": [
+        {
+          "op": "disconnect.new",
+          "args": {
+            "kind": "normal"
+          },
+          "expect": {
+            "reason_code": 0,
+            "properties": null
+          }
+        },
+        {
+          "op": "disconnect.new",
+          "args": {
+            "kind": "normal",
+            "reason": "Server shutting down"
+          },
+          "expect": {
+            "reason_code": 0,
+            "properties": [
+              [
+                31,
+                "Server shutting down"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0,
+            "properties": [
+              {
+                "id": 31,
+                "value": "Server shutting down"
+              }
+            ]
+          },
+          "bind": "w",
+          "expect": {
+            "$bytes": "4BkAFx8AFFNlcnZlciBzaHV0dGluZyBkb3du"
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "w"
+            }
+          },
+          "bind": "wp",
+          "expect": {
+            "type": 14,
+            "flags": 0,
+            "body": "\u0000\u0017\u001f\u0000\u0014Server shutting down",
+            "name": "disconnect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "wp",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [
+              [
+                31,
+                "Server shutting down"
+              ]
+            ],
+            "offset": 25,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEmptyReasonStringIsNotEmittedOnTheWire",
+      "steps": [
+        {
+          "op": "disconnect.new",
+          "args": {
+            "kind": "refuse",
+            "reason_code": 135,
+            "reason": ""
+          },
+          "expect": {
+            "reason_code": 135,
+            "properties": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "refuse defaults to Not Authorized",
+      "op": "disconnect.new",
+      "args": {
+        "kind": "refuse"
+      },
+      "expect": {
+        "reason_code": 135,
+        "properties": null
+      }
+    },
+    {
+      "name": "decode reads the reason code only",
+      "steps": [
+        {
+          "op": "disconnect.decode",
+          "args": {
+            "body": ""
+          },
+          "expect": {
+            "reason_code": 0,
+            "properties": null
+          }
+        },
+        {
+          "op": "disconnect.decode",
+          "args": {
+            "body": {
+              "$bytes": "hwUfAAJoaQ=="
+            }
+          },
+          "expect": {
+            "reason_code": 135,
+            "properties": null
+          }
+        }
+      ]
+    }
+  ]
+}

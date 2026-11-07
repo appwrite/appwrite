@@ -1,0 +1,595 @@
+{
+  "source": "packages/audit/tests/QueryTest.php",
+  "cases": [
+    {
+      "name": "testQueryStaticFactoryMethods",
+      "steps": [
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "userId",
+            "value": "123"
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "userId",
+            "values": [
+              "123"
+            ]
+          }
+        },
+        {
+          "op": "query.less_than",
+          "args": {
+            "attribute": "time",
+            "value": "2024-01-01"
+          },
+          "expect": {
+            "method": "lessThan",
+            "attribute": "time",
+            "values": [
+              "2024-01-01"
+            ]
+          }
+        },
+        {
+          "op": "query.greater_than",
+          "args": {
+            "attribute": "time",
+            "value": "2023-01-01"
+          },
+          "expect": {
+            "method": "greaterThan",
+            "attribute": "time",
+            "values": [
+              "2023-01-01"
+            ]
+          }
+        },
+        {
+          "op": "query.between",
+          "args": {
+            "attribute": "time",
+            "start": "2023-01-01",
+            "end": "2024-01-01"
+          },
+          "expect": {
+            "method": "between",
+            "attribute": "time",
+            "values": [
+              "2023-01-01",
+              "2024-01-01"
+            ]
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "contains",
+            "attribute": "event",
+            "values": [
+              "create",
+              "update",
+              "delete"
+            ]
+          },
+          "expect": {
+            "method": "contains",
+            "attribute": "event",
+            "values": [
+              "create",
+              "update",
+              "delete"
+            ]
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "orderDesc",
+            "attribute": "time"
+          },
+          "expect": {
+            "method": "orderDesc",
+            "attribute": "time",
+            "values": []
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "orderAsc",
+            "attribute": "userId"
+          },
+          "expect": {
+            "method": "orderAsc",
+            "attribute": "userId",
+            "values": []
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "limit",
+            "values": [
+              10
+            ]
+          },
+          "expect": {
+            "method": "limit",
+            "attribute": "",
+            "values": [
+              10
+            ]
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "offset",
+            "values": [
+              5
+            ]
+          },
+          "expect": {
+            "method": "offset",
+            "attribute": "",
+            "values": [
+              5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseAndToString",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"userId\",\"values\":[\"123\"]}"
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "userId",
+            "values": [
+              "123"
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "method": "equal",
+              "attribute": "event",
+              "values": [
+                "create"
+              ]
+            }
+          },
+          "bind": "json",
+          "expect": "{\"method\":\"equal\",\"attribute\":\"event\",\"values\":[\"create\"]}"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": {
+              "$ref": "json"
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "event",
+            "values": [
+              "create"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseQueries",
+      "steps": [
+        {
+          "op": "query.parse_queries",
+          "args": {
+            "queries": [
+              "{\"method\":\"equal\",\"attribute\":\"userId\",\"values\":[\"123\"]}",
+              "{\"method\":\"greaterThan\",\"attribute\":\"time\",\"values\":[\"2023-01-01\"]}",
+              "{\"method\":\"limit\",\"values\":[10]}"
+            ]
+          },
+          "expect": [
+            {
+              "method": "equal",
+              "attribute": "userId",
+              "values": [
+                "123"
+              ]
+            },
+            {
+              "method": "greaterThan",
+              "attribute": "time",
+              "values": [
+                "2023-01-01"
+              ]
+            },
+            {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                10
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetValue",
+      "steps": [
+        {
+          "op": "query.get_value",
+          "args": {
+            "query": {
+              "method": "equal",
+              "attribute": "userId",
+              "values": [
+                "123"
+              ]
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "query.get_value",
+          "args": {
+            "query": {
+              "method": "limit",
+              "values": [
+                10
+              ]
+            }
+          },
+          "expect": 10
+        },
+        {
+          "op": "query.get_value",
+          "args": {
+            "query": {
+              "method": "orderAsc",
+              "attribute": "time"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "query.get_value",
+          "args": {
+            "query": {
+              "method": "orderAsc",
+              "attribute": "time"
+            },
+            "default": "default"
+          },
+          "expect": "default"
+        }
+      ]
+    },
+    {
+      "name": "testQueryWithEmptyAttribute",
+      "steps": [
+        {
+          "op": "query.new",
+          "args": {
+            "method": "limit",
+            "values": [
+              25
+            ]
+          },
+          "expect": {
+            "method": "limit",
+            "attribute": "",
+            "values": [
+              25
+            ]
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "offset",
+            "values": [
+              10
+            ]
+          },
+          "expect": {
+            "method": "offset",
+            "attribute": "",
+            "values": [
+              10
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseInvalidJson",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"userId\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Query\\Exception",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseNonArray",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "\"string\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Query\\Exception",
+              "message": "Invalid query. Must be an array, got string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseInvalidMethodType",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":[\"array\"],\"attribute\":\"test\",\"values\":[]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Query\\Exception",
+              "message": "Invalid query method. Must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseInvalidAttributeType",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":123,\"values\":[]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Query\\Exception",
+              "message": "Invalid query attribute. Must be a string, got integer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseInvalidValuesType",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"test\",\"values\":\"string\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Query\\Exception",
+              "message": "Invalid query values. Must be an array, got string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryToStringWithComplexValues",
+      "steps": [
+        {
+          "op": "query.between",
+          "args": {
+            "attribute": "time",
+            "start": "2023-01-01",
+            "end": "2024-12-31"
+          },
+          "expect": {
+            "method": "between",
+            "attribute": "time",
+            "values": [
+              "2023-01-01",
+              "2024-12-31"
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "method": "between",
+              "attribute": "time",
+              "values": [
+                "2023-01-01",
+                "2024-12-31"
+              ]
+            }
+          },
+          "bind": "json",
+          "expect": "{\"method\":\"between\",\"attribute\":\"time\",\"values\":[\"2023-01-01\",\"2024-12-31\"]}"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": {
+              "$ref": "json"
+            }
+          },
+          "expect": {
+            "method": "between",
+            "attribute": "time",
+            "values": [
+              "2023-01-01",
+              "2024-12-31"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "equal with a list, and the other lenient factories with lists and nulls",
+      "steps": [
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "event",
+            "value": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "event",
+            "values": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "event",
+            "value": null
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "event",
+            "values": [
+              null
+            ]
+          }
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "event",
+            "value": {
+              "k": "v"
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "event",
+            "values": [
+              "v"
+            ]
+          }
+        },
+        {
+          "op": "query.less_than",
+          "args": {
+            "attribute": "time",
+            "value": [
+              "a"
+            ]
+          },
+          "expect": {
+            "method": "lessThan",
+            "attribute": "time",
+            "values": [
+              [
+                "a"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "query.greater_than",
+          "args": {
+            "attribute": "time",
+            "value": null
+          },
+          "expect": {
+            "method": "greaterThan",
+            "attribute": "time",
+            "values": [
+              null
+            ]
+          }
+        },
+        {
+          "op": "query.between",
+          "args": {
+            "attribute": "time",
+            "start": 1,
+            "end": 2.5
+          },
+          "expect": {
+            "method": "between",
+            "attribute": "time",
+            "values": [
+              1,
+              2.5
+            ]
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "nope",
+            "attribute": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Query\\Method"
+            }
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "cursorAfter",
+            "values": [
+              {
+                "$log": {
+                  "$id": "a",
+                  "event": "e"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "method": "cursorAfter",
+            "attribute": "",
+            "values": [
+              {
+                "$log": {
+                  "$id": "a",
+                  "event": "e"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

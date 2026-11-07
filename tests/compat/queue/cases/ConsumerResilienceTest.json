@@ -1,0 +1,92 @@
+{
+  "source": "packages/queue/tests/ConsumerResilienceTest.php",
+  "cases": [
+    {
+      "name": "consume survives broker failures and resumes",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p01",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p02",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ],
+            "fail": [
+              "receive",
+              "receive"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "queue": {
+              "name": "work",
+              "namespace": "${ns}"
+            },
+            "coroutines": 1,
+            "stop_after": 2
+          },
+          "expect": {
+            "handled": [
+              "p01",
+              "p02"
+            ],
+            "succeeded": [
+              "p01",
+              "p02"
+            ],
+            "errors": [
+              [
+                null,
+                "broker unreachable"
+              ],
+              [
+                null,
+                "broker unreachable"
+              ]
+            ],
+            "max": 1
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:failed",
+            "receive:failed",
+            "receive:1",
+            "commit:p01",
+            "receive:1",
+            "commit:p02"
+          ]
+        }
+      ]
+    }
+  ]
+}

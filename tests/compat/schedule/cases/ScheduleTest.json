@@ -1,0 +1,2730 @@
+{
+  "source": "packages/schedule/tests/ScheduleTest.php",
+  "cases": [
+    {
+      "name": "cron occurrence on window start belongs to the window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/15 * * * *"
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron occurrence on window end belongs to the next window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/15 * * * *"
+        },
+        "start": "2026-08-17 15:45:00.000001",
+        "end": "2026-08-17 16:00:00.000000"
+      },
+      "expect": []
+    },
+    {
+      "name": "cron boundary occurrence survives a sub-second window start",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/15 * * * *"
+        },
+        "start": "2026-08-17 15:59:59.941000",
+        "end": "2026-08-17 16:00:59.941000"
+      },
+      "expect": [
+        "2026-08-17 16:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron enumerates every occurrence in a wide window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/15 * * * *"
+        },
+        "start": "2026-08-18 03:00:59.500000",
+        "end": "2026-08-18 03:31:00.500000"
+      },
+      "expect": [
+        "2026-08-18 03:15:00.000000 UTC",
+        "2026-08-18 03:30:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron rejects invalid expressions",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "not a cron"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"not a cron\" must have exactly five fields"
+        }
+      }
+    },
+    {
+      "name": "cron rejects impossible expressions",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "0 0 31 2 *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"0 0 31 2 *\" never matches a date"
+        }
+      }
+    },
+    {
+      "name": "interval occurrences sit on the epoch grid",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 900
+        },
+        "start": "2026-08-17 16:07:00.000000",
+        "end": "2026-08-17 16:35:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:15:00.000000 UTC",
+        "2026-08-17 16:30:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "interval anchor sets the phase",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 900,
+          "anchor": "2026-08-17 16:07:30.000000"
+        },
+        "start": "2026-08-17 16:08:00.000000",
+        "end": "2026-08-17 16:40:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:22:30.000000 UTC",
+        "2026-08-17 16:37:30.000000 UTC"
+      ]
+    },
+    {
+      "name": "interval occurrence on window start belongs to the window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 60
+        },
+        "start": "2026-08-17 16:07:00.000000",
+        "end": "2026-08-17 16:07:30.000000"
+      },
+      "expect": [
+        "2026-08-17 16:07:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "interval rejects a sub-second cadence",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "interval": 0
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Interval must be at least 1 second"
+        }
+      }
+    },
+    {
+      "name": "interval rejects a negative cadence",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "interval": -60
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Interval must be at least 1 second"
+        }
+      }
+    },
+    {
+      "name": "cron lists ranges and steps",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "15,45-50/2 8 * * *"
+        },
+        "start": "2026-08-17 00:00:00.000000",
+        "end": "2026-08-18 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-17 08:15:00.000000 UTC",
+        "2026-08-17 08:45:00.000000 UTC",
+        "2026-08-17 08:47:00.000000 UTC",
+        "2026-08-17 08:49:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron month and day names",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "30 9 * AUG mon-Fri"
+        },
+        "start": "2026-08-14 12:00:00.000000",
+        "end": "2026-08-18 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-17 09:30:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron seven means sunday",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 * * 7"
+        },
+        "start": "2026-08-17 00:00:01.000000",
+        "end": "2026-08-31 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-23 00:00:00.000000 UTC",
+        "2026-08-30 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron zero means sunday",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 * * 0"
+        },
+        "start": "2026-08-17 00:00:01.000000",
+        "end": "2026-08-31 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-23 00:00:00.000000 UTC",
+        "2026-08-30 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron macros",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "@daily"
+        },
+        "start": "2026-08-17 00:00:01.000000",
+        "end": "2026-08-19 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-18 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron restricted day fields combine with or",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 13 * 5"
+        },
+        "start": "2026-08-01 00:00:01.000000",
+        "end": "2026-08-15 00:00:00.000000"
+      },
+      "expect": [
+        "2026-08-07 00:00:00.000000 UTC",
+        "2026-08-13 00:00:00.000000 UTC",
+        "2026-08-14 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron leap day fires on leap years only",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 12 29 2 *"
+        },
+        "start": "2026-03-01 00:00:00.000000",
+        "end": "2029-01-01 00:00:00.000000"
+      },
+      "expect": [
+        "2028-02-29 12:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 L * *",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 L * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-31",
+        "2026-02-28",
+        "2026-03-31"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 L-2 * *",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 L-2 * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-29",
+        "2026-02-26",
+        "2026-03-29"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 LW * *",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 LW * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-30",
+        "2026-02-27",
+        "2026-03-31"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 15W * *",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 15W * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-15",
+        "2026-02-16",
+        "2026-03-16"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 1W * *",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 1W * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-01",
+        "2026-02-02",
+        "2026-03-02"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 ? * 5L",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 ? * 5L"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-30",
+        "2026-02-27",
+        "2026-03-27"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 ? * 7L",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 ? * 7L"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-25",
+        "2026-02-22",
+        "2026-03-29"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 ? * FRI#3",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 ? * FRI#3"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-16",
+        "2026-02-20",
+        "2026-03-20"
+      ]
+    },
+    {
+      "name": "cron quartz day extension 0 0 1,L * ?",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 1,L * ?"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-04-01 00:00:00.000000",
+        "format": "Y-m-d"
+      },
+      "expect": [
+        "2026-01-01",
+        "2026-01-31",
+        "2026-02-01",
+        "2026-02-28",
+        "2026-03-01",
+        "2026-03-31"
+      ]
+    },
+    {
+      "name": "cron question mark reads as any day (0 0 ? * *)",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 ? * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-01-08 00:00:00.000000"
+      },
+      "expect": [
+        "2026-01-01 00:00:00.000000 UTC",
+        "2026-01-02 00:00:00.000000 UTC",
+        "2026-01-03 00:00:00.000000 UTC",
+        "2026-01-04 00:00:00.000000 UTC",
+        "2026-01-05 00:00:00.000000 UTC",
+        "2026-01-06 00:00:00.000000 UTC",
+        "2026-01-07 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron question mark reads as any day (0 0 * * *)",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 * * *"
+        },
+        "start": "2026-01-01 00:00:00.000000",
+        "end": "2026-01-08 00:00:00.000000"
+      },
+      "expect": [
+        "2026-01-01 00:00:00.000000 UTC",
+        "2026-01-02 00:00:00.000000 UTC",
+        "2026-01-03 00:00:00.000000 UTC",
+        "2026-01-04 00:00:00.000000 UTC",
+        "2026-01-05 00:00:00.000000 UTC",
+        "2026-01-06 00:00:00.000000 UTC",
+        "2026-01-07 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron rejects malformed not a cron",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "not a cron"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"not a cron\" must have exactly five fields"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"* * * *\" must have exactly five fields"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"* * * * * *\" must have exactly five fields"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed 61 * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "61 * * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"61\" is out of range 0-59"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * 24 * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* 24 * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"24\" is out of range 0-23"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed */0 * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "*/0 * * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron step \"*/0\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed 5/10 * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "5/10 * * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron step \"5/10\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed 5-1 * * * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "5-1 * * * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron range \"5-1\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * L-31 * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * L-31 * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"l-31\" is out of range L-1-L-30"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * 32W * *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * 32W * *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"32w\" is out of range 1-31"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * * * 1#6",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * * 1#6"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"1#6\" is out of range 1-5 nth days of week"
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed * * * * L",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * * L"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron value \"l\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects malformed 0 0 31 2 *",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "0 0 31 2 *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"0 0 31 2 *\" never matches a date"
+        }
+      }
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.000000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.000000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.000000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.037000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.037000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.037000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.074000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.074000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.074000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.111000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.111000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.111000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.148000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.148000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.148000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.185000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.185000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.185000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.222000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.222000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.222000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.259000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.259000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.259000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.296000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.296000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.296000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.333000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.333000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.333000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.370000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.370000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.370000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.407000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.407000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.407000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.444000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.444000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.444000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.481000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.481000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.481000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.518000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.518000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.518000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.555000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.555000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.555000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.592000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.592000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.592000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.629000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.629000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.629000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.666000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.666000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.666000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.703000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.703000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.703000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.740000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.740000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.740000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.777000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.777000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.777000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.814000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.814000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.814000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.851000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.851000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.851000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.888000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.888000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.888000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.925000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.925000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.925000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.962000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.962000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.962000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 15:59:59.999000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 15:59:59.999000"
+          },
+          "expect": []
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:59.999000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.036000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.036000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.036000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.073000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.073000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.073000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.110000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.110000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.110000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.147000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.147000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.147000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.184000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.184000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.184000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.221000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.221000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.221000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.258000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.258000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.258000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.295000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.295000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.295000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.332000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.332000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.332000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.369000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.369000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.369000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.406000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.406000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.406000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.443000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.443000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.443000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.480000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.480000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.480000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.517000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.517000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.517000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.554000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.554000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.554000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.591000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.591000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.591000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.628000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.628000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.628000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.665000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.665000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.665000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.702000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.702000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.702000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.739000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.739000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.739000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.776000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.776000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.776000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.813000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.813000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.813000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.850000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.850000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.850000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.887000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.887000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.887000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.924000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.924000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.924000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.961000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.961000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.961000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "windows tile at split 2026-08-17 16:00:00.998000",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 15:59:00.000000",
+            "end": "2026-08-17 16:00:00.998000"
+          },
+          "expect": [
+            "2026-08-17 16:00:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "*/5 * * * *"
+            },
+            "start": "2026-08-17 16:00:00.998000",
+            "end": "2026-08-17 16:01:00.000000"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "cron skips nonexistent local times",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "30 2 * * *"
+        },
+        "start": {
+          "time": "2026-03-07 12:00:00",
+          "tz": "America/New_York"
+        },
+        "end": {
+          "time": "2026-03-09 12:00:00",
+          "tz": "America/New_York"
+        },
+        "format": "Y-m-d H:i:s T"
+      },
+      "expect": [
+        "2026-03-09 02:30:00 EDT"
+      ]
+    },
+    {
+      "name": "cron repeated local time fires once",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "30 1 * * *"
+        },
+        "start": {
+          "time": "2026-10-31 12:00:00",
+          "tz": "America/New_York"
+        },
+        "end": {
+          "time": "2026-11-01 12:00:00",
+          "tz": "America/New_York"
+        },
+        "format": "Y-m-d H:i:s T"
+      },
+      "expect": [
+        "2026-11-01 01:30:00 EDT"
+      ]
+    },
+    {
+      "name": "at fires inside its window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 16:00:30.000000"
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:30.000000 UTC"
+      ]
+    },
+    {
+      "name": "at does not fire outside its window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 16:00:30.000000"
+        },
+        "start": "2026-08-17 16:01:00.000000",
+        "end": "2026-08-17 16:02:00.000000"
+      },
+      "expect": []
+    },
+    {
+      "name": "in is anchored to its creation time",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "in": 30,
+          "from": "2026-08-17 16:00:00.000000"
+        },
+        "start": "2026-08-17 16:00:29.000000",
+        "end": "2026-08-17 16:00:31.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:30.000000 UTC"
+      ]
+    },
+    {
+      "name": "shifted moves every occurrence",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "shifted": {
+            "cron": "*/15 * * * *"
+          },
+          "seconds": 40
+        },
+        "start": "2026-08-18 03:00:00.000000",
+        "end": "2026-08-18 03:16:00.000000"
+      },
+      "expect": [
+        "2026-08-18 03:00:40.000000 UTC",
+        "2026-08-18 03:15:40.000000 UTC"
+      ]
+    },
+    {
+      "name": "shifted occurrences still tile across consecutive windows",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            },
+            "start": "2026-08-18 03:00:15.000000",
+            "end": "2026-08-18 03:01:15.000000"
+          },
+          "expect": [
+            "2026-08-18 03:00:30.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            },
+            "start": "2026-08-18 03:01:15.000000",
+            "end": "2026-08-18 03:02:15.000000"
+          },
+          "expect": [
+            "2026-08-18 03:01:30.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            },
+            "start": "2026-08-18 03:02:15.000000",
+            "end": "2026-08-18 03:03:15.000000"
+          },
+          "expect": [
+            "2026-08-18 03:02:30.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shifted keeps the kind of schedule it wraps",
+      "steps": [
+        {
+          "op": "trigger.recurring",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "trigger.recurring",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "at": "2026-08-18 03:00:00"
+              },
+              "seconds": 5
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "trigger.recurring",
+          "args": {
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "trigger.recurring",
+          "args": {
+            "trigger": {
+              "at": "2026-08-18 03:00:00"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "trigger.recurring",
+          "args": {
+            "trigger": {
+              "cron": "@hourly"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "shifted by nothing changes nothing",
+      "steps": [
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "cron": "* * * * *"
+            },
+            "start": "2026-08-18 03:00:00.000000",
+            "end": "2026-08-18 03:02:00.000000"
+          },
+          "expect": [
+            "2026-08-18 03:00:00.000000 UTC",
+            "2026-08-18 03:01:00.000000 UTC"
+          ]
+        },
+        {
+          "op": "trigger.occurrences",
+          "args": {
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 0
+            },
+            "start": "2026-08-18 03:00:00.000000",
+            "end": "2026-08-18 03:02:00.000000"
+          },
+          "expect": [
+            "2026-08-18 03:00:00.000000 UTC",
+            "2026-08-18 03:01:00.000000 UTC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shifted accepts a negative shift",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "shifted": {
+            "cron": "0 * * * *"
+          },
+          "seconds": -10
+        },
+        "start": "2026-08-18 02:59:00.000000",
+        "end": "2026-08-18 03:00:00.000000"
+      },
+      "expect": [
+        "2026-08-18 02:59:50.000000 UTC"
+      ]
+    },
+    {
+      "name": "interval keeps the window timezone",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 3600
+        },
+        "start": {
+          "time": "2026-03-08 00:30:00",
+          "tz": "America/New_York"
+        },
+        "end": {
+          "time": "2026-03-08 05:00:00",
+          "tz": "America/New_York"
+        }
+      },
+      "expect": [
+        "2026-03-08 01:00:00.000000 EST",
+        "2026-03-08 03:00:00.000000 EDT",
+        "2026-03-08 04:00:00.000000 EDT"
+      ]
+    },
+    {
+      "name": "interval with a fractional anchor",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 7,
+          "anchor": "2026-08-17 16:00:00.123456"
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:00:30.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:00.123456 UTC",
+        "2026-08-17 16:00:07.123456 UTC",
+        "2026-08-17 16:00:14.123456 UTC",
+        "2026-08-17 16:00:21.123456 UTC",
+        "2026-08-17 16:00:28.123456 UTC"
+      ]
+    },
+    {
+      "name": "interval before the epoch",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "interval": 1
+        },
+        "start": "1969-12-31 23:59:58.500000",
+        "end": "1970-01-01 00:00:01.000000"
+      },
+      "expect": [
+        "1969-12-31 23:59:58.000000 UTC",
+        "1969-12-31 23:59:59.000000 UTC",
+        "1970-01-01 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron in a half-hour offset zone",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 * * * *"
+        },
+        "start": {
+          "time": "2026-08-17 10:00:00",
+          "tz": "Asia/Kolkata"
+        },
+        "end": {
+          "time": "2026-08-17 13:00:00",
+          "tz": "Asia/Kolkata"
+        }
+      },
+      "expect": [
+        "2026-08-17 10:00:00.000000 IST",
+        "2026-08-17 11:00:00.000000 IST",
+        "2026-08-17 12:00:00.000000 IST"
+      ]
+    },
+    {
+      "name": "cron across the lord howe half-hour shift",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/30 1-3 * * *"
+        },
+        "start": {
+          "time": "2026-10-03 23:00:00",
+          "tz": "Australia/Lord_Howe"
+        },
+        "end": {
+          "time": "2026-10-04 04:00:00",
+          "tz": "Australia/Lord_Howe"
+        }
+      },
+      "expect": [
+        "2026-10-04 01:00:00.000000 +1030",
+        "2026-10-04 01:30:00.000000 +1030",
+        "2026-10-04 02:30:00.000000 +11",
+        "2026-10-04 03:30:00.000000 +11"
+      ]
+    },
+    {
+      "name": "cron end of year rollover",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "0 0 1 1 *"
+        },
+        "start": "2026-12-31 23:59:30.000000",
+        "end": "2027-01-01 00:01:00.000000"
+      },
+      "expect": [
+        "2027-01-01 00:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "cron rejects a reversed name range",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * DEC-JAN *"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron range \"dec-jan\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects an unknown macro",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "@reboot"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron expression \"@reboot\" must have exactly five fields"
+        }
+      }
+    },
+    {
+      "name": "cron accepts whitespace and case",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "  @HOURLY\n"
+        }
+      },
+      "expect": true
+    },
+    {
+      "name": "cron rejects a nth day with a bad name",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * * xyz#2"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid cron value \"xyz\""
+        }
+      }
+    },
+    {
+      "name": "cron rejects a last day of week out of range",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "* * * * 8L"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cron value \"8\" is out of range 0-7"
+        }
+      }
+    },
+    {
+      "name": "cron rejects a huge step",
+      "op": "trigger.new",
+      "args": {
+        "trigger": {
+          "cron": "*/99999999999999999999 * * * *"
+        }
+      },
+      "expect": true
+    },
+    {
+      "name": "cron accepts a step past the range",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "cron": "*/9999 * * * *"
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 18:00:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:00.000000 UTC",
+        "2026-08-17 17:00:00.000000 UTC"
+      ]
+    }
+  ]
+}

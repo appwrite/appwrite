@@ -1,0 +1,930 @@
+{
+  "source": "packages/user-agent/tests/PlatformDetectionTest.php",
+  "cases": [
+    {
+      "name": "platform Chrome OS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 Chrome/101.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 Chrome/101.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "COS",
+            "name": "Chrome OS",
+            "version": "14541.0.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "101.0",
+            "engine": "Blink",
+            "engineVersion": "101.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Ubuntu",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+        "array": {
+          "os": {
+            "code": "UBT",
+            "name": "Ubuntu",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "120.0",
+            "engine": "Gecko",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Windows Phone",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950 XL)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; Lumia 950 XL)",
+        "array": {
+          "os": {
+            "code": "WPH",
+            "name": "Windows Phone",
+            "version": "10.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Microsoft",
+            "model": "Microsoft"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Tizen TV",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 TV Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 TV Safari/537.36",
+        "array": {
+          "os": {
+            "code": "TIZ",
+            "name": "Tizen",
+            "version": "6.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": null,
+            "engine": "WebKit",
+            "engineVersion": "537.36"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "Samsung",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform iPadOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IPA",
+            "name": "iPadOS",
+            "version": "17.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "MF",
+            "name": "Mobile Safari",
+            "version": "17.4",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Apple",
+            "model": "iPad"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform HarmonyOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Phone; OpenHarmony 5.0) ArkWeb/4.1.6.1 Mobile"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Phone; OpenHarmony 5.0) ArkWeb/4.1.6.1 Mobile",
+        "array": {
+          "os": {
+            "code": "OHS",
+            "name": "OpenHarmony",
+            "version": "5.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Debian",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0 Debian/102.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0 Debian/102.0",
+        "array": {
+          "os": {
+            "code": "DEB",
+            "name": "Debian",
+            "version": "102.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "102.0",
+            "engine": "Gecko",
+            "engineVersion": "102.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Fedora",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0",
+        "array": {
+          "os": {
+            "code": "FED",
+            "name": "Fedora",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "115.0",
+            "engine": "Gecko",
+            "engineVersion": "115.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Arch Linux",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0 Arch Linux"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0 Arch Linux",
+        "array": {
+          "os": {
+            "code": "ARL",
+            "name": "Arch Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "120.0",
+            "engine": "Gecko",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Linux Mint",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux Mint; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux Mint; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0",
+        "array": {
+          "os": {
+            "code": "MIN",
+            "name": "Mint",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "115.0",
+            "engine": "Gecko",
+            "engineVersion": "115.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Fire OS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/104.5.1 like Chrome/104.0.5112.105 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/104.5.1 like Chrome/104.0.5112.105 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "FIR",
+            "name": "Fire OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "104.5",
+            "engine": "Blink",
+            "engineVersion": "104.0.5112.105"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Amazon",
+            "model": "KFMAWI"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform webOS TV",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36 WebAppManager"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36 WebAppManager",
+        "array": {
+          "os": {
+            "code": "WOS",
+            "name": "webOS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "79.0",
+            "engine": "Blink",
+            "engineVersion": "79.0.3945.79"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "LG",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "platform Sailfish OS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Mobile; rv:78.0; Sailfish; Jolla) Gecko/78.0 Firefox/78.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Mobile; rv:78.0; Sailfish; Jolla) Gecko/78.0 Firefox/78.0",
+        "array": {
+          "os": {
+            "code": "SAF",
+            "name": "Sailfish OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FM",
+            "name": "Firefox Mobile",
+            "version": "78.0",
+            "engine": "Gecko",
+            "engineVersion": "78.0"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Xbox",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Xbox One; Xbox One OS 10.0)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Xbox One; Xbox One OS 10.0)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "console",
+            "brand": "Microsoft",
+            "model": "Xbox One"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device PlayStation",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (PlayStation 5/1.00)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (PlayStation 5/1.00)",
+        "array": {
+          "os": {
+            "code": "PS3",
+            "name": "PlayStation",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "console",
+            "brand": "Sony",
+            "model": "PlayStation 5"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Nintendo",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Nintendo Switch; WifiWebAuthApplet)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Nintendo Switch; WifiWebAuthApplet)",
+        "array": {
+          "os": {
+            "code": "WII",
+            "name": "Nintendo",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "console",
+            "brand": "Nintendo",
+            "model": "Nintendo Switch"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Kindle",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 Silk/3.13 Safari/533.16"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 Silk/3.13 Safari/533.16",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "3.13",
+            "engine": "WebKit",
+            "engineVersion": "533.16"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Amazon",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device BlackBerry",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (BB10; Touch) AppleWebKit/537.35 Mobile Safari/537.35"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (BB10; Touch) AppleWebKit/537.35 Mobile Safari/537.35",
+        "array": {
+          "os": {
+            "code": "BLB",
+            "name": "BlackBerry OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": null,
+            "engine": "WebKit",
+            "engineVersion": "537.35"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "BlackBerry",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Realme",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; RMX3630) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; RMX3630) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "116.0",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Realme",
+            "model": "RMX3630"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Asus",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; ASUS_AI2205) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; ASUS_AI2205) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "116.0",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Asus",
+            "model": "ASUS_AI2205"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Tecno",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 12; TECNO KI5k) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 12; TECNO KI5k) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "12"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "104.0",
+            "engine": "Blink",
+            "engineVersion": "104.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Tecno",
+            "model": "TECNO KI5k"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device webOS LG TV",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36 WebAppManager"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36 WebAppManager",
+        "array": {
+          "os": {
+            "code": "WOS",
+            "name": "webOS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "79.0",
+            "engine": "Blink",
+            "engineVersion": "79.0.3945.79"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "LG",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Honor named model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Honor 90 Build/HONORREA-N31) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Honor 90 Build/HONORREA-N31) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "116.0",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Honor",
+            "model": "Honor 90"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device Honor uppercase brand",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 12; HONOR WKG-LX9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 12; HONOR WKG-LX9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "12"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "104.0",
+            "engine": "Blink",
+            "engineVersion": "104.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Honor",
+            "model": "HONOR WKG-LX9"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "special device honor word is not a brand",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; SM-G991B Build/InHonorOfRelease) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; SM-G991B Build/InHonorOfRelease) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "116.0",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "SM-G991B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    }
+  ]
+}

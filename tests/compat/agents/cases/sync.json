@@ -1,0 +1,428 @@
+{
+  "cases": [
+    {
+      "name": "writes the curated constants and the sorted catalog",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":[{\"id\":\"openai/gpt-4o\",\"name\":\"GPT-4o\"},{\"id\":\"anthropic/claude-3.5-sonnet\"},{\"id\":\"google/gemini-2.0-flash-001\"},{\"id\":\"openai/gpt-4o-2024-08-06\"},{\"id\":\"openai/gpt-4-0314\"},{\"id\":\"openai/gpt-4-1106-preview\"},{\"id\":\"openai/gpt-3.5-turbo\"},{\"id\":\"openai/gpt-4-turbo\"},{\"id\":\"openai/o1-preview\"},{\"id\":\"meta-llama/llama-3.3-70b-instruct:free\"},{\"id\":\"meta-llama/llama-3.3-70b-instruct\"},{\"id\":\"mistralai/mistral-large:beta\"},{\"id\":\"x-ai/grok-3:extended\"},{\"id\":\"x-ai/grok-3\"},{\"id\":\"deepseek/deepseek-chat\"},{\"id\":\"deepseek/deepseek.chat\"},{\"id\":\"deepseek/deepseek-chat-v3\"},{\"id\":\"qwen/qwen-2.5-72b-instruct\"},{\"id\":\"cohere/command-r\"},{\"id\":\"openai/it's\"},{\"id\":\"google/---\"},{\"id\":\"openai/gpt-4o\"},{\"id\":\"\"},{\"id\":42},{\"name\":\"no id\"},\"a string\",{\"id\":\"anthropic/claude-3-haiku\"},{\"id\":\"Anthropic/Upper-Case\"}]}"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 12 named constants + 24 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_ANTHROPIC_CLAUDE_3_HAIKU",
+                  "anthropic/claude-3-haiku"
+                ],
+                [
+                  "MODEL_ANTHROPIC_CLAUDE_3_5_SONNET",
+                  "anthropic/claude-3.5-sonnet"
+                ],
+                [
+                  "MODEL_DEEPSEEK_DEEPSEEK_CHAT",
+                  "deepseek/deepseek-chat"
+                ],
+                [
+                  "MODEL_DEEPSEEK_DEEPSEEK_CHAT_V3",
+                  "deepseek/deepseek-chat-v3"
+                ],
+                [
+                  "MODEL_DEEPSEEK_DEEPSEEK_CHAT_A03119ED",
+                  "deepseek/deepseek.chat"
+                ],
+                [
+                  "MODEL_GOOGLE",
+                  "google/---"
+                ],
+                [
+                  "MODEL_GOOGLE_GEMINI_2_0_FLASH_001",
+                  "google/gemini-2.0-flash-001"
+                ],
+                [
+                  "MODEL_META_LLAMA_LLAMA_3_3_70B_INSTRUCT",
+                  "meta-llama/llama-3.3-70b-instruct"
+                ],
+                [
+                  "MODEL_OPENAI_GPT_4O",
+                  "openai/gpt-4o"
+                ],
+                [
+                  "MODEL_OPENAI_GPT_4O_7666FC6C",
+                  "openai/gpt-4o"
+                ],
+                [
+                  "MODEL_OPENAI_IT_S",
+                  "openai/it's"
+                ],
+                [
+                  "MODEL_X_AI_GROK_3",
+                  "x-ai/grok-3"
+                ]
+              ],
+              "models": [
+                "Anthropic/Upper-Case",
+                "anthropic/claude-3-haiku",
+                "anthropic/claude-3.5-sonnet",
+                "cohere/command-r",
+                "deepseek/deepseek-chat",
+                "deepseek/deepseek-chat-v3",
+                "deepseek/deepseek.chat",
+                "google/---",
+                "google/gemini-2.0-flash-001",
+                "meta-llama/llama-3.3-70b-instruct",
+                "meta-llama/llama-3.3-70b-instruct:free",
+                "mistralai/mistral-large:beta",
+                "openai/gpt-3.5-turbo",
+                "openai/gpt-4-0314",
+                "openai/gpt-4-1106-preview",
+                "openai/gpt-4-turbo",
+                "openai/gpt-4o",
+                "openai/gpt-4o",
+                "openai/gpt-4o-2024-08-06",
+                "openai/it's",
+                "openai/o1-preview",
+                "qwen/qwen-2.5-72b-instruct",
+                "x-ai/grok-3",
+                "x-ai/grok-3:extended"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ids with backslashes, line breaks and quotes",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\": [{\"id\": \"openai/back\\\\slash\"}, {\"id\": \"openai/new\\nline\"}, {\"id\": \"openai/carriage\\rreturn\"}, {\"id\": \"openai/it's \\\"quoted\\\"\"}, {\"id\": \"z-ai/\\u00e9t\\u00e9\"}]}"
+            }
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 4 named constants + 5 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_OPENAI_BACK_SLASH",
+                  "openai/back\\slash"
+                ],
+                [
+                  "MODEL_OPENAI_CARRIAGE_RETURN",
+                  "openai/carriage\rreturn"
+                ],
+                [
+                  "MODEL_OPENAI_IT_S_QUOTED",
+                  "openai/it's \"quoted\""
+                ],
+                [
+                  "MODEL_OPENAI_NEW_LINE",
+                  "openai/new\nline"
+                ]
+              ],
+              "models": [
+                "openai/back\\slash",
+                "openai/carriage\rreturn",
+                "openai/it's \"quoted\"",
+                "openai/new\nline",
+                "z-ai/été"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends the API key",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":[{\"id\":\"openai/gpt-4o\"}]}"
+            },
+            "key": "test-key"
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 1 named constants + 1 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": "Bearer test-key"
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_OPENAI_GPT_4O",
+                  "openai/gpt-4o"
+                ]
+              ],
+              "models": [
+                "openai/gpt-4o"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "falls back to the second key variable",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":[{\"id\":\"openai/gpt-4o\"}]}"
+            },
+            "fallbackKey": "test-fallback"
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 1 named constants + 1 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": "Bearer test-fallback"
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_OPENAI_GPT_4O",
+                  "openai/gpt-4o"
+                ]
+              ],
+              "models": [
+                "openai/gpt-4o"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a key of 0 is no key",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":[{\"id\":\"openai/gpt-4o\"}]}"
+            },
+            "key": "0",
+            "fallbackKey": "test-fallback"
+          },
+          "expect": {
+            "exit": 0,
+            "stdout": "Wrote 1 named constants + 1 model IDs to ${output}\n",
+            "stderr": "",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": "Bearer test-fallback"
+            },
+            "catalog": {
+              "constants": [
+                [
+                  "MODEL_OPENAI_GPT_4O",
+                  "openai/gpt-4o"
+                ]
+              ],
+              "models": [
+                "openai/gpt-4o"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails without a data array",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"models\":[]}"
+            }
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "",
+            "stderr": "OpenRouter models response did not include a data array\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        },
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "not json"
+            }
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "",
+            "stderr": "OpenRouter models response did not include a data array\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        },
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":\"x\"}"
+            }
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "",
+            "stderr": "OpenRouter models response did not include a data array\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails on an empty catalog",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 200,
+              "body": "{\"data\":[{\"id\":\"\"},{\"name\":\"x\"}]}"
+            }
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "",
+            "stderr": "OpenRouter models response was empty\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails when the catalog cannot be fetched",
+      "steps": [
+        {
+          "op": "sync.run",
+          "args": {
+            "catalog": {
+              "status": 404,
+              "body": "missing"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/stdout"
+            ],
+            "reason": "PHP's file_get_contents() prints its own warning (with the script's path and line) on standard output before the failure line; the Rust binary prints only the failure line (deviation in spec.json)"
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "<masked>",
+            "stderr": "Failed to fetch OpenRouter models from ${fixture}/serve/${ns}/api/v1/models\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        },
+        {
+          "op": "sync.run",
+          "args": {},
+          "mask": {
+            "paths": [
+              "/stdout"
+            ],
+            "reason": "PHP's file_get_contents() warning, as above"
+          },
+          "expect": {
+            "exit": 1,
+            "stdout": "<masked>",
+            "stderr": "Failed to fetch OpenRouter models from ${fixture}/serve/${ns}/api/v1/models\n",
+            "request": {
+              "method": "GET",
+              "target": "/serve/${ns}/api/v1/models",
+              "accept": "application/json",
+              "authorization": null
+            },
+            "catalog": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "the catalog the library ships",
+      "op": "data.digest",
+      "expect": {
+        "constants": 115,
+        "models": 346,
+        "sha256": "b1b40b1d67c626d6ead7802b3e978c480e9cc3e218231005def0fcc389c6f741"
+      }
+    }
+  ]
+}

@@ -1,0 +1,2567 @@
+{
+  "source": "packages/dns/tests/Zone/FileTest.php",
+  "cases": [
+    {
+      "name": "example.com zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.     ; designates the start of this zone file in the namespace\n$TTL 3600                ; default expiration time (in seconds) of all RRs without their own TTL value\nexample.com.  IN  SOA   ns.example.com. username.example.com. ( 2020091025 7200 3600 1209600 3600 )\nexample.com.  IN  NS    ns                    ; ns.example.com is a nameserver for example.com\nexample.com.  IN  NS    ns.somewhere.example. ; ns.somewhere.example is a backup nameserver for example.com\nexample.com.  IN  MX    10 mail.example.com.  ; mail.example.com is the mailserver for example.com\n@             IN  MX    20 mail2.example.com. ; equivalent to above line, \"@\" represents zone origin\n@             IN  MX    50 mail3              ; equivalent to above line, but using a relative host name\nexample.com.  IN  A     192.0.2.1             ; IPv4 address for example.com\n              IN  AAAA  2001:db8:10::1        ; IPv6 address for example.com\nns            IN  A     192.0.2.2             ; IPv4 address for ns.example.com\n              IN  AAAA  2001:db8:10::2        ; IPv6 address for ns.example.com\nwww           IN  CNAME example.com.          ; www.example.com is an alias for example.com\nwwwtest       IN  CNAME www                   ; wwwtest.example.com is another alias for www.example.com\nmail          IN  A     192.0.2.3             ; IPv4 address for mail.example.com\nmail2         IN  A     192.0.2.4             ; IPv4 address for mail2.example.com\nmail3         IN  A     192.0.2.5             ; IPv4 address for mail3.example.com"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns.somewhere.example",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail2.example.com",
+                "priority": 20,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail3.example.com",
+                "priority": 50,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "2001:db8:10::1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "ns.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "ns.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "2001:db8:10::2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "wwwtest.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "www.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail2.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail3.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.example.com username.example.com ( 2020091025 7200 3600 1209600",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.     ; designates the start of this zone file in the namespace\n$TTL 3600                ; default expiration time (in seconds) of all RRs without their own TTL value\nexample.com.  IN  SOA   ns.example.com. username.example.com. ( 2020091025 7200 3600 1209600 3600 )\nexample.com.  IN  NS    ns                    ; ns.example.com is a nameserver for example.com\nexample.com.  IN  NS    ns.somewhere.example. ; ns.somewhere.example is a backup nameserver for example.com\nexample.com.  IN  MX    10 mail.example.com.  ; mail.example.com is the mailserver for example.com\n@             IN  MX    20 mail2.example.com. ; equivalent to above line, \"@\" represents zone origin\n@             IN  MX    50 mail3              ; equivalent to above line, but using a relative host name\nexample.com.  IN  A     192.0.2.1             ; IPv4 address for example.com\n              IN  AAAA  2001:db8:10::1        ; IPv6 address for example.com\nns            IN  A     192.0.2.2             ; IPv4 address for ns.example.com\n              IN  AAAA  2001:db8:10::2        ; IPv6 address for ns.example.com\nwww           IN  CNAME example.com.          ; www.example.com is an alias for example.com\nwwwtest       IN  CNAME www                   ; wwwtest.example.com is another alias for www.example.com\nmail          IN  A     192.0.2.3             ; IPv4 address for mail.example.com\nmail2         IN  A     192.0.2.4             ; IPv4 address for mail2.example.com\nmail3         IN  A     192.0.2.5             ; IPv4 address for mail3.example.com"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "Red Hat zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com. \n$TTL 86400 \n@\tIN\tSOA\tdns1.example.com.\thostmaster.example.com. (\n\t\t\t2001062501 ; serial                     \n\t\t\t21600      ; refresh after 6 hours                     \n\t\t\t3600       ; retry after 1 hour                     \n\t\t\t604800     ; expire after 1 week                     \n\t\t\t86400 )    ; minimum TTL of 1 day  \n\t\t     \n\t\t           \n\tIN\tNS\tdns1.example.com.       \n\tIN\tNS\tdns2.example.com.        \n\t\n\t\n\tIN\tMX\t10\tmail.example.com.       \n\tIN\tMX\t20\tmail2.example.com.        \n\n\t\ndns1\tIN\tA\t10.0.1.1\ndns2\tIN\tA\t10.0.1.2\t\n\n\t\t\t       \nserver1\tIN\tA\t10.0.1.5        \nserver2\tIN\tA\t10.0.1.6\n\n       \nftp\tIN\tA\t10.0.1.3\n\tIN\tA\t10.0.1.4\n\t\nmail\tIN\tCNAME\tserver1\nmail2\tIN\tCNAME\tserver2\n\n\nwww\tIN\tCNAME\tserver1"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "dns1.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "dns2.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "mail2.example.com",
+                "priority": 20,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dns1.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dns2.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "server1.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "server2.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "ftp.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "ftp.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "10.0.1.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "server1.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail2.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "server2.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "server1.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 86400,
+              "rdata": "dns1.example.com hostmaster.example.com 2001062501 21600 3600 604800 86400",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com. \n$TTL 86400 \n@\tIN\tSOA\tdns1.example.com.\thostmaster.example.com. (\n\t\t\t2001062501 ; serial                     \n\t\t\t21600      ; refresh after 6 hours                     \n\t\t\t3600       ; retry after 1 hour                     \n\t\t\t604800     ; expire after 1 week                     \n\t\t\t86400 )    ; minimum TTL of 1 day  \n\t\t     \n\t\t           \n\tIN\tNS\tdns1.example.com.       \n\tIN\tNS\tdns2.example.com.        \n\t\n\t\n\tIN\tMX\t10\tmail.example.com.       \n\tIN\tMX\t20\tmail2.example.com.        \n\n\t\ndns1\tIN\tA\t10.0.1.1\ndns2\tIN\tA\t10.0.1.2\t\n\n\t\t\t       \nserver1\tIN\tA\t10.0.1.5        \nserver2\tIN\tA\t10.0.1.6\n\n       \nftp\tIN\tA\t10.0.1.3\n\tIN\tA\t10.0.1.4\n\t\nmail\tIN\tCNAME\tserver1\nmail2\tIN\tCNAME\tserver2\n\n\nwww\tIN\tCNAME\tserver1"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "Oracle 1 zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "; Exported (y-m-d hh:mm:ss): 2019-01-10 13:05:04\n;\n; This file is intended for use for informational and archival\n; purposes ONLY and MUST be edited before use on a production\n; DNS server.\n;\n; In particular, you must update the SOA record with the correct\n; authoritative name server and contact e-mail address information,\n; and add the correct NS records for the name servers which will\n; be authoritative for this domain.\n;\n; For further information, please consult the BIND documentation\n; located on the following website:\n;\n; http://www.isc.org/\n;\n; And RFC 1035:\n;\n; http://www.ietf.org/rfc/rfc1035.txt\n;\n; Please note that we do NOT offer technical support for any use\n; of this zone data, the BIND name server, or any other third-\n; party DNS software.\n;\n; Use at your own risk.\n; SOA Record\nexample.com.        3600     IN     SOA ns41.domaincontrol.com. dns.net. (\n                    2018122702\n                    28800\n                    7200\n                    604800\n                    3600\n                    ) \n; A Records\n@   600  IN     A   192.0.2.249\nblog    10800    IN     A   192.0.2.255\ndev 1800     IN     A   192.0.2.254\ndev01   1800     IN     A   192.0.2.253\ndev02   1800     IN     A   192.0.2.252\ndev03   1800     IN     A   192.0.2.251\ndev04   1800     IN     A   192.0.2.250\n; CNAME Records\nabc123b432dc7785b7ef31f04f25c3e71    1800     IN     CNAME   verify.bing.com.\nakamai  600  IN     CNAME   www.example.com.edgekey.net.\nemail   3600     IN     CNAME   email.secureserver.net.\n; MX Records\n@   604800   IN     MX  10  amlxe.l.google.com.\n@   604800   IN     MX  10  aplxe.l.google.com.\n; TXT Records\n@   3600     IN     TXT \"google-site-verification=3J82-80dbMyCo5Q5C1G11JszeOnZPGCSYlHcPcXg\"\n@   3600     IN     TXT \"google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB743xsbX918\"",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "192.0.2.249",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "blog.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 10800,
+                "rdata": "192.0.2.255",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.254",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev01.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.253",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev02.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.252",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev03.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.251",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev04.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.250",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "abc123b432dc7785b7ef31f04f25c3e71.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "verify.bing.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "akamai.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "www.example.com.edgekey.net",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "email.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "email.secureserver.net",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 604800,
+                "rdata": "amlxe.l.google.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 604800,
+                "rdata": "aplxe.l.google.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "google-site-verification=3J82-80dbMyCo5Q5C1G11JszeOnZPGCSYlHcPcXg",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB743xsbX918",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns41.domaincontrol.com dns.net 2018122702 28800 7200 604800 3600",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "; Exported (y-m-d hh:mm:ss): 2019-01-10 13:05:04\n;\n; This file is intended for use for informational and archival\n; purposes ONLY and MUST be edited before use on a production\n; DNS server.\n;\n; In particular, you must update the SOA record with the correct\n; authoritative name server and contact e-mail address information,\n; and add the correct NS records for the name servers which will\n; be authoritative for this domain.\n;\n; For further information, please consult the BIND documentation\n; located on the following website:\n;\n; http://www.isc.org/\n;\n; And RFC 1035:\n;\n; http://www.ietf.org/rfc/rfc1035.txt\n;\n; Please note that we do NOT offer technical support for any use\n; of this zone data, the BIND name server, or any other third-\n; party DNS software.\n;\n; Use at your own risk.\n; SOA Record\nexample.com.        3600     IN     SOA ns41.domaincontrol.com. dns.net. (\n                    2018122702\n                    28800\n                    7200\n                    604800\n                    3600\n                    ) \n; A Records\n@   600  IN     A   192.0.2.249\nblog    10800    IN     A   192.0.2.255\ndev 1800     IN     A   192.0.2.254\ndev01   1800     IN     A   192.0.2.253\ndev02   1800     IN     A   192.0.2.252\ndev03   1800     IN     A   192.0.2.251\ndev04   1800     IN     A   192.0.2.250\n; CNAME Records\nabc123b432dc7785b7ef31f04f25c3e71    1800     IN     CNAME   verify.bing.com.\nakamai  600  IN     CNAME   www.example.com.edgekey.net.\nemail   3600     IN     CNAME   email.secureserver.net.\n; MX Records\n@   604800   IN     MX  10  amlxe.l.google.com.\n@   604800   IN     MX  10  aplxe.l.google.com.\n; TXT Records\n@   3600     IN     TXT \"google-site-verification=3J82-80dbMyCo5Q5C1G11JszeOnZPGCSYlHcPcXg\"\n@   3600     IN     TXT \"google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB743xsbX918\"",
+            "defaultOrigin": "example.com"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "Oracle 2 zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\nexample.com.\t     3600     IN     SOA ns41.domaincontrol.com. dns.net. (\n                    2018122702\n                    28800\n                    7200\n                    604800\n                    3600\n\t\t     )\n\t\t\t\t\t\n; A Records\n@   600  IN     A   192.0.2.249\nblog    10800    IN     A   192.0.2.255\ndev 1800     IN     A   192.0.2.254\ndev01   1800     IN     A   192.0.2.253\ndev02   1800     IN     A   192.0.2.252\ndev03   1800     IN     A   192.0.2.251\ndev04   1800     IN     A   192.0.2.250\nabc123b432dc7785b7ef31f04f25c3e71    1800     IN     CNAME   verify.bing.com.\n; CNAME Records\nakamai  600  IN     CNAME   www.example.edgekey.net.\nemail   3600     IN     CNAME   email.secureserver.net.\n; MX Records\n@   604800   IN     MX  10  amlxe.l.google.com.\n@   604800   IN     MX  10  aplxe.l.google.com.\n; TXT Records\n@   3600     IN     TXT \"google-site-verification=3J82-80dbMyCo5Q5C1GM8os1VYVEOnZPGCSYlHcPcXg\"\n@   3600     IN     TXT \"google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB7k7uIG7qrsyu8\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "192.0.2.249",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "blog.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 10800,
+                "rdata": "192.0.2.255",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.254",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev01.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.253",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev02.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.252",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev03.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.251",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "dev04.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.250",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "abc123b432dc7785b7ef31f04f25c3e71.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "verify.bing.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "akamai.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "www.example.edgekey.net",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "email.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "email.secureserver.net",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 604800,
+                "rdata": "amlxe.l.google.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 604800,
+                "rdata": "aplxe.l.google.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "google-site-verification=3J82-80dbMyCo5Q5C1GM8os1VYVEOnZPGCSYlHcPcXg",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB7k7uIG7qrsyu8",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns41.domaincontrol.com dns.net 2018122702 28800 7200 604800 3600",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\nexample.com.\t     3600     IN     SOA ns41.domaincontrol.com. dns.net. (\n                    2018122702\n                    28800\n                    7200\n                    604800\n                    3600\n\t\t     )\n\t\t\t\t\t\n; A Records\n@   600  IN     A   192.0.2.249\nblog    10800    IN     A   192.0.2.255\ndev 1800     IN     A   192.0.2.254\ndev01   1800     IN     A   192.0.2.253\ndev02   1800     IN     A   192.0.2.252\ndev03   1800     IN     A   192.0.2.251\ndev04   1800     IN     A   192.0.2.250\nabc123b432dc7785b7ef31f04f25c3e71    1800     IN     CNAME   verify.bing.com.\n; CNAME Records\nakamai  600  IN     CNAME   www.example.edgekey.net.\nemail   3600     IN     CNAME   email.secureserver.net.\n; MX Records\n@   604800   IN     MX  10  amlxe.l.google.com.\n@   604800   IN     MX  10  aplxe.l.google.com.\n; TXT Records\n@   3600     IN     TXT \"google-site-verification=3J82-80dbMyCo5Q5C1GM8os1VYVEOnZPGCSYlHcPcXg\"\n@   3600     IN     TXT \"google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB7k7uIG7qrsyu8\""
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "localhost zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN localhost.\n@  86400  IN  SOA   @  root (\n                  1999010100 ; serial\n                       10800 ; refresh (3 hours)\n                         900 ; retry (15 minutes)\n                      604800 ; expire (1 week)\n                       86400 ; minimum (1 day)\n                    )\n@  86400  IN  NS    @\n@  86400  IN  A     127.0.0.1\n@  86400  IN  AAAA  ::1\nlarge  300  IN  TXT   \"Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua\"\nlarge  300  IN  TXT   \"Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat\"\nlarge  300  IN  TXT   \"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur\"\nlarge  300  IN  TXT   \"Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum\"\nlarge  300  IN  TXT   \"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam\"\nlarge  300  IN  TXT   \"Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo\"\nlarge  300  IN  TXT   \"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores\"\nlarge  300  IN  TXT   \"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit\""
+          },
+          "expect": {
+            "name": "localhost",
+            "records": [
+              {
+                "name": "localhost",
+                "type": 2,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "localhost",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "localhost",
+                "type": 1,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "127.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "localhost",
+                "type": 28,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "::1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "large.localhost",
+                "type": 16,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "localhost",
+              "type": 6,
+              "class": 1,
+              "ttl": 86400,
+              "rdata": "localhost root.localhost 1999010100 10800 900 604800 86400",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN localhost.\n@  86400  IN  SOA   @  root (\n                  1999010100 ; serial\n                       10800 ; refresh (3 hours)\n                         900 ; retry (15 minutes)\n                      604800 ; expire (1 week)\n                       86400 ; minimum (1 day)\n                    )\n@  86400  IN  NS    @\n@  86400  IN  A     127.0.0.1\n@  86400  IN  AAAA  ::1\nlarge  300  IN  TXT   \"Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua\"\nlarge  300  IN  TXT   \"Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat\"\nlarge  300  IN  TXT   \"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur\"\nlarge  300  IN  TXT   \"Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum\"\nlarge  300  IN  TXT   \"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam\"\nlarge  300  IN  TXT   \"Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo\"\nlarge  300  IN  TXT   \"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores\"\nlarge  300  IN  TXT   \"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit\""
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "reverse zone file",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": ";; reverse zone file for 127.0.0.1 and ::1\n$TTL 1814400 ; 3 weeks\n@  1814400  IN  SOA     localhost. root.localhost.  (\n                      1999010100 ; serial\n                           10800 ; refresh (3 hours)\n                             900 ; retry (15 minutes)\n                          604800 ; expire (1 week)\n                           86400 ; minimum (1 day)\n                        )\n@  1814400  IN  NS      localhost.\n1  1814400  IN  PTR     localhost."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Record is missing an owner name (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": ";; reverse zone file for 127.0.0.1 and ::1\n$TTL 1814400 ; 3 weeks\n@  1814400  IN  SOA     localhost. root.localhost.  (\n                      1999010100 ; serial\n                           10800 ; refresh (3 hours)\n                             900 ; retry (15 minutes)\n                          604800 ; expire (1 week)\n                           86400 ; minimum (1 day)\n                        )\n@  1814400  IN  NS      localhost.\n1  1814400  IN  PTR     localhost."
+          },
+          "expect": {
+            "message": "Record is missing an owner name (line 3).",
+            "content": ";; reverse zone file for 127.0.0.1 and ::1\n$TTL 1814400 ; 3 weeks\n@  1814400  IN  SOA     localhost. root.localhost.  (\n                      1999010100 ; serial\n                           10800 ; refresh (3 hours)\n                             900 ; retry (15 minutes)\n                          604800 ; expire (1 week)\n                           86400 ; minimum (1 day)\n                        )\n@  1814400  IN  NS      localhost.\n1  1814400  IN  PTR     localhost.",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Record is missing an owner name (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import valid zone with directives",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n$TTL 1800\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww IN A 192.168.1.10\nmail 300 IN MX 10 mail\n_sip._tcp 600 IN SRV 5 10 5060 sip"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.168.1.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "_sip._tcp.example.com",
+                "type": 33,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "sip.example.com",
+                "priority": 5,
+                "weight": 10,
+                "port": 5060
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 1800,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails with unsupported directive",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n$INCLUDE other.zone"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "$INCLUDE directive is not supported"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n$INCLUDE other.zone"
+          },
+          "expect": {
+            "message": "$INCLUDE directive is not supported",
+            "content": "$ORIGIN example.com.\n$INCLUDE other.zone",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "$INCLUDE directive is not supported"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails with unknown record type",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 300 IN BADTYPE data"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Invalid record type 'BADTYPE' (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 300 IN BADTYPE data"
+          },
+          "expect": {
+            "message": "Invalid record type 'BADTYPE' (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 300 IN BADTYPE data",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid record type 'BADTYPE' (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails when MX priority missing",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nmail 3600 IN MX mail.example.com."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "MX requires numeric priority and exchange (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nmail 3600 IN MX mail.example.com."
+          },
+          "expect": {
+            "message": "MX requires numeric priority and exchange (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nmail 3600 IN MX mail.example.com.",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "MX requires numeric priority and exchange (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails when SRV fields missing",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n_sip._tcp 600 IN SRV 5 10 5060"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "SRV requires priority, weight, port, target (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n_sip._tcp 600 IN SRV 5 10 5060"
+          },
+          "expect": {
+            "message": "SRV requires priority, weight, port, target (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n_sip._tcp 600 IN SRV 5 10 5060",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "SRV requires priority, weight, port, target (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import handles blank lines and comments",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n\n; comment line\n@ 3600 IN A 127.0.0.1"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "127.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import allows zero TTL",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 0 IN A 127.0.0.1"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "127.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import uses default origin when directive missing",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 600 IN A 192.0.2.10",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import allows email address SOA rname to encode",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. first.last@example.com. 2025011801 7200 3600 1209600 1800\nwww 600 IN A 192.0.2.10",
+            "defaultOrigin": "example.com"
+          },
+          "bind": "z",
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com first.last@example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "$ref": "z",
+              "path": "/soa"
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QAD0DbnMxB2V4YW1wbGUDY29tAApmaXJzdC5sYXN0B2V4YW1wbGUDY29tAHizOlkAABwgAAAOEAASdQAAAAcI"
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails when SOA data missing",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. admin.example.com.",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. admin.example.com.",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1).",
+            "content": "@ IN SOA ns1.example.com. admin.example.com.",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import with relative names expands to zone",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww     IN  A   192.0.2.10\nmail    IN  MX  10 mail\nalias   IN  CNAME   www"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "alias.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "www.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import handles class before TTL",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ IN 3600 A 192.0.2.10"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import defaults class to IN",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 600 A 192.0.2.11"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "192.0.2.11",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import collapses parenthesized TXT records",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nmultiline 600 IN TXT (\n    \"foo\"\n    \"bar\"\n)"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "multiline.example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "foobar",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import decodes decimal escapes in TXT",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nescaped 600 IN TXT \"foo\\010bar\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "escaped.example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "foo\nbar",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import ignores unknown directive",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n$FOO bar\nwww IN A 192.168.1.10"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.168.1.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import TXT with special chars",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN TXT \"v=DMARC1; p=none; rua=mailto:jon@snow.got; ruf=mailto:jon@snow.got; fo=1;\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "v=DMARC1; p=none; rua=mailto:jon@snow.got; ruf=mailto:jon@snow.got; fo=1;",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "export TXT with special chars",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 16,
+                  "ttl": 3600,
+                  "rdata": "v=DMARC1; text=\"quoted\"; backslash=\\",
+                  "class": 1
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+                "class": 1
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 3600",
+            "",
+            "@\t3600\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "@\t3600\tIN\tTXT\t\"v=DMARC1; text=\\\"quoted\\\"; backslash=\\\\\"",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "import export round trip",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n$TTL 1200\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww IN A 192.168.1.10\nmail 600 IN MX 10 mail"
+          },
+          "bind": "z",
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1200,
+                "rdata": "192.168.1.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 1200,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "$ref": "z"
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 1200",
+            "",
+            "@\t1200\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "www\t1200\tIN\tA\t192.168.1.10",
+            "",
+            "mail\t600\tIN\tMX\t10 mail",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "export basic zone",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1.example.com",
+                  "class": 1
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1800,
+                  "rdata": "192.168.1.10",
+                  "class": 1
+                },
+                {
+                  "name": "mail.example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "mail.example.com",
+                  "class": 1,
+                  "priority": 10
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 1800,
+                "rdata": "ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+                "class": 1
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 1800",
+            "",
+            "@\t1800\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "@\t3600\tIN\tNS\tns1",
+            "",
+            "www\t1800\tIN\tA\t192.168.1.10",
+            "",
+            "mail\t300\tIN\tMX\t10 mail",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "export and import keep zero MX priority",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "mail.example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "mail.example.com",
+                  "class": 1,
+                  "priority": 0
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 1800,
+                "rdata": "ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+                "class": 1
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 1800",
+            "",
+            "@\t1800\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "mail\t300\tIN\tMX\t0 mail",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "export and import keep zero SRV numerics",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "_sip._tcp.example.com",
+                  "type": 33,
+                  "ttl": 300,
+                  "rdata": "sip.example.com",
+                  "class": 1,
+                  "priority": 0,
+                  "weight": 0,
+                  "port": 0
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 1800,
+                "rdata": "ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+                "class": 1
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 1800",
+            "",
+            "@\t1800\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "_sip._tcp\t300\tIN\tSRV\t0 0 0 sip",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "import supports PTR records",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n1 3600 IN PTR host.example.com."
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "1.example.com",
+                "type": 12,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "host.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import supports multiline SOA",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ 3600 IN SOA (\n    ns1.example.com.\n    admin.example.com.\n    2025011801\n    7200\n    3600\n    1209600\n    1800\n)\nwww 1800 IN A 192.0.2.10"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import handles multiple origins",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww IN A 192.0.2.10\n$ORIGIN sub.example.com.\n@ 600 IN AAAA 2001:db8::1\n$ORIGIN example.com.\napi IN CNAME www"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "sub.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "2001:db8::1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "api.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "www.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import allows owner omission with previous owner",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww IN A 192.0.2.10\n    IN AAAA 2001:db8::1"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "2001:db8::1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import TXT with escaped semicolon",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN TXT \"foo\\;bar\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "foo;bar",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import TXT with semicolon in quotes",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN TXT \"not a comment; still text\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "not a comment; still text",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import export round trip for AAAA",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 600 IN AAAA 2001:db8::1"
+          },
+          "bind": "z",
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "2001:db8::1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "$ref": "z"
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 3600",
+            "",
+            "@\t3600\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "www\t600\tIN\tAAAA\t2001:db8::1",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "can export zone with template records",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "api.example.com",
+                  "type": 1,
+                  "ttl": 120,
+                  "rdata": "a.a.a.a"
+                },
+                {
+                  "name": "api.example.com",
+                  "type": 1,
+                  "ttl": 120,
+                  "rdata": "b:b::b:b:b"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "the comment line holds the export time"
+          },
+          "expect": [
+            "; Zone file for example.com",
+            "<masked>",
+            "",
+            "$ORIGIN example.com.",
+            "$TTL 3600",
+            "",
+            "; SOA Record",
+            "@\t3600\tIN\tSOA\tns1 hostmaster (",
+            "\t\t\t\t1\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t300 )\t; minimum",
+            "",
+            "; A Records",
+            "api\t120\tIN\tA\ta.a.a.a",
+            "api\t120\tIN\tA\tb:b::b:b:b",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "can import zone with template records",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 600 IN AAAA b:b::b:b:b"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "b:b::b:b:b",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import export round trip for CAA",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN CAA 0 issue \"letsencrypt.org\""
+          },
+          "bind": "z",
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 257,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "0 issue \"letsencrypt.org\"",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "$ref": "z"
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN example.com.",
+            "$TTL 3600",
+            "",
+            "@\t3600\tIN\tSOA\tns1 admin (",
+            "\t\t\t\t2025011801\t; serial",
+            "\t\t\t\t7200\t; refresh",
+            "\t\t\t\t3600\t; retry",
+            "\t\t\t\t1209600\t; expire",
+            "\t\t\t\t1800 )\t; minimum",
+            "",
+            "@\t3600\tIN\tCAA\t0 issue \"letsencrypt.org\"",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "import CAA missing quoted value fails",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN CAA 0 issue letsencrypt.org"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "CAA value must be quoted (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN CAA 0 issue letsencrypt.org"
+          },
+          "expect": {
+            "message": "CAA value must be quoted (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN CAA 0 issue letsencrypt.org",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "CAA value must be quoted (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import PTR with reverse origin",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN 2.0.192.in-addr.arpa.\n@ 3600 IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n1 3600 IN PTR host.example.com."
+          },
+          "expect": {
+            "name": "2.0.192.in-addr.arpa",
+            "records": [
+              {
+                "name": "1.2.0.192.in-addr.arpa",
+                "type": 12,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "host.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "2.0.192.in-addr.arpa",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails with duplicate SOA",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ IN SOA ns2.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Multiple SOA records found (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ IN SOA ns2.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800"
+          },
+          "expect": {
+            "message": "Multiple SOA records found (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ IN SOA ns2.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "import rejects TTL with suffix",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 1h IN A 192.0.2.10"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Invalid record type '1H' (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 1h IN A 192.0.2.10"
+          },
+          "expect": {
+            "message": "Invalid record type '1H' (line 3).",
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww 1h IN A 192.0.2.10",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid record type '1H' (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import supports alternative classes",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\nwww CS A 192.0.2.10"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 2,
+                "ttl": 3600,
+                "rdata": "192.0.2.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import TXT with embedded quote and backslash",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN TXT \"a \\\"quote\\\" and a \\\\ backslash\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "a \"quote\" and a \\ backslash",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import TXT three digit escape consumes only three digits",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800\n@ 3600 IN TXT \"foo\\0100bar\""
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "foo\n0bar",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2025011801 7200 3600 1209600 1800",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails when SOA has too few fields",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1).",
+            "content": "@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "SOA requires MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM (line 1)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails without SOA",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "www IN A 192.168.1.10\n",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "No SOA record found in zone file"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "www IN A 192.168.1.10\n",
+            "defaultOrigin": "example.com"
+          },
+          "expect": {
+            "message": "No SOA record found in zone file",
+            "content": "www IN A 192.168.1.10\n",
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "import fails when owner omitted without context",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n    IN A 127.0.0.1\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Owner omitted but no previous owner available (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN example.com.\n    IN A 127.0.0.1\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800"
+          },
+          "expect": {
+            "message": "Owner omitted but no previous owner available (line 2).",
+            "content": "$ORIGIN example.com.\n    IN A 127.0.0.1\n@ IN SOA ns1.example.com. admin.example.com. 2025011801 7200 3600 1209600 1800",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Owner omitted but no previous owner available (line 2)."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

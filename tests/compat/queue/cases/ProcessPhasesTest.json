@@ -1,0 +1,1043 @@
+{
+  "source": "packages/queue/tests/ProcessPhasesTest.php",
+  "cases": [
+    {
+      "name": "a failed handler is rejected",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "inject": [
+                  "message"
+                ],
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a permanent failure is rejected as terminal",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "PermanentFailure",
+                  "message": "Region hostname not configured"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:Utopia\\Queue\\PermanentFailure:Region hostname not configured",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:terminal",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an ordinary failure is not terminal",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "timeout"
+                }
+              }
+            ]
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a type error is rejected as terminal without the handler saying so",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "TypeError",
+                  "message": "bad"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:TypeError:bad",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:terminal",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a value error is rejected as terminal",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "ValueError",
+                  "message": "bad"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:ValueError:bad",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:terminal",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "exhaustion is not terminal even though it is an error",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "Error",
+                  "message": "Allowed memory size exhausted"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:Error:Allowed memory size exhausted",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a handler marking its message terminal",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "inject": [
+                  "message"
+                ],
+                "fail": "terminal"
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:marked terminal",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:terminal",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a permanent failure is still reported",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "PermanentFailure",
+                  "message": "never"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:Utopia\\Queue\\PermanentFailure:never"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:terminal",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed ack is never rejected",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ],
+            "fail": [
+              "commit"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:commit failed",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed success hook is never rejected",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "fail": {
+                    "class": "RuntimeException",
+                    "message": "hook down"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "shutdown0",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:hook down",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the success hook runs only after the ack lands",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p2",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "shutdown": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "shutdown0",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "job:work",
+              []
+            ],
+            [
+              "shutdown0",
+              [
+                "message:p2"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "receive:1",
+            "commit:p2",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a handler failure whose report also fails still rejects",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "fail": {
+                    "class": "RuntimeException",
+                    "message": "reporter down"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed reject is reported, not raised",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p2",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ],
+            "fail": [
+              "reject"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:p1"
+              ]
+            ],
+            [
+              "job:work",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:p2"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "receive:1",
+            "reject:p2:retry",
+            "close"
+          ]
+        }
+      ]
+    }
+  ]
+}

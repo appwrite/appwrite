@@ -1,0 +1,236 @@
+{
+  "source": "packages/emails/tests/Validator/EmailDomainTest.php",
+  "cases": [
+    {
+      "name": "valid email domain",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "test@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@mail.example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@mail.sub.example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example-domain.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example123.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "invalid-email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example..com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example--com.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@.example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example.com."
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@-example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example-.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "user@example!.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "non string input",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": false
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validatordescription",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "domain"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validatortype",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "domain"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validator is array",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "domain"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

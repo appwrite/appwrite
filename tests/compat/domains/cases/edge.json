@@ -1,0 +1,1558 @@
+{
+  "source": "packages/domains/src",
+  "cases": [
+    {
+      "name": "parse ''",
+      "op": "domain.parse",
+      "args": {
+        "domain": ""
+      },
+      "expect": {
+        "get": "",
+        "tld": "",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '.'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "."
+      },
+      "expect": {
+        "get": ".",
+        "tld": "",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '..'",
+      "op": "domain.parse",
+      "args": {
+        "domain": ".."
+      },
+      "expect": {
+        "get": "..",
+        "tld": "",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": ".",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "com"
+      },
+      "expect": {
+        "get": "com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "",
+        "sub": "",
+        "apex": ".com",
+        "registerable": ".com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'COM'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "COM"
+      },
+      "expect": {
+        "get": "com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "",
+        "sub": "",
+        "apex": ".com",
+        "registerable": ".com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'Example.COM'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "Example.COM"
+      },
+      "expect": {
+        "get": "example.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "example",
+        "sub": "",
+        "apex": "example.com",
+        "registerable": "example.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'example.com.'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "example.com."
+      },
+      "expect": {
+        "get": "example.com.",
+        "tld": "",
+        "suffix": "",
+        "rule": "",
+        "name": "com",
+        "sub": "example",
+        "apex": "com.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'a..b.com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "a..b.com"
+      },
+      "expect": {
+        "get": "a..b.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "b",
+        "sub": "a.",
+        "apex": "b.com",
+        "registerable": "b.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '0'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "0"
+      },
+      "expect": {
+        "get": "0",
+        "tld": "0",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '0.com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "0.com"
+      },
+      "expect": {
+        "get": "0.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "0",
+        "sub": "0",
+        "apex": "0.com",
+        "registerable": "0.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'x.0.com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "x.0.com"
+      },
+      "expect": {
+        "get": "x.0.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "0",
+        "sub": "x.0",
+        "apex": "0.com",
+        "registerable": "0.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '*.ck'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "*.ck"
+      },
+      "expect": {
+        "get": "*.ck",
+        "tld": "ck",
+        "suffix": "*.ck",
+        "rule": "*.ck",
+        "name": "",
+        "sub": "",
+        "apex": ".*.ck",
+        "registerable": ".*.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '!www.ck'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "!www.ck"
+      },
+      "expect": {
+        "get": "!www.ck",
+        "tld": "ck",
+        "suffix": "!www.ck",
+        "rule": "!www.ck",
+        "name": "",
+        "sub": "",
+        "apex": ".!www.ck",
+        "registerable": ".!www.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'ck'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "ck"
+      },
+      "expect": {
+        "get": "ck",
+        "tld": "ck",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'a.b.c.d.e.f.co.uk'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "a.b.c.d.e.f.co.uk"
+      },
+      "expect": {
+        "get": "a.b.c.d.e.f.co.uk",
+        "tld": "uk",
+        "suffix": "co.uk",
+        "rule": "co.uk",
+        "name": "f",
+        "sub": "a.b.c.d.e",
+        "apex": "f.co.uk",
+        "registerable": "f.co.uk",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'xn--p1ai'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "xn--p1ai"
+      },
+      "expect": {
+        "get": "xn--p1ai",
+        "tld": "xn--p1ai",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'пример.рф'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "пример.рф"
+      },
+      "expect": {
+        "get": "пример.рф",
+        "tld": "рф",
+        "suffix": "рф",
+        "rule": "рф",
+        "name": "пример",
+        "sub": "",
+        "apex": "пример.рф",
+        "registerable": "пример.рф",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'ПРИМЕР.РФ'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "ПРИМЕР.РФ"
+      },
+      "expect": {
+        "get": "пример.рф",
+        "tld": "рф",
+        "suffix": "рф",
+        "rule": "рф",
+        "name": "пример",
+        "sub": "",
+        "apex": "пример.рф",
+        "registerable": "пример.рф",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'xn--e1afmkfd.xn--p1ai'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "xn--e1afmkfd.xn--p1ai"
+      },
+      "expect": {
+        "get": "xn--e1afmkfd.xn--p1ai",
+        "tld": "xn--p1ai",
+        "suffix": "",
+        "rule": "",
+        "name": "xn--e1afmkfd",
+        "sub": "",
+        "apex": "xn--e1afmkfd.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '127.0.0.1'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "127.0.0.1"
+      },
+      "expect": {
+        "get": "127.0.0.1",
+        "tld": "1",
+        "suffix": "",
+        "rule": "",
+        "name": "0",
+        "sub": "127.0.0",
+        "apex": "0.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse '::1'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "::1"
+      },
+      "expect": {
+        "get": "::1",
+        "tld": "::1",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'HTTP://example.com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "HTTP://example.com"
+      },
+      "expect": {
+        "get": "http://example.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "http://example",
+        "sub": "",
+        "apex": "http://example.com",
+        "registerable": "http://example.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'ftp://example.com'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "ftp://example.com"
+      },
+      "expect": {
+        "get": "ftp://example.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "ftp://example",
+        "sub": "",
+        "apex": "ftp://example.com",
+        "registerable": "ftp://example.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'example.com:8080'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "example.com:8080"
+      },
+      "expect": {
+        "get": "example.com:8080",
+        "tld": "com:8080",
+        "suffix": "",
+        "rule": "",
+        "name": "example",
+        "sub": "",
+        "apex": "example.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'ÉXAMPLE.fr'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "ÉXAMPLE.fr"
+      },
+      "expect": {
+        "get": "éxample.fr",
+        "tld": "fr",
+        "suffix": "fr",
+        "rule": "fr",
+        "name": "éxample",
+        "sub": "",
+        "apex": "éxample.fr",
+        "registerable": "éxample.fr",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'a.github.io'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "a.github.io"
+      },
+      "expect": {
+        "get": "a.github.io",
+        "tld": "io",
+        "suffix": "github.io",
+        "rule": "github.io",
+        "name": "a",
+        "sub": "",
+        "apex": "a.github.io",
+        "registerable": "a.github.io",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'github.io'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "github.io"
+      },
+      "expect": {
+        "get": "github.io",
+        "tld": "io",
+        "suffix": "github.io",
+        "rule": "github.io",
+        "name": "",
+        "sub": "",
+        "apex": ".github.io",
+        "registerable": ".github.io",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'b.a.github.io'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "b.a.github.io"
+      },
+      "expect": {
+        "get": "b.a.github.io",
+        "tld": "io",
+        "suffix": "github.io",
+        "rule": "github.io",
+        "name": "a",
+        "sub": "b",
+        "apex": "a.github.io",
+        "registerable": "a.github.io",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'test'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "test"
+      },
+      "expect": {
+        "get": "test",
+        "tld": "test",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "parse 'a.test'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "a.test"
+      },
+      "expect": {
+        "get": "a.test",
+        "tld": "test",
+        "suffix": "",
+        "rule": "",
+        "name": "a",
+        "sub": "",
+        "apex": "a.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "parse 'localhost.'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "localhost."
+      },
+      "expect": {
+        "get": "localhost.",
+        "tld": "",
+        "suffix": "",
+        "rule": "",
+        "name": "localhost",
+        "sub": "",
+        "apex": "localhost.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "parse 'İstanbul.tr'",
+      "op": "domain.parse",
+      "args": {
+        "domain": "İstanbul.tr"
+      },
+      "expect": {
+        "get": "i̇stanbul.tr",
+        "tld": "tr",
+        "suffix": "tr",
+        "rule": "tr",
+        "name": "i̇stanbul",
+        "sub": "",
+        "apex": "i̇stanbul.tr",
+        "registerable": "i̇stanbul.tr",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "public null",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": null
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "apex null",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": null
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "registrable null",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": null
+      },
+      "expect": false
+    },
+    {
+      "name": "public []",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": []
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "apex []",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": []
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "registrable []",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": []
+      },
+      "expect": false
+    },
+    {
+      "name": "public {\"a\": 1}",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": {
+          "a": 1
+        }
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "apex {\"a\": 1}",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": {
+          "a": 1
+        }
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "registrable {\"a\": 1}",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": {
+          "a": 1
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "public true",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": true
+      },
+      "expect": false
+    },
+    {
+      "name": "apex true",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": true
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable true",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": true
+      },
+      "expect": false
+    },
+    {
+      "name": "public false",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": false
+      },
+      "expect": false
+    },
+    {
+      "name": "apex false",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": false
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable false",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": false
+      },
+      "expect": false
+    },
+    {
+      "name": "public 0",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "apex 0",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable 0",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "public 1.5",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": 1.5
+      },
+      "expect": false
+    },
+    {
+      "name": "apex 1.5",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": 1.5
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable 1.5",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": 1.5
+      },
+      "expect": false
+    },
+    {
+      "name": "public \"http://exa mple.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://exa mple.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://exa mple.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "apex \"http://exa mple.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "http://exa mple.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://exa mple.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "registrable \"http://exa mple.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "http://exa mple.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "public \"mailto:a@example.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "mailto:a@example.com"
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "apex \"mailto:a@example.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "mailto:a@example.com"
+      },
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "PHP's TypeError names the file and line of the call"
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "<masked>"
+        }
+      }
+    },
+    {
+      "name": "registrable \"mailto:a@example.com\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "mailto:a@example.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "public \"http://例子.公司.香港\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://例子.公司.香港"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://例子.公司.香港' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "apex \"http://例子.公司.香港\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "http://例子.公司.香港"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://例子.公司.香港' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "registrable \"http://例子.公司.香港\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "http://例子.公司.香港"
+      },
+      "expect": false
+    },
+    {
+      "name": "public \"http://xn--fsqu00a.xn--55qx5d.xn--j6w193g\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://xn--fsqu00a.xn--55qx5d.xn--j6w193g"
+      },
+      "expect": false
+    },
+    {
+      "name": "apex \"http://xn--fsqu00a.xn--55qx5d.xn--j6w193g\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "http://xn--fsqu00a.xn--55qx5d.xn--j6w193g"
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable \"http://xn--fsqu00a.xn--55qx5d.xn--j6w193g\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "http://xn--fsqu00a.xn--55qx5d.xn--j6w193g"
+      },
+      "expect": false
+    },
+    {
+      "name": "public \"https://user:pw@sub.example.co.uk:8443/x?y#z\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "https://user:pw@sub.example.co.uk:8443/x?y#z"
+      },
+      "expect": true
+    },
+    {
+      "name": "apex \"https://user:pw@sub.example.co.uk:8443/x?y#z\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "https://user:pw@sub.example.co.uk:8443/x?y#z"
+      },
+      "expect": false
+    },
+    {
+      "name": "registrable \"https://user:pw@sub.example.co.uk:8443/x?y#z\"",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "https://user:pw@sub.example.co.uk:8443/x?y#z"
+      },
+      "expect": false
+    },
+    {
+      "name": "memory cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "Example.com",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "Example.com",
+            "data": {
+              "price": 12.0,
+              "premium": false
+            }
+          },
+          "expect": {
+            "price": 12.0,
+            "premium": false
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.COM",
+            "ttl": 60
+          },
+          "expect": {
+            "price": 12.0,
+            "premium": false
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com",
+            "ttl": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "empty.com",
+            "data": []
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "text.com",
+            "data": "x"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "text.com",
+            "ttl": 60
+          },
+          "expect": "x"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "none cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com",
+            "data": {
+              "price": 1.5
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "domain": "example.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "contact",
+      "op": "contact.to_array",
+      "args": {
+        "contact": {
+          "firstname": "Test",
+          "lastname": "Tester",
+          "phone": "+18031234567",
+          "email": "testing@test.com",
+          "address1": "123 Main St",
+          "address2": "Suite 100",
+          "address3": "",
+          "city": "San Francisco",
+          "state": "CA",
+          "country": "US",
+          "postalcode": "94105",
+          "org": "Test Inc"
+        }
+      },
+      "expect": {
+        "firstname": "Test",
+        "lastname": "Tester",
+        "phone": "+18031234567",
+        "email": "testing@test.com",
+        "address1": "123 Main St",
+        "address2": "Suite 100",
+        "address3": "",
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "US",
+        "postalcode": "94105",
+        "org": "Test Inc",
+        "owner": "Test Tester"
+      }
+    },
+    {
+      "name": "contact with owner",
+      "op": "contact.to_array",
+      "args": {
+        "contact": {
+          "firstname": "Test",
+          "lastname": "Tester",
+          "phone": "+18031234567",
+          "email": "testing@test.com",
+          "address1": "123 Main St",
+          "address2": "Suite 100",
+          "address3": "",
+          "city": "San Francisco",
+          "state": "CA",
+          "country": "US",
+          "postalcode": "94105",
+          "org": "Test Inc",
+          "owner": "Someone Else"
+        }
+      },
+      "expect": {
+        "firstname": "Test",
+        "lastname": "Tester",
+        "phone": "+18031234567",
+        "email": "testing@test.com",
+        "address1": "123 Main St",
+        "address2": "Suite 100",
+        "address3": "",
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "US",
+        "postalcode": "94105",
+        "org": "Test Inc",
+        "owner": "Someone Else"
+      }
+    },
+    {
+      "name": "adapter without updateNameservers",
+      "op": "registrar.bare_update_nameservers",
+      "args": {
+        "domain": "example.com",
+        "nameservers": [
+          "ns1.example.com"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Method not implemented"
+        }
+      }
+    },
+    {
+      "name": "once: namecom price with odd answers",
+      "op": "registrar.once",
+      "args": {
+        "adapter": {
+          "type": "namecom",
+          "username": "u",
+          "token": "t"
+        },
+        "method": "getPrice",
+        "args": {
+          "domain": "shop.dev",
+          "regType": "renewal"
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": "{\"purchasePrice\":\"12abc\",\"renewalPrice\":true,\"premium\":\"0\"}"
+          },
+          {
+            "status": 200,
+            "body": "{\"results\":[{\"purchasable\":\"1\",\"purchasePrice\":\"9.5\",\"renewalPrice\":\"0\",\"purchaseType\":0}]}"
+          }
+        ]
+      },
+      "expect": {
+        "result": {
+          "price": 1.0,
+          "premium": true
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://api.name.com/core/v1/domains/shop.dev:getPricing?years=1",
+            "headers": {
+              "authorization": "Basic dTp0",
+              "content-type": "application/json"
+            },
+            "body": ""
+          },
+          {
+            "method": "POST",
+            "url": "https://api.name.com/core/v1/domains:checkAvailability",
+            "headers": {
+              "authorization": "Basic dTp0",
+              "content-type": "application/json"
+            },
+            "body": "{\"domainNames\":[\"shop.dev\"]}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "once: namecom auth code as an array",
+      "op": "registrar.once",
+      "args": {
+        "adapter": {
+          "type": "namecom",
+          "username": "u",
+          "token": "t"
+        },
+        "method": "getAuthCode",
+        "args": {
+          "domain": "shop.dev"
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": "{\"authCode\":[1]}"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "TypeError",
+          "message": "Utopia\\Domains\\Registrar\\Adapter\\NameCom::getAuthCode(): Return value must be of type string, array returned",
+          "code": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://api.name.com/core/v1/domains/shop.dev:getAuthCode",
+            "headers": {
+              "authorization": "Basic dTp0",
+              "content-type": "application/json"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "once: opensrs answer with a misplaced declaration",
+      "op": "registrar.once",
+      "args": {
+        "adapter": {
+          "type": "opensrs",
+          "key": "k",
+          "username": "u",
+          "password": "p"
+        },
+        "method": "available",
+        "args": {
+          "domains": [
+            "a.net"
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": " <?xml version=\"1.0\"?><OPS_envelope/>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Exception",
+          "message": "OpenSRS returned an invalid XML response",
+          "code": 0
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://horizon.opensrs.net:55443",
+            "headers": {
+              "content-type": "text/xml",
+              "x-signature": "846664214e1ce7c0e6f458b2e3f58e87",
+              "x-username": "u"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>a.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "once: opensrs answer with a processing instruction",
+      "op": "registrar.once",
+      "args": {
+        "adapter": {
+          "type": "opensrs",
+          "key": "k",
+          "username": "u",
+          "password": "p"
+        },
+        "method": "available",
+        "args": {
+          "domains": [
+            "a.net"
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": "<?php echo 1; ?><OPS_envelope><body><data_block><dt_assoc><item key=\"response_code\"> 210</item></dt_assoc></data_block></body></OPS_envelope>"
+          }
+        ]
+      },
+      "expect": {
+        "result": {
+          "a.net": true
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://horizon.opensrs.net:55443",
+            "headers": {
+              "content-type": "text/xml",
+              "x-signature": "846664214e1ce7c0e6f458b2e3f58e87",
+              "x-username": "u"
+            },
+            "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>a.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+          }
+        ]
+      }
+    }
+  ]
+}

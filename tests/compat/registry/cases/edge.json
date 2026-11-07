@@ -1,0 +1,496 @@
+{
+  "cases": [
+    {
+      "name": "get without a factory",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No callback named \"missing\" found when trying to create connection"
+            }
+          }
+        },
+        {
+          "op": "registry.has",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "missing"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "set keeps the instances of other contexts",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db",
+            "factory": {
+              "kind": "value",
+              "value": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "worker"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db",
+            "factory": {
+              "kind": "value",
+              "value": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db"
+          },
+          "expect": "second"
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "default"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db"
+          },
+          "expect": "first"
+        }
+      ]
+    },
+    {
+      "name": "set replaces the cached instance",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db",
+            "factory": {
+              "kind": "value",
+              "value": "first"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db",
+            "factory": {
+              "kind": "value",
+              "value": "second"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "db"
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "a fresh read replaces the cached instance",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list",
+            "factory": {
+              "kind": "list",
+              "value": [
+                1
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.push",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list"
+          },
+          "expect": [
+            1,
+            2
+          ]
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list",
+            "fresh": true
+          },
+          "expect": [
+            1
+          ]
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list"
+          },
+          "expect": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a fresh factory does not keep changes",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list",
+            "factory": {
+              "kind": "list",
+              "value": []
+            },
+            "fresh": true
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.push",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "list"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "contexts share factories",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "n",
+            "factory": {
+              "kind": "counter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.has",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "n"
+          },
+          "expect": true
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "n"
+          },
+          "expect": 2
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "n"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "op": "registry.script",
+      "args": {
+        "calls": [
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "set_fresh",
+            "name": "db"
+          },
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "set",
+            "name": "db"
+          },
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "get_fresh",
+            "name": "db"
+          },
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "context",
+            "name": ""
+          },
+          {
+            "op": "get",
+            "name": "db"
+          },
+          {
+            "op": "has",
+            "name": "db"
+          },
+          {
+            "op": "has",
+            "name": "cache"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "No callback named \"db\" found when trying to create connection"
+          }
+        },
+        null,
+        1,
+        2,
+        null,
+        1,
+        2,
+        2,
+        null,
+        3,
+        true,
+        false
+      ]
+    }
+  ]
+}

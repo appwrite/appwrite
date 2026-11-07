@@ -1,0 +1,1612 @@
+{
+  "source": "packages/nats/tests/E2E/JetStreamParityTest.php",
+  "cases": [
+    {
+      "name": "stream metadata, republish and subject transform",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_MRT_${ns}",
+              "subjects": [
+                "rp.${ns}.>"
+              ],
+              "storage": "memory",
+              "metadata": {
+                "env": "test",
+                "team": "core"
+              },
+              "republish": {
+                "source": "rp.${ns}.>",
+                "destination": "pub.${ns}.>"
+              },
+              "subjectTransform": {
+                "source": "rp.${ns}.>",
+                "destination": "rp.${ns}.>"
+              }
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_MRT_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "rp.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17",
+                  "env": "test",
+                  "team": "core"
+                },
+                "republish": {
+                  "src": "rp.${ns}.>",
+                  "dest": "pub.${ns}.>"
+                },
+                "subject_transform": {
+                  "src": "rp.${ns}.>",
+                  "dest": "rp.${ns}.>"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "pub.${ns}.>"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "rp.${ns}.one",
+            "data": "hello-republish"
+          },
+          "expect": {
+            "stream": "PARITY_MRT_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 3.0
+          },
+          "mask": {
+            "paths": [
+              "/headers/all/3",
+              "/headers/wire"
+            ],
+            "reason": "the time the server stored the message"
+          },
+          "expect": {
+            "subject": "pub.${ns}.one",
+            "data": "hello-republish",
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-Stream",
+                  [
+                    "PARITY_MRT_${ns}"
+                  ]
+                ],
+                [
+                  "Nats-Subject",
+                  [
+                    "rp.${ns}.one"
+                  ]
+                ],
+                [
+                  "Nats-Sequence",
+                  [
+                    "1"
+                  ]
+                ],
+                "<masked>",
+                [
+                  "Nats-Last-Sequence",
+                  [
+                    "0"
+                  ]
+                ]
+              ],
+              "count": 5,
+              "all_count": 5,
+              "wire": "<masked>"
+            },
+            "sid": "2"
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_MRT_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "mirrors and sources reflect and replicate",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_ORIG_${ns}",
+              "subjects": [
+                "ev.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_ORIG_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "ev.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ev.${ns}.a",
+            "data": "m-1"
+          },
+          "expect": {
+            "stream": "PARITY_ORIG_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ev.${ns}.a",
+            "data": "m-2"
+          },
+          "expect": {
+            "stream": "PARITY_ORIG_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ev.${ns}.a",
+            "data": "m-3"
+          },
+          "expect": {
+            "stream": "PARITY_ORIG_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ev.${ns}.a",
+            "data": "m-4"
+          },
+          "expect": {
+            "stream": "PARITY_ORIG_${ns}",
+            "seq": 4,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ev.${ns}.a",
+            "data": "m-5"
+          },
+          "expect": {
+            "stream": "PARITY_ORIG_${ns}",
+            "seq": 5,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_MIR_${ns}",
+              "storage": "memory",
+              "mirror": {
+                "name": "PARITY_ORIG_${ns}"
+              }
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_MIR_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "max_msg_size": -1,
+                "max_age": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "mirror": {
+                  "name": "PARITY_ORIG_${ns}"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_SRC_${ns}",
+              "storage": "memory",
+              "sources": [
+                {
+                  "name": "PARITY_ORIG_${ns}"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_SRC_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "sources": [
+                  {
+                    "name": "PARITY_ORIG_${ns}"
+                  }
+                ],
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 2.0,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_MIR_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "PARITY_MIR_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "max_msg_size": -1,
+              "max_age": 0,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "mirror": {
+                "name": "PARITY_ORIG_${ns}"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 5,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 5,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 1
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_SRC_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "PARITY_SRC_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "sources": [
+                {
+                  "name": "PARITY_ORIG_${ns}"
+                }
+              ],
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 5,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 5,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 1
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_MIR_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_SRC_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_ORIG_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "consumer metadata is surfaced",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_CM_${ns}",
+              "subjects": [
+                "cm.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_CM_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "cm.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PARITY_CM_${ns}",
+            "config": {
+              "durableName": "dur",
+              "metadata": {
+                "owner": "billing",
+                "tier": "gold"
+              }
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "PARITY_CM_${ns}",
+              "name": "dur",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "dur",
+                "durable_name": "dur",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17",
+                  "owner": "billing",
+                  "tier": "gold"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17",
+                "owner": "billing",
+                "tier": "gold"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_CM_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "getConsumers returns typed infos",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_CL_${ns}",
+              "subjects": [
+                "cl.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_CL_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "cl.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PARITY_CL_${ns}",
+            "config": {
+              "durableName": "one"
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "PARITY_CL_${ns}",
+              "name": "one",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "one",
+                "durable_name": "one",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PARITY_CL_${ns}",
+            "config": {
+              "durableName": "two"
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "PARITY_CL_${ns}",
+              "name": "two",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "two",
+                "durable_name": "two",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.get_consumers",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PARITY_CL_${ns}"
+          },
+          "expect": [
+            [
+              "PARITY_CL_${ns}",
+              "one"
+            ],
+            [
+              "PARITY_CL_${ns}",
+              "two"
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_CL_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "per-message TTL",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "StreamConfig",
+            "args": {
+              "name": "x",
+              "allowMsgTtl": true,
+              "subjectDeleteMarkerTtl": 2.0
+            }
+          },
+          "expect": {
+            "name": "x",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": -1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "old",
+            "no_ack": false,
+            "allow_direct": false,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": false,
+            "allow_msg_ttl": true,
+            "subject_delete_marker_ttl": 2000000000
+          }
+        },
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_TTL_${ns}",
+              "subjects": [
+                "ttl.${ns}.>"
+              ],
+              "storage": "memory",
+              "allowMsgTtl": true,
+              "subjectDeleteMarkerTtl": 2.0
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_TTL_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": true,
+                "subjects": [
+                  "ttl.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "1",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": [],
+                "allow_msg_ttl": true,
+                "subject_delete_marker_ttl": 2000000000
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ttl.${ns}.a",
+            "data": "expires-soon",
+            "ttl": 2
+          },
+          "expect": {
+            "stream": "PARITY_TTL_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "PARITY_TTL_${ns}",
+            "seq": 1
+          },
+          "expect": {
+            "subject": "ttl.${ns}.a",
+            "seq": 1,
+            "data": "expires-soon",
+            "time": true,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-TTL",
+                  [
+                    "2s"
+                  ]
+                ]
+              ],
+              "count": 1,
+              "all_count": 1,
+              "wire": "NATS/1.0\r\nNats-TTL: 2s\r\n\r\n"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ttl.${ns}.b",
+            "data": "never",
+            "ttl": "never"
+          },
+          "expect": {
+            "stream": "PARITY_TTL_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 5.0,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_TTL_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "PARITY_TTL_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": true,
+              "subjects": [
+                "ttl.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "1",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": [],
+              "allow_msg_ttl": true,
+              "subject_delete_marker_ttl": 2000000000
+            },
+            "state": {
+              "messages": 2,
+              "bytes": true,
+              "first_seq": 2,
+              "last_seq": 3,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 2
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_TTL_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "account info is a typed object",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "PARITY_ACC_${ns}",
+              "subjects": [
+                "acc.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "PARITY_ACC_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "acc.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.account_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            }
+          },
+          "expect": {
+            "streams_ge_1": true,
+            "memory_ge_0": true,
+            "api_total_ge_0": true,
+            "raw_has_memory": true,
+            "limits_is_array": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "PARITY_ACC_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

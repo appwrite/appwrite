@@ -1,0 +1,246 @@
+{
+  "source": "packages/lock/tests/SemaphoreTest.php",
+  "cases": [
+    {
+      "name": "caps at permits",
+      "steps": [
+        {
+          "op": "semaphore.new",
+          "args": {
+            "permits": 3
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.concurrency",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            },
+            "tasks": 10,
+            "hold_ms": 10,
+            "timeout": -1
+          },
+          "expect": {
+            "count": 10,
+            "max": 3,
+            "contention": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects zero permits",
+      "op": "semaphore.new",
+      "args": {
+        "permits": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Permits must be at least 1"
+        }
+      }
+    },
+    {
+      "name": "rejects negative permits",
+      "op": "semaphore.new",
+      "args": {
+        "permits": -3
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Permits must be at least 1"
+        }
+      }
+    },
+    {
+      "name": "single permit behaves like a mutex",
+      "steps": [
+        {
+          "op": "semaphore.new",
+          "args": {
+            "permits": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.concurrency",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            },
+            "tasks": 5,
+            "hold_ms": 5,
+            "timeout": -1
+          },
+          "expect": {
+            "count": 5,
+            "max": 1,
+            "contention": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "counts permits outside coroutines",
+      "steps": [
+        {
+          "op": "semaphore.new",
+          "args": {
+            "permits": 2
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "contention message",
+      "steps": [
+        {
+          "op": "semaphore.new",
+          "args": {
+            "permits": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "s"
+            },
+            "result": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception\\Contention",
+              "message": "Failed to acquire semaphore within timeout"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

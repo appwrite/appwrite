@@ -1,0 +1,5580 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/WithCacheTest.php"
+  ],
+  "cases": [
+    {
+      "name": "WithCacheTest::testACachedValueIsRefusedToACallerWhoCannotReadTheCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o3894"
+          },
+          "bind": "s7893",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "reader"
+            },
+            "as": "o3895"
+          },
+          "bind": "s7894",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3895"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:reader"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3894"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:reader"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3896"
+          },
+          "bind": "s7897",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "reader"
+            },
+            "as": "o3897"
+          },
+          "bind": "s7898",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3897"
+              }
+            }
+          },
+          "expect": "read(\"user:reader\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3896"
+              },
+              "cache": "memory"
+            },
+            "as": "o3898"
+          },
+          "bind": "s7900",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o3894"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000123"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3894"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3899"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3900"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3899"
+                          },
+                          {
+                            "$obj": "o3900"
+                          }
+                        ],
+                        "permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3901"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3898"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3901"
+                        }
+                      },
+                      "as": "o3902"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7906",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"user:reader\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3894"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "q3",
+                          "title": "Q3"
+                        }
+                      },
+                      "as": "o3903"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3898"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "reports",
+                        "document": {
+                          "$obj": "o3903"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7908",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "q3",
+                "title": "Q3",
+                "$collection": "reports",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "publishedAt": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "q3",
+                        "title": "Q3"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "q3",
+                        "title": "Q3",
+                        "$collection": "reports",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "publishedAt": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3898"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "reports",
+                        "id": "q3"
+                      },
+                      "as": "o3904"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7909",
+          "expect": {
+            "result": {
+              "$document": {
+                "title": "Q3",
+                "$sequence": "1",
+                "$id": "q3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "reports",
+                "publishedAt": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "title": "Q3",
+                        "$sequence": "1",
+                        "$id": "q3",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "reports",
+                        "publishedAt": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3904"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "Q3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": true
+            },
+            "as": "o3905"
+          },
+          "bind": "s7911",
+          "expect": {
+            "result": {
+              "$document": {
+                "title": "Q3",
+                "$sequence": "1",
+                "$id": "q3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "reports",
+                "publishedAt": null
+              }
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3905"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "Q3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "reader"
+            },
+            "as": "o3906"
+          },
+          "bind": "s7913",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3906"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:reader"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3894"
+            },
+            "method": "removeRole",
+            "args": {
+              "role": "user:reader"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3898"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"read\" permission for role \"user:reader\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:reader\"]\" was given."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACachedDocumentTheCallerCannotReadIsRecomputed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o3907"
+          },
+          "bind": "s7917",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "owner"
+            },
+            "as": "o3908"
+          },
+          "bind": "s7918",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3908"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:owner"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3907"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:owner"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3909"
+          },
+          "bind": "s7921",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3909"
+              },
+              "cache": "memory"
+            },
+            "as": "o3910"
+          },
+          "bind": "s7922",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o3907"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000124"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3907"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3911"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3912"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3911"
+                          },
+                          {
+                            "$obj": "o3912"
+                          }
+                        ],
+                        "permissions": [],
+                        "documentSecurity": true
+                      },
+                      "as": "o3913"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3910"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3913"
+                        }
+                      },
+                      "as": "o3914"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7928",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3907"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "user",
+                      "args": {
+                        "identifier": "owner"
+                      },
+                      "as": "o3915"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3915"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "q3",
+                          "$permissions": [
+                            "read(\"user:owner\")"
+                          ],
+                          "title": "Q3"
+                        }
+                      },
+                      "as": "o3916"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3910"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "reports",
+                        "document": {
+                          "$obj": "o3916"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7930",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "q3",
+                "$permissions": [
+                  "read(\"user:owner\")"
+                ],
+                "title": "Q3",
+                "$collection": "reports",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1",
+                "publishedAt": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"user:owner\")",
+                    {
+                      "$document": {
+                        "$id": "q3",
+                        "$permissions": [
+                          "read(\"user:owner\")"
+                        ],
+                        "title": "Q3"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "q3",
+                        "$permissions": [
+                          "read(\"user:owner\")"
+                        ],
+                        "title": "Q3",
+                        "$collection": "reports",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "publishedAt": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3910"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "reports",
+                        "id": "q3"
+                      },
+                      "as": "o3917"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7931",
+          "expect": {
+            "result": {
+              "$document": {
+                "title": "Q3",
+                "$sequence": "1",
+                "$id": "q3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:owner\")"
+                ],
+                "$collection": "reports",
+                "publishedAt": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "title": "Q3",
+                        "$sequence": "1",
+                        "$id": "q3",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"user:owner\")"
+                        ],
+                        "$collection": "reports",
+                        "publishedAt": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3917"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "title"
+            }
+          },
+          "expect": "Q3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "owner"
+            },
+            "as": "o3918"
+          },
+          "bind": "s7933",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3918"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:owner"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3907"
+            },
+            "method": "removeRole",
+            "args": {
+              "role": "user:owner"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "stranger"
+            },
+            "as": "o3919"
+          },
+          "bind": "s7936",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3919"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:stranger"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3907"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:stranger"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3910"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3910"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "reports",
+                        "id": "q3"
+                      },
+                      "as": "o3920"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7939",
+          "expect": {
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3920"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACachedValueOfADeletedCollectionIsRecomputed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3921"
+          },
+          "bind": "s7941",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3921"
+              },
+              "cache": "memory"
+            },
+            "as": "o3922"
+          },
+          "bind": "s7942",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000125"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3923"
+          },
+          "bind": "s7946",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3923"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3924"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3925"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3926"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3926"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3927"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3927"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3928"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3928"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3924"
+                          },
+                          {
+                            "$obj": "o3925"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3929"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3922"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3929"
+                        }
+                      },
+                      "as": "o3930"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7947",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "q3",
+                "title": "Q3"
+              }
+            },
+            "as": "o3931"
+          },
+          "bind": "s7948",
+          "expect": {
+            "$document": {
+              "$id": "q3",
+              "title": "Q3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "reports",
+              "document": {
+                "$obj": "o3931"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "q3",
+              "title": "Q3",
+              "$collection": "reports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "publishedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3922"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "reports"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "title": "Q3",
+                  "$id": "q3",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$sequence": "1",
+                  "publishedAt": null,
+                  "$collection": "reports"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "title": "Q3",
+                          "$id": "q3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$sequence": "1",
+                          "publishedAt": null,
+                          "$collection": "reports"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "deleteCollection",
+            "args": {
+              "collection": "reports"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3922"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "recomputed6ae70f741713d0.02122155"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "recomputed6ae70f741713d0.02122155",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the epoch cannot be read",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3943"
+          },
+          "bind": "s7967",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3943"
+              },
+              "cache": "memory"
+            },
+            "as": "o3944"
+          },
+          "bind": "s7968",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3944"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3944"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000127"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3944"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3944"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3945"
+          },
+          "bind": "s7972",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3945"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3946"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3947"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3948"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3948"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3949"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3949"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3950"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3950"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3946"
+                          },
+                          {
+                            "$obj": "o3947"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3951"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3944"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3951"
+                        }
+                      },
+                      "as": "o3952"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7973",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3944"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the epoch cannot be written",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3953"
+          },
+          "bind": "s7975",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3953"
+              },
+              "cache": "memory"
+            },
+            "as": "o3954"
+          },
+          "bind": "s7976",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3954"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3954"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000128"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3954"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3954"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3955"
+          },
+          "bind": "s7980",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3955"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3956"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3957"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3958"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3958"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3959"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3959"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3960"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3960"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3956"
+                          },
+                          {
+                            "$obj": "o3957"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3961"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3954"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3961"
+                        }
+                      },
+                      "as": "o3962"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7981",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3954"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the epoch is not a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3963"
+          },
+          "bind": "s7983",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3963"
+              },
+              "cache": "memory"
+            },
+            "as": "o3964"
+          },
+          "bind": "s7984",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3964"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3964"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000129"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3964"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3964"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3965"
+          },
+          "bind": "s7988",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3965"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3966"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3967"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3968"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3968"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3969"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3969"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3970"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3970"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3966"
+                          },
+                          {
+                            "$obj": "o3967"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3971"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3964"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3971"
+                        }
+                      },
+                      "as": "o3972"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7989",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3964"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the value cannot be read",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3973"
+          },
+          "bind": "s7991",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3973"
+              },
+              "cache": "memory"
+            },
+            "as": "o3974"
+          },
+          "bind": "s7992",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3974"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3974"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000130"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3974"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3974"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3975"
+          },
+          "bind": "s7996",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3975"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3976"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3977"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3978"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3978"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3979"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3979"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3980"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3980"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3976"
+                          },
+                          {
+                            "$obj": "o3977"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3981"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3974"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3981"
+                        }
+                      },
+                      "as": "o3982"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7997",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3974"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#a rejected value cannot be purged",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3983"
+          },
+          "bind": "s7999",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3983"
+              },
+              "cache": "memory"
+            },
+            "as": "o3984"
+          },
+          "bind": "s8000",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3984"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3984"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000131"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3984"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3984"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3985"
+          },
+          "bind": "s8004",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3985"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3986"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3987"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3988"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3988"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3989"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3989"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3990"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o3990"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3986"
+                          },
+                          {
+                            "$obj": "o3987"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o3991"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3984"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o3991"
+                        }
+                      },
+                      "as": "o3992"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s8005",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3984"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the generation cannot be read",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3993"
+          },
+          "bind": "s8007",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3993"
+              },
+              "cache": "memory"
+            },
+            "as": "o3994"
+          },
+          "bind": "s8008",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000132"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3995"
+          },
+          "bind": "s8012",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3995"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o3996"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o3997"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3998"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o3998"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3999"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3999"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o4000"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o4000"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o3996"
+                          },
+                          {
+                            "$obj": "o3997"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o4001"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3994"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o4001"
+                        }
+                      },
+                      "as": "o4002"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s8013",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "newer"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheTest::testACacheFailureFallsBackToTheCallback#the value cannot be written",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o4003"
+          },
+          "bind": "s8016",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4003"
+              },
+              "cache": "memory"
+            },
+            "as": "o4004"
+          },
+          "bind": "s8017",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4004"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "with_cache"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4004"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000133"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4004"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4004"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o4005"
+          },
+          "bind": "s8021",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4005"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "title",
+                        "size": 32
+                      },
+                      "as": "o4006"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "datetime",
+                      "args": {
+                        "key": "publishedAt"
+                      },
+                      "as": "o4007"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o4008"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "create",
+                      "args": {
+                        "role": {
+                          "$obj": "o4008"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o4009"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o4009"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o4010"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "delete",
+                      "args": {
+                        "role": {
+                          "$obj": "o4010"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "reports",
+                        "attributes": [
+                          {
+                            "$obj": "o4006"
+                          },
+                          {
+                            "$obj": "o4007"
+                          }
+                        ],
+                        "permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "documentSecurity": false
+                      },
+                      "as": "o4011"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4004"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o4011"
+                        }
+                      },
+                      "as": "o4012"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s8022",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "reports",
+                "name": "reports",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "publishedAt",
+                      "key": "publishedAt",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "default": null,
+                      "signed": false,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "title",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 32,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "publishedAt",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::Datetime"
+                        },
+                        "size": null,
+                        "required": false,
+                        "default": null,
+                        "signed": false,
+                        "array": false,
+                        "format": null,
+                        "filters": [
+                          "datetime"
+                        ],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "create(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "delete(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "reports",
+                        "name": "reports",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 32,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          },
+                          {
+                            "$document": {
+                              "$id": "publishedAt",
+                              "key": "publishedAt",
+                              "type": "datetime",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": false,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": [
+                                "datetime"
+                              ]
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4004"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "computed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

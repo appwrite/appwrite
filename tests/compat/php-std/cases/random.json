@@ -1,0 +1,134 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "mt_rand dice",
+      "op": "random.mt_rand",
+      "args": {
+        "seed": 42,
+        "draws": 10,
+        "min": 1,
+        "span": 5
+      },
+      "expect": [
+        1,
+        6,
+        5,
+        5,
+        1,
+        6,
+        5,
+        3,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "mt_rand power of two range",
+      "op": "random.mt_rand",
+      "args": {
+        "seed": 9,
+        "draws": 5,
+        "min": 0,
+        "span": 15
+      },
+      "expect": [
+        14,
+        12,
+        14,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "mt_rand empty range",
+      "op": "random.mt_rand",
+      "args": {
+        "seed": 9,
+        "draws": 3,
+        "min": 7,
+        "span": 0
+      },
+      "expect": [
+        7,
+        7,
+        7
+      ]
+    },
+    {
+      "name": "mt_rand full 32-bit range",
+      "op": "random.mt_rand",
+      "args": {
+        "seed": 9,
+        "draws": 3,
+        "min": 0,
+        "span": 4294967295
+      },
+      "expect": [
+        44556670,
+        1565348188,
+        2155534974
+      ]
+    },
+    {
+      "name": "mt_rand 64-bit range",
+      "op": "random.mt_rand",
+      "args": {
+        "seed": 9,
+        "draws": 3,
+        "min": -4611686018427387904,
+        "span": 9223372036854775807
+      },
+      "expect": [
+        2111433255930028414,
+        4595644098689030782,
+        -4472540380261580874
+      ]
+    },
+    {
+      "name": "array_rand of three",
+      "op": "random.array_rand",
+      "args": {
+        "seed": 7,
+        "len": 3,
+        "draws": 6
+      },
+      "expect": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "array_rand of one",
+      "op": "random.array_rand",
+      "args": {
+        "seed": 7,
+        "len": 1,
+        "draws": 2
+      },
+      "expect": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "array_rand of an empty array",
+      "op": "random.array_rand",
+      "args": {
+        "seed": 7,
+        "len": 0,
+        "draws": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "array_rand(): Argument #1 ($array) must not be empty"
+        }
+      }
+    }
+  ]
+}

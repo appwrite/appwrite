@@ -1,0 +1,424 @@
+{
+  "source": "packages/queue/tests/RedisQueueSizeTest.php",
+  "cases": [
+    {
+      "name": "pending counts only the work queue",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3",
+              "x4",
+              "x5",
+              "x6"
+            ]
+          },
+          "expect": 7
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.failed.audits",
+              "x0",
+              "x1",
+              "x2"
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.dead.audits",
+              "x0",
+              "x1"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.poison.audits",
+              "x0"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 7
+        }
+      ]
+    },
+    {
+      "name": "failed sums the retry sweep, the dead list and the parked bytes",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3",
+              "x4",
+              "x5",
+              "x6"
+            ]
+          },
+          "expect": 7
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.failed.audits",
+              "x0",
+              "x1",
+              "x2"
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.dead.audits",
+              "x0",
+              "x1"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.poison.audits",
+              "x0"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 6
+        }
+      ]
+    },
+    {
+      "name": "the named read and the older flag answer together",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3",
+              "x4",
+              "x5",
+              "x6"
+            ]
+          },
+          "expect": 7
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.failed.audits",
+              "x0",
+              "x1",
+              "x2"
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.dead.audits",
+              "x0",
+              "x1"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.poison.audits",
+              "x0"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 6
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 7
+        }
+      ]
+    },
+    {
+      "name": "a terminal reject is visible with nothing on the failed list",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.dead.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3"
+            ]
+          },
+          "expect": 4
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 4
+        }
+      ]
+    },
+    {
+      "name": "parked bytes are visible with nothing else wrong",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.poison.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3",
+              "x4",
+              "x5",
+              "x6",
+              "x7",
+              "x8"
+            ]
+          },
+          "expect": 9
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 9
+        }
+      ]
+    },
+    {
+      "name": "a healthy queue still reports nothing failed",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "x0",
+              "x1",
+              "x2",
+              "x3",
+              "x4"
+            ]
+          },
+          "expect": 5
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

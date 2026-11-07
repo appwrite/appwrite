@@ -1,0 +1,42 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/HostnameTest.php"
+  ],
+  "cases": [
+    {
+      "name": "HostnameTest::testAnAdapterWithoutAHostnameReturnsAnEmptyOne",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o17895"
+          },
+          "bind": "s46208",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17895"
+            },
+            "method": "hostname",
+            "args": {}
+          },
+          "expect": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "source": "packages/cdn/tests/CertificatesTest.php",
+  "cases": [
+    {
+      "name": "issue certificate delegates to provider",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "provider",
+            "log": {
+              "$ref": "log"
+            },
+            "status": "unknown",
+            "date": "2027-01-01 00:00:00.000"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "facade",
+            "provider": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "issueCertificate",
+            "domain": "cdn.example.com",
+            "cert_name": "cert-name"
+          },
+          "expect": {
+            "result": "2027-01-01 00:00:00.000"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "isInstantGeneration",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "getCertificateStatus",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": "unknown"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "isRenewRequired",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "deleteCertificate",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "expect": [
+            "provider:issue:cdn.example.com",
+            "provider:delete:cdn.example.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "facade passes no date along",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "provider",
+            "log": {
+              "$ref": "log"
+            },
+            "status": "pending"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "facade",
+            "provider": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "issueCertificate",
+            "domain": "cdn.example.com",
+            "domain_type": "pending"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "getCertificateStatus",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": "pending"
+          }
+        }
+      ]
+    }
+  ]
+}

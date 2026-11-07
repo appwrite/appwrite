@@ -1,0 +1,168 @@
+{
+  "source": "packages/client/tests/PoolTest.php",
+  "cases": [
+    {
+      "name": "borrows a connection to send a request",
+      "op": "pool.send",
+      "args": {
+        "size": 4,
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "http://${http}/echo"
+          }
+        ]
+      },
+      "expect": {
+        "responses": [
+          {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        ],
+        "created": 1
+      }
+    },
+    {
+      "name": "borrows a connection to stream a request",
+      "op": "pool.send",
+      "args": {
+        "size": 4,
+        "stream": true,
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "http://${http}/chunked?chunks=3&size=4"
+          }
+        ]
+      },
+      "expect": {
+        "responses": [
+          {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "chunchunchun"
+          }
+        ],
+        "created": 1
+      }
+    },
+    {
+      "name": "reclaims the connection so it can be reused",
+      "op": "pool.send",
+      "args": {
+        "size": 1,
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "http://${http}/echo"
+          },
+          {
+            "method": "GET",
+            "uri": "http://${http}/echo?second=1"
+          }
+        ]
+      },
+      "expect": {
+        "responses": [
+          {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          },
+          {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo?second=1\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        ],
+        "created": 1
+      }
+    },
+    {
+      "name": "a failed request discards its connection",
+      "op": "pool.send",
+      "args": {
+        "size": 1,
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "http://${http}/raw?r="
+          },
+          {
+            "method": "GET",
+            "uri": "http://${http}/echo"
+          }
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Client\\Exception\\ConnectionException",
+          "message": "Empty reply from server"
+        }
+      }
+    }
+  ]
+}

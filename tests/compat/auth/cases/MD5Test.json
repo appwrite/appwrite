@@ -1,0 +1,320 @@
+{
+  "source": "packages/auth/tests/Algorithms/MD5Test.php",
+  "cases": [
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "cc03e747a6afbbcbf8be7668acfebee5"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "md5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "multiple hashes",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "expect": "cc03e747a6afbbcbf8be7668acfebee5"
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "password123"
+          },
+          "expect": "482c811da5d5b4bc6d497ffa98491e38"
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "!@#$%^&*()"
+          },
+          "expect": "05b28d17a7b6e7024b6e5d8cc43a8bf7"
+        }
+      ]
+    },
+    {
+      "name": "empty string",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": ""
+          },
+          "bind": "out",
+          "expect": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "special characters",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "!@#$%^&*()_+-=[]{}|;:,.<>?"
+          },
+          "bind": "out",
+          "expect": "2d4d1514af52035b561e3fd0ea390cf3"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "!@#$%^&*()_+-=[]{}|;:,.<>?",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "unicode characters",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "Hello 世界"
+          },
+          "bind": "out",
+          "expect": "af91c2603879085df0cb545dd0366dcd"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "Hello 世界",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "binary",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": {
+              "$bytes": "/wCA"
+            }
+          },
+          "expect": "60cdccd4000580a3c394b8ad6ea9b899"
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "md5"
+        }
+      ]
+    }
+  ]
+}

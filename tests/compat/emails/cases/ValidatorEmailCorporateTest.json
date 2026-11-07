@@ -1,0 +1,470 @@
+{
+  "source": "packages/emails/tests/Validator/EmailCorporateTest.php",
+  "cases": [
+    {
+      "name": "valid corporate email",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "test@company.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@business.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@enterprise.net"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@corporation.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@organization.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@firm.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@office.net"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@work.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid free email",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@hotmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@live.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@aol.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@icloud.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@protonmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@zoho.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@yandex.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@mail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@gmx.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@web.de"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@tutanota.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@fastmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@hey.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid disposable email",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@tempmail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@guerrillamail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@mailinator.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@yopmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@temp-mail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@throwaway.email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@getnada.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@maildrop.cc"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@sharklasers.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@test.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@business.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@enterprise.net"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid email format",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "invalid-email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@example@com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "user@"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "non string input",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": false
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validatordescription",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "corporate"
+          },
+          "expect": {
+            "description": "Value must be a valid email address from a corporate domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validatortype",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "corporate"
+          },
+          "expect": {
+            "description": "Value must be a valid email address from a corporate domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validator is array",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "corporate"
+          },
+          "expect": {
+            "description": "Value must be a valid email address from a corporate domain",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

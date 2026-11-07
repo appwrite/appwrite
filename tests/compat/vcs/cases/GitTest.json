@@ -1,0 +1,323 @@
+{
+  "source": "packages/vcs/tests/GitTest.php",
+  "cases": [
+    {
+      "name": "testWritesInsideTheCheckout",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n"
+                    },
+                    "links": {
+                      "linked": "../../outside",
+                      "linked.txt": "../../outside/target.txt"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "docs/./guide.md",
+            "content": "content",
+            "message": "Write docs/./guide.md"
+          },
+          "expect": {
+            "path": "docs/guide.md",
+            "branch": "main",
+            "commitHash": "12423c9ff511a70f4e16e59e65e783a81b953b78"
+          }
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "path": "docs/guide.md"
+          },
+          "expect": {
+            "sha": "6b584e8ece562ebffc15d38808cd6b98fc3d97ea",
+            "size": 7,
+            "content": "content"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRefusesASymlinkedDirectory",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n"
+                    },
+                    "links": {
+                      "linked": "../../outside",
+                      "linked.txt": "../../outside/target.txt"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "linked/escape.txt",
+            "content": "content",
+            "message": "Write linked/escape.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: linked/escape.txt",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRefusesASymlinkedParentBeforeCreatingAnythingBeneathIt",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n"
+                    },
+                    "links": {
+                      "linked": "../../outside",
+                      "linked.txt": "../../outside/target.txt"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "linked/new/escape.txt",
+            "content": "content",
+            "message": "Write linked/new/escape.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: linked/new/escape.txt",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRefusesASymlinkedFile",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n"
+                    },
+                    "links": {
+                      "linked": "../../outside",
+                      "linked.txt": "../../outside/target.txt"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "endpoint": "${vcs}/~${ns}/origin",
+            "web": "${vcs}/~${ns}/origin/web",
+            "git": "${vcs-tls}/~${ns}/origin/git"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "i_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "app_fixture"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-owner",
+            "repositoryName": "app",
+            "filepath": "linked.txt",
+            "content": "content",
+            "message": "Write linked.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: linked.txt",
+              "code": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

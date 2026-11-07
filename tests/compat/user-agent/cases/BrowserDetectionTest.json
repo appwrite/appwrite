@@ -1,0 +1,1115 @@
+{
+  "source": "packages/user-agent/tests/BrowserDetectionTest.php",
+  "cases": [
+    {
+      "name": "browser Edge",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/126.0.0.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/126.0.0.0",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "PS",
+            "name": "Microsoft Edge",
+            "version": "126.0",
+            "engine": "Blink",
+            "engineVersion": "124.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Opera",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OPR/110.0.0.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OPR/110.0.0.0",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "OP",
+            "name": "Opera",
+            "version": "110.0",
+            "engine": "Blink",
+            "engineVersion": "124.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Samsung Internet",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SB",
+            "name": "Samsung Browser",
+            "version": "25.0",
+            "engine": "Blink",
+            "engineVersion": "121.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "SM-S918B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Chrome iOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "17.5"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CI",
+            "name": "Chrome Mobile iOS",
+            "version": "126.0",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Firefox iOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/127.0 Mobile/15E148 Safari/605.1.15"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/127.0 Mobile/15E148 Safari/605.1.15",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "17.5"
+          },
+          "client": {
+            "type": "browser",
+            "code": "F1",
+            "name": "Firefox Mobile iOS",
+            "version": "127.0",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Android WebView",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Pixel 6 Build/TQ3A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Pixel 6 Build/TQ3A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CV",
+            "name": "Chrome Webview",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Pixel 6"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Internet Explorer",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7"
+          },
+          "client": {
+            "type": "browser",
+            "code": "IE",
+            "name": "Internet Explorer",
+            "version": "11.0",
+            "engine": "Trident",
+            "engineVersion": "7.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Opera Mini",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Opera/9.80 (Android; Opera Mini/36.2.2254/191.249; U; en) Presto/2.12.423 Version/12.16"
+      },
+      "expect": {
+        "raw": "Opera/9.80 (Android; Opera Mini/36.2.2254/191.249; U; en) Presto/2.12.423 Version/12.16",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "OI",
+            "name": "Opera Mini",
+            "version": "36.2",
+            "engine": "Presto",
+            "engineVersion": "2.12.423"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "Opera Mini/36.2.2254/191.249"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Opera Mobile",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 10; VOG-L29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36 OPR/64.3.3282.60839"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 10; VOG-L29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Mobile Safari/537.36 OPR/64.3.3282.60839",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "OM",
+            "name": "Opera Mobile",
+            "version": "64.3",
+            "engine": "Blink",
+            "engineVersion": "104.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Huawei",
+            "model": "VOG-L29"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Brave",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Brave/120"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Brave/120",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "BR",
+            "name": "Brave",
+            "version": "120",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Vivaldi",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Vivaldi/6.2"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Vivaldi/6.2",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "VI",
+            "name": "Vivaldi",
+            "version": "6.2",
+            "engine": "Blink",
+            "engineVersion": "117.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Yandex Browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "YA",
+            "name": "Yandex Browser",
+            "version": "23.7",
+            "engine": "Blink",
+            "engineVersion": "114.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser UC Browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; Android 11; en-US; SM-M317F Build/RP1A.200720.012) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.127 UCBrowser/15.5.0.1395 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; Android 11; en-US; SM-M317F Build/RP1A.200720.012) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.127 UCBrowser/15.5.0.1395 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "11"
+          },
+          "client": {
+            "type": "browser",
+            "code": "UC",
+            "name": "UC Browser",
+            "version": "15.5",
+            "engine": "Blink",
+            "engineVersion": "100.0.4896.127"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "SM-M317F"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser DuckDuckGo",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile DuckDuckGo/5 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile DuckDuckGo/5 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "DD",
+            "name": "DuckDuckGo Privacy Browser",
+            "version": "5",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "SM-G991B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser QQ Browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; Android 12; zh-cn; RMX3350 Build/SKQ1.211019.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/107.0.5304.105 MQQBrowser/13.6 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; Android 12; zh-cn; RMX3350 Build/SKQ1.211019.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/107.0.5304.105 MQQBrowser/13.6 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "12"
+          },
+          "client": {
+            "type": "browser",
+            "code": "QQ",
+            "name": "QQ Browser",
+            "version": "13.6",
+            "engine": "Blink",
+            "engineVersion": "107.0.5304.105"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Realme",
+            "model": "RMX3350"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Coc Coc",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/112.0.174 Chrome/106.0.5249.174 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/112.0.174 Chrome/106.0.5249.174 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CC",
+            "name": "Coc Coc",
+            "version": "112.0",
+            "engine": "Blink",
+            "engineVersion": "106.0.5249.174"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Whale",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Whale/3.23.214.9 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Whale/3.23.214.9 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "WH",
+            "name": "Whale Browser",
+            "version": "3.23",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Huawei Browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 10; ELS-NX9; HMSCore 6.6.0.311) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.88 HuaweiBrowser/13.0.5.303 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 10; ELS-NX9; HMSCore 6.6.0.311) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.88 HuaweiBrowser/13.0.5.303 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "HU",
+            "name": "Huawei Browser Mobile",
+            "version": "13.0",
+            "engine": "Blink",
+            "engineVersion": "99.0.4844.88"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Huawei",
+            "model": "ELS-NX9"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Amazon Silk",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/104.5.1 like Chrome/104.0.5112.105 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/104.5.1 like Chrome/104.0.5112.105 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "FIR",
+            "name": "Fire OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "104.5",
+            "engine": "Blink",
+            "engineVersion": "104.0.5112.105"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Amazon",
+            "model": "KFMAWI"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Amazon Silk (legacy WebKit)",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16 Silk/3.13"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16 Silk/3.13",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "3.13",
+            "engine": "WebKit",
+            "engineVersion": "533.16"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Amazon",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "browser Firefox Focus",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.0.0 Mobile Safari/537.36 Focus/125.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.0.0 Mobile Safari/537.36 Focus/125.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FK",
+            "name": "Firefox Focus",
+            "version": "125.0",
+            "engine": "Blink",
+            "engineVersion": "113.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Pixel 7"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library curl",
+      "op": "agent.inspect",
+      "args": {
+        "value": "curl/8.7.1"
+      },
+      "expect": {
+        "raw": "curl/8.7.1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "curl",
+            "version": "8.7",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Guzzle",
+      "op": "agent.inspect",
+      "args": {
+        "value": "GuzzleHttp/7.8"
+      },
+      "expect": {
+        "raw": "GuzzleHttp/7.8",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Guzzle",
+            "version": "7.8",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Go",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Go-http-client/2.0"
+      },
+      "expect": {
+        "raw": "Go-http-client/2.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Go-http-client",
+            "version": "2.0",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Java",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Java/17.0.2"
+      },
+      "expect": {
+        "raw": "Java/17.0.2",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Java",
+            "version": "17.0",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Axios",
+      "op": "agent.inspect",
+      "args": {
+        "value": "axios/1.6.2"
+      },
+      "expect": {
+        "raw": "axios/1.6.2",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Axios",
+            "version": "1.6",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Node Fetch",
+      "op": "agent.inspect",
+      "args": {
+        "value": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "expect": {
+        "raw": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Node Fetch",
+            "version": "1.0",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library aiohttp",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Python/3.11 aiohttp/3.9.1"
+      },
+      "expect": {
+        "raw": "Python/3.11 aiohttp/3.9.1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "aiohttp",
+            "version": "3.9",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library HTTPie",
+      "op": "agent.inspect",
+      "args": {
+        "value": "HTTPie/3.2.2"
+      },
+      "expect": {
+        "raw": "HTTPie/3.2.2",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "HTTPie",
+            "version": "3.2",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library Apache HTTP Client",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Apache-HttpClient/4.5.13 (Java/1.8.0_292)"
+      },
+      "expect": {
+        "raw": "Apache-HttpClient/4.5.13 (Java/1.8.0_292)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Apache HTTP Client",
+            "version": "4.5",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    }
+  ]
+}

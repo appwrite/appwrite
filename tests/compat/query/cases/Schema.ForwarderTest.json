@@ -1,0 +1,2068 @@
+{
+  "source": "packages/query/tests/Schema/ForwarderTest.php",
+  "cases": [
+    {
+      "name": "testMySQLColumnForwarderExposesAllMySQLMethods",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\MySQL",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\MySQL",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "same": [
+              {
+                "$o": 4
+              },
+              {
+                "$o": 4
+              }
+            ]
+          },
+          {
+            "call": "addForeignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\MySQL",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "dropForeignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "fk_old"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "partitionByRange",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "toYear(created_at)"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "id",
+              4
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "partitionCount",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "fulltextIndex",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "body"
+              ],
+              "ft_body"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "location"
+              ],
+              "sp_loc"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        true,
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 4
+        },
+        true,
+        [
+          {
+            "$object": "Schema\\ForeignKey\\MySQL",
+            "id": 4
+          }
+        ],
+        true,
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 5
+        },
+        true,
+        [
+          {
+            "$object": "Schema\\ForeignKey\\MySQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\ForeignKey\\MySQL",
+            "id": 5
+          }
+        ],
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        [
+          "fk_old"
+        ],
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        4,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true
+      ]
+    },
+    {
+      "name": "testMySQLColumnDualPurposePrimaryAndCheck",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "product_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "same": [
+              {
+                "$o": 3
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "get": "isPrimary",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "order_id",
+                "product_id"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "`order_id` > 0"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 3
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "get": "checkExpression",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "product_positive",
+              "`product_id` > 0"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        true,
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        [
+          "order_id",
+          "product_id"
+        ],
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        true,
+        "`order_id` > 0",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 5,
+            "props": {
+              "name": "product_positive",
+              "expression": "`product_id` > 0"
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 6,
+            "props": {
+              "name": "product_positive",
+              "expression": "`product_id` > 0"
+            }
+          }
+        ],
+        "product_positive"
+      ]
+    },
+    {
+      "name": "testMySQLForeignKeyForwarderExposesAllMethods",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\MySQL",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "addForeignKey",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "promo_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\MySQL",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "dropForeignKey",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "fk_old"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByRange",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "toYear(created_at)"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "id",
+              8
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "partitionCount",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "fulltextIndex",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "body"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "location"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_min",
+              "`age` >= 18"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 5
+        },
+        true,
+        [
+          {
+            "$object": "Schema\\ForeignKey\\MySQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\ForeignKey\\MySQL",
+            "id": 5
+          }
+        ],
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 6
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        8,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        [
+          "a",
+          "b"
+        ],
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 7,
+            "props": {
+              "name": "age_min",
+              "expression": "`age` >= 18"
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testPostgreSQLColumnForwarderIncludesVector",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\PostgreSQL",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "embedding",
+              1536
+            ]
+          },
+          {
+            "is": "Schema\\Column\\PostgreSQL",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "dimensions",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "partitionByRange",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "created_at"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "id",
+              2
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "fulltextIndex",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "body"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "location"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\PostgreSQL",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "dropForeignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "fk_old"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        true,
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        true,
+        1536,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 5
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        true
+      ]
+    },
+    {
+      "name": "testSQLiteColumnForwarderHasOnlyForeignKeysAndDualPurpose",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\SQLite",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "is": "Schema\\ForeignKey\\SQLite",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "same": [
+              {
+                "$o": 3
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "get": "isPrimary",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "`user_id` > 0"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 3
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "get": "checkExpression",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "age_min",
+              "`age` >= 18"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        true,
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        true,
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        true,
+        true,
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        true,
+        [
+          "a",
+          "b"
+        ],
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        true,
+        "`user_id` > 0",
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        true,
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 6,
+            "props": {
+              "name": "age_min",
+              "expression": "`age` >= 18"
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testSQLiteHasNoAlterForeignKeyMethods",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        }
+      ]
+    },
+    {
+      "name": "testSQLiteForeignKeyForwarderTableLevelMethods",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_min",
+              "`age` >= 18"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        true
+      ]
+    },
+    {
+      "name": "testClickHouseColumnForwarderEngineOrderBySettingsPartition",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\ClickHouse",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "embedding"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\ClickHouse",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "dimensions",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "engine",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+              }
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "engine",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "orderBy",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "orderBy",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "index_granularity": 8192
+              }
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "settings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "partitionBy",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "toYYYYMM(created_at)"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "partitionExpression",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        true,
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        true,
+        null,
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        true,
+        {
+          "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        true,
+        [
+          "id"
+        ],
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        true,
+        {
+          "index_granularity": "8192"
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        true,
+        "toYYYYMM(created_at)"
+      ]
+    },
+    {
+      "name": "testClickHouseColumnPrimaryDualPurpose",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "same": [
+              {
+                "$o": 3
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "get": "isPrimary",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        true,
+        true,
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        true,
+        [
+          "a",
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "testMongoDBColumnForwarderExposesVectorOnly",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\MongoDB",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "embedding"
+            ]
+          },
+          {
+            "is": "Schema\\Column\\MongoDB",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "dimensions",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        true,
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        true,
+        null
+      ]
+    },
+    {
+      "name": "testTableEntryPointReturnsDialectSpecificType",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "is": "Schema\\Table\\MySQL",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "is": "Schema\\Table\\PostgreSQL",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "is": "Schema\\Table\\SQLite",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "is": "Schema\\Table\\ClickHouse",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "is": "Schema\\Table\\MongoDB",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 4
+        },
+        true,
+        {
+          "$object": "Schema\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 6
+        },
+        true,
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 8
+        },
+        true,
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 10
+        },
+        true
+      ]
+    }
+  ]
+}

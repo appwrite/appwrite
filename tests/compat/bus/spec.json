@@ -1,0 +1,195 @@
+{
+  "lib": "bus",
+  "description": "utopia-php/bus: a synchronous in-process event bus with typed events, listeners with injected dependencies, and failures recorded on the current span.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/bus/src"
+    ],
+    "tests": [
+      "packages/bus/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/bus"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "bus.dispatch": {
+      "doc": "A Bus with a resolver (`suffix` (default): name.':resolved'; `none`: no resolver; {fail: [names]}: throws Exception('cannot resolve <name>') for those, else the name), the listeners subscribed in order (classes clock and mailer handle Deployed, refunds Cancelled, audit all three, twice Created twice; each with `injections` and a `behaviour`: {record: true}, {throw: {message, code}} (a RuntimeException), or null for no callback), then dispatch() of each of `events` (deployed, cancelled, created) within a span. Returns the callbacks' calls ([name, event class, deps]), the first error dispatch() raised, and the span's listener.<name>.<attribute> attributes grouped by listener",
+      "covers": [
+        "Utopia\\Bus\\Bus::setResolver",
+        "Utopia\\Bus\\Bus::subscribe",
+        "Utopia\\Bus\\Bus::dispatch",
+        "Utopia\\Bus\\Listener::getInjections",
+        "Utopia\\Bus\\Listener::getCallback"
+      ],
+      "mask": {
+        "paths": [
+          "/span/*/error.line",
+          "/span/*/error.file",
+          "/span/*/error.trace"
+        ],
+        "reason": "where a failure was raised (source file, line, stack) belongs to the runtime: PHP's file and trace, Rust's #[track_caller] location and backtrace"
+      },
+      "fuzz": [
+        {
+          "name": "listeners",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "resolver": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "suffix"
+                  },
+                  {
+                    "gen": "const",
+                    "value": "none"
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "fail": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "pick",
+                          "from": [
+                            "db",
+                            "clock",
+                            "mailer"
+                          ]
+                        },
+                        "min": 0,
+                        "max": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "listeners": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "listener"
+                },
+                "min": 0,
+                "max": 5
+              },
+              "events": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "deployed",
+                    "cancelled",
+                    "created"
+                  ]
+                },
+                "min": 1,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "listener.inspect": {
+      "doc": "A listener built as bus.dispatch builds them: getInjections(), and getCallback() (true, or the LogicException a listener without a callback raises)",
+      "covers": [
+        "Utopia\\Bus\\Listener::getInjections",
+        "Utopia\\Bus\\Listener::getCallback"
+      ],
+      "mask": {
+        "paths": [
+          "/callback/$error/message"
+        ],
+        "reason": "PHP's message names the listener's class (Tests\\Compat\\Bus\\Clock), Rust's the listener's name: a Rust listener is a value, not a class (see deviations)"
+      }
+    }
+  },
+  "generators": {
+    "listener": {
+      "gen": "object",
+      "fields": {
+        "class": {
+          "gen": "pick",
+          "from": [
+            "clock",
+            "mailer",
+            "refunds",
+            "audit",
+            "twice"
+          ]
+        },
+        "injections": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "db",
+              "clock",
+              "mailer",
+              "cache"
+            ]
+          },
+          "min": 0,
+          "max": 3
+        },
+        "behaviour": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "record": {
+                  "gen": "const",
+                  "value": true
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "throw": {
+                  "gen": "object",
+                  "fields": {
+                    "message": {
+                      "gen": "string",
+                      "max": 12,
+                      "tricky": 0.3
+                    },
+                    "code": {
+                      "gen": "int",
+                      "min": -5,
+                      "max": 600
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Bus\\Listener::getCallback",
+      "php": "The LogicException's message names the listener's class: '<Class> must set a callback via $this->callback()'.",
+      "reason": "A Rust listener is a value built with a name, not a class, so the message names it: '<name> must set a callback via callback()'. Masked in listener.inspect; dispatch() catches it on both sides and records the failure on the span."
+    },
+    {
+      "symbol": "Utopia\\Bus\\Bus::dispatch",
+      "php": "A callback may throw any \\Throwable; error.code, .line, .file and .trace come from it.",
+      "reason": "A Rust callback returns a Failure: message and code, plus the file and line where it was raised (#[track_caller]); error.trace is std::backtrace's capture. The locations are masked."
+    }
+  ]
+}

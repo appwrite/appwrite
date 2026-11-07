@@ -1,0 +1,3148 @@
+{
+  "cases": [
+    {
+      "name": "Mirror runs its write filters around every write it mirrors",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true,
+              "filters": [
+                "log"
+              ]
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.on_error",
+          "args": {
+            "name": "first"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c40"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c40"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateCollection",
+              "collection": "people"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a41"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "attribute": {
+              "$obj": "a41"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateAttribute",
+              "collection": "people",
+              "attribute": "name",
+              "document": {
+                "$document": {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a42"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "attribute": {
+              "$obj": "a42"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateAttribute",
+              "collection": "people",
+              "attribute": "age",
+              "document": {
+                "$document": {
+                  "$id": "age",
+                  "key": "age",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "city",
+                "key": "city",
+                "type": "string",
+                "size": 32,
+                "required": false
+              }
+            },
+            "as": "a43"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "city",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "score",
+                "key": "score",
+                "type": "double",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a44"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attributes",
+          "args": {
+            "collection": "people",
+            "attributes": [
+              {
+                "$obj": "a43"
+              },
+              {
+                "$obj": "a44"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "city",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 32,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "score",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Double"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateAttribute",
+              "collection": "people",
+              "attribute": "city",
+              "document": {
+                "$document": {
+                  "$id": "city",
+                  "key": "city",
+                  "type": "string",
+                  "size": 32,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              }
+            },
+            {
+              "mirror_filter": "beforeCreateAttribute",
+              "collection": "people",
+              "attribute": "score",
+              "document": {
+                "$document": {
+                  "$id": "score",
+                  "key": "score",
+                  "type": "double",
+                  "size": 0,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "size": 48
+            },
+            "as": "u45"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": 48,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "people",
+            "key": "city",
+            "update": {
+              "$obj": "u45"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "city",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 48,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeUpdateAttribute",
+              "collection": "people",
+              "attribute": "city"
+            }
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "required": false
+            },
+            "as": "u46"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": false,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "people",
+            "key": "city",
+            "update": {
+              "$obj": "u46"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "city",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 48,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "default": "Paris"
+            },
+            "as": "u47"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": "Paris",
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "people",
+            "key": "city",
+            "update": {
+              "$obj": "u47"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "city",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 48,
+              "required": false,
+              "default": "Paris",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.rename_attribute",
+          "args": {
+            "collection": "people",
+            "old": "score",
+            "new": "points"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeUpdateAttribute",
+              "collection": "people",
+              "attribute": "city"
+            },
+            {
+              "mirror_filter": "beforeUpdateAttribute",
+              "collection": "people",
+              "attribute": "city"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i48"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "people",
+            "index": {
+              "$obj": "i48"
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateIndex",
+              "collection": "people",
+              "index": "by_name",
+              "document": {
+                "$document": {
+                  "$id": "by_name",
+                  "key": "by_name",
+                  "type": "key",
+                  "attributes": [
+                    "name"
+                  ],
+                  "lengths": [],
+                  "orders": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.rename_index",
+          "args": {
+            "collection": "people",
+            "old": "by_name",
+            "new": "names"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "ada",
+              "name": "Ada",
+              "age": 36
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "name": "Ada",
+              "age": 36,
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "city": "Paris",
+              "$sequence": "1",
+              "points": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "$id": "ada",
+                  "name": "Ada",
+                  "age": 36,
+                  "$collection": "people",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "city": "Paris",
+                  "$sequence": "1",
+                  "points": null
+                }
+              }
+            },
+            {
+              "mirror_filter": "afterCreateDocument",
+              "collection": "people",
+              "id": "ada"
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "people",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "grace",
+                  "name": "Grace",
+                  "age": 85
+                }
+              },
+              {
+                "$document": {
+                  "$id": "alan",
+                  "name": "Alan",
+                  "age": 41
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "$id": "grace",
+                  "name": "Grace",
+                  "age": 85,
+                  "$collection": "people",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "city": "Paris",
+                  "points": null,
+                  "$sequence": null
+                }
+              }
+            },
+            {
+              "mirror_filter": "beforeCreateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "$id": "alan",
+                  "name": "Alan",
+                  "age": 41,
+                  "$collection": "people",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "city": "Paris",
+                  "points": null,
+                  "$sequence": null
+                }
+              }
+            },
+            {
+              "mirror": "createDocuments",
+              "callback": "first",
+              "event": "documents_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\Unique",
+                  "message": "Unique index violation"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "document": {
+              "age": 37
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "age": 37,
+              "city": "Paris",
+              "points": null,
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeUpdateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "name": "Ada",
+                  "age": 37,
+                  "city": "Paris",
+                  "points": null,
+                  "$sequence": "1",
+                  "$id": "ada",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "people"
+                }
+              }
+            },
+            {
+              "mirror_filter": "afterUpdateDocument",
+              "collection": "people",
+              "id": "ada"
+            }
+          ]
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "people",
+            "updates": {
+              "city": "London"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "age",
+                  "values": [
+                    40
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeUpdateDocuments",
+              "collection": "people",
+              "updates": {
+                "$document": {
+                  "city": "London",
+                  "$updatedAt": "<now>"
+                }
+              },
+              "queries": 1
+            },
+            {
+              "mirror_filter": "afterUpdateDocuments",
+              "collection": "people",
+              "queries": 1
+            }
+          ]
+        },
+        {
+          "op": "database.upsert_documents",
+          "args": {
+            "collection": "people",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "alan",
+                  "name": "Alan",
+                  "age": 42
+                }
+              },
+              {
+                "$document": {
+                  "$id": "edsger",
+                  "name": "Edsger",
+                  "age": 72
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeCreateOrUpdateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "$id": "alan",
+                  "name": "Alan",
+                  "age": 42,
+                  "$collection": "people",
+                  "$updatedAt": "<now>",
+                  "$createdAt": "<now>",
+                  "city": "London",
+                  "points": null,
+                  "$permissions": [],
+                  "$sequence": "3"
+                }
+              }
+            },
+            {
+              "mirror_filter": "beforeCreateOrUpdateDocument",
+              "collection": "people",
+              "document": {
+                "$document": {
+                  "$id": "edsger",
+                  "name": "Edsger",
+                  "age": 72,
+                  "$collection": "people",
+                  "$updatedAt": "<now>",
+                  "$createdAt": "<now>",
+                  "city": "Paris",
+                  "points": null,
+                  "$permissions": [],
+                  "$sequence": null
+                }
+              }
+            },
+            {
+              "mirror_filter": "afterCreateOrUpdateDocument",
+              "collection": "people",
+              "id": "alan"
+            },
+            {
+              "mirror_filter": "afterCreateOrUpdateDocument",
+              "collection": "people",
+              "id": "edsger"
+            }
+          ]
+        },
+        {
+          "op": "database.increase_document_attribute",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "attribute": "age",
+            "value": 2
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "age": 39,
+              "city": "Paris",
+              "points": null,
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "database.decrease_document_attribute",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "attribute": "age",
+            "value": 1
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "age": 38,
+              "city": "Paris",
+              "points": null,
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "people",
+            "id": "grace"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeDeleteDocument",
+              "collection": "people",
+              "id": "grace"
+            },
+            {
+              "mirror_filter": "afterDeleteDocument",
+              "collection": "people",
+              "id": "grace"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "collection": "people",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "age",
+                  "values": [
+                    50
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeDeleteDocuments",
+              "collection": "people",
+              "queries": 1
+            },
+            {
+              "mirror_filter": "afterDeleteDocuments",
+              "collection": "people",
+              "queries": 1
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "people"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Edsger",
+                "age": 72,
+                "city": "Paris",
+                "points": null,
+                "$id": "edsger",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "people"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "people"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Edsger",
+                "age": 72,
+                "city": "Paris",
+                "points": null,
+                "$id": "edsger",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "people"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_index",
+          "args": {
+            "collection": "people",
+            "key": "names"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeDeleteIndex",
+              "collection": "people",
+              "index": "names"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "people",
+            "key": "points"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeDeleteAttribute",
+              "collection": "people",
+              "attribute": "points"
+            }
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "u49"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            }
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "collection": "people",
+            "update": {
+              "$obj": "u49"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "city",
+                    "key": "city",
+                    "type": "string",
+                    "size": 48,
+                    "required": false,
+                    "default": "Paris",
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeUpdateCollection",
+              "collection": "people"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "people"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror_filter": "beforeDeleteCollection",
+              "collection": "people"
+            }
+          ]
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "people"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mirror reports destination failures to every onError callback",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.on_error",
+          "args": {
+            "name": "first"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.on_error",
+          "args": {
+            "name": "second"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "things",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c50"
+          },
+          "expect": {
+            "$document": {
+              "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c50"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a51"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "things",
+            "attribute": {
+              "$obj": "a51"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "things",
+            "document": {
+              "$id": "dup",
+              "name": "destination"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dup",
+              "name": "destination",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "things",
+            "document": {
+              "$id": "dup",
+              "name": "source"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dup",
+              "name": "source",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror": "createDocument",
+              "callback": "first",
+              "event": "document_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\Unique",
+                  "message": "Unique index violation"
+                }
+              }
+            },
+            {
+              "mirror": "createDocument",
+              "callback": "second",
+              "event": "document_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\Unique",
+                  "message": "Unique index violation"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "things",
+            "id": "dup"
+          },
+          "expect": {
+            "$document": {
+              "name": "destination",
+              "$sequence": "1",
+              "$id": "dup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "things"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "things",
+            "document": {
+              "$id": "solo",
+              "name": "only here"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "solo",
+              "name": "only here",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "things",
+            "id": "solo",
+            "document": {
+              "name": "changed"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$sequence": "2",
+              "$id": "solo",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "things"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "things",
+            "id": "solo"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "default": "x"
+            },
+            "as": "u52"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": "x",
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "things",
+            "key": "missing",
+            "update": {
+              "$obj": "u52"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "things"
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "size",
+                "key": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a53"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "size",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "things",
+            "attribute": {
+              "$obj": "a53"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "size",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror": "createAttribute",
+              "callback": "first",
+              "event": "attribute_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            },
+            {
+              "mirror": "createAttribute",
+              "callback": "second",
+              "event": "attribute_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i54"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "things",
+            "index": {
+              "$obj": "i54"
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror": "createIndex",
+              "callback": "first",
+              "event": "index_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            },
+            {
+              "mirror": "createIndex",
+              "callback": "second",
+              "event": "index_create",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "u55"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            }
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "collection": "things",
+            "update": {
+              "$obj": "u55"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "things",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "size",
+                    "key": "size",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror": "updateCollection",
+              "callback": "first",
+              "event": "collection_update",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            },
+            {
+              "mirror": "updateCollection",
+              "callback": "second",
+              "event": "collection_update",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "things"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "mirror": "deleteCollection",
+              "callback": "first",
+              "event": "collection_delete",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            },
+            {
+              "mirror": "deleteCollection",
+              "callback": "second",
+              "event": "collection_delete",
+              "error": {
+                "$error": {
+                  "class": "Utopia\\Database\\Exception\\NotFound",
+                  "message": "Collection not found"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mirror writes through only collections upgraded on the destination",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.on_error",
+          "args": {
+            "name": "first"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "legacy",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c56"
+          },
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "name": "legacy",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": {
+              "$obj": "c56"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "name": "legacy",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a57"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "legacy",
+            "attribute": {
+              "$obj": "a57"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "legacy",
+            "document": {
+              "$id": "one",
+              "name": "One"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "name": "One",
+              "$collection": "legacy",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "legacy",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "two",
+                  "name": "Two"
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "legacy",
+            "id": "one",
+            "document": {
+              "name": "Uno"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Uno",
+              "$sequence": "1",
+              "$id": "one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "legacy"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "legacy"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.create_upgrades",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.create_upgrades",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "upgrades"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "upgrades"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "legacy",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c58"
+          },
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "name": "legacy",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": {
+              "$obj": "c58"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "name": "legacy",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a59"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "legacy",
+            "attribute": {
+              "$obj": "a59"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "upgrades",
+            "document": {
+              "$id": "legacy",
+              "collectionId": "legacy",
+              "status": "upgraded"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "collectionId": "legacy",
+              "status": "upgraded",
+              "$collection": "upgrades",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "legacy",
+            "document": {
+              "$id": "three",
+              "name": "Three"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "three",
+              "name": "Three",
+              "$collection": "legacy",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "legacy",
+            "id": "one",
+            "document": {
+              "name": "Eins"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Eins",
+              "$sequence": "1",
+              "$id": "one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "legacy"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "legacy"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Three",
+                "$id": "three",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "legacy"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "upgrades",
+            "document": {
+              "$id": "other",
+              "collectionId": "other",
+              "status": "pending"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "other",
+              "collectionId": "other",
+              "status": "pending",
+              "$collection": "upgrades",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "upgrades",
+            "id": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "A Mirror without a destination writes to its source only",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": false
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.on_error",
+          "args": {
+            "name": "first"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "alone",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c60"
+          },
+          "expect": {
+            "$document": {
+              "$id": "alone",
+              "name": "alone",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c60"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "alone",
+              "name": "alone",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a61"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "alone",
+            "attribute": {
+              "$obj": "a61"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i62"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "alone",
+            "index": {
+              "$obj": "i62"
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "alone",
+            "document": {
+              "$id": "one",
+              "name": "One"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "name": "One",
+              "$collection": "alone",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "alone",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "two",
+                  "name": "Two"
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "alone",
+            "id": "one",
+            "document": {
+              "name": "Uno"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Uno",
+              "$sequence": "1",
+              "$id": "one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "alone"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "alone",
+            "updates": {
+              "name": "All"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.upsert_documents",
+          "args": {
+            "collection": "alone",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "three",
+                  "name": "Three"
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "alone",
+            "id": "two"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "collection": "alone"
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.delete_index",
+          "args": {
+            "collection": "alone",
+            "key": "by_name"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "alone",
+            "key": "name"
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "u63"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            }
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "collection": "alone",
+            "update": {
+              "$obj": "u63"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "alone",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "alone",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "alone"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "upgrades"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "strlen counts characters",
+      "op": "mb.strlen",
+      "args": {
+        "string": "héllo 😀"
+      },
+      "expect": 7
+    },
+    {
+      "name": "strlen counts each invalid sequence once",
+      "op": "mb.strlen",
+      "args": {
+        "string": {
+          "$bytes": "4oLwn5iAgA=="
+        }
+      },
+      "expect": 3
+    },
+    {
+      "name": "strlen 8bit",
+      "op": "mb.strlen",
+      "args": {
+        "string": "héllo",
+        "encoding": "8bit"
+      },
+      "expect": 6
+    },
+    {
+      "name": "substr negative start",
+      "op": "mb.substr",
+      "args": {
+        "string": "héllo",
+        "start": -3,
+        "length": 2
+      },
+      "expect": "ll"
+    },
+    {
+      "name": "substr re-encodes invalid sequences",
+      "op": "mb.substr",
+      "args": {
+        "string": {
+          "$bytes": "Yf9iYw=="
+        },
+        "start": 1,
+        "length": 2
+      },
+      "expect": "?b"
+    },
+    {
+      "name": "substr PHP_INT_MIN",
+      "op": "mb.substr",
+      "args": {
+        "string": "a",
+        "start": -9223372036854775808
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_substr(): Argument #2 ($start) must be between -9223372036854775807 and 9223372036854775807"
+        }
+      }
+    },
+    {
+      "name": "strtolower final sigma",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "ΟΔΥΣΣΕΥΣ ΣΑΣ Σ"
+      },
+      "expect": "οδυσσευς σας σ"
+    },
+    {
+      "name": "strtolower sigma before case-ignorable then cased",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "ΣΑΣ.Σ ΑΣ'"
+      },
+      "expect": "σασ.ς ας'"
+    },
+    {
+      "name": "strtolower invalid UTF-8 becomes ?",
+      "op": "mb.strtolower",
+      "args": {
+        "string": {
+          "$bytes": "Qf9C4oI="
+        }
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "strtolower sigma look-behind across PHP's 64-codepoint chunks",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "A''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''Σ"
+      },
+      "expect": "a''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''σ"
+    },
+    {
+      "name": "strtolower dotted capital I",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "İSTANBUL"
+      },
+      "expect": "i̇stanbul"
+    },
+    {
+      "name": "strpos counts characters",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本語日本語",
+        "needle": "語",
+        "offset": 3
+      },
+      "expect": 5
+    },
+    {
+      "name": "strpos negative offset",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本語日本語",
+        "needle": "日",
+        "offset": -2
+      },
+      "expect": false
+    },
+    {
+      "name": "strpos offset outside",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本",
+        "needle": "日",
+        "offset": 3
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_strpos(): Argument #3 ($offset) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "check_encoding surrogate",
+      "op": "mb.check_encoding",
+      "args": {
+        "value": {
+          "$bytes": "7aCA"
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "check_encoding overlong",
+      "op": "mb.check_encoding",
+      "args": {
+        "value": {
+          "$bytes": "wK8="
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "scrub",
+      "op": "mb.scrub",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYvA="
+        }
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "convert_encoding to UTF-8",
+      "op": "mb.convert_encoding",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYvA="
+        },
+        "to_encoding": "UTF-8"
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "strimwidth: fits",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abc",
+        "width": 5
+      },
+      "expect": "abc"
+    },
+    {
+      "name": "strimwidth: cuts ASCII",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abcdef",
+        "width": 3
+      },
+      "expect": "abc"
+    },
+    {
+      "name": "strimwidth: a wide character does not split",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "你好",
+        "width": 3
+      },
+      "expect": "你"
+    },
+    {
+      "name": "strimwidth: zero",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": "abc",
+        "width": 0
+      },
+      "expect": ""
+    },
+    {
+      "name": "strimwidth: invalid bytes",
+      "op": "mb.strimwidth",
+      "args": {
+        "string": {
+          "$bytes": "YWL/Yw=="
+        },
+        "width": 3
+      },
+      "expect": "ab?"
+    }
+  ]
+}

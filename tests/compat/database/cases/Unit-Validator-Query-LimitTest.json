@@ -1,0 +1,276 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/LimitTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LimitTest::test_value_success",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {
+              "maxLimit": 100
+            },
+            "as": "o2060"
+          },
+          "bind": "s3118",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o2061"
+          },
+          "bind": "s3119",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2060"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2061"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 100
+            },
+            "as": "o2062"
+          },
+          "bind": "s3121",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2060"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2062"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "LimitTest::test_value_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {
+              "maxLimit": 100
+            },
+            "as": "o2063"
+          },
+          "bind": "s3123",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 0
+            },
+            "as": "o2064"
+          },
+          "bind": "s3124",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2064"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 100"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 0
+            },
+            "as": "o2065"
+          },
+          "bind": "s3127",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2065"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": -1
+            },
+            "as": "o2066"
+          },
+          "bind": "s3129",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2066"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 101
+            },
+            "as": "o2067"
+          },
+          "bind": "s3131",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                101
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2067"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2305 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/IndexTest.php"
+  ],
+  "cases": [
+    {
+      "name": "IndexTest::testPropertiesAreReadonly",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o4201"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentReadsTheStoredShape",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "unique",
+                "attributes": [
+                  "first",
+                  "last"
+                ],
+                "lengths": [
+                  64,
+                  null
+                ],
+                "orders": [
+                  "ASC",
+                  null
+                ]
+              }
+            },
+            "as": "o4202"
+          },
+          "bind": "s6341",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "unique",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                "ASC",
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4202"
+              }
+            },
+            "as": "o4203"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                null
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentDropsTheLegacyLengthsAndOrdersOfAFulltextIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "search",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 1
+              }
+            },
+            "as": "o4204"
+          },
+          "bind": "s6343",
+          "expect": {
+            "$document": {
+              "$id": "search",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                "ASC"
+              ],
+              "ttl": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4204"
+              }
+            },
+            "as": "o4205"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4206"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentDropsTheLegacyOrdersOfATtlIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "expiry",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 60
+              }
+            },
+            "as": "o4207"
+          },
+          "bind": "s6346",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [
+                "ASC"
+              ],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4207"
+              }
+            },
+            "as": "o4208"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 60
+            },
+            "as": "o4209"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentReadsTheLegacyIndexTypeAsKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "legacy",
+                "type": "index",
+                "attributes": [
+                  "age"
+                ]
+              }
+            },
+            "as": "o4210"
+          },
+          "bind": "s6349",
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "type": "index",
+              "attributes": [
+                "age"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4210"
+              }
+            },
+            "as": "o4211"
+          },
+          "bind": "s6350",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "legacy",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4211"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4212"
+          },
+          "bind": "s6351",
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "key": "legacy",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4212"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "key"
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentIgnoresTheLegacyTtlOnNonTtlIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "ttl": 1
+              }
+            },
+            "as": "o4213"
+          },
+          "bind": "s6353",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "ttl": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4213"
+              }
+            },
+            "as": "o4214"
+          },
+          "bind": "s6354",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4214"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4215"
+          },
+          "bind": "s6355",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "key": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4215"
+            },
+            "method": "isSet",
+            "args": {
+              "key": "ttl"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentToleratesLowercaseAndEmptyOrders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_name",
+                "type": "key",
+                "attributes": [
+                  "first",
+                  "middle",
+                  "last"
+                ],
+                "orders": [
+                  "asc",
+                  "desc",
+                  ""
+                ]
+              }
+            },
+            "as": "o4216"
+          },
+          "bind": "s6357",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "middle",
+                "last"
+              ],
+              "orders": [
+                "asc",
+                "desc",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4216"
+              }
+            },
+            "as": "o4217"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "middle",
+                "last"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                null
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromArrayToleratesSchemaOrderCases",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "orders": [
+                  {
+                    "$enum": "Query\\Schema\\Order::Desc"
+                  }
+                ]
+              }
+            },
+            "as": "o4218"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentReadsNumericStringLengthsAndTtl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  "32"
+                ]
+              }
+            },
+            "as": "o4219"
+          },
+          "bind": "s6360",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                "32"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4219"
+              }
+            },
+            "as": "o4220"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                32
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "expiry",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "ttl": "60"
+              }
+            },
+            "as": "o4221"
+          },
+          "bind": "s6362",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "ttl": "60"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4221"
+              }
+            },
+            "as": "o4222"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentFallsBackToTheIdForTheKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ]
+              }
+            },
+            "as": "o4223"
+          },
+          "bind": "s6364",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4223"
+              }
+            },
+            "as": "o4224"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentDefaultsAMissingTypeToKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_age",
+                "attributes": [
+                  "age"
+                ]
+              }
+            },
+            "as": "o4225"
+          },
+          "bind": "s6366",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "attributes": [
+                "age"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4225"
+              }
+            },
+            "as": "o4226"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentReadsAnUnknownTypeAsKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "odd",
+                "type": "bitmap",
+                "attributes": [
+                  "age"
+                ]
+              }
+            },
+            "as": "o4227"
+          },
+          "bind": "s6368",
+          "expect": {
+            "$document": {
+              "$id": "odd",
+              "type": "bitmap",
+              "attributes": [
+                "age"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4227"
+              }
+            },
+            "as": "o4228"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "odd",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentRejectsAStoredRandomOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "orders": [
+                  "RANDOM"
+                ]
+              }
+            },
+            "as": "o4229"
+          },
+          "bind": "s6370",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "orders": [
+                "RANDOM"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4229"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders cannot be random"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentRejectsAnUnknownOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "orders": [
+                  "sideways"
+                ]
+              }
+            },
+            "as": "o4230"
+          },
+          "bind": "s6372",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "orders": [
+                "sideways"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4230"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Unknown index order \"sideways\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromDocumentRejectsATtlIndexWithoutATtl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "expiry",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ]
+              }
+            },
+            "as": "o4231"
+          },
+          "bind": "s6374",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4231"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "TTL must be at least 1 second"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromArrayPrefersTheKeyOverTheId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "old",
+                "key": "new",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ]
+              }
+            },
+            "as": "o4232"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "new",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testFromArrayAcceptsTypedValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "by_age",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "age"
+                ],
+                "orders": [
+                  {
+                    "$enum": "Query\\OrderDirection::Desc"
+                  }
+                ]
+              }
+            },
+            "as": "o4233"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testToDocumentRoundTripsThroughFromDocument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                null
+              ]
+            },
+            "as": "o4234"
+          },
+          "bind": "s6378",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4234"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4235"
+          },
+          "bind": "s6379",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                "DESC",
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4235"
+              }
+            },
+            "as": "o4236"
+          },
+          "bind": "s6380",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4235"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "first",
+              "last"
+            ],
+            "lengths": [
+              32,
+              null
+            ],
+            "orders": [
+              "DESC",
+              null
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4237"
+          },
+          "bind": "s6382",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                "DESC",
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4237"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "first",
+              "last"
+            ],
+            "lengths": [
+              32,
+              null
+            ],
+            "orders": [
+              "DESC",
+              null
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithKeyReturnsARenamedCopy",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [
+                8
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ]
+            },
+            "as": "o4238"
+          },
+          "bind": "s6384",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [
+                8
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4238"
+            },
+            "method": "withKey",
+            "args": {
+              "key": "by_years"
+            },
+            "as": "o4239"
+          },
+          "bind": "s6385",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_years",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [
+                8
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4239"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4240"
+          },
+          "bind": "s6386",
+          "expect": {
+            "$document": {
+              "$id": "by_years",
+              "key": "by_years",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [
+                8
+              ],
+              "orders": [
+                "ASC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4240"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "by_years"
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithLengthsReturnsACopyWithNewLengths",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                16,
+                16
+              ]
+            },
+            "as": "o4241"
+          },
+          "bind": "s6388",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                16,
+                16
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4241"
+            },
+            "method": "withLengths",
+            "args": {
+              "lengths": [
+                null,
+                64
+              ]
+            },
+            "as": "o4242"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                null,
+                64
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithLengthsRejectsANonIntegerLength",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4243"
+          },
+          "bind": "s6390",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4243"
+            },
+            "method": "withLengths",
+            "args": {
+              "lengths": [
+                "wide"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index lengths must be integers or null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersReturnsACopyWithNewOrders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ]
+            },
+            "as": "o4244"
+          },
+          "bind": "s6392",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4244"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": [
+                null,
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ]
+            },
+            "as": "o4245"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [],
+              "orders": [
+                null,
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersRejectsARandomOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o4246"
+          },
+          "bind": "s6394",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4246"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Random"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders cannot be random"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersRejectsOrdersTheIndexCannotStore#fulltext",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4247"
+          },
+          "bind": "s6396",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4247"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "A fulltext index does not take orders"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersRejectsOrdersTheIndexCannotStore#ttl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 60
+            },
+            "as": "o4248"
+          },
+          "bind": "s6397",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4248"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "A ttl index does not take orders"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersAcceptsNoOrdersOnAnOrderlessIndex#fulltext",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4249"
+          },
+          "bind": "s6400",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4249"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": []
+            },
+            "as": "o4251"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithOrdersAcceptsNoOrdersOnAnOrderlessIndex#ttl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 60
+            },
+            "as": "o4250"
+          },
+          "bind": "s6401",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4250"
+            },
+            "method": "withOrders",
+            "args": {
+              "orders": []
+            },
+            "as": "o4252"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithLengthsRejectsLengthsOnAFulltextIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4253"
+          },
+          "bind": "s6404",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4253"
+            },
+            "method": "withLengths",
+            "args": {
+              "lengths": [
+                16
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "A fulltext index does not take lengths"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithLengthsAcceptsNoLengthsOnAFulltextIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4254"
+          },
+          "bind": "s6406",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4254"
+            },
+            "method": "withLengths",
+            "args": {
+              "lengths": []
+            },
+            "as": "o4255"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexTest::testWithLengthsOnATtlIndexArePersisted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 60
+            },
+            "as": "o4256"
+          },
+          "bind": "s6408",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4256"
+            },
+            "method": "withLengths",
+            "args": {
+              "lengths": [
+                8
+              ]
+            },
+            "as": "o4257"
+          },
+          "bind": "s6409",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [
+                8
+              ],
+              "orders": [],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4257"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4258"
+          },
+          "bind": "s6410",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "key": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [
+                8
+              ],
+              "ttl": 60
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4258"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "lengths"
+            }
+          },
+          "expect": [
+            8
+          ]
+        }
+      ]
+    }
+  ]
+}

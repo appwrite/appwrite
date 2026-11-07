@@ -1,0 +1,217 @@
+{
+  "lib": "auth",
+  "environment": {
+    "date": "2026-10-18T14:18:11Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "password",
+      "description": "Verify a password against its Argon2id hash at Appwrite's cost (7 MiB, 5 passes, 1 lane)",
+      "php": {
+        "ns": 10062125.0,
+        "min": 9929396.0,
+        "max": 12375375.0,
+        "samples": 15,
+        "calls": 2,
+        "cpu": 10277933.333333334,
+        "peak": 3008.0,
+        "retained": 12.533333333333333,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 9284041.5,
+        "min": 8897229.0,
+        "max": 10091146.0,
+        "samples": 15,
+        "calls": 2,
+        "cpu": 9357827.733333332,
+        "rss": 29241344.0,
+        "allocations": 7.366666666666666,
+        "bytes": 7340237.633333334,
+        "peak": 7340112.0,
+        "retained": 55.13333333333333
+      },
+      "speedup": 1.083808705508264,
+      "bound": "Argon2id's cost is fixed by its parameters (7 MiB, 5 passes) in every implementation",
+      "compat": null
+    },
+    {
+      "name": "sha",
+      "description": "Verify a 256-character session secret against its SHA-256 hash",
+      "php": {
+        "ns": 1971.571596935769,
+        "min": 1951.2620310351601,
+        "max": 2071.588784128855,
+        "samples": 15,
+        "calls": 10182,
+        "cpu": 1981.254501407713,
+        "peak": 3008.0,
+        "retained": 0.00246186080010476,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 782.1839836835219,
+        "min": 763.4286923728162,
+        "max": 862.5557992765335,
+        "samples": 15,
+        "calls": 25986,
+        "cpu": 789.2633392339465,
+        "rss": 29765632.0,
+        "allocations": 2.000028220323764,
+        "bytes": 70.00720644449575,
+        "peak": 1650.0,
+        "retained": 0.004243310500525924
+      },
+      "speedup": 2.520598271075675,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "token",
+      "description": "Generate a 256-character token secret",
+      "php": {
+        "ns": 500.58158526821455,
+        "min": 497.99506271684015,
+        "max": 511.98182546036827,
+        "samples": 15,
+        "calls": 37470,
+        "cpu": 501.64931945556447,
+        "peak": 3008.0,
+        "retained": 0.0006689796281469621,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 171.3369088426022,
+        "min": 168.0704097967748,
+        "max": 185.32918501903822,
+        "samples": 15,
+        "calls": 110567,
+        "cpu": 172.45383040750556,
+        "rss": 29765632.0,
+        "allocations": 1.000006632479251,
+        "bytes": 256.0016936940196,
+        "peak": 1650.0,
+        "retained": 0.0009972836982704303
+      },
+      "speedup": 2.921621433756992,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "jwt-issue",
+      "description": "Issue an HS256 JWT with a user and a session claim",
+      "php": {
+        "ns": 3790.8481335952847,
+        "min": 3702.8732809430257,
+        "max": 6387.352848722986,
+        "samples": 15,
+        "calls": 5090,
+        "cpu": 3920.6679764243613,
+        "peak": 123288.0,
+        "retained": 0.0049246889325474785,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 2232.525400139179,
+        "min": 2160.669450243563,
+        "max": 2310.127116678265,
+        "samples": 15,
+        "calls": 8622,
+        "cpu": 2232.670617799428,
+        "rss": 29765632.0,
+        "allocations": 29.0000850537385,
+        "bytes": 4978.021719631949,
+        "peak": 2140.0,
+        "retained": 0.012788989406943478
+      },
+      "speedup": 1.6980089603275992,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "jwt-verify",
+      "description": "Verify an HS256 JWT's signature, type, issuer, audience and expiry",
+      "php": {
+        "ns": 4404.871160220994,
+        "min": 4381.795580110497,
+        "max": 4958.139889502762,
+        "samples": 15,
+        "calls": 4525,
+        "cpu": 4477.156537753222,
+        "peak": 50128.0,
+        "retained": 0.005539594843462247,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 2070.9567804220924,
+        "min": 2024.40682532555,
+        "max": 2190.601145038168,
+        "samples": 15,
+        "calls": 8908,
+        "cpu": 2086.282929202215,
+        "rss": 29765632.0,
+        "allocations": 28.00008232300554,
+        "bytes": 3658.0210223020504,
+        "peak": 2189.0,
+        "retained": 0.012378386469091453
+      },
+      "speedup": 2.1269739677151613,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "session",
+      "description": "Decode a session cookie (base64 JSON of an id and a secret) and read its id",
+      "php": {
+        "ns": 539.8721999009301,
+        "min": 531.3445979415488,
+        "max": 1019.6763718421487,
+        "samples": 15,
+        "calls": 36338,
+        "cpu": 562.1589887537381,
+        "peak": 3008.0,
+        "retained": 0.000689819656190948,
+        "rss": 114012160.0
+      },
+      "rust": {
+        "ns": 284.5879391968971,
+        "min": 281.17989961213783,
+        "max": 310.147758384668,
+        "samples": 15,
+        "calls": 70128,
+        "cpu": 288.3110169974903,
+        "rss": 29765632.0,
+        "allocations": 7.000010457068979,
+        "bytes": 2548.0026703551603,
+        "peak": 2548.0,
+        "retained": 0.0015723629173321164
+      },
+      "speedup": 1.897031200353892,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

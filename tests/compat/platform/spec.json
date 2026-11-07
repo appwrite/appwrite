@@ -1,0 +1,1787 @@
+{
+  "lib": "platform",
+  "description": "utopia-php/platform: describe an application once as modules of services of actions (HTTP routes, CLI tasks, queue jobs and the hooks around them), then register every service of one type on its server: utopia-php/http, utopia-php/cli or utopia-php/queue.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/platform/src"
+    ],
+    "tests": [
+      "packages/platform/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/platform"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "action.run": {
+      "doc": "new Action() driven by `steps`, each {name: argument}: set_type, desc, groups, label {key, value}, param {key, default, default_fn, validator (see http.run's validators; {factory: spec} for a callable), description, optional, injections, skip_validation, deprecated, example, aliases, enum {name, map, exclude}}, inject, set_http_path, set_http_method, set_http_methods, http_alias (each true when it returns the action), or get: the action described (type, desc, groups, whether a callback is set, params, injections, labels, options as [key, type], getHttpPath() or its TypeError, getHttpMethod(), getHttpMethods(), getHttpAliases()). Each step's result ({\"$error\": {class, message, code}} when it throws)",
+      "covers": [
+        "Utopia\\Platform\\Action::setType",
+        "Utopia\\Platform\\Action::getType",
+        "Utopia\\Platform\\Action::desc",
+        "Utopia\\Platform\\Action::getDesc",
+        "Utopia\\Platform\\Action::groups",
+        "Utopia\\Platform\\Action::getGroups",
+        "Utopia\\Platform\\Action::callback",
+        "Utopia\\Platform\\Action::getCallback",
+        "Utopia\\Platform\\Action::param",
+        "Utopia\\Platform\\Action::getParams",
+        "Utopia\\Platform\\Action::inject",
+        "Utopia\\Platform\\Action::getInjections",
+        "Utopia\\Platform\\Action::label",
+        "Utopia\\Platform\\Action::getLabels",
+        "Utopia\\Platform\\Action::getOptions",
+        "Utopia\\Platform\\Action::setHttpPath",
+        "Utopia\\Platform\\Action::getHttpPath",
+        "Utopia\\Platform\\Action::setHttpMethod",
+        "Utopia\\Platform\\Action::getHttpMethod",
+        "Utopia\\Platform\\Action::setHttpMethods",
+        "Utopia\\Platform\\Action::getHttpMethods",
+        "Utopia\\Platform\\Action::httpAlias",
+        "Utopia\\Platform\\Action::getHttpAliases",
+        "Utopia\\Platform\\Scope\\HTTP::setHttpPath",
+        "Utopia\\Platform\\Scope\\HTTP::getHttpPath",
+        "Utopia\\Platform\\Scope\\HTTP::setHttpMethod",
+        "Utopia\\Platform\\Scope\\HTTP::getHttpMethod",
+        "Utopia\\Platform\\Scope\\HTTP::setHttpMethods",
+        "Utopia\\Platform\\Scope\\HTTP::getHttpMethods",
+        "Utopia\\Platform\\Scope\\HTTP::httpAlias",
+        "Utopia\\Platform\\Scope\\HTTP::getHttpAliases",
+        "Utopia\\Platform\\Enum::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "action_step"
+                },
+                "min": 1,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "service.run": {
+      "doc": "A service of `type` (its $type and $actions set, as subclasses do) driven by `steps`: set_type, type, add_action {key, action (as platform.run's ACTION)}, remove_action key, action key (described as action.run's get, or null), actions (keys)",
+      "covers": [
+        "Utopia\\Platform\\Service::setType",
+        "Utopia\\Platform\\Service::getType",
+        "Utopia\\Platform\\Service::addAction",
+        "Utopia\\Platform\\Service::removeAction",
+        "Utopia\\Platform\\Service::getAction",
+        "Utopia\\Platform\\Service::getActions"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "http",
+                  "Task",
+                  "Worker",
+                  "GraphQL"
+                ]
+              },
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "service_step"
+                },
+                "min": 1,
+                "max": 10
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "platform.run": {
+      "doc": "A platform whose core module holds the services of `core` ({services: {key: SERVICE}}; SERVICE = {type, actions: {key: ACTION}}; ACTION = {type, desc, groups, http {method, methods, path, aliases}, params, inject, labels, callback {id, statements (Harness statements, for HTTP), fail {message, code}}}), driven by `steps`: add_module MODULE, add_service {key, service}, remove_service key, service key ({type, actions} or the error), services (keys), set_cli argv, set_worker (a queue Server on an adapter that never starts), init {type, params {workerName, workers, jobs, queueName, workersNum, namespace, consumer (a consumer factory)}}, cli label-keys (the CLI's tasks described, or null before one is set), run_cli (task callbacks record [id, named arguments]; null before a CLI is set), worker label-keys (jobs with queue, coroutines, prefetch, and the worker start and stop hooks described, or null), worker_hooks start|stop (calls each hook's action; worker callbacks record [id, []]; null before a worker server exists), routes label-keys (Http::getRoutes() described), request (dispatched through Http::run(), as http.run's requests). Each step's result ({\"$error\": {class, message, code}} when it throws)",
+      "covers": [
+        "Utopia\\Platform\\Module::addService",
+        "Utopia\\Platform\\Module::removeService",
+        "Utopia\\Platform\\Module::getService",
+        "Utopia\\Platform\\Module::getServices",
+        "Utopia\\Platform\\Module::getServicesByType",
+        "Utopia\\Platform\\Platform::__construct",
+        "Utopia\\Platform\\Platform::init",
+        "Utopia\\Platform\\Platform::addModule",
+        "Utopia\\Platform\\Platform::addService",
+        "Utopia\\Platform\\Platform::removeService",
+        "Utopia\\Platform\\Platform::getService",
+        "Utopia\\Platform\\Platform::getServices",
+        "Utopia\\Platform\\Platform::getCli",
+        "Utopia\\Platform\\Platform::setCli",
+        "Utopia\\Platform\\Platform::getWorker",
+        "Utopia\\Platform\\Platform::setWorker"
+      ],
+      "mask": {
+        "paths": [
+          "/*/wire/headers/x-debug-speed"
+        ],
+        "reason": "X-Debug-Speed is the elapsed time"
+      },
+      "fuzz": [
+        {
+          "name": "apps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "core": {
+                "gen": "ref",
+                "name": "module"
+              },
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "platform_step"
+                },
+                "min": 1,
+                "max": 8
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "draft",
+            "me@example.com",
+            "true",
+            "1"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "int",
+          "min": -1,
+          "max": 3
+        }
+      ]
+    },
+    "validator": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "text": {
+              "gen": "array",
+              "items": {
+                "gen": "int",
+                "min": 0,
+                "max": 20
+              },
+              "min": 0,
+              "max": 2
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "boolean": {
+              "gen": "bool"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "range": {
+              "gen": "const",
+              "value": [
+                0,
+                150
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "whitelist": {
+              "gen": "const",
+              "value": [
+                [
+                  "draft",
+                  "published"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "any": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "factory": {
+              "gen": "object",
+              "fields": {
+                "text": {
+                  "gen": "const",
+                  "value": [
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "param": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "pick",
+          "from": [
+            "name",
+            "age",
+            "status",
+            "email"
+          ]
+        },
+        "default": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "a",
+                "draft",
+                "me@example.com",
+                "true",
+                "1"
+              ]
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "int",
+              "min": -1,
+              "max": 3
+            }
+          ]
+        },
+        "validator": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "text": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 20
+                  },
+                  "min": 0,
+                  "max": 2
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "boolean": {
+                  "gen": "bool"
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "range": {
+                  "gen": "const",
+                  "value": [
+                    0,
+                    150
+                  ]
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "whitelist": {
+                  "gen": "const",
+                  "value": [
+                    [
+                      "draft",
+                      "published"
+                    ]
+                  ]
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "any": {
+                  "gen": "const",
+                  "value": true
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "factory": {
+                  "gen": "object",
+                  "fields": {
+                    "text": {
+                      "gen": "const",
+                      "value": [
+                        5
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "description": {
+          "gen": "pick",
+          "from": [
+            "",
+            "User name."
+          ]
+        },
+        "optional": {
+          "gen": "bool"
+        },
+        "injections": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "response",
+              "db"
+            ]
+          },
+          "min": 0,
+          "max": 1
+        },
+        "skip_validation": {
+          "gen": "bool"
+        },
+        "deprecated": {
+          "gen": "bool"
+        },
+        "example": {
+          "gen": "pick",
+          "from": [
+            "",
+            "John Doe"
+          ]
+        },
+        "aliases": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "n",
+              "nick",
+              "emailAddress"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        },
+        "enum": {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "pick",
+              "from": [
+                "ArticleStatus",
+                "Status"
+              ]
+            },
+            "map": {
+              "gen": "object",
+              "fields": {
+                "draft": {
+                  "gen": "const",
+                  "value": "Draft"
+                },
+                "published": {
+                  "gen": "const",
+                  "value": "Published"
+                }
+              },
+              "optional": [
+                "draft",
+                "published"
+              ]
+            },
+            "exclude": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "draft",
+                  "archived"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "name",
+            "map",
+            "exclude"
+          ]
+        }
+      },
+      "optional": [
+        "default",
+        "description",
+        "optional",
+        "injections",
+        "skip_validation",
+        "deprecated",
+        "example",
+        "aliases",
+        "enum"
+      ]
+    },
+    "action_step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "set_type": {
+              "gen": "pick",
+              "from": [
+                "Default",
+                "Init",
+                "Shutdown",
+                "Error",
+                "Options",
+                "WorkerStart",
+                "WorkerStop",
+                "Other"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "desc": {
+              "gen": "string",
+              "max": 10,
+              "tricky": 0.3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "groups": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "api",
+                  "*",
+                  "test"
+                ]
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "label": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "scope",
+                    "sdk"
+                  ]
+                },
+                "value": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "",
+                        "a",
+                        "draft",
+                        "me@example.com",
+                        "true",
+                        "1"
+                      ]
+                    },
+                    {
+                      "gen": "null"
+                    },
+                    {
+                      "gen": "bool"
+                    },
+                    {
+                      "gen": "int",
+                      "min": -1,
+                      "max": 3
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "param": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "name",
+                    "age",
+                    "status",
+                    "email"
+                  ]
+                },
+                "default": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "",
+                        "a",
+                        "draft",
+                        "me@example.com",
+                        "true",
+                        "1"
+                      ]
+                    },
+                    {
+                      "gen": "null"
+                    },
+                    {
+                      "gen": "bool"
+                    },
+                    {
+                      "gen": "int",
+                      "min": -1,
+                      "max": 3
+                    }
+                  ]
+                },
+                "validator": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "text": {
+                          "gen": "array",
+                          "items": {
+                            "gen": "int",
+                            "min": 0,
+                            "max": 20
+                          },
+                          "min": 0,
+                          "max": 2
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "boolean": {
+                          "gen": "bool"
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "range": {
+                          "gen": "const",
+                          "value": [
+                            0,
+                            150
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "whitelist": {
+                          "gen": "const",
+                          "value": [
+                            [
+                              "draft",
+                              "published"
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "any": {
+                          "gen": "const",
+                          "value": true
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "factory": {
+                          "gen": "object",
+                          "fields": {
+                            "text": {
+                              "gen": "const",
+                              "value": [
+                                5
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "description": {
+                  "gen": "pick",
+                  "from": [
+                    "",
+                    "User name."
+                  ]
+                },
+                "optional": {
+                  "gen": "bool"
+                },
+                "injections": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "pick",
+                    "from": [
+                      "response",
+                      "db"
+                    ]
+                  },
+                  "min": 0,
+                  "max": 1
+                },
+                "skip_validation": {
+                  "gen": "bool"
+                },
+                "deprecated": {
+                  "gen": "bool"
+                },
+                "example": {
+                  "gen": "pick",
+                  "from": [
+                    "",
+                    "John Doe"
+                  ]
+                },
+                "aliases": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "pick",
+                    "from": [
+                      "n",
+                      "nick",
+                      "emailAddress"
+                    ]
+                  },
+                  "min": 0,
+                  "max": 2
+                },
+                "enum": {
+                  "gen": "object",
+                  "fields": {
+                    "name": {
+                      "gen": "pick",
+                      "from": [
+                        "ArticleStatus",
+                        "Status"
+                      ]
+                    },
+                    "map": {
+                      "gen": "object",
+                      "fields": {
+                        "draft": {
+                          "gen": "const",
+                          "value": "Draft"
+                        },
+                        "published": {
+                          "gen": "const",
+                          "value": "Published"
+                        }
+                      },
+                      "optional": [
+                        "draft",
+                        "published"
+                      ]
+                    },
+                    "exclude": {
+                      "gen": "array",
+                      "items": {
+                        "gen": "pick",
+                        "from": [
+                          "draft",
+                          "archived"
+                        ]
+                      },
+                      "min": 0,
+                      "max": 2
+                    }
+                  },
+                  "optional": [
+                    "name",
+                    "map",
+                    "exclude"
+                  ]
+                }
+              },
+              "optional": [
+                "default",
+                "description",
+                "optional",
+                "injections",
+                "skip_validation",
+                "deprecated",
+                "example",
+                "aliases",
+                "enum"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "inject": {
+              "gen": "pick",
+              "from": [
+                "response",
+                "request",
+                "db",
+                "0",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_http_path": {
+              "gen": "pick",
+              "from": [
+                "/",
+                "/v1/teams",
+                "/v1/teams/:teamId",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_http_method": {
+              "gen": "pick",
+              "from": [
+                "GET",
+                "POST",
+                "get",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_http_methods": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "GET"
+                ]
+              },
+              "min": 0,
+              "max": 4
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "http_alias": {
+              "gen": "pick",
+              "from": [
+                "/alias",
+                "/v1/alias",
+                "/alias"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "get": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "get": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        }
+      ]
+    },
+    "action": {
+      "gen": "object",
+      "fields": {
+        "type": {
+          "gen": "pick",
+          "from": [
+            "Default",
+            "Default",
+            "Init",
+            "Shutdown",
+            "Error",
+            "Options",
+            "WorkerStart",
+            "WorkerStop"
+          ]
+        },
+        "desc": {
+          "gen": "pick",
+          "from": [
+            "",
+            "Create team"
+          ]
+        },
+        "groups": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "api",
+              "test",
+              "*"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        },
+        "http": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "GET",
+                "POST"
+              ]
+            },
+            "path": {
+              "gen": "pick",
+              "from": [
+                "/",
+                "/v1/teams",
+                "/v1/teams/:teamId",
+                "/v1/users"
+              ]
+            },
+            "aliases": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "/a",
+                  "/b"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "method",
+            "path",
+            "aliases"
+          ]
+        },
+        "params": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "plain_param"
+          },
+          "min": 0,
+          "max": 2
+        },
+        "inject": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "response",
+              "db"
+            ]
+          },
+          "min": 0,
+          "max": 1
+        },
+        "labels": {
+          "gen": "object",
+          "fields": {
+            "scope": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "pick",
+                  "from": [
+                    "",
+                    "a",
+                    "draft",
+                    "me@example.com",
+                    "true",
+                    "1"
+                  ]
+                },
+                {
+                  "gen": "null"
+                },
+                {
+                  "gen": "bool"
+                },
+                {
+                  "gen": "int",
+                  "min": -1,
+                  "max": 3
+                }
+              ]
+            },
+            "sdk": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "pick",
+                  "from": [
+                    "",
+                    "a",
+                    "draft",
+                    "me@example.com",
+                    "true",
+                    "1"
+                  ]
+                },
+                {
+                  "gen": "null"
+                },
+                {
+                  "gen": "bool"
+                },
+                {
+                  "gen": "int",
+                  "min": -1,
+                  "max": 3
+                }
+              ]
+            }
+          },
+          "optional": [
+            "scope",
+            "sdk"
+          ]
+        },
+        "callback": {
+          "gen": "object",
+          "fields": {
+            "id": {
+              "gen": "pick",
+              "from": [
+                "a1",
+                "a2"
+              ]
+            },
+            "statements": {
+              "gen": "const",
+              "value": [
+                {
+                  "emit": {
+                    "param": "name"
+                  }
+                },
+                {
+                  "emit": {
+                    "param": "email"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "optional": [
+        "type",
+        "desc",
+        "groups",
+        "http",
+        "params",
+        "inject",
+        "labels"
+      ]
+    },
+    "plain_param": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "pick",
+          "from": [
+            "name",
+            "email"
+          ]
+        },
+        "default": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "a",
+                "draft",
+                "me@example.com",
+                "true",
+                "1"
+              ]
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "int",
+              "min": -1,
+              "max": 3
+            }
+          ]
+        },
+        "validator": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "text": {
+                  "gen": "const",
+                  "value": [
+                    10
+                  ]
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "boolean": {
+                  "gen": "const",
+                  "value": true
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "any": {
+                  "gen": "const",
+                  "value": true
+                }
+              }
+            }
+          ]
+        },
+        "optional": {
+          "gen": "bool"
+        },
+        "example": {
+          "gen": "pick",
+          "from": [
+            "",
+            "x"
+          ]
+        },
+        "deprecated": {
+          "gen": "bool"
+        },
+        "aliases": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "e",
+              "n"
+            ]
+          },
+          "min": 0,
+          "max": 1
+        },
+        "enum": {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "pick",
+              "from": [
+                "ArticleStatus",
+                "Status"
+              ]
+            },
+            "map": {
+              "gen": "object",
+              "fields": {
+                "draft": {
+                  "gen": "const",
+                  "value": "Draft"
+                },
+                "published": {
+                  "gen": "const",
+                  "value": "Published"
+                }
+              },
+              "optional": [
+                "draft",
+                "published"
+              ]
+            },
+            "exclude": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "draft",
+                  "archived"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "name",
+            "map",
+            "exclude"
+          ]
+        }
+      },
+      "optional": [
+        "example",
+        "deprecated",
+        "aliases",
+        "enum"
+      ]
+    },
+    "service": {
+      "gen": "object",
+      "fields": {
+        "type": {
+          "gen": "pick",
+          "from": [
+            "http",
+            "Task",
+            "Worker",
+            "GraphQL",
+            "Other"
+          ]
+        },
+        "actions": {
+          "gen": "object",
+          "fields": {
+            "build": {
+              "gen": "ref",
+              "name": "action"
+            },
+            "deploy": {
+              "gen": "ref",
+              "name": "action"
+            },
+            "Teams": {
+              "gen": "ref",
+              "name": "action"
+            }
+          },
+          "optional": [
+            "build",
+            "deploy",
+            "Teams"
+          ]
+        }
+      }
+    },
+    "module": {
+      "gen": "object",
+      "fields": {
+        "services": {
+          "gen": "object",
+          "fields": {
+            "api": {
+              "gen": "ref",
+              "name": "service"
+            },
+            "tasks": {
+              "gen": "ref",
+              "name": "service"
+            },
+            "workers": {
+              "gen": "ref",
+              "name": "service"
+            }
+          },
+          "optional": [
+            "api",
+            "tasks",
+            "workers"
+          ]
+        }
+      }
+    },
+    "service_step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "set_type": {
+              "gen": "pick",
+              "from": [
+                "http",
+                "Task",
+                "Worker"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "type": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "add_action": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "build",
+                    "deploy"
+                  ]
+                },
+                "action": {
+                  "gen": "ref",
+                  "name": "action"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "remove_action": {
+              "gen": "pick",
+              "from": [
+                "build",
+                "deploy",
+                "missing"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "action": {
+              "gen": "pick",
+              "from": [
+                "build",
+                "deploy",
+                "missing"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "actions": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        }
+      ]
+    },
+    "platform_step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "add_module": {
+              "gen": "ref",
+              "name": "module"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "add_service": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "pick",
+                  "from": [
+                    "api",
+                    "extra"
+                  ]
+                },
+                "service": {
+                  "gen": "ref",
+                  "name": "service"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "remove_service": {
+              "gen": "pick",
+              "from": [
+                "api",
+                "tasks",
+                "missing"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "service": {
+              "gen": "pick",
+              "from": [
+                "api",
+                "tasks",
+                "workers",
+                "missing"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "services": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_cli": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "const",
+                  "value": [
+                    "app",
+                    "build",
+                    "--name=me",
+                    "--email=a@b.c"
+                  ]
+                },
+                {
+                  "gen": "const",
+                  "value": [
+                    "app",
+                    "deploy"
+                  ]
+                },
+                {
+                  "gen": "const",
+                  "value": [
+                    "app",
+                    "Teams",
+                    "--name"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_worker": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "init": {
+              "gen": "object",
+              "fields": {
+                "type": {
+                  "gen": "pick",
+                  "from": [
+                    "http",
+                    "Task",
+                    "Worker",
+                    "GraphQL",
+                    "Other"
+                  ]
+                },
+                "params": {
+                  "gen": "object",
+                  "fields": {
+                    "workerName": {
+                      "gen": "pick",
+                      "from": [
+                        "build",
+                        "all",
+                        "Teams",
+                        ""
+                      ]
+                    },
+                    "workers": {
+                      "gen": "array",
+                      "items": {
+                        "gen": "pick",
+                        "from": [
+                          "build",
+                          "ALL",
+                          "teams",
+                          "deploy"
+                        ]
+                      },
+                      "min": 0,
+                      "max": 2
+                    },
+                    "jobs": {
+                      "gen": "object",
+                      "fields": {
+                        "build": {
+                          "gen": "object",
+                          "fields": {
+                            "queue": {
+                              "gen": "pick",
+                              "from": [
+                                "q-build",
+                                ""
+                              ]
+                            },
+                            "coroutines": {
+                              "gen": "int",
+                              "min": -1,
+                              "max": 4
+                            },
+                            "prefetch": {
+                              "gen": "int",
+                              "min": 0,
+                              "max": 8
+                            }
+                          },
+                          "optional": [
+                            "queue",
+                            "coroutines",
+                            "prefetch"
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "build"
+                      ]
+                    },
+                    "queueName": {
+                      "gen": "pick",
+                      "from": [
+                        "tests"
+                      ]
+                    },
+                    "consumer": {
+                      "gen": "bool"
+                    }
+                  },
+                  "optional": [
+                    "workerName",
+                    "workers",
+                    "jobs",
+                    "queueName",
+                    "consumer"
+                  ]
+                }
+              },
+              "optional": [
+                "params"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "init": {
+              "gen": "object",
+              "fields": {
+                "type": {
+                  "gen": "pick",
+                  "from": [
+                    "http",
+                    "Task"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "cli": {
+              "gen": "const",
+              "value": [
+                "scope",
+                "sdk"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "worker": {
+              "gen": "const",
+              "value": [
+                "scope"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "routes": {
+              "gen": "const",
+              "value": [
+                "scope"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "request": {
+              "gen": "object",
+              "fields": {
+                "method": {
+                  "gen": "pick",
+                  "from": [
+                    "GET",
+                    "POST"
+                  ]
+                },
+                "uri": {
+                  "gen": "pick",
+                  "from": [
+                    "/",
+                    "/v1/teams",
+                    "/v1/teams/t1",
+                    "/a",
+                    "/missing"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "run_cli": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "worker_hooks": {
+              "gen": "pick",
+              "from": [
+                "start",
+                "stop"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "init": {
+              "gen": "object",
+              "fields": {
+                "type": {
+                  "gen": "const",
+                  "value": "Worker"
+                },
+                "params": {
+                  "gen": "object",
+                  "fields": {
+                    "consumer": {
+                      "gen": "const",
+                      "value": true
+                    },
+                    "workers": {
+                      "gen": "const",
+                      "value": [
+                        "all"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Platform\\Action::inject",
+      "description": "inject() checks the name against the positions of the injections list (array_key_exists on a list), so a name like '0' is refused once an injection exists, and the same name twice is accepted (listed twice, registered once).",
+      "case": "edge.json#inject checks positions, not names"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Platform\\Service::getActions",
+      "php": "A Service subclass that does not set $type and $actions raises Error (typed property accessed before initialization) from getType() and getActions().",
+      "reason": "utopia_platform::Service::new takes the type and starts with no actions: an uninitialized service cannot be built. The compat services set both, as every subclass does."
+    },
+    {
+      "symbol": "Utopia\\Platform\\Platform::getCli",
+      "php": "getCli() before setCli() or init(TYPE_TASK), and getWorker() before setWorker() or init(TYPE_WORKER), raise Error (typed property accessed before initialization).",
+      "reason": "Platform::cli() and Platform::worker() return an Option; the compat adapters report null for both."
+    },
+    {
+      "symbol": "Utopia\\Platform\\Platform::init",
+      "php": "An action without a callback fails init() with TypeError from Hook::action(null), whose message ends with ', called in <file> on line <n>'.",
+      "reason": "Rust reports the same class and message without the PHP file and line; cases mask that message."
+    },
+    {
+      "symbol": "Utopia\\Platform\\Platform::init",
+      "php": "One callback serves every server: the same closure is registered as a route, a task or a job.",
+      "reason": "A Callback is written for the server it runs on (Callback::Http, Task or Worker, each receiving that server's scope); one for another server counts as no callback."
+    }
+  ]
+}

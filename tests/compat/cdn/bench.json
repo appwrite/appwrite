@@ -1,0 +1,217 @@
+{
+  "lib": "cdn",
+  "environment": {
+    "date": "2026-10-18T14:18:46Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "validate",
+      "description": "Normalise and validate a mixed-case hostname",
+      "php": {
+        "ns": 63.06893842649187,
+        "min": 58.49417449517853,
+        "max": 78.48797134112493,
+        "samples": 15,
+        "calls": 329671,
+        "cpu": 65.09520097309135,
+        "peak": 3008.0,
+        "retained": 0.0000760354009502403,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 24.0872580347517,
+        "min": 23.750655600773122,
+        "max": 26.04718140230577,
+        "samples": 15,
+        "calls": 823672,
+        "cpu": 24.32631282031359,
+        "rss": 22040576.0,
+        "allocations": 1.0000008903220376,
+        "bytes": 16.00022735587305,
+        "peak": 1650.0,
+        "retained": 0.00013387205910443315
+      },
+      "speedup": 2.618352754618216,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "validate_paths",
+      "description": "Check ten cache paths",
+      "php": {
+        "ns": 89.90538535047274,
+        "min": 86.9589085736682,
+        "max": 95.93119134750461,
+        "samples": 15,
+        "calls": 227079,
+        "cpu": 90.22880436617505,
+        "peak": 3008.0,
+        "retained": 0.00011038742757659963,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 4.789101331375952,
+        "min": 4.540645058575557,
+        "max": 5.168604823032899,
+        "samples": 15,
+        "calls": 5175623,
+        "cpu": 4.78228629352125,
+        "rss": 22040576.0,
+        "allocations": 1.416898667722385e-7,
+        "bytes": 0.000036182439614837995,
+        "peak": 1650.0,
+        "retained": 0.000021305003603752954
+      },
+      "speedup": 18.772913565527357,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fastly_purge_paths",
+      "description": "Purge three paths through Fastly on a transport answering at once",
+      "php": {
+        "ns": 10163.461538461539,
+        "min": 9831.237672583826,
+        "max": 10481.961045364891,
+        "samples": 15,
+        "calls": 2028,
+        "cpu": 10167.554240631163,
+        "peak": 16632.0,
+        "retained": 0.012360289283366207,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 2065.0195230054874,
+        "min": 2018.2215069649642,
+        "max": 2105.9430139299284,
+        "samples": 15,
+        "calls": 9476,
+        "cpu": 2059.4797804981004,
+        "rss": 22577152.0,
+        "allocations": 91.00007738849023,
+        "bytes": 4366.019762206275,
+        "peak": 1650.0,
+        "retained": 0.011636414802307584
+      },
+      "speedup": 4.9217266109277995,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "cloudflare_purge_keys",
+      "description": "Purge 40 cache tags through Cloudflare (two batches) on a transport answering at once",
+      "php": {
+        "ns": 9869.575364667748,
+        "min": 9552.111291193949,
+        "max": 10228.705024311183,
+        "samples": 15,
+        "calls": 1851,
+        "cpu": 9836.052584188727,
+        "peak": 19056.0,
+        "retained": 0.013542229425535747,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 2456.396261222482,
+        "min": 2431.383962612225,
+        "max": 2529.8752920919937,
+        "samples": 15,
+        "calls": 8131,
+        "cpu": 2466.9942770466937,
+        "rss": 22577152.0,
+        "allocations": 78.00009018980855,
+        "bytes": 7448.023031197475,
+        "peak": 3315.0,
+        "retained": 0.013561267576763826
+      },
+      "speedup": 4.017908478559534,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fastly_tls_status",
+      "description": "Read an issued, activated Fastly TLS subscription",
+      "php": {
+        "ns": 19316.180651530107,
+        "min": 18708.99111549852,
+        "max": 19690.441263573543,
+        "samples": 15,
+        "calls": 1013,
+        "cpu": 19329.318854886475,
+        "peak": 23016.0,
+        "retained": 0.024744981901941427,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 5639.0526164462335,
+        "min": 5511.824324324324,
+        "max": 5738.810523289247,
+        "samples": 15,
+        "calls": 3478,
+        "cpu": 5621.292562775541,
+        "rss": 26189824.0,
+        "allocations": 143.000210849147,
+        "bytes": 15372.053843204907,
+        "peak": 7555.0,
+        "retained": 0.03170404447000192
+      },
+      "speedup": 3.425430114837851,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "balancer_purge_domain",
+      "description": "Fan a domain purge out over three recording adapters, one filtered away",
+      "php": {
+        "ns": 534.672241186426,
+        "min": 529.2459195089068,
+        "max": 556.0475889962996,
+        "samples": 15,
+        "calls": 34861,
+        "cpu": 539.2520772974575,
+        "peak": 3008.0,
+        "retained": 0.0007190461164816461,
+        "rss": 107323392.0
+      },
+      "rust": {
+        "ns": 123.54512704651667,
+        "min": 122.93052520813346,
+        "max": 125.8830862554548,
+        "samples": 15,
+        "calls": 161555,
+        "cpu": 123.73527694386844,
+        "rss": 26451968.0,
+        "allocations": 8.00000453921781,
+        "bytes": 413.0011591511663,
+        "peak": 1650.0,
+        "retained": 0.0006825332961942786
+      },
+      "speedup": 4.327748523704327,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

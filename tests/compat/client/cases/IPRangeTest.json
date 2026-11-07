@@ -1,0 +1,274 @@
+{
+  "source": "packages/client/tests/Destinations/IPRangeTest.php",
+  "cases": [
+    {
+      "name": "contains addresses inside the range",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/8",
+        "addresses": [
+          "10.0.0.0",
+          "10.255.255.255",
+          "11.0.0.0",
+          "::ffff:10.0.0.1",
+          "not an address"
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "matches unaligned prefixes",
+      "op": "iprange.contains",
+      "args": {
+        "range": "172.16.0.0/12",
+        "addresses": [
+          "172.31.255.255",
+          "172.32.0.0",
+          "172.15.255.255"
+        ]
+      },
+      "expect": [
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "a single address matches every spelling of it",
+      "op": "iprange.contains",
+      "args": {
+        "range": "0:0:0:0:0:0:0:1",
+        "addresses": [
+          "::1",
+          "::2",
+          "0::1"
+        ]
+      },
+      "expect": [
+        true,
+        false,
+        true
+      ]
+    },
+    {
+      "name": "a /0 matches its whole family only",
+      "op": "iprange.contains",
+      "args": {
+        "range": "0.0.0.0/0",
+        "addresses": [
+          "1.2.3.4",
+          "::1"
+        ]
+      },
+      "expect": [
+        true,
+        false
+      ]
+    },
+    {
+      "name": "ipv6 prefixes",
+      "op": "iprange.contains",
+      "args": {
+        "range": "2001:db8::/33",
+        "addresses": [
+          "2001:db8::1",
+          "2001:db8:7fff::1",
+          "2001:db8:8000::1"
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "name": "surrounding whitespace is trimmed",
+      "op": "iprange.contains",
+      "args": {
+        "range": " 10.0.0.0/8\n",
+        "addresses": [
+          "10.1.1.1"
+        ]
+      },
+      "expect": [
+        true
+      ]
+    },
+    {
+      "name": "leading zeros in the prefix",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/008",
+        "addresses": [
+          "10.1.1.1",
+          "11.1.1.1"
+        ]
+      },
+      "expect": [
+        true,
+        false
+      ]
+    },
+    {
+      "name": "refuses malformed range 'a\\x00b'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "a\u0000b",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "inet_pton(): Argument #1 ($ip) must not contain any null bytes"
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/foo'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/foo",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/foo'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/33'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/33",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/33'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '::/129'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "::/129",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '::/129'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/-1'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/-1",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/-1'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range 'example.com'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "example.com",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: 'example.com'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range ''",
+      "op": "iprange.contains",
+      "args": {
+        "range": "",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: ''."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/8/8'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/8/8",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/8/8'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '10.0.0.0/ 8'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "10.0.0.0/ 8",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/ 8'."
+        }
+      }
+    },
+    {
+      "name": "refuses malformed range '010.0.0.1'",
+      "op": "iprange.contains",
+      "args": {
+        "range": "010.0.0.1",
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '010.0.0.1'."
+        }
+      }
+    }
+  ]
+}

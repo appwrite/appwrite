@@ -1,0 +1,419 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/GenericTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "test.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "company.net"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "business.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "any-domain.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+spam",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+spam",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+newsletter",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+newsletter",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+work",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+work",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+personal",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+personal",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+test123",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+test123",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+anything",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+anything",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+verylongtag",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+verylongtag",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag.with.dots",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+tag.with.dots",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+tag-with-hyphens",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag_with_underscores",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+tag_with_underscores",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag123",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.name+tag123",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user-name",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user-name",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user-name+tag",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user-name+tag",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user+",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user+",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": ".user",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user..name",
+            "domain": "example.com"
+          },
+          "expect": {
+            "local": "user..name",
+            "domain": "example.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag",
+            "domain": "test.org"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "test.org"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag",
+            "domain": "company.net"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "company.net"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name+tag",
+            "domain": "business.co.uk"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "business.co.uk"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name",
+            "domain": "test.org"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "test.org"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name",
+            "domain": "company.net"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "company.net"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "user.name",
+            "domain": "business.co.uk"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "business.co.uk"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "generic"
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "generic"
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

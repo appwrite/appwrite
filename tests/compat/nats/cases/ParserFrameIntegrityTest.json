@@ -1,0 +1,127 @@
+{
+  "source": "packages/nats/tests/ParserFrameIntegrityTest.php",
+  "cases": [
+    {
+      "name": "a complete frame still parses",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo 1 5\r\nhello\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "foo",
+                  "1",
+                  null,
+                  "hello",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a mid-frame timeout is not reported as a timeout",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo 1 5\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: No inbound data",
+              "previous": "Utopia\\NATS\\Exception\\TimeoutException"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a poisoned parser refuses even valid following data",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo 1 5\r\n",
+            "then": "PING\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: No inbound data",
+              "previous": "Utopia\\NATS\\Exception\\TimeoutException"
+            },
+            "then": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Parser desynced from the stream; the connection must be rebuilt"
+            },
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a mid-frame failure surfaces the original cause",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "HMSG foo 1 12 20\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: No inbound data",
+              "previous": "Utopia\\NATS\\Exception\\TimeoutException"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a timeout before a line is complete keeps the partial line",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "PI",
+            "then": "NG\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": [
+              "PING",
+              null
+            ],
+            "buffered": false
+          }
+        }
+      ]
+    }
+  ]
+}

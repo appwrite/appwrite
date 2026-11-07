@@ -1,0 +1,3402 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/AttributeFactoryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeFactoryTest::testDatetimePersistsUnsignedWithDatetimeFilter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "publishedAt",
+              "required": true
+            },
+            "as": "o3004"
+          },
+          "bind": "s4311",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "publishedAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3004"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3005"
+          },
+          "bind": "s4312",
+          "expect": {
+            "$document": {
+              "$id": "publishedAt",
+              "key": "publishedAt",
+              "type": "datetime",
+              "size": 0,
+              "required": true,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "datetime"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3005"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3005"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3005"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "datetime"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3005"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3005"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testDatetimeArrayKeepsTheDatetimeFilter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "history",
+              "array": true,
+              "default": [
+                "2024-01-01T00:00:00.000+00:00"
+              ]
+            },
+            "as": "o3006"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "history",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                "2024-01-01T00:00:00.000+00:00"
+              ],
+              "signed": false,
+              "array": true,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSpatialPersistsScalarWithItsTypeFilter#point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "location"
+            },
+            "as": "o3007"
+          },
+          "bind": "s4319",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3007"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3008"
+          },
+          "bind": "s4320",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "point"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3008"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "point"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3008"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3008"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "point"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3008"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3008"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSpatialPersistsScalarWithItsTypeFilter#lineString",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "lineString",
+            "args": {
+              "key": "location"
+            },
+            "as": "o3009"
+          },
+          "bind": "s4326",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3009"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3010"
+          },
+          "bind": "s4327",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "linestring",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "linestring"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3010"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "linestring"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3010"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3010"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "linestring"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3010"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3010"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSpatialPersistsScalarWithItsTypeFilter#polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "polygon",
+            "args": {
+              "key": "location"
+            },
+            "as": "o3011"
+          },
+          "bind": "s4333",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3011"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3012"
+          },
+          "bind": "s4334",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "polygon",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "polygon"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3012"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "polygon"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3012"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3012"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "polygon"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3012"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3012"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSpatialKeepsItsDefault",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "location",
+              "required": true,
+              "default": [
+                1.5,
+                2.5
+              ]
+            },
+            "as": "o3013"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": true,
+              "default": [
+                1.5,
+                2.5
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testVectorPersistsDimensionsAsSize",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "vector",
+            "args": {
+              "key": "embedding",
+              "dimensions": 1536,
+              "default": [
+                0.0,
+                1.0
+              ]
+            },
+            "as": "o3014"
+          },
+          "bind": "s4341",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "embedding",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 1536,
+              "required": false,
+              "default": [
+                0.0,
+                1.0
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3014"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3015"
+          },
+          "bind": "s4342",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 1536,
+              "required": false,
+              "default": [
+                0.0,
+                1.0
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "vector"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3015"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "vector"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3015"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 1536
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3015"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "vector"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3015"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3015"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": [
+            0.0,
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testObjectPersistsScalarWithObjectFilter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "metadata",
+              "default": {
+                "a": 1
+              }
+            },
+            "as": "o3016"
+          },
+          "bind": "s4348",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "metadata",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": {
+                "a": 1
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3016"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3017"
+          },
+          "bind": "s4349",
+          "expect": {
+            "$document": {
+              "$id": "metadata",
+              "key": "metadata",
+              "type": "object",
+              "size": 0,
+              "required": false,
+              "default": {
+                "a": 1
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "object"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3017"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "object"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3017"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "object"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3017"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3017"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3017"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": {
+            "a": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testIntegerDefaultsToThirtyTwoBitsPersistedAsSizeZero",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o3018"
+          },
+          "bind": "s4355",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3018"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3018"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3019"
+          },
+          "bind": "s4357",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3019"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testIntegerSixtyFourBitsPersistsAsSizeEight",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count",
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              },
+              "signed": false,
+              "default": 5
+            },
+            "as": "o3020"
+          },
+          "bind": "s4359",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": 5,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3020"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3020"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3021"
+          },
+          "bind": "s4361",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 8,
+              "required": false,
+              "default": 5,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3021"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSizelessTypesPersistSizeZero#boolean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "boolean",
+            "args": {
+              "key": "flag"
+            },
+            "as": "o3022"
+          },
+          "bind": "s4363",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "flag",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3022"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3023"
+          },
+          "bind": "s4364",
+          "expect": {
+            "$document": {
+              "$id": "flag",
+              "key": "flag",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3023"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "boolean"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3023"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3023"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3023"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSizelessTypesPersistSizeZero#double",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o3024"
+          },
+          "bind": "s4369",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3024"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3025"
+          },
+          "bind": "s4370",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3025"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "double"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3025"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3025"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3025"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSizelessTypesPersistSizeZero#float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "score"
+            },
+            "as": "o3026"
+          },
+          "bind": "s4375",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3026"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3027"
+          },
+          "bind": "s4376",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "float",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3027"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "float"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3027"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3027"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3027"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSizelessTypesPersistSizeZero#id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "id",
+            "args": {
+              "key": "reference"
+            },
+            "as": "o3028"
+          },
+          "bind": "s4381",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reference",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3028"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3029"
+          },
+          "bind": "s4382",
+          "expect": {
+            "$document": {
+              "$id": "reference",
+              "key": "reference",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3029"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3029"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3029"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3029"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testSizelessTypesPersistSizeZero#bigInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total"
+            },
+            "as": "o3030"
+          },
+          "bind": "s4387",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3030"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3031"
+          },
+          "bind": "s4388",
+          "expect": {
+            "$document": {
+              "$id": "total",
+              "key": "total",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3031"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "bigint"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3031"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3031"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3031"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringFamilyPersistsSigned#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o3032"
+          },
+          "bind": "s4393",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3032"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3033"
+          },
+          "bind": "s4394",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3033"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3033"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3033"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3033"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3033"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringFamilyPersistsSigned#varchar",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "varchar",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o3034"
+          },
+          "bind": "s4400",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Varchar"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3034"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3035"
+          },
+          "bind": "s4401",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "varchar",
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3035"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "varchar"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3035"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3035"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 64
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3035"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3035"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringFamilyPersistsSigned#text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "text",
+            "args": {
+              "key": "name"
+            },
+            "as": "o3036"
+          },
+          "bind": "s4407",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3036"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3037"
+          },
+          "bind": "s4408",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "text",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3037"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "text"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3037"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3037"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3037"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3037"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringFamilyPersistsSigned#mediumText",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "mediumText",
+            "args": {
+              "key": "name"
+            },
+            "as": "o3038"
+          },
+          "bind": "s4414",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::MediumText"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3038"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3039"
+          },
+          "bind": "s4415",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "mediumtext",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3039"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "mediumtext"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3039"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3039"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3039"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3039"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringFamilyPersistsSigned#longText",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "longText",
+            "args": {
+              "key": "name",
+              "size": 1024
+            },
+            "as": "o3040"
+          },
+          "bind": "s4421",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::LongText"
+              },
+              "size": 1024,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3040"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3041"
+          },
+          "bind": "s4422",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "longtext",
+              "size": 1024,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3041"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "longtext"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3041"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3041"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 1024
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3041"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3041"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testExplicitZeroSizeMeansNoSize",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "text",
+            "args": {
+              "key": "body",
+              "size": 0
+            },
+            "as": "o3042"
+          },
+          "bind": "s4428",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3042"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3043"
+          },
+          "bind": "s4429",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "text",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3043"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testStringCarriesEveryArgument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "email",
+              "options": {
+                "allowPlus": true
+              }
+            },
+            "as": "o3044"
+          },
+          "bind": "s4431",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "email",
+              "options": {
+                "allowPlus": true
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 320,
+              "required": true,
+              "default": "user@example.com",
+              "array": true,
+              "format": {
+                "$obj": "o3044"
+              },
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                },
+                "lowercase"
+              ]
+            },
+            "as": "o3045"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 320,
+              "required": true,
+              "default": "user@example.com",
+              "signed": true,
+              "array": true,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "email",
+                  "options": {
+                    "allowPlus": true
+                  }
+                }
+              },
+              "filters": [
+                "json",
+                "lowercase"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testEveryFactoryProducesItsColumnType",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3046"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "varchar",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3047"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Varchar"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "text",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3048"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "mediumText",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3049"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::MediumText"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "longText",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3050"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::LongText"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3051"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3052"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3053"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3054"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "boolean",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3055"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3056"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3057"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "lineString",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3058"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "polygon",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3059"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "vector",
+            "args": {
+              "key": "a",
+              "dimensions": 3
+            },
+            "as": "o3060"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3061"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "id",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3062"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testNumericFactoriesKeepSignedAndDefault",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score",
+              "required": true,
+              "default": 1.5,
+              "signed": false,
+              "array": true
+            },
+            "as": "o3063"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": 1.5,
+              "signed": false,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total",
+              "default": "9223372036854775808",
+              "signed": false
+            },
+            "as": "o3064"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": "9223372036854775808",
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testRelationshipPersistsSevenXOptionsShapePlusSide",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            },
+            "as": "o3065"
+          },
+          "bind": "s4452",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "comments",
+              "relationship": {
+                "$obj": "o3065"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o3066"
+          },
+          "bind": "s4453",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "comments",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "comments",
+                  "type": {
+                    "$enum": "RelationshipType::OneToMany"
+                  },
+                  "twoWay": true,
+                  "key": "comments",
+                  "twoWayKey": "post",
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Cascade"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3066"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3067"
+          },
+          "bind": "s4454",
+          "expect": {
+            "$document": {
+              "$id": "comments",
+              "key": "comments",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "comments",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "post",
+                "onDelete": "cascade",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3067"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "relationship"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3067"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "key"
+            }
+          },
+          "expect": "comments"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3067"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3067"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3067"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "options"
+            }
+          },
+          "expect": {
+            "relatedCollection": "comments",
+            "relationType": "oneToMany",
+            "twoWay": true,
+            "twoWayKey": "post",
+            "onDelete": "cascade",
+            "side": "parent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testRelationshipAdoptsTheAttributeKeyWhenTheRelationshipHasNone",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users"
+            },
+            "as": "o3068"
+          },
+          "bind": "s4460",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "author",
+              "relationship": {
+                "$obj": "o3068"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            },
+            "as": "o3069"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "author",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "users",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "author",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeFactoryTest::testRelationshipRejectsAMismatchedKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users",
+              "key": "writer"
+            },
+            "as": "o3070"
+          },
+          "bind": "s4462",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "writer",
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "author",
+              "relationship": {
+                "$obj": "o3070"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Relationship key \"writer\" does not match attribute key \"author\""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

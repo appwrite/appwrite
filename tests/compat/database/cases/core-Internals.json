@@ -1,0 +1,3081 @@
+{
+  "cases": [
+    {
+      "name": "settings, toggles and statics",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_max_uid_length",
+          "args": {},
+          "expect": 36
+        },
+        {
+          "op": "database.is_profiling",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_profiling",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_profiling",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.is_validating",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.with_validation",
+          "args": {
+            "validation": false,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.is_validating",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.is_validating",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.with_validation",
+          "args": {
+            "validation": false,
+            "callback": {
+              "steps": [
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "left early"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "left early"
+            }
+          }
+        },
+        {
+          "op": "database.is_validating",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.is_filtering",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.with_filtering",
+          "args": {
+            "filtering": false,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.is_filtering",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_filtering",
+          "args": {
+            "filtering": true,
+            "filters": [
+              "json"
+            ],
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.is_filtering",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.is_filtering",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.is_checking_grants",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_checking_grants",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.is_checking_grants",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_schemaless",
+          "args": {
+            "schemaless": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support schemaless"
+            }
+          }
+        },
+        {
+          "op": "database.set_schemaless",
+          "args": {
+            "schemaless": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_cache_writer_timeout",
+          "args": {
+            "seconds": 5
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_filters",
+          "args": {},
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "database.set_filters",
+          "args": {
+            "filters": [
+              "rot13",
+              {
+                "$codec": "prefixed",
+                "prefix": "p:"
+              }
+            ]
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_filters",
+          "args": {},
+          "expect": {
+            "$registry": [
+              "rot13",
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "database.set_filters",
+          "args": {
+            "filters": []
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_filters",
+          "args": {},
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "database.collection_definition",
+          "args": {},
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.internal_attributes_for",
+          "args": {
+            "sharedTables": false
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.internal_attributes_for",
+          "args": {
+            "sharedTables": true
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$tenant",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "snapshots, restored authorization and query hooks",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "hooks": [
+              "Relationships",
+              "Permissions",
+              {
+                "$hook": "Queries",
+                "limit": 1
+              }
+            ]
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "size": 64,
+                "required": true
+              }
+            },
+            "as": "a1"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "text",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "notes",
+            "attribute": {
+              "$obj": "a1"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "text",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "notes",
+            "document": {
+              "$id": "one",
+              "text": "one"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "text": "one",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "notes",
+            "document": {
+              "$id": "two",
+              "text": "two"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "text": "two",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "notes"
+          },
+          "expect": [
+            {
+              "$document": {
+                "text": "one",
+                "$id": "one",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.skip_query_hooks",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "notes"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "text": "one",
+                  "$id": "one",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "notes"
+                }
+              },
+              {
+                "$document": {
+                  "text": "two",
+                  "$id": "two",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "notes"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "text": "one",
+                          "$id": "one",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "notes"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "text": "two",
+                          "$id": "two",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "notes"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_query_hooks",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "no hooks"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "no hooks"
+            }
+          }
+        },
+        {
+          "op": "database.snapshot",
+          "args": {
+            "as": "snap"
+          },
+          "expect": {
+            "$value": "State\\Snapshot",
+            "fields": {
+              "authorization": true,
+              "roles": [
+                "any"
+              ],
+              "relationships": true,
+              "existCheck": true,
+              "population": false,
+              "silenced": false,
+              "silencedListeners": [],
+              "tenant": null,
+              "filters": true,
+              "disabledFilters": [],
+              "validation": true,
+              "preserveDates": false,
+              "preserveSequence": false,
+              "ignoreDuplicates": false,
+              "requestTimestamp": null,
+              "checkGrants": false,
+              "rewriting": true
+            }
+          }
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.snapshot",
+          "args": {},
+          "expect": {
+            "$value": "State\\Snapshot",
+            "fields": {
+              "authorization": false,
+              "roles": [
+                "any",
+                "user:x"
+              ],
+              "relationships": true,
+              "existCheck": true,
+              "population": false,
+              "silenced": false,
+              "silencedListeners": [],
+              "tenant": null,
+              "filters": true,
+              "disabledFilters": [],
+              "validation": true,
+              "preserveDates": false,
+              "preserveSequence": false,
+              "ignoreDuplicates": false,
+              "requestTimestamp": null,
+              "checkGrants": false,
+              "rewriting": true
+            }
+          }
+        },
+        {
+          "op": "database.with_snapshot",
+          "args": {
+            "snapshot": {
+              "$obj": "snap"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "db.authorization.get_status",
+                  "args": {}
+                },
+                {
+                  "op": "db.authorization.get_roles",
+                  "args": {}
+                },
+                {
+                  "op": "database.with_tenant",
+                  "args": {
+                    "tenant": null,
+                    "callback": true
+                  }
+                },
+                {
+                  "op": "database.is_validating",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    [
+                      "any"
+                    ],
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    },
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "user:x"
+          ]
+        },
+        {
+          "op": "db.authorization.restore",
+          "args": {
+            "status": true,
+            "roles": [
+              "any"
+            ],
+            "callback": {
+              "steps": [
+                {
+                  "op": "db.authorization.get_status",
+                  "args": {}
+                },
+                {
+                  "op": "db.authorization.get_roles",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "any"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    [
+                      "any"
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "user:x"
+          ]
+        },
+        {
+          "op": "db.authorization.restore",
+          "args": {
+            "status": true,
+            "roles": [],
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "notes",
+                    "document": {
+                      "$id": "three",
+                      "text": "three"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"create\" permission for role \"any\". Only \"[]\" scopes are allowed and \"[\"any\"]\" was given."
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_status",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "user:x"
+          ]
+        },
+        {
+          "op": "db.authorization.enable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "raw statements need authorization skipped",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 64,
+                "required": true
+              }
+            },
+            "as": "a1"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "books",
+            "attribute": {
+              "$obj": "a1"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "books",
+            "document": {
+              "$id": "dune",
+              "title": "Dune"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "books",
+            "document": {
+              "$id": "emma",
+              "title": "Emma"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.from",
+          "args": {
+            "collection": "books"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "database.query",
+          "args": {
+            "query": {
+              "query": "SELECT \"_uid\" FROM \"${ns}\".\"compat_books\"",
+              "bindings": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "database.mutate",
+          "args": {
+            "query": {
+              "query": "DELETE FROM \"${ns}\".\"compat_books\"",
+              "bindings": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "The query builder bypasses permissions, caches and events: build and run it inside getAuthorization()->skip()"
+            }
+          }
+        },
+        {
+          "op": "database.schema",
+          "args": {},
+          "expect": {
+            "$schema": true
+          }
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.from",
+          "args": {
+            "collection": "books",
+            "alias": "b"
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "database.query",
+          "args": {
+            "query": {
+              "query": "SELECT \"_uid\", \"title\" FROM \"${ns}\".\"compat_books\" ORDER BY \"_uid\"",
+              "bindings": []
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "_uid": "dune",
+                "title": "Dune"
+              }
+            },
+            {
+              "$document": {
+                "_uid": "emma",
+                "title": "Emma"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.query",
+          "args": {
+            "query": {
+              "query": "SELECT \"title\" FROM \"${ns}\".\"compat_books\" WHERE \"_uid\" = ?",
+              "bindings": [
+                "emma"
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Emma"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.mutate",
+          "args": {
+            "query": {
+              "query": "UPDATE \"${ns}\".\"compat_books\" SET \"title\" = ? WHERE \"_uid\" = ?",
+              "bindings": [
+                "Dune Messiah",
+                "dune"
+              ]
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.mutate",
+          "args": {
+            "query": {
+              "query": "UPDATE \"${ns}\".\"compat_books\" SET \"title\" = ? WHERE \"_uid\" = ?",
+              "bindings": [
+                "Nobody",
+                "nobody"
+              ]
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.query",
+          "args": {
+            "query": {
+              "query": "SELECT \"nope\" FROM \"${ns}\".\"compat_books\"",
+              "bindings": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "database.schema",
+          "args": {},
+          "expect": {
+            "$schema": true
+          }
+        },
+        {
+          "op": "db.authorization.enable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collection": "books",
+            "id": "dune"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "books",
+            "id": "dune"
+          },
+          "expect": {
+            "$document": {
+              "title": "Dune Messiah",
+              "$sequence": "1",
+              "$id": "dune",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "staged writes: authorize, prepare and write prepared",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "c1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 64,
+                "required": true
+              }
+            },
+            "as": "a1"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "books",
+            "attribute": {
+              "$obj": "a1"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "year",
+                "key": "year",
+                "type": "integer",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a2"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "books",
+            "attribute": {
+              "$obj": "a2"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.authorize_create",
+          "args": {
+            "collection": "books",
+            "document": {
+              "$id": "dune",
+              "title": "Dune"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "database.authorize_create",
+          "args": {
+            "collection": "missing",
+            "document": {
+              "$id": "dune",
+              "title": "Dune"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.authorize_create",
+          "args": {
+            "collection": "books",
+            "document": {
+              "$id": "dune",
+              "title": "Dune"
+            },
+            "resolve": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "resolve": []
+            }
+          }
+        },
+        {
+          "op": "database.authorize_update",
+          "args": {
+            "collection": "books",
+            "old": {
+              "$id": "dune",
+              "title": "Dune",
+              "$permissions": []
+            },
+            "document": {
+              "title": "Dune 2"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "database.authorize_update",
+          "args": {
+            "collection": "books",
+            "old": {
+              "$id": "dune",
+              "title": "Dune",
+              "$permissions": [
+                "update(\"any\")"
+              ]
+            },
+            "document": {
+              "title": "Dune 2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "database.authorize_update",
+          "args": {
+            "collection": "missing",
+            "old": {
+              "$id": "dune"
+            },
+            "document": {
+              "title": "Dune 2"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.authorize_grants",
+          "args": {
+            "collection": "missing",
+            "document": {
+              "$id": "dune"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.authorize_grants",
+          "args": {
+            "collection": "books",
+            "document": {
+              "$id": "dune",
+              "title": "Dune"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "database.authorize_grants",
+          "args": {
+            "collection": "missing",
+            "document": {
+              "$id": "dune"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.set_check_grants",
+          "args": {
+            "check": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "books",
+            "as": "col"
+          },
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.prepare_create",
+          "args": {
+            "collection": {
+              "$obj": "col"
+            },
+            "document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 1965,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "p1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 1965,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>"
+            }
+          }
+        },
+        {
+          "op": "database.prepare_create",
+          "args": {
+            "collection": {
+              "$obj": "col"
+            },
+            "document": {
+              "$id": "emma",
+              "title": "Emma",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "p2"
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>"
+            }
+          }
+        },
+        {
+          "op": "database.prepare_create",
+          "args": {
+            "collection": {
+              "$obj": "col"
+            },
+            "document": {
+              "$id": "bad",
+              "year": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"title\""
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "books"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.create_prepared",
+          "args": {
+            "documents": [
+              [
+                {
+                  "$obj": "col"
+                },
+                {
+                  "$obj": "p1"
+                }
+              ],
+              [
+                {
+                  "$obj": "col"
+                },
+                {
+                  "$obj": "p2"
+                }
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "books"
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Dune",
+                "year": 1965,
+                "$id": "dune",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "books"
+              }
+            },
+            {
+              "$document": {
+                "title": "Emma",
+                "year": null,
+                "$id": "emma",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "books"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.prepare_create",
+          "args": {
+            "collection": {
+              "$obj": "col"
+            },
+            "document": {
+              "$id": "dune",
+              "title": "Dune again",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "p3"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune again",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>"
+            }
+          }
+        },
+        {
+          "op": "database.create_prepared",
+          "args": {
+            "documents": [
+              [
+                {
+                  "$obj": "col"
+                },
+                {
+                  "$obj": "p3"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "database.create_prepared",
+          "args": {
+            "documents": []
+          },
+          "expect": null
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "books"
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "x",
+                "$collection": "books",
+                "title": "X",
+                "year": 1,
+                "extra": true
+              }
+            },
+            "as": "d1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "$collection": "books",
+              "title": "X",
+              "year": 1,
+              "extra": true
+            }
+          }
+        },
+        {
+          "op": "database.apply_select_filters_to_documents",
+          "args": {
+            "documents": [
+              {
+                "$obj": "d1"
+              }
+            ],
+            "selectQueries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "values": [
+                    "title"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "d1"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "x",
+            "$collection": "books",
+            "title": "X"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "y",
+                "title": "Y",
+                "year": 2
+              }
+            },
+            "as": "d2"
+          },
+          "expect": {
+            "$document": {
+              "$id": "y",
+              "title": "Y",
+              "year": 2
+            }
+          }
+        },
+        {
+          "op": "database.apply_select_filters_to_documents",
+          "args": {
+            "documents": [
+              {
+                "$obj": "d2"
+              }
+            ],
+            "selectQueries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "values": [
+                    "*"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "d2"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "y",
+            "title": "Y",
+            "year": 2
+          }
+        },
+        {
+          "op": "database.apply_select_filters_to_documents",
+          "args": {
+            "documents": [],
+            "selectQueries": []
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "indexes in one call and savepoints",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c1"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 64,
+                "required": true
+              }
+            },
+            "as": "a1"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "books",
+            "attribute": {
+              "$obj": "a1"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "year",
+                "key": "year",
+                "type": "integer",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a2"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "books",
+            "attribute": {
+              "$obj": "a2"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_title",
+                "key": "by_title",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ]
+              }
+            },
+            "as": "i1"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_year",
+                "key": "by_year",
+                "type": "unique",
+                "attributes": [
+                  "year"
+                ]
+              }
+            },
+            "as": "i2"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_year",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "year"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "books",
+            "indexes": [
+              {
+                "$obj": "i1"
+              },
+              {
+                "$obj": "i2"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_title",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_year",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "year"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "books",
+            "indexes": [
+              {
+                "$obj": "i1"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
+            }
+          }
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "missing",
+            "indexes": [
+              {
+                "$obj": "i1"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.create_indexes",
+          "args": {
+            "collection": "books",
+            "indexes": []
+          },
+          "expect": []
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "books"
+          },
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_title",
+                    "key": "by_title",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "by_year",
+                    "key": "by_year",
+                    "type": "unique",
+                    "attributes": [
+                      "year"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "books",
+                    "document": {
+                      "$id": "dune",
+                      "title": "Dune",
+                      "year": 1965
+                    }
+                  }
+                },
+                {
+                  "op": "database.with_savepoint",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.create_document",
+                          "args": {
+                            "collection": "books",
+                            "document": {
+                              "$id": "emma",
+                              "title": "Emma",
+                              "year": 1965
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "fallback": {
+                      "steps": [
+                        {
+                          "op": "$return",
+                          "args": {
+                            "value": "fell back"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "return": true
+                },
+                {
+                  "op": "database.with_savepoint",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.create_document",
+                          "args": {
+                            "collection": "books",
+                            "document": {
+                              "$id": "heat",
+                              "title": "Heat",
+                              "year": 1995
+                            }
+                          },
+                          "return": true
+                        }
+                      ]
+                    },
+                    "fallback": true
+                  }
+                },
+                {
+                  "op": "database.with_savepoint",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.create_document",
+                          "args": {
+                            "collection": "books",
+                            "document": {
+                              "$id": "gone",
+                              "title": "Gone",
+                              "year": 2000
+                            }
+                          }
+                        },
+                        {
+                          "op": "$throw",
+                          "args": {
+                            "class": "Exception",
+                            "message": "undo this one"
+                          }
+                        }
+                      ]
+                    },
+                    "fallback": {
+                      "steps": [
+                        {
+                          "op": "$return",
+                          "args": {
+                            "value": "recovered"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "fell back",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "dune",
+                        "title": "Dune",
+                        "year": 1965,
+                        "$collection": "books",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "result": "fell back",
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$error": {
+                                  "class": "Utopia\\Database\\Exception\\Unique",
+                                  "message": "Unique index violation"
+                                }
+                              }
+                            ]
+                          }
+                        ],
+                        "fallback": [
+                          {
+                            "args": [
+                              {
+                                "$error": {
+                                  "class": "Utopia\\Database\\Exception\\Unique",
+                                  "message": "Unique index violation"
+                                }
+                              }
+                            ],
+                            "steps": [
+                              null
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "result": {
+                        "$document": {
+                          "$id": "heat",
+                          "title": "Heat",
+                          "year": 1995,
+                          "$collection": "books",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$sequence": "3"
+                        }
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "heat",
+                                  "title": "Heat",
+                                  "year": 1995,
+                                  "$collection": "books",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$sequence": "3"
+                                }
+                              }
+                            ]
+                          }
+                        ],
+                        "fallback": []
+                      }
+                    },
+                    {
+                      "result": "recovered",
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "gone",
+                                  "title": "Gone",
+                                  "year": 2000,
+                                  "$collection": "books",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$sequence": "4"
+                                }
+                              },
+                              null
+                            ]
+                          }
+                        ],
+                        "fallback": [
+                          {
+                            "args": [
+                              {
+                                "$error": {
+                                  "class": "Exception",
+                                  "message": "undo this one"
+                                }
+                              }
+                            ],
+                            "steps": [
+                              null
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "books",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Dune",
+                "year": 1965,
+                "$id": "dune",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "books"
+              }
+            },
+            {
+              "$document": {
+                "title": "Heat",
+                "year": 1995,
+                "$id": "heat",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "books"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.with_savepoint",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "books",
+                    "document": {
+                      "$id": "solo",
+                      "title": "Solo",
+                      "year": 2018
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            },
+            "fallback": true
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "solo",
+                "title": "Solo",
+                "year": 2018,
+                "$collection": "books",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "5"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "solo",
+                        "title": "Solo",
+                        "year": 2018,
+                        "$collection": "books",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "5"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "fallback": []
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "books"
+          },
+          "expect": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,355 @@
+{
+  "source": "packages/abuse/tests/TokenBucketTest.php",
+  "cases": [
+    {
+      "name": "reset uses fractional balance",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 2,
+            "refill_rate": 0.1,
+            "available": 1.5,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1015
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1005
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty bucket is limited",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 2,
+            "refill_rate": 0.1,
+            "available": 0.5,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1015
+          }
+        }
+      ]
+    },
+    {
+      "name": "exactly one token",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 2,
+            "refill_rate": 0.1,
+            "available": 1.0,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1020
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1010
+          }
+        }
+      ]
+    },
+    {
+      "name": "fractional time rounds the reset up",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 10,
+            "refill_rate": 3.0,
+            "available": 10.0,
+            "time": 1000.4
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": 1001
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": 1001
+          }
+        }
+      ]
+    },
+    {
+      "name": "negative capacity without refill divides by zero",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": -1,
+            "refill_rate": 0.0,
+            "available": 0.5,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "DivisionByZeroError",
+              "message": "Division by zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero capacity is unlimited at the double's time",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 0,
+            "refill_rate": 0.0,
+            "available": 0.5,
+            "time": 1234.9
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1234
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1234
+          }
+        }
+      ]
+    },
+    {
+      "name": "huge balance",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 5,
+            "refill_rate": 1.0,
+            "available": 1e+30,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 5076964154930102271,
+            "reset": -5076964154930102272
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset and logs of the double",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "fixed",
+            "key": "fixed",
+            "tokens": 2,
+            "refill_rate": 0.1,
+            "available": 1.5,
+            "time": 1000.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

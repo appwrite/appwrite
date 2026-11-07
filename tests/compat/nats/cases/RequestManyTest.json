@@ -1,0 +1,386 @@
+{
+  "source": "packages/nats/tests/E2E/RequestManyTest.php",
+  "cases": [
+    {
+      "name": "collects every responder",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.all.${ns}",
+            "mode": "echo",
+            "prefix": "r1"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.all.${ns}",
+            "mode": "echo",
+            "prefix": "r2"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.all.${ns}",
+            "mode": "echo",
+            "prefix": "r3"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.all.${ns}",
+            "timeout": 2.0
+          },
+          "expect": {
+            "bodies": [
+              "r1",
+              "r2",
+              "r3"
+            ]
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "max stops early",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.max.${ns}",
+            "mode": "echo",
+            "prefix": "r1"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.max.${ns}",
+            "mode": "echo",
+            "prefix": "r2"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.max.${ns}",
+            "mode": "echo",
+            "prefix": "r3"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.max.${ns}",
+            "max": 2,
+            "timeout": 2.0
+          },
+          "mask": {
+            "paths": [
+              "/bodies/*"
+            ],
+            "reason": "which two of the three responders answer first varies"
+          },
+          "expect": {
+            "bodies": [
+              "<masked>",
+              "<masked>"
+            ]
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the timeout bounds collection when max is not reached",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.timeout.${ns}",
+            "mode": "echo",
+            "prefix": "r1"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.timeout.${ns}",
+            "mode": "echo",
+            "prefix": "r2"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.timeout.${ns}",
+            "mode": "echo",
+            "prefix": "r3"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.timeout.${ns}",
+            "max": 10,
+            "timeout": 0.8,
+            "at_least": 0.7
+          },
+          "expect": {
+            "bodies": [
+              "r1",
+              "r2",
+              "r3"
+            ],
+            "at_least": true
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a stall stops before the timeout",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.stall.${ns}",
+            "mode": "echo",
+            "prefix": "r1"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.stall.${ns}",
+            "mode": "echo",
+            "prefix": "r2"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.stall.${ns}",
+            "mode": "echo",
+            "prefix": "r3"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.stall.${ns}",
+            "timeout": 10.0,
+            "stall": 0.3,
+            "within": 5.0
+          },
+          "expect": {
+            "bodies": [
+              "r1",
+              "r2",
+              "r3"
+            ],
+            "within": true
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "empty when nobody responds",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "rm.none.${ns}",
+            "timeout": 2.0
+          },
+          "expect": {
+            "bodies": []
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

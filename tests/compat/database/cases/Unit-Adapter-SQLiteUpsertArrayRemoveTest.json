@@ -1,0 +1,3335 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQLiteUpsertArrayRemoveTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteUpsertArrayRemoveTest::testAnUpsertOfAnExistingDocumentRemovesTheElementAsAnUpdateDoes#an integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o699"
+          },
+          "bind": "s1293",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o699"
+              },
+              "cache": "none"
+            },
+            "as": "o700"
+          },
+          "bind": "s1294",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o701"
+          },
+          "bind": "s1297",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o701"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "numbers",
+              "array": true
+            },
+            "as": "o702"
+          },
+          "bind": "s1300",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratios",
+              "array": true
+            },
+            "as": "o703"
+          },
+          "bind": "s1301",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratios",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "words",
+              "size": 16,
+              "array": true
+            },
+            "as": "o704"
+          },
+          "bind": "s1302",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "words",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o705"
+          },
+          "bind": "s1303",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o705"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o706"
+          },
+          "bind": "s1305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o706"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o707"
+          },
+          "bind": "s1307",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o707"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o702"
+                },
+                {
+                  "$obj": "o703"
+                },
+                {
+                  "$obj": "o704"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o708"
+          },
+          "bind": "s1309",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o708"
+              }
+            },
+            "as": "o709"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "numbers": [
+                  1,
+                  2,
+                  2,
+                  3
+                ]
+              }
+            },
+            "as": "o710"
+          },
+          "bind": "s1311",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "numbers": [
+                1,
+                2,
+                2,
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o710"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "numbers": [
+                1,
+                2,
+                2,
+                3
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "ratios": [],
+              "words": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "updated",
+                "numbers": [
+                  1,
+                  2,
+                  2,
+                  3
+                ]
+              }
+            },
+            "as": "o711"
+          },
+          "bind": "s1313",
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "numbers": [
+                1,
+                2,
+                2,
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o711"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "numbers": [
+                1,
+                2,
+                2,
+                3
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "ratios": [],
+              "words": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": 2
+            },
+            "as": "o712"
+          },
+          "bind": "s1315",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "numbers": {
+                  "$obj": "o712"
+                }
+              }
+            },
+            "as": "o713"
+          },
+          "bind": "s1316",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "numbers": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "upsertDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o713"
+              }
+            },
+            "as": "o714"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [
+                1,
+                3
+              ],
+              "ratios": [],
+              "words": [],
+              "$id": "upserted",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": 2
+            },
+            "as": "o715"
+          },
+          "bind": "s1318",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "numbers": {
+                  "$obj": "o715"
+                }
+              }
+            },
+            "as": "o716"
+          },
+          "bind": "s1319",
+          "expect": {
+            "$document": {
+              "numbers": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated",
+              "document": {
+                "$obj": "o716"
+              }
+            },
+            "as": "o717"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [
+                1,
+                3
+              ],
+              "ratios": [],
+              "words": [],
+              "$id": "updated",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated"
+            },
+            "as": "o718"
+          },
+          "bind": "s1321",
+          "expect": {
+            "$document": {
+              "numbers": [
+                1,
+                3
+              ],
+              "ratios": [],
+              "words": [],
+              "$sequence": "2",
+              "$id": "updated",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o718"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "numbers"
+            }
+          },
+          "expect": [
+            1,
+            3
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o700"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "upserted"
+            },
+            "as": "o719"
+          },
+          "bind": "s1323",
+          "expect": {
+            "$document": {
+              "numbers": [
+                1,
+                3
+              ],
+              "ratios": [],
+              "words": [],
+              "$sequence": "1",
+              "$id": "upserted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o719"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "numbers"
+            }
+          },
+          "expect": [
+            1,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SQLiteUpsertArrayRemoveTest::testAnUpsertOfAnExistingDocumentRemovesTheElementAsAnUpdateDoes#a float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o720"
+          },
+          "bind": "s1325",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o720"
+              },
+              "cache": "none"
+            },
+            "as": "o721"
+          },
+          "bind": "s1326",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o722"
+          },
+          "bind": "s1329",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o722"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "numbers",
+              "array": true
+            },
+            "as": "o723"
+          },
+          "bind": "s1332",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratios",
+              "array": true
+            },
+            "as": "o724"
+          },
+          "bind": "s1333",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratios",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "words",
+              "size": 16,
+              "array": true
+            },
+            "as": "o725"
+          },
+          "bind": "s1334",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "words",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o726"
+          },
+          "bind": "s1335",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o726"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o727"
+          },
+          "bind": "s1337",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o727"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o728"
+          },
+          "bind": "s1339",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o728"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o723"
+                },
+                {
+                  "$obj": "o724"
+                },
+                {
+                  "$obj": "o725"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o729"
+          },
+          "bind": "s1341",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o729"
+              }
+            },
+            "as": "o730"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "ratios": [
+                  0.5,
+                  1.5,
+                  0.5
+                ]
+              }
+            },
+            "as": "o731"
+          },
+          "bind": "s1343",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "ratios": [
+                0.5,
+                1.5,
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o731"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "ratios": [
+                0.5,
+                1.5,
+                0.5
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "numbers": [],
+              "words": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "updated",
+                "ratios": [
+                  0.5,
+                  1.5,
+                  0.5
+                ]
+              }
+            },
+            "as": "o732"
+          },
+          "bind": "s1345",
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "ratios": [
+                0.5,
+                1.5,
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o732"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "ratios": [
+                0.5,
+                1.5,
+                0.5
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "numbers": [],
+              "words": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": 0.5
+            },
+            "as": "o733"
+          },
+          "bind": "s1347",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "ratios": {
+                  "$obj": "o733"
+                }
+              }
+            },
+            "as": "o734"
+          },
+          "bind": "s1348",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "ratios": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "upsertDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o734"
+              }
+            },
+            "as": "o735"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [
+                1.5
+              ],
+              "words": [],
+              "$id": "upserted",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": 0.5
+            },
+            "as": "o736"
+          },
+          "bind": "s1350",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "ratios": {
+                  "$obj": "o736"
+                }
+              }
+            },
+            "as": "o737"
+          },
+          "bind": "s1351",
+          "expect": {
+            "$document": {
+              "ratios": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated",
+              "document": {
+                "$obj": "o737"
+              }
+            },
+            "as": "o738"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [
+                1.5
+              ],
+              "words": [],
+              "$id": "updated",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated"
+            },
+            "as": "o739"
+          },
+          "bind": "s1353",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [
+                1.5
+              ],
+              "words": [],
+              "$sequence": "2",
+              "$id": "updated",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o739"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "ratios"
+            }
+          },
+          "expect": [
+            1.5
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o721"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "upserted"
+            },
+            "as": "o740"
+          },
+          "bind": "s1355",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [
+                1.5
+              ],
+              "words": [],
+              "$sequence": "1",
+              "$id": "upserted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o740"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "ratios"
+            }
+          },
+          "expect": [
+            1.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SQLiteUpsertArrayRemoveTest::testAnUpsertOfAnExistingDocumentRemovesTheElementAsAnUpdateDoes#a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o741"
+          },
+          "bind": "s1357",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o741"
+              },
+              "cache": "none"
+            },
+            "as": "o742"
+          },
+          "bind": "s1358",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o743"
+          },
+          "bind": "s1361",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o743"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "numbers",
+              "array": true
+            },
+            "as": "o744"
+          },
+          "bind": "s1364",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratios",
+              "array": true
+            },
+            "as": "o745"
+          },
+          "bind": "s1365",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratios",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "words",
+              "size": 16,
+              "array": true
+            },
+            "as": "o746"
+          },
+          "bind": "s1366",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "words",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o747"
+          },
+          "bind": "s1367",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o747"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o748"
+          },
+          "bind": "s1369",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o748"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o749"
+          },
+          "bind": "s1371",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o749"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o744"
+                },
+                {
+                  "$obj": "o745"
+                },
+                {
+                  "$obj": "o746"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o750"
+          },
+          "bind": "s1373",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o750"
+              }
+            },
+            "as": "o751"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "words": [
+                  "a",
+                  "b",
+                  "b"
+                ]
+              }
+            },
+            "as": "o752"
+          },
+          "bind": "s1375",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": [
+                "a",
+                "b",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o752"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": [
+                "a",
+                "b",
+                "b"
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "numbers": [],
+              "ratios": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "updated",
+                "words": [
+                  "a",
+                  "b",
+                  "b"
+                ]
+              }
+            },
+            "as": "o753"
+          },
+          "bind": "s1377",
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "words": [
+                "a",
+                "b",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o753"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "words": [
+                "a",
+                "b",
+                "b"
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "numbers": [],
+              "ratios": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": "b"
+            },
+            "as": "o754"
+          },
+          "bind": "s1379",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "words": {
+                  "$obj": "o754"
+                }
+              }
+            },
+            "as": "o755"
+          },
+          "bind": "s1380",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "upsertDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o755"
+              }
+            },
+            "as": "o756"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "a"
+              ],
+              "$id": "upserted",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": "b"
+            },
+            "as": "o757"
+          },
+          "bind": "s1382",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "words": {
+                  "$obj": "o757"
+                }
+              }
+            },
+            "as": "o758"
+          },
+          "bind": "s1383",
+          "expect": {
+            "$document": {
+              "words": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated",
+              "document": {
+                "$obj": "o758"
+              }
+            },
+            "as": "o759"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "a"
+              ],
+              "$id": "updated",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated"
+            },
+            "as": "o760"
+          },
+          "bind": "s1385",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "a"
+              ],
+              "$sequence": "2",
+              "$id": "updated",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o760"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "words"
+            }
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o742"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "upserted"
+            },
+            "as": "o761"
+          },
+          "bind": "s1387",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "a"
+              ],
+              "$sequence": "1",
+              "$id": "upserted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o761"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "words"
+            }
+          },
+          "expect": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SQLiteUpsertArrayRemoveTest::testAnUpsertOfAnExistingDocumentRemovesTheElementAsAnUpdateDoes#a numeric string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o762"
+          },
+          "bind": "s1389",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o762"
+              },
+              "cache": "none"
+            },
+            "as": "o763"
+          },
+          "bind": "s1390",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "upsert_array_remove"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o764"
+          },
+          "bind": "s1393",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o764"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "numbers",
+              "array": true
+            },
+            "as": "o765"
+          },
+          "bind": "s1396",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratios",
+              "array": true
+            },
+            "as": "o766"
+          },
+          "bind": "s1397",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratios",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "words",
+              "size": 16,
+              "array": true
+            },
+            "as": "o767"
+          },
+          "bind": "s1398",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "words",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o768"
+          },
+          "bind": "s1399",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o768"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o769"
+          },
+          "bind": "s1401",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o769"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o770"
+          },
+          "bind": "s1403",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o770"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o765"
+                },
+                {
+                  "$obj": "o766"
+                },
+                {
+                  "$obj": "o767"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o771"
+          },
+          "bind": "s1405",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o771"
+              }
+            },
+            "as": "o772"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "numbers",
+                    "key": "numbers",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratios",
+                    "key": "ratios",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "words",
+                    "key": "words",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "words": [
+                  "1",
+                  "2",
+                  "2"
+                ]
+              }
+            },
+            "as": "o773"
+          },
+          "bind": "s1407",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": [
+                "1",
+                "2",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o773"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": [
+                "1",
+                "2",
+                "2"
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "numbers": [],
+              "ratios": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "updated",
+                "words": [
+                  "1",
+                  "2",
+                  "2"
+                ]
+              }
+            },
+            "as": "o774"
+          },
+          "bind": "s1409",
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "words": [
+                "1",
+                "2",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o774"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "updated",
+              "words": [
+                "1",
+                "2",
+                "2"
+              ],
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "numbers": [],
+              "ratios": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": "2"
+            },
+            "as": "o775"
+          },
+          "bind": "s1411",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "upserted",
+                "words": {
+                  "$obj": "o775"
+                }
+              }
+            },
+            "as": "o776"
+          },
+          "bind": "s1412",
+          "expect": {
+            "$document": {
+              "$id": "upserted",
+              "words": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "2"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "upsertDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o776"
+              }
+            },
+            "as": "o777"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "1"
+              ],
+              "$id": "upserted",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayRemove",
+            "args": {
+              "value": "2"
+            },
+            "as": "o778"
+          },
+          "bind": "s1414",
+          "expect": {
+            "$operator": {
+              "method": "arrayRemove",
+              "attribute": "",
+              "values": [
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "words": {
+                  "$obj": "o778"
+                }
+              }
+            },
+            "as": "o779"
+          },
+          "bind": "s1415",
+          "expect": {
+            "$document": {
+              "words": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "2"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated",
+              "document": {
+                "$obj": "o779"
+              }
+            },
+            "as": "o780"
+          },
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "1"
+              ],
+              "$id": "updated",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "updated"
+            },
+            "as": "o781"
+          },
+          "bind": "s1417",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "1"
+              ],
+              "$sequence": "2",
+              "$id": "updated",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o781"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "words"
+            }
+          },
+          "expect": [
+            "1"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o763"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "upserted"
+            },
+            "as": "o782"
+          },
+          "bind": "s1419",
+          "expect": {
+            "$document": {
+              "numbers": [],
+              "ratios": [],
+              "words": [
+                "1"
+              ],
+              "$sequence": "1",
+              "$id": "upserted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o782"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "words"
+            }
+          },
+          "expect": [
+            "1"
+          ]
+        }
+      ]
+    }
+  ]
+}

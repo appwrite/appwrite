@@ -1,0 +1,1330 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/DeleteSettingsTest.php",
+  "cases": [
+    {
+      "name": "testDefaultDeleteEmitsLightweightDeleteFrom",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ?",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ?",
+        [
+          "2024-01-01 00:00:00"
+        ],
+        [
+          "2024-01-01 00:00:00"
+        ],
+        "DELETE FROM `audit_log` WHERE `time` < ?",
+        "DELETE FROM `audit_log` WHERE `time` < ?",
+        [
+          "2024-01-01 00:00:00"
+        ]
+      ]
+    },
+    {
+      "name": "testLightweightDeleteWithAsyncSetting",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "lightweight_deletes_sync": "0"
+              }
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0",
+        [
+          "2024-01-01 00:00:00"
+        ],
+        [
+          "2024-01-01 00:00:00"
+        ],
+        "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0",
+        "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0",
+        [
+          "2024-01-01 00:00:00"
+        ]
+      ]
+    },
+    {
+      "name": "testMutationDeleteOptIn",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "const": "DELETE_MODE_MUTATION",
+            "class": "Builder\\ClickHouse"
+          },
+          {
+            "call": "deleteMode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mutation"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        "mutation",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `audit_log` DELETE WHERE `time` < ?",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `audit_log` DELETE WHERE `time` < ?",
+        [
+          "2024-01-01 00:00:00"
+        ],
+        [
+          "2024-01-01 00:00:00"
+        ],
+        "ALTER TABLE `audit_log` DELETE WHERE `time` < ?",
+        "ALTER TABLE `audit_log` DELETE WHERE `time` < ?",
+        [
+          "2024-01-01 00:00:00"
+        ]
+      ]
+    },
+    {
+      "name": "testMutationDeleteWithAsyncSetting",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "const": "DELETE_MODE_MUTATION",
+            "class": "Builder\\ClickHouse"
+          },
+          {
+            "call": "deleteMode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mutation"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "mutations_sync": "0"
+              }
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        "mutation",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `audit_log` DELETE WHERE `time` < ? SETTINGS mutations_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `audit_log` DELETE WHERE `time` < ? SETTINGS mutations_sync=0"
+      ]
+    },
+    {
+      "name": "testBuilderEmitsSettingsClauseUnchangedForBothModes",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "lightweight_deletes_sync": "0",
+                "mutations_sync": "0"
+              }
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "const": "DELETE_MODE_MUTATION",
+            "class": "Builder\\ClickHouse"
+          },
+          {
+            "call": "deleteMode",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "mutation"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "lightweight_deletes_sync": "0",
+                "mutations_sync": "0"
+              }
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0, mutations_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0, mutations_sync=0",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 4
+        },
+        "mutation",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "ALTER TABLE `audit_log` DELETE WHERE `time` < ? SETTINGS lightweight_deletes_sync=0, mutations_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `audit_log` DELETE WHERE `time` < ? SETTINGS lightweight_deletes_sync=0, mutations_sync=0"
+      ]
+    },
+    {
+      "name": "testLightweightDeleteWithHint",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "lightweight_deletes_sync=0"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ? SETTINGS lightweight_deletes_sync=0"
+      ]
+    },
+    {
+      "name": "testLightweightDeleteWithCompoundWhereAndSettings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "lightweight_deletes_sync": "0"
+              }
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ? AND `tenant` IN (?) SETTINGS lightweight_deletes_sync=0",
+            "bindings": [
+              "2024-01-01 00:00:00",
+              "acme"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ? AND `tenant` IN (?) SETTINGS lightweight_deletes_sync=0",
+        [
+          "2024-01-01 00:00:00",
+          "acme"
+        ]
+      ]
+    },
+    {
+      "name": "testDeleteModeRejectsUnknownMode",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "deleteMode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "truncate"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid ClickHouse delete mode: truncate. Allowed: lightweight, mutation"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testResetRestoresLightweightDefault",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "const": "DELETE_MODE_MUTATION",
+            "class": "Builder\\ClickHouse"
+          },
+          {
+            "call": "deleteMode",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "mutation"
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        "mutation",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < ?",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < ?"
+      ]
+    },
+    {
+      "name": "testSelectStillEmitsSettingsAfterDeleteFeatureAdded",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "settings",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "max_threads": "4"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `events` SETTINGS max_threads=4",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `events` SETTINGS max_threads=4"
+      ]
+    }
+  ]
+}

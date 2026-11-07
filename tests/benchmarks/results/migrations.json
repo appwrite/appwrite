@@ -1,0 +1,432 @@
+{
+  "service": "migrations",
+  "file": "tests/benchmarks/results/migrations.json",
+  "workload": {
+    "script": "tests/benchmarks/api/migrations.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "migrations-20261012-005813"
+  },
+  "environment": {
+    "date": "2026-10-12T00:00:32Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 5.295,
+        "p50": 4.018,
+        "p90": 9.652,
+        "p95": 15.896,
+        "p99": 19.484,
+        "max": 115.127
+      },
+      "cpu_ms_per_request": 3.636,
+      "db_cpu_ms_per_request": 2.189,
+      "memory_mib": {
+        "baseline": 2936.8,
+        "avg": 2936.3,
+        "peak": 2946.0
+      },
+      "endpoints": {
+        "migrations.list": {
+          "route": "GET /v1/migrations",
+          "count": 701,
+          "rps": 11.68,
+          "avg": 4.618,
+          "p50": 4.239,
+          "p90": 5.849,
+          "p95": 6.577,
+          "p99": 10.607,
+          "max": 19.112
+        },
+        "migrations.get": {
+          "route": "GET /v1/migrations/:migrationId",
+          "count": 718,
+          "rps": 11.97,
+          "avg": 3.076,
+          "p50": 2.771,
+          "p90": 4,
+          "p95": 4.601,
+          "p99": 6.988,
+          "max": 15.803
+        },
+        "migrations.update": {
+          "route": "PATCH /v1/migrations/:migrationId",
+          "note": "retries a failed migration (409 while the worker is retrying it)",
+          "count": 131,
+          "rps": 2.18,
+          "avg": 3.06,
+          "p50": 2.794,
+          "p90": 3.786,
+          "p95": 5.006,
+          "p99": 7.601,
+          "max": 8.142
+        },
+        "migrations.delete": {
+          "route": "DELETE /v1/migrations/:migrationId",
+          "count": 118,
+          "rps": 1.97,
+          "avg": 4.886,
+          "p50": 4.286,
+          "p90": 7.284,
+          "p95": 8.226,
+          "p99": 10.154,
+          "max": 15.878
+        },
+        "migrations.appwrite.create": {
+          "route": "POST /v1/migrations/appwrite",
+          "note": "users of the run's own project, from the local stack",
+          "count": 119,
+          "rps": 1.98,
+          "avg": 4.466,
+          "p50": 4.323,
+          "p90": 5.163,
+          "p95": 6.46,
+          "p99": 7.38,
+          "max": 7.417
+        },
+        "migrations.appwrite.report.get": {
+          "route": "GET /v1/migrations/appwrite/report",
+          "note": "reads the run's own project through the local stack's API",
+          "count": 244,
+          "rps": 4.07,
+          "avg": 16.983,
+          "p50": 16.207,
+          "p90": 19.467,
+          "p95": 21.71,
+          "p99": 32.146,
+          "max": 52.936
+        },
+        "migrations.csv.exports.create": {
+          "route": "POST /v1/migrations/csv/exports",
+          "note": "the worker writes the export to the platform's internal bucket",
+          "count": 127,
+          "rps": 2.12,
+          "avg": 5.111,
+          "p50": 4.818,
+          "p90": 5.865,
+          "p95": 7.023,
+          "p99": 13.522,
+          "max": 21.564
+        },
+        "migrations.csv.imports.create": {
+          "route": "POST /v1/migrations/csv/imports",
+          "note": "20 rows, overwriting the same ids",
+          "count": 111,
+          "rps": 1.85,
+          "avg": 8.139,
+          "p50": 6.499,
+          "p90": 9.485,
+          "p95": 12.703,
+          "p99": 20.685,
+          "max": 115.127
+        },
+        "migrations.json.exports.create": {
+          "route": "POST /v1/migrations/json/exports",
+          "note": "the worker writes the export to the platform's internal bucket",
+          "count": 124,
+          "rps": 2.07,
+          "avg": 5.614,
+          "p50": 4.902,
+          "p90": 8.389,
+          "p95": 9.346,
+          "p99": 15.452,
+          "max": 16.343
+        },
+        "migrations.json.imports.create": {
+          "route": "POST /v1/migrations/json/imports",
+          "note": "20 rows, overwriting the same ids",
+          "count": 119,
+          "rps": 1.98,
+          "avg": 6.938,
+          "p50": 6.383,
+          "p90": 9.91,
+          "p95": 12.146,
+          "p99": 13.811,
+          "max": 15.535
+        },
+        "migrations.firebase.create": {
+          "route": "POST /v1/migrations/firebase",
+          "note": "measured on its invalid-credentials path: a valid service account makes the source contact Google (production)",
+          "count": 137,
+          "rps": 2.28,
+          "avg": 2.694,
+          "p50": 2.5,
+          "p90": 3.094,
+          "p95": 3.59,
+          "p99": 6.513,
+          "max": 11.468
+        },
+        "migrations.firebase.report.get": {
+          "route": "GET /v1/migrations/firebase/report",
+          "note": "measured on its invalid-credentials path: a valid service account makes the source contact Google (production)",
+          "count": 122,
+          "rps": 2.03,
+          "avg": 2.587,
+          "p50": 2.369,
+          "p90": 3.356,
+          "p95": 3.874,
+          "p99": 4.685,
+          "max": 4.908
+        },
+        "migrations.supabase.create": {
+          "route": "POST /v1/migrations/supabase",
+          "note": "a local source with nothing listening: the worker fails without leaving the stack",
+          "count": 119,
+          "rps": 1.98,
+          "avg": 5.775,
+          "p50": 4.479,
+          "p90": 6.498,
+          "p95": 7.279,
+          "p99": 31.331,
+          "max": 71.779
+        },
+        "migrations.supabase.report.get": {
+          "route": "GET /v1/migrations/supabase/report",
+          "note": "measured on its unreachable-source path: a local host with nothing listening, the stack has no Supabase instance",
+          "count": 110,
+          "rps": 1.83,
+          "avg": 3.09,
+          "p50": 2.863,
+          "p90": 3.632,
+          "p95": 4.155,
+          "p99": 5.039,
+          "max": 13.279
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1666.9,
+      "requests": 100015,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 23.077,
+        "p50": 17.853,
+        "p90": 44.125,
+        "p95": 61.973,
+        "p99": 94.134,
+        "max": 198.585
+      },
+      "cpu_ms_per_request": 4.493,
+      "db_cpu_ms_per_request": 1.158,
+      "memory_mib": {
+        "baseline": 2945.0,
+        "avg": 3052.4,
+        "peak": 3082.2
+      },
+      "endpoints": {
+        "migrations.list": {
+          "route": "GET /v1/migrations",
+          "count": 24100,
+          "rps": 401.67,
+          "avg": 21.839,
+          "p50": 19.493,
+          "p90": 35.13,
+          "p95": 41.437,
+          "p99": 59.304,
+          "max": 154.748
+        },
+        "migrations.get": {
+          "route": "GET /v1/migrations/:migrationId",
+          "count": 24003,
+          "rps": 400.05,
+          "avg": 13.668,
+          "p50": 12.109,
+          "p90": 21.815,
+          "p95": 26.218,
+          "p99": 38.248,
+          "max": 100.758
+        },
+        "migrations.update": {
+          "route": "PATCH /v1/migrations/:migrationId",
+          "note": "retries a failed migration (409 while the worker is retrying it)",
+          "count": 3933,
+          "rps": 65.55,
+          "avg": 14.637,
+          "p50": 12.947,
+          "p90": 23.334,
+          "p95": 27.554,
+          "p99": 40.867,
+          "max": 114.915
+        },
+        "migrations.delete": {
+          "route": "DELETE /v1/migrations/:migrationId",
+          "count": 3976,
+          "rps": 66.27,
+          "avg": 24.796,
+          "p50": 22.726,
+          "p90": 36.281,
+          "p95": 43.173,
+          "p99": 64.461,
+          "max": 127.16
+        },
+        "migrations.appwrite.create": {
+          "route": "POST /v1/migrations/appwrite",
+          "note": "users of the run's own project, from the local stack",
+          "count": 4078,
+          "rps": 67.97,
+          "avg": 21.173,
+          "p50": 19.322,
+          "p90": 31.31,
+          "p95": 37.433,
+          "p99": 57.294,
+          "max": 136.49
+        },
+        "migrations.appwrite.report.get": {
+          "route": "GET /v1/migrations/appwrite/report",
+          "note": "reads the run's own project through the local stack's API",
+          "count": 8018,
+          "rps": 133.63,
+          "avg": 68.61,
+          "p50": 64.311,
+          "p90": 96.832,
+          "p95": 109.266,
+          "p99": 138.752,
+          "max": 198.585
+        },
+        "migrations.csv.exports.create": {
+          "route": "POST /v1/migrations/csv/exports",
+          "note": "the worker writes the export to the platform's internal bucket",
+          "count": 3980,
+          "rps": 66.33,
+          "avg": 24.601,
+          "p50": 22.363,
+          "p90": 37.324,
+          "p95": 44.299,
+          "p99": 65.541,
+          "max": 124.741
+        },
+        "migrations.csv.imports.create": {
+          "route": "POST /v1/migrations/csv/imports",
+          "note": "20 rows, overwriting the same ids",
+          "count": 3925,
+          "rps": 65.42,
+          "avg": 29.862,
+          "p50": 27.524,
+          "p90": 42.915,
+          "p95": 50.049,
+          "p99": 69.439,
+          "max": 151.208
+        },
+        "migrations.json.exports.create": {
+          "route": "POST /v1/migrations/json/exports",
+          "note": "the worker writes the export to the platform's internal bucket",
+          "count": 3997,
+          "rps": 66.62,
+          "avg": 24.235,
+          "p50": 22.206,
+          "p90": 36.626,
+          "p95": 42.868,
+          "p99": 59.712,
+          "max": 136.931
+        },
+        "migrations.json.imports.create": {
+          "route": "POST /v1/migrations/json/imports",
+          "note": "20 rows, overwriting the same ids",
+          "count": 4021,
+          "rps": 67.02,
+          "avg": 29.853,
+          "p50": 27.648,
+          "p90": 42.846,
+          "p95": 49.996,
+          "p99": 73.024,
+          "max": 142.03
+        },
+        "migrations.firebase.create": {
+          "route": "POST /v1/migrations/firebase",
+          "note": "measured on its invalid-credentials path: a valid service account makes the source contact Google (production)",
+          "count": 4088,
+          "rps": 68.13,
+          "avg": 11.282,
+          "p50": 10.047,
+          "p90": 17.965,
+          "p95": 21.488,
+          "p99": 31.238,
+          "max": 64.828
+        },
+        "migrations.firebase.report.get": {
+          "route": "GET /v1/migrations/firebase/report",
+          "note": "measured on its invalid-credentials path: a valid service account makes the source contact Google (production)",
+          "count": 3815,
+          "rps": 63.58,
+          "avg": 11.265,
+          "p50": 10.059,
+          "p90": 17.832,
+          "p95": 21.584,
+          "p99": 31.019,
+          "max": 58.522
+        },
+        "migrations.supabase.create": {
+          "route": "POST /v1/migrations/supabase",
+          "note": "a local source with nothing listening: the worker fails without leaving the stack",
+          "count": 3994,
+          "rps": 66.57,
+          "avg": 21.12,
+          "p50": 19.102,
+          "p90": 31.853,
+          "p95": 37.504,
+          "p99": 58.963,
+          "max": 112.979
+        },
+        "migrations.supabase.report.get": {
+          "route": "GET /v1/migrations/supabase/report",
+          "note": "measured on its unreachable-source path: a local host with nothing listening, the stack has no Supabase instance",
+          "count": 4087,
+          "rps": 68.12,
+          "avg": 13.609,
+          "p50": 12.234,
+          "p90": 21.478,
+          "p95": 25.522,
+          "p99": 36.437,
+          "max": 81.902
+        }
+      }
+    }
+  ]
+}

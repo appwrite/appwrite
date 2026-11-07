@@ -1,0 +1,30 @@
+[package]
+name = "utopia-auth"
+description = "Password hashing, proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/auth"
+publish.workspace = true
+
+[dependencies]
+aes.workspace = true
+ctr.workspace = true
+rand.workspace = true
+hex.workspace = true
+hmac.workspace = true
+indexmap.workspace = true
+md-5.workspace = true
+num-bigint.workspace = true
+num-integer.workspace = true
+openssl.workspace = true
+p256.workspace = true
+php-std.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "security"
+php-sync = "43271113321d9096408a79fee7e93f26c6dbde2b"

@@ -1,0 +1,217 @@
+{
+  "lib": "openapi",
+  "environment": {
+    "date": "2026-10-18T14:21:45Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse_2_0",
+      "description": "Parse the OpenAPI 2.0 fixture from JSON",
+      "php": {
+        "ns": 51615.705128205125,
+        "min": 48470.51282051282,
+        "max": 58381.41025641026,
+        "samples": 15,
+        "calls": 390,
+        "cpu": 51733.67521367521,
+        "peak": 45368.0,
+        "retained": 0.06427350427350427,
+        "rss": 107253760.0
+      },
+      "rust": {
+        "ns": 13597.147118644069,
+        "min": 13350.338983050848,
+        "max": 16583.13559322034,
+        "samples": 15,
+        "calls": 1475,
+        "cpu": 13811.06020338983,
+        "rss": 23203840.0,
+        "allocations": 298.0004971751412,
+        "bytes": 54361.12696045198,
+        "peak": 42128.0,
+        "retained": 0.07475706214689265
+      },
+      "speedup": 3.7960687398484465,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_3_0",
+      "description": "Parse the OpenAPI 3.0 fixture from JSON",
+      "php": {
+        "ns": 47142.10779816514,
+        "min": 45444.571100917434,
+        "max": 49968.08027522936,
+        "samples": 15,
+        "calls": 436,
+        "cpu": 47270.030581039755,
+        "peak": 48328.0,
+        "retained": 0.05749235474006116,
+        "rss": 107573248.0
+      },
+      "rust": {
+        "ns": 12528.36064516129,
+        "min": 12332.285161290323,
+        "max": 13148.252258064516,
+        "samples": 15,
+        "calls": 1550,
+        "cpu": 12671.790279569892,
+        "rss": 23203840.0,
+        "allocations": 286.00047311827956,
+        "bytes": 44981.120817204304,
+        "peak": 33560.0,
+        "retained": 0.07113978494623656
+      },
+      "speedup": 3.762831317948401,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_3_1",
+      "description": "Parse the OpenAPI 3.1 fixture from JSON",
+      "php": {
+        "ns": 45190.666666666664,
+        "min": 43922.99754901961,
+        "max": 45845.791666666664,
+        "samples": 15,
+        "calls": 408,
+        "cpu": 45007.51633986928,
+        "peak": 48328.0,
+        "retained": 0.06143790849673202,
+        "rss": 107573248.0
+      },
+      "rust": {
+        "ns": 12498.313725490196,
+        "min": 12383.67046173308,
+        "max": 13130.033523086655,
+        "samples": 15,
+        "calls": 1581,
+        "cpu": 12609.076491671938,
+        "rss": 23203840.0,
+        "allocations": 286.00046384145054,
+        "bytes": 44981.11844823951,
+        "peak": 33560.0,
+        "retained": 0.0697448872021927
+      },
+      "speedup": 3.6157411038979377,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_document",
+      "description": "Read the decoded OpenAPI 3.1 fixture",
+      "php": {
+        "ns": 27617.517955801104,
+        "min": 27097.375690607736,
+        "max": 28726.864640883978,
+        "samples": 15,
+        "calls": 724,
+        "cpu": 27611.510128913444,
+        "peak": 57752.0,
+        "retained": 0.03462246777163904,
+        "rss": 107573248.0
+      },
+      "rust": {
+        "ns": 6240.096684226836,
+        "min": 6122.6371242640225,
+        "max": 6549.336535481872,
+        "samples": 15,
+        "calls": 3227,
+        "cpu": 6270.995558310092,
+        "rss": 23203840.0,
+        "allocations": 147.0002272492511,
+        "bytes": 17191.058031195123,
+        "peak": 16510.0,
+        "retained": 0.034170023757876256
+      },
+      "speedup": 4.425815713017752,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "schema_read",
+      "description": "Read an object schema with five properties",
+      "php": {
+        "ns": 6215.4097849797445,
+        "min": 6112.665004674353,
+        "max": 6294.380492365222,
+        "samples": 15,
+        "calls": 3209,
+        "cpu": 6212.215643502649,
+        "peak": 50128.0,
+        "retained": 0.00781136387244209,
+        "rss": 107573248.0
+      },
+      "rust": {
+        "ns": 1153.1967993575772,
+        "min": 1137.219915108409,
+        "max": 1231.5828840197316,
+        "samples": 15,
+        "calls": 17434,
+        "cpu": 1167.8584604795228,
+        "rss": 23203840.0,
+        "allocations": 14.000042063401017,
+        "bytes": 2256.0107414630415,
+        "peak": 2224.0,
+        "retained": 0.006324805934763489
+      },
+      "speedup": 5.389721674949345,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "resolve_schema",
+      "description": "Resolve a two-step schema reference chain",
+      "php": {
+        "ns": 246.09375,
+        "min": 241.5194570806962,
+        "max": 251.59464003164558,
+        "samples": 15,
+        "calls": 80896,
+        "cpu": 245.66768855485233,
+        "peak": 3008.0,
+        "retained": 0.0003098628691983122,
+        "rss": 107573248.0
+      },
+      "rust": {
+        "ns": 55.66423462593134,
+        "min": 54.47093078448231,
+        "max": 57.72344713294945,
+        "samples": 15,
+        "calls": 368689,
+        "cpu": 55.73222490138482,
+        "rss": 23203840.0,
+        "allocations": 1.0000019890295977,
+        "bytes": 64.00050792583089,
+        "peak": 1650.0,
+        "retained": 0.00029907772313973746
+      },
+      "speedup": 4.4210389607217655,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "source": "packages/smtp/tests/HeaderTest.php",
+  "cases": [
+    {
+      "name": "short header is left alone",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "Hello"
+      },
+      "expect": "Subject: Hello\r\n"
+    },
+    {
+      "name": "long header is folded",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject a very long subject"
+      },
+      "expect": "Subject: a very long subject a very long subject a very long subject a very\r\n long subject a very long subject a very long subject a very long subject a\r\n very long subject a very long subject a very long subject a very long subject\r\n a very long subject\r\n"
+    },
+    {
+      "name": "an address list folds within the limit",
+      "op": "header.line",
+      "args": {
+        "name": "To",
+        "value": "\"Recipient Number 0\" <recipient0@example.test>, \"Recipient Number 1\" <recipient1@example.test>, \"Recipient Number 2\" <recipient2@example.test>, \"Recipient Number 3\" <recipient3@example.test>, \"Recipient Number 4\" <recipient4@example.test>, \"Recipient Number 5\" <recipient5@example.test>, \"Recipient Number 6\" <recipient6@example.test>, \"Recipient Number 7\" <recipient7@example.test>, \"Recipient Number 8\" <recipient8@example.test>, \"Recipient Number 9\" <recipient9@example.test>, \"Recipient Number 10\" <recipient10@example.test>, \"Recipient Number 11\" <recipient11@example.test>, \"Recipient Number 12\" <recipient12@example.test>, \"Recipient Number 13\" <recipient13@example.test>, \"Recipient Number 14\" <recipient14@example.test>, \"Recipient Number 15\" <recipient15@example.test>, \"Recipient Number 16\" <recipient16@example.test>, \"Recipient Number 17\" <recipient17@example.test>, \"Recipient Number 18\" <recipient18@example.test>, \"Recipient Number 19\" <recipient19@example.test>, \"Recipient Number 20\" <recipient20@example.test>, \"Recipient Number 21\" <recipient21@example.test>, \"Recipient Number 22\" <recipient22@example.test>, \"Recipient Number 23\" <recipient23@example.test>, \"Recipient Number 24\" <recipient24@example.test>, \"Recipient Number 25\" <recipient25@example.test>, \"Recipient Number 26\" <recipient26@example.test>, \"Recipient Number 27\" <recipient27@example.test>, \"Recipient Number 28\" <recipient28@example.test>, \"Recipient Number 29\" <recipient29@example.test>"
+      },
+      "expect": "To: \"Recipient Number 0\" <recipient0@example.test>, \"Recipient Number 1\"\r\n <recipient1@example.test>, \"Recipient Number 2\" <recipient2@example.test>,\r\n \"Recipient Number 3\" <recipient3@example.test>, \"Recipient Number 4\"\r\n <recipient4@example.test>, \"Recipient Number 5\" <recipient5@example.test>,\r\n \"Recipient Number 6\" <recipient6@example.test>, \"Recipient Number 7\"\r\n <recipient7@example.test>, \"Recipient Number 8\" <recipient8@example.test>,\r\n \"Recipient Number 9\" <recipient9@example.test>, \"Recipient Number 10\"\r\n <recipient10@example.test>, \"Recipient Number 11\" <recipient11@example.test>,\r\n \"Recipient Number 12\" <recipient12@example.test>, \"Recipient Number 13\"\r\n <recipient13@example.test>, \"Recipient Number 14\" <recipient14@example.test>,\r\n \"Recipient Number 15\" <recipient15@example.test>, \"Recipient Number 16\"\r\n <recipient16@example.test>, \"Recipient Number 17\" <recipient17@example.test>,\r\n \"Recipient Number 18\" <recipient18@example.test>, \"Recipient Number 19\"\r\n <recipient19@example.test>, \"Recipient Number 20\" <recipient20@example.test>,\r\n \"Recipient Number 21\" <recipient21@example.test>, \"Recipient Number 22\"\r\n <recipient22@example.test>, \"Recipient Number 23\" <recipient23@example.test>,\r\n \"Recipient Number 24\" <recipient24@example.test>, \"Recipient Number 25\"\r\n <recipient25@example.test>, \"Recipient Number 26\" <recipient26@example.test>,\r\n \"Recipient Number 27\" <recipient27@example.test>, \"Recipient Number 28\"\r\n <recipient28@example.test>, \"Recipient Number 29\" <recipient29@example.test>\r\n"
+    },
+    {
+      "name": "non-ASCII becomes encoded words",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "Hellö"
+      },
+      "expect": "Subject: =?UTF-8?B?SGVsbMO2?=\r\n"
+    },
+    {
+      "name": "no encoded word exceeds its limit",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo héllo "
+      },
+      "expect": "Subject:\r\n =?UTF-8?B?aMOpbGxvIGjDqWxsbyBow6lsbG8gaMOpbGxvIGjDqWxsbyBow6lsbG8gaMOp?=\r\n =?UTF-8?B?bGxvIGjDqWxsbyBow6lsbG8gaMOpbGxvIGjDqWxsbyBow6lsbG8gaMOpbGxv?=\r\n =?UTF-8?B?IGjDqWxsbyBow6lsbG8gaMOpbGxvIGjDqWxsbyBow6lsbG8gaMOpbGxvIGg=?=\r\n =?UTF-8?B?w6lsbG8g?=\r\n"
+    },
+    {
+      "name": "every encoded word decodes on its own",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld héllo wörld "
+      },
+      "expect": "Subject:\r\n =?UTF-8?B?aMOpbGxvIHfDtnJsZCBow6lsbG8gd8O2cmxkIGjDqWxsbyB3w7ZybGQgaMOp?=\r\n =?UTF-8?B?bGxvIHfDtnJsZCBow6lsbG8gd8O2cmxkIGjDqWxsbyB3w7ZybGQgaMOpbGxv?=\r\n =?UTF-8?B?IHfDtnJsZCBow6lsbG8gd8O2cmxkIGjDqWxsbyB3w7ZybGQgaMOpbGxvIHc=?=\r\n =?UTF-8?B?w7ZybGQgaMOpbGxvIHfDtnJsZCBow6lsbG8gd8O2cmxkIA==?=\r\n"
+    },
+    {
+      "name": "a four-byte character is never split",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      },
+      "expect": "Subject:\r\n =?UTF-8?B?8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIA=?=\r\n =?UTF-8?B?8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIA=?=\r\n =?UTF-8?B?8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIA=?=\r\n"
+    },
+    {
+      "name": "refuses a value it cannot break",
+      "op": "header.line",
+      "args": {
+        "name": "X-Token",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The X-Token header has an unbreakable run of 999 octets"
+        }
+      }
+    },
+    {
+      "name": "a run of exactly 998 octets",
+      "op": "header.line",
+      "args": {
+        "name": "X",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": "X:\r\n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n"
+    },
+    {
+      "name": "a long name counts in the first run",
+      "op": "header.line",
+      "args": {
+        "name": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "value": "value"
+      },
+      "expect": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\r\n value\r\n"
+    },
+    {
+      "name": "double spaces survive folding",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": "word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word"
+      },
+      "expect": "Subject: word  word  word  word  word  word  word  word  word  word  word \r\n word  word  word  word  word  word  word  word  word  word  word  word  word \r\n word  word  word  word  word  word\r\n"
+    },
+    {
+      "name": "an empty value",
+      "op": "header.line",
+      "args": {
+        "name": "Subject",
+        "value": ""
+      },
+      "expect": "Subject: \r\n"
+    },
+    {
+      "name": "phrase quotes ascii",
+      "op": "header.phrase",
+      "args": {
+        "value": "Jane Doe"
+      },
+      "expect": "\"Jane Doe\""
+    },
+    {
+      "name": "phrase encodes the rest",
+      "op": "header.phrase",
+      "args": {
+        "value": "Jäne"
+      },
+      "expect": "=?UTF-8?B?SsOkbmU=?="
+    },
+    {
+      "name": "phrase escapes quotes and backslashes",
+      "op": "header.phrase",
+      "args": {
+        "value": "a\"b\\c"
+      },
+      "expect": "\"a\\\"b\\\\c\""
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "lib": "user-agent",
+  "environment": {
+    "date": "2026-10-18T14:23:58Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "chrome",
+      "description": "Detect the OS, client, device and bot of a desktop Chrome on Windows",
+      "php": {
+        "ns": 5104.628409090909,
+        "min": 4807.196875,
+        "max": 7474.313352272728,
+        "samples": 15,
+        "calls": 3520,
+        "cpu": 5338.939393939394,
+        "peak": 57080.0,
+        "retained": 0.007121212121212121,
+        "rss": 107888640.0
+      },
+      "rust": {
+        "ns": 1085.093573292736,
+        "min": 1066.6911700739452,
+        "max": 1126.3796759460636,
+        "samples": 15,
+        "calls": 18392,
+        "cpu": 1087.117580107293,
+        "rss": 22302720.0,
+        "allocations": 0.000039872408293460924,
+        "bytes": 0.010181963172393794,
+        "peak": 1650.0,
+        "retained": 0.005995360301580397
+      },
+      "speedup": 4.704320931144051,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "safari",
+      "description": "Detect the OS, client, device and bot of a mobile Safari on iPhone",
+      "php": {
+        "ns": 6119.119371411302,
+        "min": 5901.455424599577,
+        "max": 7083.4215775158655,
+        "samples": 15,
+        "calls": 3309,
+        "cpu": 6202.578825425607,
+        "peak": 3008.0,
+        "retained": 0.007575299687720359,
+        "rss": 107888640.0
+      },
+      "rust": {
+        "ns": 1546.7856590944214,
+        "min": 1538.1284191006027,
+        "max": 1576.546669757379,
+        "samples": 15,
+        "calls": 12942,
+        "cpu": 1548.3964714366662,
+        "rss": 22433792.0,
+        "allocations": 2.0000566630608354,
+        "bytes": 12.014469685262453,
+        "peak": 1650.0,
+        "retained": 0.008520063874723123
+      },
+      "speedup": 3.956022824127935,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "bot",
+      "description": "Detect the OS, client, device and bot of Googlebot",
+      "php": {
+        "ns": 3963.082235528942,
+        "min": 3872.446706586826,
+        "max": 4216.176047904191,
+        "samples": 15,
+        "calls": 5010,
+        "cpu": 3985.4424484364604,
+        "peak": 3008.0,
+        "retained": 0.005003326679973386,
+        "rss": 107888640.0
+      },
+      "rust": {
+        "ns": 1472.7474170147284,
+        "min": 1443.4063896827142,
+        "max": 1498.0184655968344,
+        "samples": 15,
+        "calls": 13647,
+        "cpu": 1470.69847341296,
+        "rss": 22433792.0,
+        "allocations": 0.00005373586380401065,
+        "bytes": 0.013722185584133266,
+        "peak": 1650.0,
+        "retained": 0.008079919884712147
+      },
+      "speedup": 2.690944957528524,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "client",
+      "description": "Detect the client of a desktop Chrome on Windows",
+      "php": {
+        "ns": 1316.3718295012848,
+        "min": 1289.6188813492324,
+        "max": 1361.733315765202,
+        "samples": 15,
+        "calls": 15179,
+        "cpu": 1316.1473087818697,
+        "peak": 3008.0,
+        "retained": 0.0016514043525045568,
+        "rss": 107888640.0
+      },
+      "rust": {
+        "ns": 428.67590021691973,
+        "min": 425.20696312364424,
+        "max": 440.1726464208243,
+        "samples": 15,
+        "calls": 46100,
+        "cpu": 431.03061026753437,
+        "rss": 22433792.0,
+        "allocations": 0.000015907447577729574,
+        "bytes": 0.004062183658712943,
+        "peak": 1650.0,
+        "retained": 0.0023919016630513375
+      },
+      "speedup": 3.0707857120849824,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "is_bot",
+      "description": "Tell whether a desktop Chrome on Windows is a bot",
+      "php": {
+        "ns": 2066.7672930002063,
+        "min": 2023.0961181086104,
+        "max": 2125.5162089613877,
+        "samples": 15,
+        "calls": 9686,
+        "cpu": 2065.2212815747816,
+        "peak": 3008.0,
+        "retained": 0.0025879275930896827,
+        "rss": 107888640.0
+      },
+      "rust": {
+        "ns": 162.87555779531655,
+        "min": 161.47514000764048,
+        "max": 184.9966999650489,
+        "samples": 15,
+        "calls": 123029,
+        "cpu": 164.96873691026778,
+        "rss": 22433792.0,
+        "allocations": 5.960654263087023e-6,
+        "bytes": 0.0015221343477283134,
+        "peak": 1650.0,
+        "retained": 0.0008962656501041759
+      },
+      "speedup": 12.689241534923761,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

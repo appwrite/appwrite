@@ -1,0 +1,446 @@
+{
+  "runs": [
+    {
+      "environment": {
+        "date": "2026-10-17T22:48:08Z",
+        "commit": "5858c552f7",
+        "machine": {
+          "os": "macos",
+          "arch": "aarch64",
+          "cpu": "Apple M4 Max"
+        },
+        "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "profile": "dev",
+        "jobs": 16
+      },
+      "wall": 168.91,
+      "crates": {
+        "abuse": {
+          "lib": 2.28,
+          "total": 2.28
+        },
+        "agents": {
+          "lib": 5.18,
+          "total": 8.88
+        },
+        "async": {
+          "lib": 1.09,
+          "total": 1.09
+        },
+        "audit": {
+          "lib": 48.5,
+          "total": 48.5
+        },
+        "auth": {
+          "lib": 7.46,
+          "total": 7.46
+        },
+        "balancer": {
+          "lib": 0.39,
+          "total": 0.39
+        },
+        "bus": {
+          "lib": 0.35,
+          "total": 0.35
+        },
+        "cache": {
+          "lib": 4.44,
+          "total": 4.44
+        },
+        "cdn": {
+          "lib": 2.97,
+          "total": 2.97
+        },
+        "circuit-breaker": {
+          "lib": 1.55,
+          "total": 1.55
+        },
+        "cli": {
+          "lib": 1.17,
+          "total": 1.17
+        },
+        "client": {
+          "lib": 3.86,
+          "total": 3.86
+        },
+        "compression": {
+          "lib": 4.54,
+          "total": 4.54
+        },
+        "config": {
+          "lib": 1.91,
+          "total": 1.91
+        },
+        "console": {
+          "lib": 0.83,
+          "total": 0.83
+        },
+        "database": {
+          "lib": 74.23,
+          "total": 74.23
+        },
+        "detector": {
+          "lib": 1.57,
+          "total": 1.57
+        },
+        "di": {
+          "lib": 0.17,
+          "total": 0.17
+        },
+        "dns": {
+          "lib": 3.49,
+          "total": 3.49
+        },
+        "domains": {
+          "lib": 10.12,
+          "total": 11.07
+        },
+        "dsn": {
+          "lib": 0.17,
+          "total": 0.17
+        },
+        "emails": {
+          "lib": 0.55,
+          "total": 4.84
+        },
+        "http": {
+          "lib": 5.46,
+          "total": 5.46
+        },
+        "image": {
+          "lib": 40.53,
+          "total": 40.53
+        },
+        "locale": {
+          "lib": 0.41,
+          "total": 0.41
+        },
+        "lock": {
+          "lib": 0.86,
+          "total": 0.86
+        },
+        "messaging": {
+          "lib": 11.29,
+          "total": 11.29
+        },
+        "migration": {
+          "lib": 82.61,
+          "total": 82.61
+        },
+        "mongo": {
+          "lib": 3.33,
+          "total": 3.33
+        },
+        "mqtt": {
+          "lib": 4.49,
+          "total": 4.49
+        },
+        "nats": {
+          "lib": 10.57,
+          "total": 10.57
+        },
+        "openapi": {
+          "lib": 4.21,
+          "total": 4.21
+        },
+        "orchestration": {
+          "lib": 4.5,
+          "total": 4.5
+        },
+        "php-std": {
+          "lib": 10.48,
+          "total": 19.7
+        },
+        "platform": {
+          "lib": 1.91,
+          "total": 1.91
+        },
+        "pools": {
+          "lib": 0.48,
+          "total": 0.48
+        },
+        "query": {
+          "lib": 14.95,
+          "total": 14.95
+        },
+        "queue": {
+          "lib": 14.98,
+          "total": 14.98
+        },
+        "registry": {
+          "lib": 0.15,
+          "total": 0.15
+        },
+        "schedule": {
+          "lib": 1.24,
+          "total": 1.24
+        },
+        "servers": {
+          "lib": 1.44,
+          "total": 1.44
+        },
+        "smtp": {
+          "lib": 3.6,
+          "total": 3.6
+        },
+        "span": {
+          "lib": 10.02,
+          "total": 10.02
+        },
+        "storage": {
+          "lib": 13.34,
+          "total": 13.34
+        },
+        "system": {
+          "lib": 1.35,
+          "total": 1.35
+        },
+        "telemetry": {
+          "lib": 5.95,
+          "total": 5.95
+        },
+        "usage": {
+          "lib": 5.35,
+          "total": 5.35
+        },
+        "user-agent": {
+          "lib": 1.59,
+          "total": 1.59
+        },
+        "validators": {
+          "lib": 2.03,
+          "total": 2.03
+        },
+        "vcs": {
+          "lib": 25.33,
+          "total": 25.33
+        },
+        "websocket": {
+          "lib": 3.88,
+          "total": 3.88
+        }
+      }
+    },
+    {
+      "environment": {
+        "date": "2026-10-17T22:45:01Z",
+        "commit": "5858c552f7",
+        "machine": {
+          "os": "macos",
+          "arch": "aarch64",
+          "cpu": "Apple M4 Max"
+        },
+        "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "profile": "dev",
+        "jobs": 16
+      },
+      "wall": 151.2,
+      "crates": {
+        "abuse": {
+          "lib": 1.29,
+          "total": 1.29
+        },
+        "agents": {
+          "lib": 3.85,
+          "total": 7.12
+        },
+        "async": {
+          "lib": 0.96,
+          "total": 0.96
+        },
+        "audit": {
+          "lib": 43.46,
+          "total": 43.46
+        },
+        "auth": {
+          "lib": 5.7,
+          "total": 5.7
+        },
+        "balancer": {
+          "lib": 0.46,
+          "total": 0.46
+        },
+        "bus": {
+          "lib": 0.41,
+          "total": 0.41
+        },
+        "cache": {
+          "lib": 3.62,
+          "total": 3.62
+        },
+        "cdn": {
+          "lib": 1.92,
+          "total": 1.92
+        },
+        "circuit-breaker": {
+          "lib": 1.64,
+          "total": 1.64
+        },
+        "cli": {
+          "lib": 1.32,
+          "total": 1.32
+        },
+        "client": {
+          "lib": 3.24,
+          "total": 3.24
+        },
+        "compression": {
+          "lib": 3.66,
+          "total": 3.66
+        },
+        "config": {
+          "lib": 1.34,
+          "total": 1.34
+        },
+        "console": {
+          "lib": 0.45,
+          "total": 0.45
+        },
+        "database": {
+          "lib": 65.24,
+          "total": 65.24
+        },
+        "detector": {
+          "lib": 0.67,
+          "total": 0.67
+        },
+        "di": {
+          "lib": 0.14,
+          "total": 0.14
+        },
+        "dns": {
+          "lib": 2.75,
+          "total": 2.75
+        },
+        "domains": {
+          "lib": 8.47,
+          "total": 9.51
+        },
+        "dsn": {
+          "lib": 0.13,
+          "total": 0.13
+        },
+        "emails": {
+          "lib": 0.81,
+          "total": 4.04
+        },
+        "http": {
+          "lib": 4.78,
+          "total": 4.78
+        },
+        "image": {
+          "lib": 33.16,
+          "total": 33.16
+        },
+        "locale": {
+          "lib": 0.35,
+          "total": 0.35
+        },
+        "lock": {
+          "lib": 0.39,
+          "total": 0.39
+        },
+        "messaging": {
+          "lib": 8.36,
+          "total": 8.36
+        },
+        "migration": {
+          "lib": 73.04,
+          "total": 73.04
+        },
+        "mongo": {
+          "lib": 2.82,
+          "total": 2.82
+        },
+        "mqtt": {
+          "lib": 4.48,
+          "total": 4.48
+        },
+        "nats": {
+          "lib": 6.42,
+          "total": 6.42
+        },
+        "openapi": {
+          "lib": 3.16,
+          "total": 3.16
+        },
+        "orchestration": {
+          "lib": 4.43,
+          "total": 4.43
+        },
+        "php-std": {
+          "lib": 7.71,
+          "total": 16.06
+        },
+        "platform": {
+          "lib": 1.23,
+          "total": 1.23
+        },
+        "pools": {
+          "lib": 0.71,
+          "total": 0.71
+        },
+        "query": {
+          "lib": 10.94,
+          "total": 10.94
+        },
+        "queue": {
+          "lib": 13.09,
+          "total": 13.09
+        },
+        "registry": {
+          "lib": 0.14,
+          "total": 0.14
+        },
+        "schedule": {
+          "lib": 1.18,
+          "total": 1.18
+        },
+        "servers": {
+          "lib": 1.47,
+          "total": 1.47
+        },
+        "smtp": {
+          "lib": 2.44,
+          "total": 2.44
+        },
+        "span": {
+          "lib": 8.07,
+          "total": 8.07
+        },
+        "storage": {
+          "lib": 11.3,
+          "total": 11.3
+        },
+        "system": {
+          "lib": 0.62,
+          "total": 0.62
+        },
+        "telemetry": {
+          "lib": 4.41,
+          "total": 4.41
+        },
+        "usage": {
+          "lib": 4.43,
+          "total": 4.43
+        },
+        "user-agent": {
+          "lib": 0.65,
+          "total": 0.65
+        },
+        "validators": {
+          "lib": 0.83,
+          "total": 0.83
+        },
+        "vcs": {
+          "lib": 21.63,
+          "total": 21.63
+        },
+        "websocket": {
+          "lib": 2.95,
+          "total": 2.95
+        }
+      }
+    }
+  ]
+}

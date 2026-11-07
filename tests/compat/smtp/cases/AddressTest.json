@@ -1,0 +1,273 @@
+{
+  "source": "packages/smtp/tests/AddressTest.php",
+  "cases": [
+    {
+      "name": "bare address",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "",
+        "string": "<jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "display name is quoted",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jane Doe"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "Jane Doe",
+        "string": "\"Jane Doe\" <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "quotes inside a display name are escaped",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jane \"JD\" Doe"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "Jane \"JD\" Doe",
+        "string": "\"Jane \\\"JD\\\" Doe\" <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "backslashes inside a display name are escaped",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "C:\\Jane"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "C:\\Jane",
+        "string": "\"C:\\\\Jane\" <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "non-ASCII display name becomes an encoded word",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jäne"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "Jäne",
+        "string": "=?UTF-8?B?SsOkbmU=?= <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "a long non-ASCII display name becomes several words",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe "
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe Jäne Døe ",
+        "string": "=?UTF-8?B?SsOkbmUgRMO4ZSBKw6RuZSBEw7hlIErDpG5lIETDuGUgSsOkbmUgRMO4ZSBK?= =?UTF-8?B?w6RuZSBEw7hlIErDpG5lIETDuGUgSsOkbmUgRMO4ZSBKw6RuZSBEw7hlIA==?= <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "an ASCII address is not international",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jäne"
+      },
+      "expect": {
+        "email": "jane@example.test",
+        "name": "Jäne",
+        "string": "=?UTF-8?B?SsOkbmU=?= <jane@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "a non-ASCII local part is international",
+      "op": "address.new",
+      "args": {
+        "email": "jäne@example.test"
+      },
+      "expect": {
+        "email": "jäne@example.test",
+        "name": "",
+        "string": "<jäne@example.test>",
+        "international": true
+      }
+    },
+    {
+      "name": "rejects an address with no domain",
+      "op": "address.new",
+      "args": {
+        "email": "jane"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an address: jane"
+        }
+      }
+    },
+    {
+      "name": "rejects an address ending in @",
+      "op": "address.new",
+      "args": {
+        "email": "jane@"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an address: jane@"
+        }
+      }
+    },
+    {
+      "name": "rejects an address starting with @",
+      "op": "address.new",
+      "args": {
+        "email": "@example.test"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an address: @example.test"
+        }
+      }
+    },
+    {
+      "name": "rejects an address that is not an address",
+      "op": "address.new",
+      "args": {
+        "email": "jane doe@example.test"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an address: jane doe@example.test"
+        }
+      }
+    },
+    {
+      "name": "rejects a local part over the limit",
+      "op": "address.new",
+      "args": {
+        "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.test"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Address is over the length limits of RFC 5321: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.test"
+        }
+      }
+    },
+    {
+      "name": "accepts a local part at the limit",
+      "op": "address.new",
+      "args": {
+        "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.test"
+      },
+      "expect": {
+        "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.test",
+        "name": "",
+        "string": "<aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "rejects a domain over the limit",
+      "op": "address.new",
+      "args": {
+        "email": "jane@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Address is over the length limits of RFC 5321: jane@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "rejects a header injected through the display name",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Jane\r\nBcc: eve@example.test"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "An address must not span lines"
+        }
+      }
+    },
+    {
+      "name": "rejects a command injected through the address",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test>\r\nRCPT TO:<eve@example.test"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "An address must not span lines"
+        }
+      }
+    },
+    {
+      "name": "rejects a NUL byte",
+      "op": "address.new",
+      "args": {
+        "email": "jane@example.test",
+        "name": "Ja\u0000ne"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "An address must not span lines"
+        }
+      }
+    },
+    {
+      "name": "the last @ splits the address",
+      "op": "address.new",
+      "args": {
+        "email": "\"a@b\"@example.test"
+      },
+      "expect": {
+        "email": "\"a@b\"@example.test",
+        "name": "",
+        "string": "<\"a@b\"@example.test>",
+        "international": false
+      }
+    },
+    {
+      "name": "a non-ASCII address skips the filter",
+      "op": "address.new",
+      "args": {
+        "email": "jä ne@example.test"
+      },
+      "expect": {
+        "email": "jä ne@example.test",
+        "name": "",
+        "string": "<jä ne@example.test>",
+        "international": true
+      }
+    }
+  ]
+}

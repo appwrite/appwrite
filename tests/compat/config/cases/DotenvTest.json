@@ -1,0 +1,496 @@
+{
+  "source": "packages/config/tests/Parser/DotenvTest.php",
+  "cases": [
+    {
+      "name": "testDotenvBasicTypes",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "  STRING=hello world\n  UNICODE_STRING=ä你こحب🌍\n  INTEGER=42\n  FLOAT=3.14159\n  NEGATIVE=-50\n  BOOLEAN_TRUE=true\n  BOOLEAN_FALSE=false\n  NULL_VALUE=null"
+          },
+          "expect": {
+            "$array": [
+              [
+                "STRING",
+                "hello world"
+              ],
+              [
+                "UNICODE_STRING",
+                "ä你こحب🌍"
+              ],
+              [
+                "INTEGER",
+                "42"
+              ],
+              [
+                "FLOAT",
+                "3.14159"
+              ],
+              [
+                "NEGATIVE",
+                "-50"
+              ],
+              [
+                "BOOLEAN_TRUE",
+                "true"
+              ],
+              [
+                "BOOLEAN_FALSE",
+                "false"
+              ],
+              [
+                "NULL_VALUE",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvParseExceptionInvalid",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "=b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid dotenv file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvParseExceptionNumber",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": 12
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvParseExceptionBoolean",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvParseExceptionNull",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": null
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvEdgeCases",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": ""
+          },
+          "expect": []
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "KEY="
+          },
+          "expect": {
+            "$array": [
+              [
+                "KEY",
+                ""
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvComment",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "HOST=127.0.0.1\nPORT=3306 # A comment\n# Another comment, with empty line below intentionally\n\nPASSWORD=secret"
+          },
+          "expect": {
+            "$array": [
+              [
+                "HOST",
+                "127.0.0.1"
+              ],
+              [
+                "PORT",
+                "3306"
+              ],
+              [
+                "PASSWORD",
+                "secret"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvLineWithoutEqualsThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "HOST=127.0.0.1\nDATABASE_PASSWORD"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid dotenv file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvHashInsideQuotesPreserved",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "PASSWORD=\"abc#123\"\nTOKEN='x#y#z'\nURL=\"https://example.com/path#fragment\"\nPLAIN=value # trailing comment"
+          },
+          "expect": {
+            "$array": [
+              [
+                "PASSWORD",
+                "abc#123"
+              ],
+              [
+                "TOKEN",
+                "x#y#z"
+              ],
+              [
+                "URL",
+                "https://example.com/path#fragment"
+              ],
+              [
+                "PLAIN",
+                "value"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvHashInsideUnquotedValuePreserved",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "PASSWORD=pa#ss\nURL=https://example.com/path#fragment\nTABBED=value\t# tab before the comment\nEMPTY=# only a comment"
+          },
+          "expect": {
+            "$array": [
+              [
+                "PASSWORD",
+                "pa#ss"
+              ],
+              [
+                "URL",
+                "https://example.com/path#fragment"
+              ],
+              [
+                "TABBED",
+                "value"
+              ],
+              [
+                "EMPTY",
+                ""
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvExportPrefixIsNotPartOfTheKey",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "export HOST=db\nexport\tPORT=3306\nexported=yes"
+          },
+          "expect": {
+            "$array": [
+              [
+                "HOST",
+                "db"
+              ],
+              [
+                "PORT",
+                "3306"
+              ],
+              [
+                "exported",
+                "yes"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvEscapedQuoteInsideValue",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "KEY=\"abc\\\"#def\""
+          },
+          "expect": {
+            "$array": [
+              [
+                "KEY",
+                "abc\"#def"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvLiteralBackslashPreserved",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "PATH=\"C:\\tmp\"\nESCAPED=\"a\\\\b\""
+          },
+          "expect": {
+            "$array": [
+              [
+                "PATH",
+                "C:\\tmp"
+              ],
+              [
+                "ESCAPED",
+                "a\\b"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvTrailingGarbageAfterQuoteThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "KEY=\"prod\"oops"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid dotenv file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDotenvUnterminatedQuoteThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "KEY=\"abc"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid dotenv file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueConvertor",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "KEY1=1 # Becomes true\nKEY2=on # Becomes true\nKEY3=enabled # Becomes true\nKEY4=Enabled # Becomes true\nKEY5=true # Becomes true\nKEY6=TRUE # Becomes true\nKEY7=yes # Becomes true\n\nKEY8=0 # Becomes false\nKEY9=off # Becomes false\nKEY10=disabled # Becomes false\nKEY11=Disabled # Becomes false\nKEY12=false # Becomes false\nKEY13=FALSE # Becomes false\nKEY14=no # Becomes false\n\nKEY15=11  # Preserves value\nKEY16=20  # Preserves value\n\nKEY17=online # Preserves value\nKEY18=offline # Preserves value\n\nKEY19=notenabled # Preserves value\nKEY20=notdisabled # Preserves value\n\nKEY21=yesterday # Preserves value\nKEY22=november # Preserves value\n\nKEY23=agree # Preserves value\nKEY24=disagree # Preserves value\n\nKEY25=1\nKEY26=0\nKEY27=null\n",
+            "schema": "TestValueConvertorConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "KEY1",
+                true
+              ],
+              [
+                "KEY2",
+                true
+              ],
+              [
+                "KEY3",
+                true
+              ],
+              [
+                "KEY4",
+                true
+              ],
+              [
+                "KEY5",
+                true
+              ],
+              [
+                "KEY6",
+                true
+              ],
+              [
+                "KEY7",
+                true
+              ],
+              [
+                "KEY8",
+                false
+              ],
+              [
+                "KEY9",
+                false
+              ],
+              [
+                "KEY10",
+                false
+              ],
+              [
+                "KEY11",
+                false
+              ],
+              [
+                "KEY12",
+                false
+              ],
+              [
+                "KEY13",
+                false
+              ],
+              [
+                "KEY14",
+                false
+              ],
+              [
+                "KEY15",
+                "11"
+              ],
+              [
+                "KEY16",
+                "20"
+              ],
+              [
+                "KEY17",
+                "online"
+              ],
+              [
+                "KEY18",
+                "offline"
+              ],
+              [
+                "KEY19",
+                "notenabled"
+              ],
+              [
+                "KEY20",
+                "notdisabled"
+              ],
+              [
+                "KEY21",
+                "yesterday"
+              ],
+              [
+                "KEY22",
+                "november"
+              ],
+              [
+                "KEY23",
+                "agree"
+              ],
+              [
+                "KEY24",
+                "disagree"
+              ],
+              [
+                "KEY25",
+                "1"
+              ],
+              [
+                "KEY26",
+                "0"
+              ],
+              [
+                "KEY27",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

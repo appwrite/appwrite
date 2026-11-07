@@ -1,0 +1,5610 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/MemoryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MemoryTest::testUpsertIsNotImplemented",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s53",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s53"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s54",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s54"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s54"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s54"
+            },
+            "namespace": "memory_iso_u000000000001"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s54"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.upsert_documents",
+          "args": {
+            "db": {
+              "$ref": "s54"
+            },
+            "collection": "any",
+            "documents": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support upserts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testNestedTransactionRollbackOnlyDiscardsInner",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s66",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s66"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s67",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "namespace": "memory_iso_u000000000002"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "collection": {
+              "$document": {
+                "$id": "nested",
+                "name": "nested",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "nested",
+              "name": "nested",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s66"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "collection": "nested",
+            "document": {
+              "$document": {
+                "$id": "outer",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "outer"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "outer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "outer",
+              "$collection": "nested",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s66"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "collection": "nested",
+            "document": {
+              "$document": {
+                "$id": "inner",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "inner"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "inner",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "inner",
+              "$collection": "nested",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s66"
+            },
+            "method": "rollbackTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s66"
+            },
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s66"
+            },
+            "method": "commitTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "collection": "nested",
+            "id": "outer"
+          },
+          "expect": {
+            "$document": {
+              "name": "outer",
+              "$sequence": "1",
+              "$id": "outer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "nested"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s67"
+            },
+            "collection": "nested",
+            "id": "inner"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testArrayAttributeRoundTrip",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s88",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s88"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s89",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "namespace": "memory_iso_u000000000003"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "collection": {
+              "$document": {
+                "$id": "lists",
+                "name": "lists",
+                "attributes": [
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "lists",
+              "name": "lists",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "collection": "lists",
+            "document": {
+              "$document": {
+                "$id": "l1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "tags": [
+                  "php",
+                  "memory",
+                  "adapter"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "l1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "tags": [
+                "php",
+                "memory",
+                "adapter"
+              ],
+              "$collection": "lists",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s89"
+            },
+            "collection": "lists",
+            "id": "l1"
+          },
+          "expect": {
+            "$document": {
+              "tags": [
+                "php",
+                "memory",
+                "adapter"
+              ],
+              "$sequence": "1",
+              "$id": "l1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "lists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testCreateUniqueIndexRejectsExistingDuplicates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s103",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "uniqdup_u000000000004"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "emails"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "addr": "dup@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "addr": "dup@example.com",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "addr": "dup@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "addr": "dup@example.com",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "emails",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testUniqueIndexAllowsMultipleNulls",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s115",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s115"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s116",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "namespace": "memory_iso_u000000000005"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "collection": {
+              "$document": {
+                "$id": "optional",
+                "name": "optional",
+                "attributes": [
+                  {
+                    "$id": "token",
+                    "key": "token",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_token",
+                    "key": "unique_token",
+                    "type": "unique",
+                    "attributes": [
+                      "token"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "optional",
+              "name": "optional",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "token",
+                    "key": "token",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "unique_token",
+                    "key": "unique_token",
+                    "type": "unique",
+                    "attributes": [
+                      "token"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "collection": "optional",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "token": null
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "token": null,
+              "$collection": "optional",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "collection": "optional",
+            "document": {
+              "$document": {
+                "$id": "b",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "token": null
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "token": null,
+              "$collection": "optional",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "collection": "optional"
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testUpdateAttributeMovesStoredValuesToTheNewKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s131",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "rename_u000000000006"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "renames"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "renames",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "old",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "renames"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "row",
+                  "$permissions": [],
+                  "old": "value"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "$permissions": [],
+              "old": "value",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "updateAttribute",
+            "args": {
+              "collection": "renames",
+              "key": "old",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "fresh",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "renames"
+                }
+              },
+              "id": "row"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1",
+              "fresh": "value"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testRenameAttributeCarriesValuesIndexesAndRegistration",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s144",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "idxrn_u000000000007"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "indexed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "indexed",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "name",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "indexed",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_name",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "name"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "first",
+                  "$permissions": [],
+                  "name": "taken"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "name": "taken",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "renameAttribute",
+            "args": {
+              "collection": "indexed",
+              "old": "name",
+              "new": "title"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "id": "first"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1",
+              "title": "taken"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "free",
+                  "$permissions": [],
+                  "title": "available"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "free",
+              "$permissions": [],
+              "title": "available",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "second",
+                  "$permissions": [],
+                  "title": "taken"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "indexed",
+              "key": "title"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "id": "first"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testDeleteAttributeNarrowsCompositeUniqueIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s162",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "idxdrop_u000000000008"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "drops"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "drops",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "a",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "drops",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "b",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "drops",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_ab",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "a",
+                    "b"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "existing",
+                  "$permissions": [],
+                  "a": "one",
+                  "b": "kept"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "existing",
+              "$permissions": [],
+              "a": "one",
+              "b": "kept",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "drops",
+              "key": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "id": "existing"
+            }
+          },
+          "expect": {
+            "$document": {
+              "b": "kept",
+              "$id": "existing",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "first",
+                  "$permissions": [],
+                  "b": "shared"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "b": "shared",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "second",
+                  "$permissions": [],
+                  "b": "shared"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testBatchUpdateEnforcesUniqueIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s179",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s179"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s180",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "namespace": "memory_iso_u000000000009"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": {
+              "$document": {
+                "$id": "handles",
+                "name": "handles",
+                "attributes": [
+                  {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "handles",
+              "name": "handles",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": "handles",
+            "document": {
+              "$document": {
+                "$id": "h1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "handle": "taken"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "h1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "handle": "taken",
+              "$collection": "handles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": "handles",
+            "document": {
+              "$document": {
+                "$id": "h2",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "handle": "free"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "h2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "handle": "free",
+              "$collection": "handles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": "handles",
+            "updates": {
+              "$document": {
+                "handle": "taken"
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "h2"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": "handles",
+            "id": "h1"
+          },
+          "expect": {
+            "$document": {
+              "handle": "taken",
+              "$sequence": "1",
+              "$id": "h1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "handles"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s180"
+            },
+            "collection": "handles",
+            "id": "h2"
+          },
+          "expect": {
+            "$document": {
+              "handle": "free",
+              "$sequence": "2",
+              "$id": "h2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "handles"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testBatchUpdateRejectsSiblingCollision",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s197",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s197"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s198",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "namespace": "memory_iso_u000000000010"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": {
+              "$document": {
+                "$id": "siblings",
+                "name": "siblings",
+                "attributes": [
+                  {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "siblings",
+              "name": "siblings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": "siblings",
+            "document": {
+              "$document": {
+                "$id": "s1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "handle": "a"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "s1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "handle": "a",
+              "$collection": "siblings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": "siblings",
+            "document": {
+              "$document": {
+                "$id": "s2",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "handle": "b"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "s2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "handle": "b",
+              "$collection": "siblings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": "siblings",
+            "updates": {
+              "$document": {
+                "handle": "shared"
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "s1",
+                    "s2"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": "siblings",
+            "id": "s1"
+          },
+          "expect": {
+            "$document": {
+              "handle": "a",
+              "$sequence": "1",
+              "$id": "s1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "siblings"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s198"
+            },
+            "collection": "siblings",
+            "id": "s2"
+          },
+          "expect": {
+            "$document": {
+              "handle": "b",
+              "$sequence": "2",
+              "$id": "s2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "siblings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testBulkDeleteRemovesPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s215",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s215"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s216",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "namespace": "memory_iso_u000000000011"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": {
+              "$document": {
+                "$id": "cleanup",
+                "name": "cleanup",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cleanup",
+              "name": "cleanup",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup",
+            "document": {
+              "$document": {
+                "$id": "c0",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "n0"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c0",
+              "$permissions": [
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "n0",
+              "$collection": "cleanup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup",
+            "document": {
+              "$document": {
+                "$id": "c1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "n1"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "$permissions": [
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "n1",
+              "$collection": "cleanup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup",
+            "document": {
+              "$document": {
+                "$id": "c2",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "n2"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "$permissions": [
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "n2",
+              "$collection": "cleanup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "n0",
+                "$id": "c0",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "cleanup"
+              }
+            },
+            {
+              "$document": {
+                "name": "n1",
+                "$id": "c1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "2",
+                "$collection": "cleanup"
+              }
+            },
+            {
+              "$document": {
+                "name": "n2",
+                "$id": "c2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "3",
+                "$collection": "cleanup"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup",
+            "document": {
+              "$document": {
+                "$id": "c0",
+                "$permissions": [
+                  "delete(\"any\")"
+                ],
+                "name": "restricted"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c0",
+              "$permissions": [
+                "delete(\"any\")"
+              ],
+              "name": "restricted",
+              "$collection": "cleanup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testSharedTablesIsolatesTenants",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s236",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "shared_u000000000012"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "shared"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "shared"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "same",
+                  "name": "tenant1",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "same",
+              "name": "tenant1",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "shared"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "same",
+                  "name": "tenant2",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "same",
+              "name": "tenant2",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "shared"
+                }
+              },
+              "id": "same"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant2",
+              "$id": "same",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$tenant": 2,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s236"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "shared"
+                }
+              },
+              "id": "same"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant1",
+              "$id": "same",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$tenant": 1,
+              "$sequence": "1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testSingleDocumentDateOperations",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "single_date_operations_memory",
+                "name": "single_date_operations_memory",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "single_date_operations_memory",
+              "name": "single_date_operations_memory",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "single_date_operations_memory",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "string",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "string",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "single_date_operations_memory",
+            "document": {
+              "$document": {
+                "$id": "doc11",
+                "$permissions": [
+                  "read(\"any\")",
+                  "write(\"any\")",
+                  "update(\"any\")"
+                ],
+                "string": "no_dates",
+                "$createdAt": "2000-01-01T10:00:00.000+00:00"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc11",
+              "$permissions": [
+                "read(\"any\")",
+                "write(\"any\")",
+                "update(\"any\")"
+              ],
+              "string": "no_dates",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "single_date_operations_memory",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "single_date_operations_memory",
+            "id": "doc11",
+            "document": {
+              "$document": {
+                "string": "no_dates_update"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string": "no_dates_update",
+              "$sequence": "1",
+              "$id": "doc11",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "write(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "single_date_operations_memory"
+            }
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "single_date_operations_memory"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testSharedTablesUniqueIndexPerTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s103",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "emails"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "addr": "dup@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "addr": "dup@example.com",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "addr": "dup@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "addr": "dup@example.com",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s103"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "emails",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s266",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "share_uniq_u000000000013"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "emails"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "emails",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 128,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "emails",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "addr": "shared@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "addr": "shared@example.com",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "addr": "shared@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "addr": "shared@example.com",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "id": "b"
+            }
+          },
+          "expect": {
+            "$document": {
+              "addr": "shared@example.com",
+              "$id": "b",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$tenant": 2,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "id": "a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "addr": "shared@example.com",
+              "$id": "a",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$tenant": 1,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s266"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "emails"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a-dup",
+                  "addr": "shared@example.com",
+                  "$permissions": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testFindThrowsWhenCollectionMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s286",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s286"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "missing_u000000000014"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s286"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testCountThrowsWhenCollectionMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s295",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s295"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "missing_u000000000015"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s295"
+            },
+            "method": "count",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testSumThrowsWhenCollectionMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s304",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s304"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "missing_u000000000016"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s304"
+            },
+            "method": "sum",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
+              "attribute": "value"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testDeleteDocumentThrowsWhenCollectionMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s313",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s313"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "missing_u000000000017"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s313"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
+              "id": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testDeleteDocumentReturnsFalseForMissingDoc",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s322",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s322"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "miss_u000000000018"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s322"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "here"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s322"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "here"
+                }
+              },
+              "id": "never-created"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testDeleteDocumentsThrowsWhenCollectionMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s313",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s313"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
+              "id": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s332",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s332"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "missing_u000000000019"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s332"
+            },
+            "method": "deleteDocuments",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
+              "sequences": [],
+              "permissionIds": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testDeleteDocumentsHonoursTenantBoundary",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s341",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "shared_del_u000000000020"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "box"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "$permissions": [],
+                  "name": "tenant1-doc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "name": "tenant1-doc",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "$permissions": [],
+                  "name": "tenant2-doc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "name": "tenant2-doc",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "deleteDocuments",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "sequences": [
+                "1"
+              ],
+              "permissionIds": []
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "id": "b"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant2-doc",
+              "$id": "b",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$tenant": 2,
+              "$sequence": "2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testGetSequencesUsesDocumentTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s341",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "box"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "$permissions": [],
+                  "name": "tenant1-doc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "name": "tenant1-doc",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "$permissions": [],
+                  "name": "tenant2-doc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "name": "tenant2-doc",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s341"
+            },
+            "method": "deleteDocuments",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "sequences": [
+                "1"
+              ],
+              "permissionIds": []
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s359",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "seq_tenant_u000000000021"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "box"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "tenant1-only",
+                  "$permissions": [],
+                  "name": "tenant1"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tenant1-only",
+              "$permissions": [],
+              "name": "tenant1",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "tenant7-only",
+                  "$permissions": [],
+                  "name": "tenant7"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tenant7-only",
+              "$permissions": [],
+              "name": "tenant7",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s359"
+            },
+            "method": "getSequences",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
+              "documents": [
+                {
+                  "$document": {
+                    "$id": "tenant1-only",
+                    "$tenant": 1
+                  }
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "tenant1-only",
+                "$tenant": 1,
+                "$sequence": "1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testUniqueIndexNormalizesBool",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s374",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s374"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s375",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "namespace": "memory_iso_u000000000022"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "collection": {
+              "$document": {
+                "$id": "flags",
+                "name": "flags",
+                "attributes": [
+                  {
+                    "$id": "active",
+                    "key": "active",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_active",
+                    "key": "unique_active",
+                    "type": "unique",
+                    "attributes": [
+                      "active"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "flags",
+              "name": "flags",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "active",
+                    "key": "active",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "unique_active",
+                    "key": "unique_active",
+                    "type": "unique",
+                    "attributes": [
+                      "active"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "collection": "flags",
+            "document": {
+              "$document": {
+                "$id": "first",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "active": true
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "active": true,
+              "$collection": "flags",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s375"
+            },
+            "collection": "flags",
+            "document": {
+              "$document": {
+                "$id": "second",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "active": true
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testUniqueIndexNormalizesNumericString",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s389",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numstr_u000000000023"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "codes"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "codes",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "code",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 16,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "codes",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_code",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "code"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "codes"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "$permissions": [],
+                  "code": "3"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "3",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s389"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "codes"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "$permissions": [],
+                  "code": 3
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryTest::testNegationOperatorsExcludeNullRows",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory",
+            "detached": true,
+            "hooks": []
+          },
+          "bind": "s402",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "s402"
+            },
+            "cache": "memory",
+            "hooks": []
+          },
+          "bind": "s403",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "namespace": "memory_iso_u000000000024"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": {
+              "$document": {
+                "$id": "nullable",
+                "name": "nullable",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "bio",
+                    "key": "bio",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "bio_ft",
+                    "key": "bio_ft",
+                    "type": "fulltext",
+                    "attributes": [
+                      "bio"
+                    ]
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "nullable",
+              "name": "nullable",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "bio",
+                    "key": "bio",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "bio_ft",
+                    "key": "bio_ft",
+                    "type": "fulltext",
+                    "attributes": [
+                      "bio"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "document": {
+              "$document": {
+                "$id": "with_value",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "with_value",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "alice",
+              "score": 5,
+              "bio": "hello world",
+              "$collection": "nullable",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "document": {
+              "$document": {
+                "$id": "with_null",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": null,
+                "score": null,
+                "bio": null
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "with_null",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": null,
+              "score": null,
+              "bio": null,
+              "$collection": "nullable",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "name",
+                  "values": [
+                    "bob"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notBetween",
+                  "attribute": "score",
+                  "values": [
+                    100,
+                    200
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notStartsWith",
+                  "attribute": "name",
+                  "values": [
+                    "zz"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEndsWith",
+                  "attribute": "name",
+                  "values": [
+                    "zz"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notContains",
+                  "attribute": "bio",
+                  "values": [
+                    "nope"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s403"
+            },
+            "collection": "nullable",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notSearch",
+                  "attribute": "bio",
+                  "values": [
+                    "unrelated"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "alice",
+                "score": 5,
+                "bio": "hello world",
+                "$id": "with_value",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "nullable"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

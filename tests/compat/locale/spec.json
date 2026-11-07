@@ -1,0 +1,450 @@
+{
+  "lib": "locale",
+  "description": "utopia-php/locale: languages (static in PHP, a Languages value in Rust), default and fallback locales, getText with placeholders.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/locale/src"
+    ],
+    "tests": [
+      "packages/locale/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/locale"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "locale.reset": {
+      "doc": "start from no languages, exceptions on (PHP: clears Locale's static state)"
+    },
+    "locale.exceptions": {
+      "doc": "Locale::$exceptions = on"
+    },
+    "languages.set_array": {
+      "doc": "Locale::setLanguageFromArray(name, translations)",
+      "covers": [
+        "Utopia\\Locale\\Locale::setLanguageFromArray"
+      ]
+    },
+    "languages.set_json": {
+      "doc": "Locale::setLanguageFromJSON(name, path); a relative path is relative to the repository root",
+      "covers": [
+        "Utopia\\Locale\\Locale::setLanguageFromJSON"
+      ]
+    },
+    "languages.list": {
+      "doc": "Locale::getLanguages()",
+      "covers": [
+        "Utopia\\Locale\\Locale::getLanguages"
+      ]
+    },
+    "locale.new": {
+      "doc": "new Locale(default) as a handle",
+      "covers": [
+        "Utopia\\Locale\\Locale::__construct"
+      ]
+    },
+    "locale.set_default": {
+      "doc": "$locale->setDefault(name)",
+      "covers": [
+        "Utopia\\Locale\\Locale::setDefault"
+      ]
+    },
+    "locale.set_fallback": {
+      "doc": "$locale->setFallback(name)",
+      "covers": [
+        "Utopia\\Locale\\Locale::setFallback"
+      ]
+    },
+    "locale.state": {
+      "doc": "{default, fallback}: the public properties"
+    },
+    "locale.text": {
+      "doc": "$locale->getText(key, default?, placeholders?); `default` absent is not passed",
+      "covers": [
+        "Utopia\\Locale\\Locale::getText"
+      ]
+    },
+    "locale.translations": {
+      "doc": "$locale->getTranslations()",
+      "covers": [
+        "Utopia\\Locale\\Locale::getTranslations"
+      ]
+    },
+    "locale.lookup": {
+      "doc": "fresh languages from `languages` with `exceptions`, new Locale(language), setFallback(fallback?), getText(key, default?, placeholders?)",
+      "covers": [
+        "Utopia\\Locale\\Locale::__construct",
+        "Utopia\\Locale\\Locale::setLanguageFromArray",
+        "Utopia\\Locale\\Locale::setFallback",
+        "Utopia\\Locale\\Locale::getText"
+      ],
+      "fuzz": [
+        {
+          "name": "lookups",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "exceptions": {
+                "gen": "bool"
+              },
+              "languages": {
+                "gen": "object",
+                "fields": {
+                  "en": {
+                    "gen": "ref",
+                    "name": "translations"
+                  },
+                  "he": {
+                    "gen": "ref",
+                    "name": "translations"
+                  },
+                  "": {
+                    "gen": "ref",
+                    "name": "translations"
+                  }
+                },
+                "optional": [
+                  "he",
+                  ""
+                ]
+              },
+              "language": {
+                "gen": "ref",
+                "name": "language"
+              },
+              "fallback": {
+                "gen": "ref",
+                "name": "language"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "default": {
+                "gen": "ref",
+                "name": "missing"
+              }
+            },
+            "optional": [
+              "fallback",
+              "default"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "placeholders",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "exceptions": {
+                "gen": "const",
+                "value": false
+              },
+              "languages": {
+                "gen": "object",
+                "fields": {
+                  "en": {
+                    "gen": "ref",
+                    "name": "translations"
+                  }
+                }
+              },
+              "language": {
+                "gen": "const",
+                "value": "en"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "default": {
+                "gen": "ref",
+                "name": "missing"
+              },
+              "placeholders": {
+                "gen": "ref",
+                "name": "placeholders"
+              }
+            },
+            "optional": [
+              "default"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "language": {
+      "gen": "pick",
+      "from": [
+        "en",
+        "he",
+        "",
+        "fr",
+        "0"
+      ]
+    },
+    "missing": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "A custom text",
+            "Sorry {{name}}, missing text",
+            "[[defaultDynamicKey]]",
+            "{{word}}"
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "text"
+        }
+      ]
+    },
+    "key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "hello",
+            "world",
+            "greeting",
+            "nested",
+            "missing",
+            "",
+            "0",
+            "1",
+            "{{name}}",
+            "[[defaultDynamicKey]]"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab{}",
+          "min": 0,
+          "max": 4
+        }
+      ]
+    },
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "Hello {{name}} {{surname}}!",
+            "Lets repeat: {{word}}, {{word}}, {{word}}",
+            "{{name}}{{name}}",
+            "{{{name}}}",
+            "{{ name }}",
+            "{{name}",
+            "{{",
+            "}}",
+            "",
+            "שלום {{name}}",
+            "{{0}} and {{1}}",
+            "We have {{usersAmount}} users registered.",
+            "{{a}}{{b}}"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ab {}",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "{{name}}",
+                "{{word}}",
+                "{{a}}",
+                "{{b}}",
+                "{{0}}",
+                "",
+                "{{{{name}}}}"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "unicode",
+              "min": 0,
+              "max": 3
+            }
+          ]
+        }
+      ]
+    },
+    "translations": {
+      "gen": "object",
+      "fields": {
+        "hello": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "world": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "greeting": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "{{name}}": {
+          "gen": "ref",
+          "name": "text"
+        }
+      },
+      "optional": [
+        "world",
+        "greeting",
+        "0",
+        "{{name}}"
+      ]
+    },
+    "placeholder_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "Matej",
+            "Bačo",
+            "{{surname}}",
+            "{{name}}",
+            "{{b}}",
+            "",
+            "{{",
+            "}}",
+            "{{word}}"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "int",
+          "min": -100,
+          "max": 100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        },
+        {
+          "gen": "bool"
+        }
+      ]
+    },
+    "placeholders": {
+      "gen": "object",
+      "fields": {
+        "name": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "surname": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "word": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "a": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "b": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        },
+        "": {
+          "gen": "ref",
+          "name": "placeholder_value"
+        }
+      },
+      "optional": [
+        "surname",
+        "word",
+        "a",
+        "b",
+        "0",
+        ""
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Locale\\Locale::getText",
+      "description": "without a fallback, the language named \"\" is read as the fallback (`$this->fallback ?? ''`)",
+      "case": "LocaleTest.json#language named empty string is the implicit fallback"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::getText",
+      "description": "with exceptions off, a locale whose default language is unknown, unreadable or not a JSON array raises a TypeError from array_key_exists()",
+      "case": "LocaleTest.json#unknown default with exceptions off is a TypeError"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::getText",
+      "description": "placeholders are replaced in turn, so a value can contain a later placeholder, which is then replaced too",
+      "case": "LocaleTest.json#placeholders replace in turn"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::getText",
+      "description": "passing the literal DEFAULT_DYNAMIC_KEY as the default is the same as passing nothing ({{key}})",
+      "case": "LocaleTest.json#default dynamic key literal"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::getTranslations",
+      "description": "for an unknown or unusable default language, a TypeError (return type array) instead of an array",
+      "case": "LocaleTest.json#translation files PHP cannot use"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Locale\\Locale::setLanguageFromJSON",
+      "php": "stores whatever json_decode() returns; a file whose values are not all strings (numbers, booleans, nested arrays) makes getText() return those values, and getTranslations() return them",
+      "reason": "utopia_locale translations are strings (Translations = IndexMap<String, String>): Languages::insert_json refuses such a file with Error::Unsupported"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::setLanguageFromArray",
+      "php": "accepts any array: non-string values are returned by getText() as they are (or cast by str_replace() with placeholders)",
+      "reason": "Languages::insert takes Translations (strings only); the adapters only pass strings"
+    },
+    {
+      "symbol": "Utopia\\Locale\\Locale::getText",
+      "php": "placeholder values are cast with (string): arrays print \"Array\" with a warning, objects without __toString throw",
+      "reason": "placeholders are (&str, &str) pairs: callers pass strings; the adapters cast scalars like PHP (php_std::value::to_string)"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "source": "packages/vcs/tests/AdapterCallTest.php",
+  "cases": [
+    {
+      "name": "testServerErrorDoesNotWriteRequestParamsToOutput",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/api/v1/repos/owner/repository/hooks",
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "message": "Internal Server Error"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "",
+            "privateKey": "",
+            "accessToken": "test-token-gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${vcs}/~${ns}/gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_webhook",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repository",
+            "url": "https://example.com/hook",
+            "secret": "webhook-secret"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create webhook: HTTP 500",
+              "code": 500
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/owner/repository/hooks",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"type\":\"gitea\",\"active\":true,\"events\":[\"push\",\"pull_request\"],\"config\":{\"url\":\"https:\\/\\/example.com\\/hook\",\"content_type\":\"json\",\"secret\":\"webhook-secret\"}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

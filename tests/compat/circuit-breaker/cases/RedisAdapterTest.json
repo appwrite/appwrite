@@ -1,0 +1,266 @@
+{
+  "source": "packages/circuit-breaker/tests/E2E/RedisAdapterTest.php",
+  "cases": [
+    {
+      "name": "the Redis adapter stores values in Redis",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker-e2e:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "state",
+            "value": "open"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "state"
+          },
+          "expect": "open"
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count"
+          },
+          "expect": "2"
+        },
+        {
+          "op": "store.increment",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count"
+          },
+          "expect": 3
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count"
+          },
+          "expect": "3"
+        },
+        {
+          "op": "store.delete",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "count"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.increment",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "by",
+            "by": 5
+          },
+          "expect": 5
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "missing"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "circuit breaker shares state through Redis",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker-e2e:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 2,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 2,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": {
+            "open": false,
+            "closed": false,
+            "half_open": true
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-1"
+            }
+          },
+          "expect": "probe-1"
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-2"
+            }
+          },
+          "expect": "probe-2"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": {
+            "open": false,
+            "closed": true,
+            "half_open": false
+          }
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api:state"
+          },
+          "expect": "closed"
+        }
+      ]
+    }
+  ]
+}

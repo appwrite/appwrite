@@ -1,0 +1,216 @@
+{
+  "source": "packages/compression/tests/CompressionTest.php",
+  "cases": [
+    {
+      "name": "fromName brotli",
+      "op": "from_name",
+      "args": {
+        "name": "brotli"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromName snappy",
+      "op": "from_name",
+      "args": {
+        "name": "snappy"
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromName xz",
+      "op": "from_name",
+      "args": {
+        "name": "xz"
+      },
+      "expect": {
+        "class": "XZ",
+        "name": "xz",
+        "encoding": "xz",
+        "supported": false
+      }
+    },
+    {
+      "name": "fromName zstd",
+      "op": "from_name",
+      "args": {
+        "name": "zstd"
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 3
+      }
+    },
+    {
+      "name": "fromName unknown",
+      "op": "from_name",
+      "args": {
+        "name": "unknown"
+      },
+      "expect": null
+    },
+    {
+      "name": "br",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "br"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "quality",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "br;q=0.5"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "quality and other encodings",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "br;q=0.5, gzip;q=0.5"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "supported gzip",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip;q=0.5, br;q=0.5",
+        "supported": [
+          "gzip"
+        ]
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "supported snappy",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "snappy;q=0.6, br;q=0.4",
+        "supported": [
+          "snappy"
+        ]
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "first in priority gzip",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip;q=0.5, br;q=0.5",
+        "supported": [
+          "brotli",
+          "gzip"
+        ]
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "first in priority snappy",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "snappy;q=0.6, br;q=0.4",
+        "supported": [
+          "snappy",
+          "brotli"
+        ]
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "not supported gzip",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip;q=0.5, br;q=0.5",
+        "supported": [
+          "snappy"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "not supported snappy",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "snappy;q=0.6, br;q=0.4",
+        "supported": [
+          "gzip"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "invalid with supported",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "adfkljasdjkf",
+        "supported": [
+          "brotli"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "invalid",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "adfkljasdjkf"
+      },
+      "expect": null
+    }
+  ]
+}

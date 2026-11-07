@@ -1,0 +1,523 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Permission/JoinTest.php"
+  ],
+  "cases": [
+    {
+      "name": "JoinTest::testLeftJoinPlacesPermissionInOnClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1261"
+          },
+          "bind": "s2531",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o1261"
+              },
+              "alias": "j0"
+            },
+            "as": "o1262"
+          },
+          "bind": "s2532",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1262"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o1263"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1262"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j1",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "JoinTest::testInnerJoinPlacesPermissionInOnClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1264"
+          },
+          "bind": "s2535",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o1264"
+              },
+              "alias": "j0"
+            },
+            "as": "o1265"
+          },
+          "bind": "s2536",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1265"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1266"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinTest::testRightJoinPlacesPermissionInWhereClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1267"
+          },
+          "bind": "s2538",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o1267"
+              },
+              "alias": "j0"
+            },
+            "as": "o1268"
+          },
+          "bind": "s2539",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1268"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1269"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinTest::testFullOuterJoinPlacesPermissionInWhereClauseAndAllowsNullUid",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1270"
+          },
+          "bind": "s2541",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o1270"
+              },
+              "alias": "j0"
+            },
+            "as": "o1271"
+          },
+          "bind": "s2542",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1271"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1272"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?) OR `j0`.`_uid` IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1273"
+          },
+          "bind": "s2544",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1273"
+            },
+            "method": "filter",
+            "args": {
+              "table": "j0"
+            },
+            "as": "o1274"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinTest::testCrossJoinPlacesPermissionInWhereClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "perms_j0"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "j0._uid"
+            },
+            "as": "o1275"
+          },
+          "bind": "s2546",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o1275"
+              },
+              "alias": "j0"
+            },
+            "as": "o1276"
+          },
+          "bind": "s2547",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1276"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1277"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`.`_uid` IN (SELECT document_id FROM `perms_j0` WHERE role IN (?) AND type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

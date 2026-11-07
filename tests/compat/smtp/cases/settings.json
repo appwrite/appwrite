@@ -1,0 +1,86 @@
+{
+  "cases": [
+    {
+      "name": "tls defaults to full verification",
+      "op": "tls.new",
+      "args": {},
+      "expect": {
+        "verify": "Full",
+        "peer_name": null,
+        "ca_file": null,
+        "ciphers": null
+      }
+    },
+    {
+      "name": "tls with every option",
+      "op": "tls.new",
+      "args": {
+        "verify": "self_signed",
+        "peer_name": "mail.example.test",
+        "ca_file": "/etc/ssl/ca.pem",
+        "ciphers": "HIGH:!aNULL"
+      },
+      "expect": {
+        "verify": "SelfSigned",
+        "peer_name": "mail.example.test",
+        "ca_file": "/etc/ssl/ca.pem",
+        "ciphers": "HIGH:!aNULL"
+      }
+    },
+    {
+      "name": "tls without verification",
+      "op": "tls.new",
+      "args": {
+        "verify": "none"
+      },
+      "expect": {
+        "verify": "None",
+        "peer_name": null,
+        "ca_file": null,
+        "ciphers": null
+      }
+    },
+    {
+      "name": "a session for fuzzing",
+      "op": "client.session",
+      "args": {
+        "transport": {
+          "replies": [
+            "220 a",
+            "250 b",
+            "250 c",
+            "250 d",
+            "354 e",
+            "250 id=X"
+          ]
+        },
+        "encryption": "none",
+        "envelope": {
+          "sender": "jane@example.test",
+          "recipients": [
+            "john@example.test"
+          ]
+        },
+        "content": [
+          ".a\r",
+          "\n.b"
+        ]
+      },
+      "expect": {
+        "result": {
+          "ok": {
+            "message_id": "X",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\n..a\r\n..b\r\n.\r\n",
+        "closed": false,
+        "transactions": 1
+      }
+    }
+  ]
+}

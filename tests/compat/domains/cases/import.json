@@ -1,0 +1,127 @@
+{
+  "cases": [
+    {
+      "name": "imports sections, comments, wildcards, exceptions and repeated rules",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "path": "/files/psl.dat"
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "rules": [
+          "#\tA small Public Suffix List in the format of",
+          "#\thttps://publicsuffix.org/list/public_suffix_list.dat, for the import task's cases.",
+          "#\tA rule before any section has no section.",
+          "-\tbefore.example",
+          "#\tA rule given twice keeps its first place and its last comments.",
+          "ICANN\tac",
+          "ICANN\tcom.ac",
+          "#\tcom : https://en.wikipedia.org/wiki/.com",
+          "ICANN\tcom",
+          "#\tck : https://en.wikipedia.org/wiki/.ck",
+          "ICANN\t*.ck",
+          "ICANN\t!www.ck",
+          "#\tuk : https://en.wikipedia.org/wiki/.uk",
+          "ICANN\tuk",
+          "ICANN\tco.uk",
+          "#\tThe line below is \"0\", which PHP's empty() skips.",
+          "#\t公司.cn : a rule in UTF-8",
+          "ICANN\t公司.cn",
+          "-\tbetween.example",
+          "#\tGitHub, Inc.",
+          "PRIVATE\tgithub.io",
+          "PRIVATE\t//no space after the slashes: a rule, not a comment",
+          "PRIVATE\t===BEGIN ICANN DOMAINS=== at the start of a line is not a marker",
+          "-\tafter.example"
+        ]
+      }
+    },
+    {
+      "name": "follows a redirect",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "path": "/to/files/psl.dat"
+      },
+      "expect": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "rules": [
+          "#\tA small Public Suffix List in the format of",
+          "#\thttps://publicsuffix.org/list/public_suffix_list.dat, for the import task's cases.",
+          "#\tA rule before any section has no section.",
+          "-\tbefore.example",
+          "#\tA rule given twice keeps its first place and its last comments.",
+          "ICANN\tac",
+          "ICANN\tcom.ac",
+          "#\tcom : https://en.wikipedia.org/wiki/.com",
+          "ICANN\tcom",
+          "#\tck : https://en.wikipedia.org/wiki/.ck",
+          "ICANN\t*.ck",
+          "ICANN\t!www.ck",
+          "#\tuk : https://en.wikipedia.org/wiki/.uk",
+          "ICANN\tuk",
+          "ICANN\tco.uk",
+          "#\tThe line below is \"0\", which PHP's empty() skips.",
+          "#\t公司.cn : a rule in UTF-8",
+          "ICANN\t公司.cn",
+          "-\tbetween.example",
+          "#\tGitHub, Inc.",
+          "PRIVATE\tgithub.io",
+          "PRIVATE\t//no space after the slashes: a rule, not a comment",
+          "PRIVATE\t===BEGIN ICANN DOMAINS=== at the start of a line is not a marker",
+          "-\tafter.example"
+        ]
+      }
+    },
+    {
+      "name": "a list that cannot be downloaded writes nothing",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "path": "/files/missing.dat"
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "Could not download public suffix list\n",
+        "rules": null
+      }
+    },
+    {
+      "name": "a list without com is corrupt and writes nothing",
+      "requires": [
+        "services"
+      ],
+      "op": "import.run",
+      "args": {
+        "path": "/files/no-com.dat"
+      },
+      "expect": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": ".com is missing from public suffix list; it must be corrupted\n",
+        "rules": null
+      }
+    },
+    {
+      "name": "both runtimes ship the same list",
+      "op": "data.digest",
+      "args": {},
+      "expect": {
+        "rules": 9468,
+        "sha256": "ff7278165f210101fc05c608d9c7b94d2660bf9383ff2e23550b9858708f98df"
+      }
+    }
+  ]
+}

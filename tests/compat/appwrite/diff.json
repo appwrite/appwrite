@@ -1,0 +1,1314 @@
+{
+  "projects": {
+    "php": "mdiff1015060400p",
+    "rust": "mdiff1015060400r"
+  },
+  "scenarios": 75,
+  "identical": 67,
+  "masked_headers": [
+    {
+      "header": "date",
+      "why": "the time the response was sent"
+    },
+    {
+      "header": "x-ratelimit-reset",
+      "why": "a time"
+    },
+    {
+      "header": "connection",
+      "why": "transport: keep-alive handling is the server's"
+    },
+    {
+      "header": "keep-alive",
+      "why": "transport"
+    },
+    {
+      "header": "x-debug-speed",
+      "why": "timing"
+    },
+    {
+      "header": "content-length",
+      "why": "follows the body, which is compared"
+    }
+  ],
+  "masked_error_fields": [
+    {
+      "field": "file",
+      "why": "the runtime's source file (development only)"
+    },
+    {
+      "field": "line",
+      "why": "the runtime's source line (development only)"
+    },
+    {
+      "field": "trace",
+      "why": "the runtime's stack (development only)"
+    }
+  ],
+  "differences": [
+    {
+      "scenario": "account.passkeys.list key origin:none",
+      "at": "/purges: 3 items vs 5",
+      "php": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "app.{project}@service.localhost (role: applications) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": [
+          {
+            "purge": [
+              "default-cache-console:appwrite:_console::collection:keys:{project}-full"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-console:appwrite:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "lock:platform:{seq}:keys:{project}-full"
+            ]
+          }
+        ]
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "app.{project}@service.localhost (role: applications) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": [
+          {
+            "purge": "default-cache-postgresql:_console::collection:keys",
+            "fields": [
+              "default-cache-postgresql:_console::collection:keys:{project}-full"
+            ]
+          },
+          {
+            "purge": "default-cache-postgresql:_console::collection:projects",
+            "fields": [
+              "default-cache-postgresql:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-postgresql:_console::collection:keys:{project}-full"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-postgresql:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "lock:platform:{seq}:keys:{project}-full"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "account.passkeys.list narrowkey origin:none",
+      "at": "/purges: 3 items vs 5",
+      "php": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "app.{project}@service.localhost (role: applications) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": [
+          {
+            "purge": [
+              "default-cache-console:appwrite:_console::collection:keys:{project}-narrow"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-console:appwrite:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "lock:platform:{seq}:keys:{project}-narrow"
+            ]
+          }
+        ]
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "app.{project}@service.localhost (role: applications) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": [
+          {
+            "purge": "default-cache-postgresql:_console::collection:keys",
+            "fields": [
+              "default-cache-postgresql:_console::collection:keys:{project}-narrow"
+            ]
+          },
+          {
+            "purge": "default-cache-postgresql:_console::collection:projects",
+            "fields": [
+              "default-cache-postgresql:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-postgresql:_console::collection:keys:{project}-narrow"
+            ]
+          },
+          {
+            "purge": [
+              "default-cache-postgresql:_console::collection:projects:{project}"
+            ]
+          },
+          {
+            "purge": [
+              "lock:platform:{seq}:keys:{project}-narrow"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "account.passkeys.delete jwt origin:none",
+      "at": "/status: 404 vs 401",
+      "php": {
+        "status": 404,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "Passkey with the requested ID could not be found on the current user.",
+          "code": 404,
+          "type": "user_passkey_not_found",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    },
+    {
+      "scenario": "account.passkeys.delete jwt origin:platform",
+      "at": "/status: 404 vs 401",
+      "php": {
+        "status": 404,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "Passkey with the requested ID could not be found on the current user.",
+          "code": 404,
+          "type": "user_passkey_not_found",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    },
+    {
+      "scenario": "account.passkeys.create session origin:none",
+      "at": "/status: 501 vs 401",
+      "php": {
+        "status": 501,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-ratelimit-limit",
+            "10"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "9"
+          ]
+        ],
+        "body": {
+          "message": "Passkey authentication is disabled for this project",
+          "code": 501,
+          "type": "user_auth_method_unsupported",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    },
+    {
+      "scenario": "account.passkeys.create session origin:platform",
+      "at": "/status: 501 vs 401",
+      "php": {
+        "status": 501,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-ratelimit-limit",
+            "10"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "9"
+          ]
+        ],
+        "body": {
+          "message": "Passkey authentication is disabled for this project",
+          "code": 501,
+          "type": "user_auth_method_unsupported",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    },
+    {
+      "scenario": "account.passkeys.create jwt origin:none",
+      "at": "/status: 501 vs 401",
+      "php": {
+        "status": 501,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ],
+          [
+            "x-ratelimit-limit",
+            "10"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "9"
+          ]
+        ],
+        "body": {
+          "message": "Passkey authentication is disabled for this project",
+          "code": 501,
+          "type": "user_auth_method_unsupported",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    },
+    {
+      "scenario": "account.passkeys.create jwt origin:platform",
+      "at": "/status: 501 vs 401",
+      "php": {
+        "status": 501,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ],
+          [
+            "x-ratelimit-limit",
+            "10"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "9"
+          ]
+        ],
+        "body": {
+          "message": "Passkey authentication is disabled for this project",
+          "code": 501,
+          "type": "user_auth_method_unsupported",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      },
+      "rust": {
+        "status": 401,
+        "headers": [
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Organization, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-Appwrite-Impersonate-User-Id, X-Appwrite-Impersonate-User-Email, X-Appwrite-Impersonate-User-Phone, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE"
+          ],
+          [
+            "access-control-allow-origin",
+            "http://localhost"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-Appwrite-Session, X-Fallback-Cookies"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "expires",
+            "0"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "server",
+            "Appwrite"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-debug-fallback",
+            "false"
+          ],
+          [
+            "x-debug-fallback",
+            "true"
+          ]
+        ],
+        "body": {
+          "message": "User (role: guests) missing scopes ([\"account\"])",
+          "code": 401,
+          "type": "general_unauthorized_scope",
+          "version": "2.5.0",
+          "file": "{development}",
+          "line": "{development}",
+          "trace": "{development}"
+        },
+        "database": {},
+        "effects": [],
+        "purges": []
+      }
+    }
+  ]
+}

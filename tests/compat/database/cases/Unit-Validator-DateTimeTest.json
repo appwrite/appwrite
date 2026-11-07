@@ -1,0 +1,1696 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/DateTimeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DateTimeTest::test_create_datetime",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              }
+            },
+            "as": "o456"
+          },
+          "bind": "s787",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              },
+              "seconds": -3
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "now",
+            "args": {}
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-12-04"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-1-4 11:31"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-12-04 11:31:52"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-1-4 11:31:52.123456789"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "now",
+            "args": {}
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2022-07-02T18:31:52.680000+00:00"
+              }
+            }
+          },
+          "expect": "2022-07-02 18:31:52.680"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-12-04 11:31:52.680+02:00"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2022-12-04 11:31:52.680+02:00"
+            }
+          },
+          "expect": "2022-12-04 09:31:52.680"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "2022-12-04 09:31:52.681"
+            }
+          },
+          "expect": "2022-12-04T09:31:52.681+00:00"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2022-13-04 11:31:52.680"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "-0001-13-04 00:00:00"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "0000-00-00 00:00:00"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "10000-01-01 00:00:00"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_past_date_validation",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "requireDateInFuture": true
+            },
+            "as": "o457"
+          },
+          "bind": "s804",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              },
+              "seconds": -3
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o457"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": -3,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              },
+              "seconds": 5
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o457"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 5,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o457"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date in the future and between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "requireDateInFuture": false
+            },
+            "as": "o458"
+          },
+          "bind": "s810",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              },
+              "seconds": -3
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": -3,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              },
+              "seconds": 5
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 5,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_date_precision",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "precision": "seconds"
+            },
+            "as": "o459"
+          },
+          "bind": "s816",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o459"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o459"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o459"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o459"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date with seconds precision between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "precision": "minutes"
+            },
+            "as": "o460"
+          },
+          "bind": "s824",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date with minutes precision between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "precision": "hours"
+            },
+            "as": "o461"
+          },
+          "bind": "s834",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:00.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:00:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:00:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:00:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o461"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date with hours precision between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "precision": "days"
+            },
+            "as": "o462"
+          },
+          "bind": "s846",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:00.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:00:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:00:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:00:00.000"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T00:00:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 00:00:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 00:00:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date with days precision between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "precision": "minutes"
+            },
+            "as": "o463"
+          },
+          "bind": "s860",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2019-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2019-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o463"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2019-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2100-04-08T19:36:26.255000+00:00"
+              }
+            }
+          },
+          "expect": "2100-04-08 19:36:26.255"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o463"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2100-04-08 19:36:26.255"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2100-04-08T19:36:00.000000+00:00"
+              }
+            }
+          },
+          "expect": "2100-04-08 19:36:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o463"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2100-04-08 19:36:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o463"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date with minutes precision between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_offset",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "offset": 60
+            },
+            "as": "o464"
+          },
+          "bind": "s868",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "now"
+              }
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 0,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "+50 seconds"
+              }
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 50,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "+70 seconds"
+              }
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 70,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date at least 60 seconds in the future and between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "requireDateInFuture": true,
+              "offset": 60
+            },
+            "as": "o465"
+          },
+          "bind": "s876",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "+70 seconds"
+              }
+            }
+          },
+          "expect": "<now>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o465"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$now": 70,
+                "format": "Y-m-d H:i:s.v"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o465"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be valid date at least 60 seconds in the future and between 0000-01-01 00:00:00 and 9999-12-31 23:59:59."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "offset": -60
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Offset must be a positive integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_empty_and_non_string_values",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              }
+            },
+            "as": "o466"
+          },
+          "bind": "s881",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o466"
+            },
+            "method": "isValid",
+            "args": {
+              "value": ""
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o466"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 12345
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o466"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o466"
+            },
+            "method": "isValid",
+            "args": {
+              "value": []
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o466"
+            },
+            "method": "isValid",
+            "args": {
+              "value": false
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_year_outside_min_max_range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "2000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "2050-12-31T00:00:00.000000+00:00"
+              }
+            },
+            "as": "o467"
+          },
+          "bind": "s887",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "1999-06-15 12:00:00"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2051-01-01 00:00:00"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "2025-06-15 12:00:00"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_value_without_four_digit_year",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              }
+            },
+            "as": "o468"
+          },
+          "bind": "s891",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "noon"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "tomorrow"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "next Monday"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_is_array",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              }
+            },
+            "as": "o469"
+          },
+          "bind": "s895",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "isArray",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DateTimeTest::test_get_type",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Datetime",
+            "args": {
+              "min": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "max": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              }
+            },
+            "as": "o470"
+          },
+          "bind": "s897",
+          "expect": {
+            "$value": "Validator\\Datetime",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o470"
+            },
+            "method": "getType",
+            "args": {}
+          },
+          "expect": "string"
+        }
+      ]
+    }
+  ]
+}

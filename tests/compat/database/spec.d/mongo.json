@@ -1,0 +1,278 @@
+{
+  "ops": {
+    "mongo.fuzz_find": {
+      "doc": "find() on collection `fz` of the session's MongoDB fuzz adapter (database ${ns} of the compat MongoDB, namespace `fz`, seeded as adapter.fuzz_find seeds its schema): the same programs as adapter.fuzz_find, without filters on `$sequence` (a random UUIDv7 here, so which documents a filter on it matches differs between the runtimes)",
+      "services": [
+        "database-mongo"
+      ],
+      "covers": [
+        "Utopia\\Database\\Adapter\\Mongo::find"
+      ],
+      "fuzz": [
+        {
+          "name": "filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "mongo.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "mongo.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "mongo.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        }
+      ]
+    },
+    "mongo.fuzz_roundtrip": {
+      "doc": "createDocument() of `value` into collection `rt` of the session's MongoDB fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(), as adapter.fuzz_roundtrip: each result or {error}",
+      "services": [
+        "database-mongo"
+      ],
+      "covers": [
+        "Utopia\\Database\\Adapter\\Mongo::createDocument",
+        "Utopia\\Database\\Adapter\\Mongo::getDocument"
+      ],
+      "fuzz": [
+        {
+          "name": "string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "mongo.literal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "generators": {
+    "mongo.literal": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 40,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "'\\\"%_:?$-/*\n\t\u0000é"
+        },
+        {
+          "gen": "bytes",
+          "max": 12
+        }
+      ]
+    },
+    "mongo.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "mongo.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "mongo.query": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "contains",
+                "containsAny",
+                "containsAll",
+                "notContains",
+                "search",
+                "notSearch",
+                "isNull",
+                "isNotNull",
+                "between",
+                "notBetween",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "exists"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "title",
+                "year",
+                "rating",
+                "active",
+                "tags",
+                "meta",
+                "released",
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "missing",
+                "meta.k",
+                "meta.s"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "scrub": [
+    {
+      "kind": "uuid7",
+      "reason": "MongoDB documents get a UUIDv7 _id ($sequence) made from the clock and random bits"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Mongo::list",
+      "php": "Returns the values of the listDatabases reply as they decode: the list of databases (stdClass objects), totalSize, ok, $clusterTime and operationTime.",
+      "reason": "Adapter::list returns documents in Rust (one per value, as the other adapters' lists are documents); Mongo::database_list returns the reply's values as PHP does. The cases mask the listing, which names every database on the shared server."
+    }
+  ]
+}

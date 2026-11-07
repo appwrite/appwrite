@@ -1,0 +1,978 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/MemoryRegexTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MemoryRegexTest::testAPatternThatDoesNotCompileIsAQueryError",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o4555"
+          },
+          "bind": "s7987",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4555"
+              },
+              "cache": "none"
+            },
+            "as": "o4556"
+          },
+          "bind": "s7988",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "regex"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "regex"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4557"
+          },
+          "bind": "s7991",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4557"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32
+            },
+            "as": "o4558"
+          },
+          "bind": "s7994",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4559"
+          },
+          "bind": "s7995",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4559"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4560"
+          },
+          "bind": "s7997",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4560"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "words",
+              "attributes": [
+                {
+                  "$obj": "o4558"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o4561"
+          },
+          "bind": "s7999",
+          "expect": {
+            "$document": {
+              "$id": "words",
+              "name": "words",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4561"
+              }
+            },
+            "as": "o4562"
+          },
+          "expect": {
+            "$document": {
+              "$id": "words",
+              "name": "words",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "abc"
+              }
+            },
+            "as": "o4563"
+          },
+          "bind": "s8001",
+          "expect": {
+            "$document": {
+              "name": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "words",
+              "document": {
+                "$obj": "o4563"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "abc",
+              "$id": "<uniqid>",
+              "$collection": "words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "axc"
+              }
+            },
+            "as": "o4564"
+          },
+          "bind": "s8003",
+          "expect": {
+            "$document": {
+              "name": "axc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "words",
+              "document": {
+                "$obj": "o4564"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "axc",
+              "$id": "<uniqid>",
+              "$collection": "words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "regex",
+            "args": {
+              "attribute": "name",
+              "pattern": "(("
+            },
+            "as": "o4565"
+          },
+          "bind": "s8005",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": [
+                "(("
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "find",
+            "args": {
+              "collection": "words",
+              "queries": [
+                {
+                  "$obj": "o4565"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "regex",
+            "args": {
+              "attribute": "name",
+              "pattern": "["
+            },
+            "as": "o4566"
+          },
+          "bind": "s8007",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": [
+                "["
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "find",
+            "args": {
+              "collection": "words",
+              "queries": [
+                {
+                  "$obj": "o4566"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "regex",
+            "args": {
+              "attribute": "name",
+              "pattern": "a{2,1}"
+            },
+            "as": "o4567"
+          },
+          "bind": "s8009",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": [
+                "a{2,1}"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4556"
+            },
+            "method": "find",
+            "args": {
+              "collection": "words",
+              "queries": [
+                {
+                  "$obj": "o4567"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryRegexTest::testAPatternThatCompilesStillMatches",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o4568"
+          },
+          "bind": "s8011",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4568"
+              },
+              "cache": "none"
+            },
+            "as": "o4569"
+          },
+          "bind": "s8012",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "regex"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "regex"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4570"
+          },
+          "bind": "s8015",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4570"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32
+            },
+            "as": "o4571"
+          },
+          "bind": "s8018",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4572"
+          },
+          "bind": "s8019",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4572"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4573"
+          },
+          "bind": "s8021",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4573"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "words",
+              "attributes": [
+                {
+                  "$obj": "o4571"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o4574"
+          },
+          "bind": "s8023",
+          "expect": {
+            "$document": {
+              "$id": "words",
+              "name": "words",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4574"
+              }
+            },
+            "as": "o4575"
+          },
+          "expect": {
+            "$document": {
+              "$id": "words",
+              "name": "words",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "abc"
+              }
+            },
+            "as": "o4576"
+          },
+          "bind": "s8025",
+          "expect": {
+            "$document": {
+              "name": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "words",
+              "document": {
+                "$obj": "o4576"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "abc",
+              "$id": "<uniqid>",
+              "$collection": "words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "axc"
+              }
+            },
+            "as": "o4577"
+          },
+          "bind": "s8027",
+          "expect": {
+            "$document": {
+              "name": "axc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "words",
+              "document": {
+                "$obj": "o4577"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "axc",
+              "$id": "<uniqid>",
+              "$collection": "words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "regex",
+            "args": {
+              "attribute": "name",
+              "pattern": "^a[b]c$"
+            },
+            "as": "o4578"
+          },
+          "bind": "s8029",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": [
+                "^a[b]c$"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4569"
+            },
+            "method": "find",
+            "args": {
+              "collection": "words",
+              "queries": [
+                {
+                  "$obj": "o4578"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "abc",
+                "$id": "<uniqid>",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "words"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

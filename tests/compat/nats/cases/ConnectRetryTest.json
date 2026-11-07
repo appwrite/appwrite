@@ -1,0 +1,691 @@
+{
+  "source": "packages/nats/tests/ConnectRetryTest.php",
+  "cases": [
+    {
+      "name": "testRefusedConnectIsRetriedUntilABackendAccepts",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          },
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          },
+          {}
+        ],
+        "publish": {
+          "subject": "jobs",
+          "data": "payload"
+        }
+      },
+      "expect": {
+        "connected": true,
+        "error": null,
+        "hosts": [
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          true
+        ],
+        "connects": 3,
+        "published": "PUB jobs 7\r\npayload\r\n"
+      }
+    },
+    {
+      "name": "testEveryPassWalksTheWholePool",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": [
+            "nats://a.cloud:4222",
+            "nats://b.cloud:4222"
+          ],
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 2,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          },
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          },
+          {}
+        ]
+      },
+      "expect": {
+        "connected": true,
+        "error": null,
+        "hosts": [
+          "a.cloud",
+          "b.cloud",
+          "a.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          true
+        ],
+        "connects": 3
+      }
+    },
+    {
+      "name": "testExhaustedAttemptsThrowConnectionException (single pass)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 1,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testExhaustedAttemptsThrowConnectionException (default)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          false
+        ],
+        "connects": 3
+      }
+    },
+    {
+      "name": "testExhaustedAttemptsThrowConnectionException (five)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 5,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "connects": 5
+      }
+    },
+    {
+      "name": "testServerRejectionIsNotRetried (authorization violation)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "answer_pings": false,
+            "rules": [
+              {
+                "when": {
+                  "prefix": "CONNECT "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Authorization Violation'\r\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+            "message": "Server error: Authorization Violation"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testServerRejectionIsNotRetried (authentication timeout)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "answer_pings": false,
+            "rules": [
+              {
+                "when": {
+                  "prefix": "CONNECT "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Authentication Timeout'\r\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+            "message": "Server error: Authentication Timeout"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testServerRejectionIsNotRetried (tls required)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "answer_pings": false,
+            "rules": [
+              {
+                "when": {
+                  "prefix": "CONNECT "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Secure Connection - TLS Required'\r\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Server error: Secure Connection - TLS Required"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testServerRejectionIsNotRetried (connection ceiling)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "answer_pings": false,
+            "rules": [
+              {
+                "when": {
+                  "prefix": "CONNECT "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Maximum Connections Exceeded'\r\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Server error: Maximum Connections Exceeded"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testTlsHandshakeFailureIsNotRetried",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "TlsException",
+              "message": "TLS handshake with nats.cloud:4222 failed: certificate verify failed"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\TlsException",
+            "message": "TLS handshake with nats.cloud:4222 failed: certificate verify failed"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1
+      }
+    },
+    {
+      "name": "testFailedAttemptsLeaveNoTransportOpen",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": [
+            "nats://a.cloud:4222",
+            "nats://b.cloud:4222"
+          ],
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 2,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "answer_pings": false
+          }
+        ]
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\TimeoutException",
+            "message": "No inbound data"
+          }
+        },
+        "hosts": [
+          "a.cloud",
+          "b.cloud",
+          "a.cloud",
+          "b.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "connects": 4
+      }
+    },
+    {
+      "name": "testPassesArePausedBetween",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 2.0,
+          "noRandomize": true,
+          "connectAttempts": 3,
+          "connectRetryWait": 0.05,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ],
+        "gap_at_least": 0.05
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud",
+          "nats.cloud",
+          "nats.cloud"
+        ],
+        "open": [
+          false,
+          false,
+          false
+        ],
+        "connects": 3,
+        "gaps_at_least": true
+      }
+    },
+    {
+      "name": "testNoPassStartsAfterAPauseThatOverrunsTheDeadline (wait longer than the window)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 0.1,
+          "noRandomize": true,
+          "connectAttempts": 1000,
+          "connectRetryWait": 1.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ],
+        "within": 0.1
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud"
+        ],
+        "open": [
+          false
+        ],
+        "connects": 1,
+        "starts_within": true,
+        "returned_within": true
+      }
+    },
+    {
+      "name": "testNoPassStartsAfterAPauseThatOverrunsTheDeadline (second wait overruns)",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 0.25,
+          "noRandomize": true,
+          "connectAttempts": 1000,
+          "connectRetryWait": 0.15,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "ConnectionException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+            }
+          }
+        ],
+        "within": 0.25
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\ConnectionException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [111] Connection refused"
+          }
+        },
+        "hosts": [
+          "nats.cloud",
+          "nats.cloud"
+        ],
+        "open": [
+          false,
+          false
+        ],
+        "connects": 2,
+        "starts_within": true,
+        "returned_within": true
+      }
+    },
+    {
+      "name": "testNoPassStartsOnceConnectTimeoutHasElapsed",
+      "op": "fake.connect_passes",
+      "args": {
+        "options": {
+          "servers": "nats://nats.cloud:4222",
+          "connectTimeout": 0.1,
+          "noRandomize": true,
+          "connectAttempts": 1000,
+          "connectRetryWait": 0.0,
+          "connectRetryJitter": 0.0
+        },
+        "transports": [
+          {
+            "refuse": {
+              "class": "TimeoutException",
+              "message": "Failed to connect to tcp://nats.cloud:4222: [110] Connection timed out"
+            }
+          }
+        ],
+        "factory_sleep_ms": 20,
+        "connects_between": [
+          2,
+          20
+        ],
+        "within": 0.5
+      },
+      "expect": {
+        "connected": false,
+        "error": {
+          "class": "Utopia\\NATS\\Exception\\ConnectionException",
+          "message": "Failed to connect to any NATS server",
+          "previous": {
+            "class": "Utopia\\NATS\\Exception\\TimeoutException",
+            "message": "Failed to connect to tcp://nats.cloud:4222: [110] Connection timed out"
+          }
+        },
+        "connects_between": true,
+        "starts_within": true,
+        "returned_within": true
+      }
+    }
+  ]
+}

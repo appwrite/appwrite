@@ -1,0 +1,734 @@
+{
+  "source": "packages/nats/tests/Protocol/ParserTest.php",
+  "cases": [
+    {
+      "name": "parse info",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "INFO {\"server_id\":\"test\",\"version\":\"2.10.0\"}\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "INFO",
+                {
+                  "server_id": "test",
+                  "version": "2.10.0"
+                }
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse ping",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "PING\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "PING",
+                null
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse pong",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "PONG\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "PONG",
+                null
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse ok",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "+OK\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "+OK",
+                null
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse err",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "-ERR 'Authorization Violation'\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "-ERR",
+                "Authorization Violation"
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse msg",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo.bar 1 5\r\nhello\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "foo.bar",
+                  "1",
+                  null,
+                  "hello",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse msg with reply",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo.bar 1 _INBOX.xyz 5\r\nhello\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "foo.bar",
+                  "1",
+                  "_INBOX.xyz",
+                  "hello",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse empty msg",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG foo 1 0\r\n\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "foo",
+                  "1",
+                  null,
+                  "",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse hmsg",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "HMSG foo.bar 1 27 32\r\nNATS/1.0\r\nX-Test: value\r\n\r\nhello\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "HMSG",
+                [
+                  "foo.bar",
+                  "1",
+                  null,
+                  "hello",
+                  "NATS/1.0\r\nX-Test: value\r\n\r\n"
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse hmsg with reply",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "HMSG foo 1 reply 12 15\r\nNATS/1.0\r\n\r\nbar\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "HMSG",
+                [
+                  "foo",
+                  "1",
+                  "reply",
+                  "bar",
+                  "NATS/1.0\r\n\r\n"
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse multiple ops",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "PING\r\n+OK\r\nMSG foo 1 3\r\nabc\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "PING",
+                null
+              ],
+              [
+                "+OK",
+                null
+              ],
+              [
+                "MSG",
+                [
+                  "foo",
+                  "1",
+                  null,
+                  "abc",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown op throws",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "UNKNOWN command\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Unknown protocol operation: UNKNOWN command"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty line throws",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "\r\nPING\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Empty protocol line received"
+            },
+            "then": null,
+            "buffered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a line without CR",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "PING\nPONG\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "PING",
+                null
+              ],
+              [
+                "PONG",
+                null
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "the payload may hold CRLF; the trailing two bytes are not checked",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG a 1 4\r\na\r\nbXYPING\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  "a\r\nb",
+                  null
+                ]
+              ],
+              [
+                "PING",
+                null
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid MSG lines desync the parser",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG a\r\nPING\r\n",
+            "then": "PING\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: Invalid MSG line: MSG a",
+              "previous": "Utopia\\NATS\\Exception\\ProtocolException"
+            },
+            "then": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Parser desynced from the stream; the connection must be rebuilt"
+            },
+            "buffered": false
+          }
+        },
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG a 1 2 3 4\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: Invalid MSG line: MSG a 1 2 3 4",
+              "previous": "Utopia\\NATS\\Exception\\ProtocolException"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "MSG args split on any whitespace run",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG \t a \f 7  r 1 \r\nx\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "a",
+                  "7",
+                  "r",
+                  "x",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a byte count that is not a number reads as PHP casts it",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG a 1 2abc\r\nhi\r\nMSG a 1 x\r\n\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  "hi",
+                  null
+                ]
+              ],
+              [
+                "MSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  "",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a negative byte count takes from the end of the buffer (substr)",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "MSG a 1 -3\r\nabcdef\r\nPING\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  "abcdef\r\nPIN",
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Empty protocol line received"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "HMSG with a total below the header size",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "HMSG a 1 10 4\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed mid-frame, parser desynced from the stream: Invalid HMSG byte counts: header=10, total=4",
+              "previous": "Utopia\\NATS\\Exception\\ProtocolException"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "HMSG with an empty header block",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "HMSG a 1 0 2\r\nhi\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "HMSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  "hi",
+                  ""
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "INFO that is not JSON",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "INFO nope\r\n"
+          },
+          "expect": {
+            "ops": [],
+            "error": {
+              "class": "JsonException",
+              "message": "Syntax error"
+            },
+            "then": null,
+            "buffered": false
+          }
+        },
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "INFO [1,2]\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "INFO",
+                [
+                  1,
+                  2
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "-ERR quotes and whitespace are trimmed",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": "-ERR  \t\"'Stale Connection'\"\t \r\n-ERR\r\n"
+          },
+          "expect": {
+            "ops": [
+              [
+                "-ERR",
+                "Stale Connection"
+              ],
+              [
+                "-ERR",
+                ""
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "binary payloads",
+      "steps": [
+        {
+          "op": "parser.run",
+          "args": {
+            "inbound": {
+              "$bytes": "TVNHIGEgMSAzDQr/AP4NCg=="
+            }
+          },
+          "expect": {
+            "ops": [
+              [
+                "MSG",
+                [
+                  "a",
+                  "1",
+                  null,
+                  {
+                    "$bytes": "/wD+"
+                  },
+                  null
+                ]
+              ]
+            ],
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "No inbound data"
+            },
+            "then": null,
+            "buffered": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,740 @@
+{
+  "lib": "console",
+  "description": "utopia-php/console: log lines, prompts, process titles, shell-safe commands (plain commands, pipelines, &&/|| lists, groups, redirections), running commands with input, output, progress and a timeout, and repeating work.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/console/src"
+    ],
+    "tests": [
+      "packages/console/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/console"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "command.run": {
+      "doc": "Builds a command from `expr`: {plain: {executable, steps}}, {pipe|and|or: [exprs]}, {group: expr}, {redirect_stdout|append_stdout|redirect_input: {command, path}}, {then: {command, steps}}; steps are {flag: key}, {option: {key, value, check}}, {argument: {value, check}} where check is null (Text(0)), {validator: spec} or {in: [values]} (a closure). Returns isPlain(), toArray(), toString() and (string), or the error building it raised",
+      "covers": [
+        "Utopia\\Console\\Command::__construct",
+        "Utopia\\Console\\Command::flag",
+        "Utopia\\Console\\Command::option",
+        "Utopia\\Console\\Command::argument",
+        "Utopia\\Console\\Command::pipe",
+        "Utopia\\Console\\Command::and",
+        "Utopia\\Console\\Command::or",
+        "Utopia\\Console\\Command::group",
+        "Utopia\\Console\\Command::redirectStdout",
+        "Utopia\\Console\\Command::appendStdout",
+        "Utopia\\Console\\Command::redirectInput",
+        "Utopia\\Console\\Command::isPlain",
+        "Utopia\\Console\\Command::toArray",
+        "Utopia\\Console\\Command::toString",
+        "Utopia\\Console\\Command::__toString"
+      ],
+      "fuzz": [
+        {
+          "name": "plain",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "expr": {
+                "gen": "ref",
+                "name": "plain"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "composed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "expr": {
+                "gen": "ref",
+                "name": "expr"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "console.log": {
+      "doc": "Console::log|success|error|info|warning(message) (`method`) in a child process: what it returned, wrote to stdout and to stderr",
+      "covers": [
+        "Utopia\\Console\\Console::log",
+        "Utopia\\Console\\Console::success",
+        "Utopia\\Console\\Console::error",
+        "Utopia\\Console\\Console::info",
+        "Utopia\\Console\\Console::warning"
+      ],
+      "fuzz": [
+        {
+          "name": "messages",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "log",
+                  "success",
+                  "error",
+                  "info",
+                  "warning"
+                ]
+              },
+              "message": {
+                "gen": "string",
+                "max": 24,
+                "tricky": 0.4
+              }
+            }
+          },
+          "iterations": 60
+        }
+      ]
+    },
+    "console.confirm": {
+      "doc": "Console::confirm(question) in a child process reading `input`: its answer, and what it wrote",
+      "covers": [
+        "Utopia\\Console\\Console::confirm"
+      ],
+      "fuzz": [
+        {
+          "name": "answers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "question": {
+                "gen": "string",
+                "max": 12
+              },
+              "input": {
+                "gen": "string",
+                "alphabet": "ab \t\n\r\u000b",
+                "max": 12
+              }
+            }
+          },
+          "iterations": 40
+        }
+      ]
+    },
+    "console.exit": {
+      "doc": "Console::exit(status) in a child process: the process's exit status",
+      "covers": [
+        "Utopia\\Console\\Console::exit"
+      ]
+    },
+    "console.title": {
+      "doc": "Console::title(title): whether the process title was set",
+      "covers": [
+        "Utopia\\Console\\Console::title"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "whether a process can retitle itself depends on the OS the driver runs on (PHP: Linux, in a container; Rust: the host) and on how it does (see deviations)"
+      }
+    },
+    "console.interactive": {
+      "doc": "Console::isInteractive()",
+      "covers": [
+        "Utopia\\Console\\Console::isInteractive"
+      ]
+    },
+    "console.execute": {
+      "doc": "Console::execute() of `program` ({command: expr} as command.run, {argv: [...]} or {shell: string}) with `stdin` and `timeout` (seconds; none when absent or not positive): the status, stdout, stderr, and, with `progress`, what the progress callback received",
+      "covers": [
+        "Utopia\\Console\\Console::execute"
+      ],
+      "fuzz": [
+        {
+          "name": "echo",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "program": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "argv": {
+                        "gen": "const",
+                        "value": [
+                          "cat"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "command": {
+                        "gen": "object",
+                        "fields": {
+                          "pipe": {
+                            "gen": "const",
+                            "value": [
+                              {
+                                "plain": {
+                                  "executable": "cat"
+                                }
+                              },
+                              {
+                                "plain": {
+                                  "executable": "cat"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "stdin": {
+                "gen": "string",
+                "max": 40,
+                "tricky": 0.5
+              },
+              "progress": {
+                "gen": "bool"
+              }
+            }
+          },
+          "iterations": 100
+        },
+        {
+          "name": "arguments",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "program": {
+                "gen": "object",
+                "fields": {
+                  "command": {
+                    "gen": "object",
+                    "fields": {
+                      "and": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "object",
+                          "fields": {
+                            "plain": {
+                              "gen": "object",
+                              "fields": {
+                                "executable": {
+                                  "gen": "const",
+                                  "value": "printf"
+                                },
+                                "steps": {
+                                  "gen": "array",
+                                  "items": {
+                                    "gen": "object",
+                                    "fields": {
+                                      "argument": {
+                                        "gen": "object",
+                                        "fields": {
+                                          "value": {
+                                            "gen": "string",
+                                            "alphabet": "abc '\"$`;|&()<>*?~#",
+                                            "min": 1,
+                                            "max": 10
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "min": 1,
+                                  "max": 1
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "min": 2,
+                        "max": 3
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 100
+        }
+      ]
+    },
+    "console.loop": {
+      "doc": "Console::loop() with `sleep` and `delay` (seconds) of a callback that throws Exception('fail <n>') on the calls listed in `fail`; with `on_error`, an error handler that records each message and rethrows the `rethrow`-th. Returns the calls made, the errors handled and the message the loop ended with",
+      "covers": [
+        "Utopia\\Console\\Console::loop"
+      ],
+      "fuzz": [
+        {
+          "name": "failures",
+          "args": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "object",
+                "fields": {
+                  "fail": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "int",
+                      "min": 1,
+                      "max": 8
+                    },
+                    "min": 1,
+                    "max": 5
+                  },
+                  "on_error": {
+                    "gen": "const",
+                    "value": false
+                  }
+                }
+              },
+              {
+                "gen": "object",
+                "fields": {
+                  "fail": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "int",
+                      "min": 1,
+                      "max": 8
+                    },
+                    "min": 1,
+                    "max": 5
+                  },
+                  "on_error": {
+                    "gen": "const",
+                    "value": true
+                  },
+                  "rethrow": {
+                    "gen": "const",
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "gen": "object",
+                "fields": {
+                  "fail": {
+                    "gen": "pick",
+                    "from": [
+                      [
+                        1,
+                        2
+                      ],
+                      [
+                        2,
+                        5
+                      ],
+                      [
+                        1,
+                        3,
+                        6
+                      ],
+                      [
+                        4,
+                        5,
+                        8
+                      ],
+                      [
+                        2,
+                        3,
+                        4,
+                        7
+                      ],
+                      [
+                        6,
+                        7
+                      ],
+                      [
+                        1,
+                        8
+                      ],
+                      [
+                        3,
+                        5,
+                        7,
+                        8
+                      ],
+                      [
+                        2,
+                        6
+                      ],
+                      [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                      ]
+                    ]
+                  },
+                  "on_error": {
+                    "gen": "const",
+                    "value": true
+                  },
+                  "rethrow": {
+                    "gen": "const",
+                    "value": 2
+                  }
+                }
+              }
+            ]
+          },
+          "iterations": 500
+        }
+      ]
+    }
+  },
+  "generators": {
+    "word": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 10,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "alphabet": "-abc_19'",
+          "max": 6
+        },
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        }
+      ]
+    },
+    "key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "-v",
+            "-cz",
+            "--env",
+            "--dry-run",
+            "--a_b",
+            "-",
+            "--",
+            "---x",
+            "-v\n",
+            "--x\n\n",
+            "verbose",
+            "-é",
+            ""
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "-",
+                "--",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "aZ9_-\n.",
+              "max": 4
+            }
+          ]
+        }
+      ]
+    },
+    "check": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "validator": {
+              "gen": "object",
+              "fields": {
+                "text": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 5
+                  },
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "in": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "main",
+                  "develop",
+                  "1"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          }
+        }
+      ]
+    },
+    "step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "flag": {
+              "gen": "ref",
+              "name": "key"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "option": {
+              "gen": "object",
+              "fields": {
+                "key": {
+                  "gen": "ref",
+                  "name": "key"
+                },
+                "value": {
+                  "gen": "ref",
+                  "name": "word"
+                },
+                "check": {
+                  "gen": "ref",
+                  "name": "check"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "argument": {
+              "gen": "object",
+              "fields": {
+                "value": {
+                  "gen": "ref",
+                  "name": "word"
+                },
+                "check": {
+                  "gen": "ref",
+                  "name": "check"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "plain": {
+      "gen": "object",
+      "fields": {
+        "plain": {
+          "gen": "object",
+          "fields": {
+            "executable": {
+              "gen": "ref",
+              "name": "word"
+            },
+            "steps": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "step"
+              },
+              "min": 0,
+              "max": 4
+            }
+          }
+        }
+      }
+    },
+    "expr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "plain"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "pipe": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "plain"
+              },
+              "min": 1,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "and": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "plain"
+              },
+              "min": 1,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "or": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "plain"
+              },
+              "min": 2,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "group": {
+              "gen": "ref",
+              "name": "plain"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "redirect_stdout": {
+              "gen": "object",
+              "fields": {
+                "command": {
+                  "gen": "ref",
+                  "name": "plain"
+                },
+                "path": {
+                  "gen": "ref",
+                  "name": "word"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "then": {
+              "gen": "object",
+              "fields": {
+                "command": {
+                  "gen": "object",
+                  "fields": {
+                    "group": {
+                      "gen": "ref",
+                      "name": "plain"
+                    }
+                  }
+                },
+                "steps": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "step"
+                  },
+                  "min": 1,
+                  "max": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {
+    "packages/console/tests/CompatTest.php": "Checks that the pre-namespace class names Utopia\\Console and Utopia\\Command (class_alias in src/compat.php) resolve to the moved classes: PHP autoloading plumbing. Rust has one path per item; Console::log and new Command('echo'), which it also calls, are covered by ConsoleTest.json."
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Console\\Console::execute",
+      "description": "A piece of output or error output read in one go that is exactly \"0\" is dropped: `stream_get_contents(...) ?: ''` treats it as falsy, so it is neither collected nor passed to the progress callback.",
+      "case": "edge.json#a piece of output that is exactly 0 is dropped"
+    },
+    {
+      "symbol": "Utopia\\Console\\Command::flag",
+      "description": "Flag and option keys are matched with `$` without the D modifier, so a key ending in one newline (\"-v\\n\") is accepted, newline included.",
+      "case": "edge.json#a flag may end in one newline"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Console\\Console::title",
+      "php": "cli_set_process_title() rewrites the process's arguments on Linux and macOS, and returns true.",
+      "reason": "Rust has no safe way to rewrite argv: on Linux it sets the process name (comm, 15 bytes); elsewhere it returns false. The result is masked: the Rust driver runs on the host OS."
+    },
+    {
+      "symbol": "Utopia\\Console\\Console::execute",
+      "php": "The timeout is checked with time(), in whole seconds, so a command is killed between `timeout` and `timeout + 1` seconds after it started; stdin is written in one non-blocking fwrite(), which truncates an input larger than the pipe buffer (64 KiB).",
+      "reason": "Rust kills the command as soon as it has run longer than the timeout, and writes the whole input from a task. Both agree for every case that does not race the second boundary or exceed the pipe buffer."
+    },
+    {
+      "symbol": "Utopia\\Console\\Console::loop",
+      "php": "The callback's \\Error (engine errors such as TypeError) skips $onError and ends the loop; only \\Exception reaches $onError.",
+      "reason": "A Rust callback returns Result: every Err goes to on_error, and Rust has no engine errors to tell apart (a panic propagates)."
+    },
+    {
+      "symbol": "Utopia\\Console\\Command::option",
+      "php": "Values may be Stringable objects, cast with (string).",
+      "reason": "Arg is built from strings and numbers; a Rust caller converts its type to a String first."
+    }
+  ]
+}

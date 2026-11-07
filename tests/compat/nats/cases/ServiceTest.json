@@ -1,0 +1,870 @@
+{
+  "source": "packages/nats/tests/E2E/ServiceTest.php",
+  "cases": [
+    {
+      "name": "an endpoint handles a request",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svc_${ns}",
+            "version": "1.2.3",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "echo",
+            "subject": "svc_${ns}.echo",
+            "handler": {
+              "kind": "echo",
+              "prefix": "echo:"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.echo",
+            "data": "hello",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "echo:hello",
+            "reply": null,
+            "headers": null,
+            "sid": "11"
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "PING returns the service identity",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svc_${ns}",
+            "version": "1.2.3",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.PING.svc_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id"
+            ],
+            "reason": "a random id"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.ping_response",
+              "name": "svc_${ns}",
+              "id": "<masked>",
+              "version": "1.2.3",
+              "metadata": []
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.get",
+          "args": {
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": {
+            "name": "svc_${ns}",
+            "id_length": 22,
+            "id_hex": true
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "INFO lists the endpoints",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svc_${ns}",
+            "version": "1.2.3",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "echo",
+            "subject": "svc_${ns}.echo",
+            "handler": {
+              "kind": "echo",
+              "prefix": "echo:"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.INFO.svc_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id"
+            ],
+            "reason": "a random id"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.info_response",
+              "name": "svc_${ns}",
+              "id": "<masked>",
+              "version": "1.2.3",
+              "description": "Test service",
+              "metadata": [],
+              "endpoints": [
+                {
+                  "name": "echo",
+                  "subject": "svc_${ns}.echo",
+                  "queue_group": "q",
+                  "metadata": []
+                }
+              ]
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "STATS track request and error counts",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svc_${ns}",
+            "version": "1.2.3",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "echo",
+            "subject": "svc_${ns}.echo",
+            "handler": {
+              "kind": "echo",
+              "prefix": "echo:"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "boom",
+            "subject": "svc_${ns}.boom",
+            "handler": {
+              "kind": "throw",
+              "error": {
+                "class": "RuntimeException",
+                "message": "kaboom"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.echo",
+            "data": "a",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "echo:a",
+            "reply": null,
+            "headers": null,
+            "sid": "12"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.echo",
+            "data": "b",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "echo:b",
+            "reply": null,
+            "headers": null,
+            "sid": "12"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.boom",
+            "data": "x",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "",
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-Service-Error",
+                  [
+                    "kaboom"
+                  ]
+                ],
+                [
+                  "Nats-Service-Error-Code",
+                  [
+                    "500"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nNats-Service-Error: kaboom\r\nNats-Service-Error-Code: 500\r\n\r\n"
+            },
+            "sid": "12"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.STATS.svc_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id",
+              "/json/started",
+              "/json/endpoints/*/processing_time",
+              "/json/endpoints/*/average_processing_time"
+            ],
+            "reason": "handling times and the start time"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.stats_response",
+              "name": "svc_${ns}",
+              "id": "<masked>",
+              "version": "1.2.3",
+              "started": "<masked>",
+              "metadata": [],
+              "endpoints": [
+                {
+                  "name": "echo",
+                  "subject": "svc_${ns}.echo",
+                  "queue_group": "q",
+                  "metadata": [],
+                  "num_requests": 2,
+                  "num_errors": 0,
+                  "last_error": "",
+                  "processing_time": "<masked>",
+                  "average_processing_time": "<masked>"
+                },
+                {
+                  "name": "boom",
+                  "subject": "svc_${ns}.boom",
+                  "queue_group": "q",
+                  "metadata": [],
+                  "num_requests": 1,
+                  "num_errors": 1,
+                  "last_error": "kaboom",
+                  "processing_time": "<masked>",
+                  "average_processing_time": "<masked>"
+                }
+              ]
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the discovery subjects with the id, and an endpoint added while running",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svc_${ns}",
+            "version": "1.2.3",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.id",
+          "args": {
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a random id"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "service.register_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "late",
+            "subject": "svc_${ns}.late",
+            "handler": {
+              "kind": "fixed",
+              "payload": "late"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.late",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "late",
+            "reply": null,
+            "headers": null,
+            "sid": "11"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.PING",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/name",
+              "/json/id",
+              "/json/version",
+              "/json/metadata"
+            ],
+            "reason": "any service on the shared server may answer first"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.ping_response",
+              "name": "<masked>",
+              "id": "<masked>",
+              "version": "<masked>",
+              "metadata": "<masked>"
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svc_${ns}.late",
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "run returns when the connection fails",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "r",
+            "version": "1"
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.fail_reads",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "error": {
+              "class": "ConnectionException",
+              "message": "Connection closed by server"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "service.run",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Connection closed by server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint statistics on their own",
+      "steps": [
+        {
+          "op": "endpoint.new",
+          "args": {
+            "name": "e",
+            "subject": "s"
+          },
+          "expect": {
+            "info": {
+              "name": "e",
+              "subject": "s",
+              "queue_group": "q",
+              "metadata": {}
+            },
+            "stats": {
+              "name": "e",
+              "subject": "s",
+              "queue_group": "q",
+              "metadata": {},
+              "num_requests": 0,
+              "num_errors": 0,
+              "last_error": "",
+              "processing_time": 0,
+              "average_processing_time": 0
+            }
+          }
+        },
+        {
+          "op": "endpoint.new",
+          "args": {
+            "name": "e",
+            "subject": "s",
+            "queue": "w",
+            "metadata": {
+              "a": "b"
+            }
+          },
+          "expect": {
+            "info": {
+              "name": "e",
+              "subject": "s",
+              "queue_group": "w",
+              "metadata": {
+                "a": "b"
+              }
+            },
+            "stats": {
+              "name": "e",
+              "subject": "s",
+              "queue_group": "w",
+              "metadata": {
+                "a": "b"
+              },
+              "num_requests": 0,
+              "num_errors": 0,
+              "last_error": "",
+              "processing_time": 0,
+              "average_processing_time": 0
+            }
+          }
+        },
+        {
+          "op": "service_exception.new",
+          "args": {
+            "code": "418",
+            "message": "I am a teapot"
+          },
+          "expect": [
+            "Utopia\\NATS\\Services\\ServiceException",
+            "418",
+            "I am a teapot"
+          ]
+        }
+      ]
+    }
+  ]
+}

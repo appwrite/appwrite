@@ -1,0 +1,95 @@
+{
+  "source": "packages/cache/tests/RedisNoScriptTest.php",
+  "cases": [
+    {
+      "name": "testMatchesWhenNoScriptIsTheLeadingCodeToken",
+      "steps": [
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": "NOSCRIPT No matching script. Please use EVAL."
+          },
+          "expect": true
+        },
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": "NOSCRIPT"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDoesNotMatchWhenNoScriptIsNotTheCode",
+      "steps": [
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": "ERR user set key to \"NOSCRIPT\""
+          },
+          "expect": false
+        },
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": "WRONGTYPE Operation against a key holding the wrong kind of value"
+          },
+          "expect": false
+        },
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": " NOSCRIPT"
+          },
+          "expect": false
+        },
+        {
+          "op": "noscript.matches",
+          "args": {
+            "error": "NOSCRIPTX y"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testFromExceptionPreservesMessageAndCause",
+      "steps": [
+        {
+          "op": "noscript.from",
+          "args": {
+            "message": "NOSCRIPT No matching script. Please use EVAL.",
+            "cause": true
+          },
+          "expect": {
+            "class": "Utopia\\Cache\\Adapter\\Redis\\NoScript",
+            "message": "NOSCRIPT No matching script. Please use EVAL."
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFromStringCarriesMessage",
+      "steps": [
+        {
+          "op": "noscript.from",
+          "args": {
+            "message": "NOSCRIPT No matching script. Please use EVAL."
+          },
+          "expect": {
+            "class": "Utopia\\Cache\\Adapter\\Redis\\NoScript",
+            "message": "NOSCRIPT No matching script. Please use EVAL."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,422 @@
+{
+  "source": "packages/http/src/Files.php",
+  "cases": [
+    {
+      "name": "load a directory",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/index.html",
+              "<!DOCTYPE html><html></html>"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/css/site.css",
+              "body{}"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/js/app.js",
+              "x()"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/img/logo.svg",
+              "<svg/>"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/robots.txt",
+              "User-agent: *"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/data.json",
+              "{\"a\":1}"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/empty.txt",
+              ""
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/.hidden",
+              "x"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/skip.php",
+              "<?php"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/skip.phtml",
+              "x"
+            ]
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/public"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "is_loaded": "/index.html"
+          },
+          {
+            "is_loaded": "/css/site.css"
+          },
+          {
+            "is_loaded": "/.hidden"
+          },
+          {
+            "is_loaded": "/skip.php"
+          },
+          {
+            "mime": "/index.html"
+          },
+          {
+            "mime": "/css/site.css"
+          },
+          {
+            "mime": "/js/app.js"
+          },
+          {
+            "mime": "/img/logo.svg"
+          },
+          {
+            "mime": "/robots.txt"
+          },
+          {
+            "mime": "/data.json"
+          },
+          {
+            "mime": "/empty.txt"
+          },
+          {
+            "contents": "/css/site.css"
+          },
+          {
+            "contents": "/missing"
+          },
+          {
+            "mime": "/missing"
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/public"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "add_mime_type": "text/x"
+          },
+          {
+            "add_mime_type": "text/y"
+          },
+          {
+            "remove_mime_type": "text/x"
+          },
+          {
+            "remove_mime_type": "nope"
+          },
+          {
+            "mime_types": null
+          },
+          {
+            "reset": null
+          },
+          {
+            "count": null
+          },
+          {
+            "mime_types": null
+          },
+          {
+            "is_loaded": "/index.html"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        7,
+        true,
+        true,
+        false,
+        false,
+        "text/html",
+        "text/css",
+        "text/javascript",
+        "image/svg+xml",
+        "text/plain",
+        "application/json",
+        "application/x-empty",
+        "body{}",
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "File not found or not loaded: /missing",
+            "code": 0,
+            "previous": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "File not found or not loaded: /missing",
+            "code": 0,
+            "previous": null
+          }
+        },
+        null,
+        7,
+        null,
+        null,
+        null,
+        null,
+        {
+          "text/y": true
+        },
+        null,
+        0,
+        [],
+        false
+      ]
+    },
+    {
+      "name": "load a missing directory",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/nope"
+            ]
+          },
+          {
+            "count": null
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Failed to load directory: /tmp/compat-fs/${ns}/nope",
+            "code": 0,
+            "previous": null
+          }
+        },
+        0
+      ]
+    },
+    {
+      "name": "load with a root",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/site/sub/a.css",
+              "a"
+            ]
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/site/sub",
+              "/tmp/compat-fs/${ns}/site"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "is_loaded": "/sub/a.css"
+          },
+          {
+            "is_loaded": "/a.css"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        1,
+        true,
+        false
+      ]
+    },
+    {
+      "name": "static files are served by run()",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "write": [
+            [
+              "/tmp/compat-fs/${ns}/static/style.css",
+              "body{}"
+            ],
+            [
+              "/tmp/compat-fs/${ns}/static/sub/a.txt",
+              "hello"
+            ]
+          ],
+          "files": [
+            "/tmp/compat-fs/${ns}/static"
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "route"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/style.css"
+          },
+          {
+            "method": "GET",
+            "uri": "/sub/a.txt"
+          },
+          {
+            "method": "GET",
+            "uri": "/x"
+          },
+          {
+            "method": "POST",
+            "uri": "/style.css"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/css"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "body{}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "hello",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "route",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/css"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "body{}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1001 @@
+{
+  "source": "packages/mqtt/tests/E2E/AdapterTest.php",
+  "cases": [
+    {
+      "name": "testV5FullSession",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "v5-client",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "expect": "\u00102\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\tv5-client"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "sensors/+/temp"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "expect": {
+            "$bytes": "ghQAAQAADnNlbnNvcnMvKy90ZW1wAQ=="
+          }
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 25,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "fresh"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "reauth",
+          "expect": {
+            "$bytes": "8CEZHxUABHRlc3QWAAVmcmVzaCYACXByb2plY3RJZAACcDE="
+          }
+        },
+        {
+          "op": "v5.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "sensors/+/temp"
+            ]
+          },
+          "bind": "unsubscribe",
+          "expect": {
+            "$bytes": "ohMAAgAADnNlbnNvcnMvKy90ZW1w"
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0
+          },
+          "bind": "disconnect",
+          "expect": {
+            "$bytes": "4AIAAA=="
+          }
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "ping",
+                  "path": "/0"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "reauth"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "unsubscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connected": "c"
+              },
+              {
+                "log": "c"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            null,
+            {
+              "$bytes": "0AA="
+            },
+            null,
+            {
+              "$bytes": "8AIAAA=="
+            },
+            null,
+            {
+              "$bytes": "sAQAAgAA"
+            },
+            null,
+            null,
+            false,
+            [
+              [
+                "open"
+              ],
+              [
+                "receive",
+                " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1"
+              ],
+              [
+                "receive",
+                {
+                  "$bytes": "kAQAAQAB"
+                }
+              ],
+              [
+                "receive",
+                {
+                  "$bytes": "0AA="
+                }
+              ],
+              [
+                "receive",
+                {
+                  "$bytes": "8AIAAA=="
+                }
+              ],
+              [
+                "receive",
+                {
+                  "$bytes": "sAQAAgAA"
+                }
+              ],
+              [
+                "close"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testV5PublishFanOutWithWildcard",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "v5-sub",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect_sub",
+          "expect": "\u0010/\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\u0006v5-sub"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "sensors/+/temp"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "expect": {
+            "$bytes": "ghQAAQAADnNlbnNvcnMvKy90ZW1wAQ=="
+          }
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "v5-pub",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect_pub",
+          "expect": "\u0010/\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\u0006v5-pub"
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "sensors/room1/temp",
+            "payload": "21.5",
+            "qos": 1,
+            "packet_id": 100,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "unit",
+                      "C"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "publish",
+          "expect": "2%\u0000\u0012sensors/room1/temp\u0000d\n&\u0000\u0004unit\u0000\u0001C21.5"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "sub"
+              },
+              {
+                "send": "sub",
+                "data": {
+                  "$ref": "connect_sub"
+                }
+              },
+              {
+                "receive": "sub"
+              },
+              {
+                "send": "sub",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "sub"
+              },
+              {
+                "connect": "pub"
+              },
+              {
+                "send": "pub",
+                "data": {
+                  "$ref": "connect_pub"
+                }
+              },
+              {
+                "receive": "pub"
+              },
+              {
+                "send": "pub",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "receive": "pub"
+              },
+              {
+                "receive": "sub"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            "@\u0002\u0000d",
+            "0#\u0000\u0012sensors/room1/temp\n&\u0000\u0004unit\u0000\u0001C21.5"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testV3FullSession",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "v3-client",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "user",
+            "password": "ok"
+          },
+          "bind": "connect",
+          "expect": {
+            "$bytes": "EB8ABE1RVFQEwgA8AAl2My1jbGllbnQABHVzZXIAAm9r"
+          }
+        },
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "news/tech"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "expect": {
+            "$bytes": "gg4AAQAJbmV3cy90ZWNoAQ=="
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "news/tech",
+            "payload": "hello",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "publish",
+          "expect": "0\u0010\u0000\tnews/techhello"
+        },
+        {
+          "op": "v3.disconnect",
+          "args": {},
+          "bind": "disconnect",
+          "expect": {
+            "$bytes": "4AA="
+          }
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connected": "c"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            {
+              "$bytes": "kAMAAQE="
+            },
+            null,
+            "0\u0010\u0000\tnews/techhello",
+            null,
+            null,
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testAuthRejectionClosesConnection",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "v5-bad",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "deny"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect5",
+          "expect": "\u00101\u0000\u0004MQTT\u0005\u0002\u0000<\u001e\u0015\u0000\u0004test\u0016\u0000\u0004deny&\u0000\tprojectId\u0000\u0002p1\u0000\u0006v5-bad"
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "v3-bad",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "user",
+            "password": "deny"
+          },
+          "bind": "connect3",
+          "expect": {
+            "$bytes": "EB4ABE1RVFQEwgA8AAZ2My1iYWQABHVzZXIABGRlbnk="
+          }
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "v5"
+              },
+              {
+                "send": "v5",
+                "data": {
+                  "$ref": "connect5"
+                }
+              },
+              {
+                "receive": "v5"
+              },
+              {
+                "receive": "v5"
+              },
+              {
+                "connected": "v5"
+              },
+              {
+                "connect": "v3"
+              },
+              {
+                "send": "v3",
+                "data": {
+                  "$ref": "connect3"
+                }
+              },
+              {
+                "receive": "v3"
+              },
+              {
+                "receive": "v3"
+              },
+              {
+                "connected": "v3"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            {
+              "$bytes": "IAMAhwA="
+            },
+            null,
+            false,
+            null,
+            null,
+            " \u0002\u0000\u0005",
+            null,
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUnsubscribeStopsDelivery",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "v5-unsub",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "expect": "\u00101\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\bv5-unsub"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "room/1"
+            ],
+            "qos": 0
+          },
+          "bind": "subscribe",
+          "expect": {
+            "$bytes": "ggwAAQAABnJvb20vMQA="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "room/1",
+            "payload": "first",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "first",
+          "expect": "0\u000e\u0000\u0006room/1\u0000first"
+        },
+        {
+          "op": "v5.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "room/1"
+            ]
+          },
+          "bind": "unsubscribe",
+          "expect": {
+            "$bytes": "ogsAAgAABnJvb20vMQ=="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "room/1",
+            "payload": "second",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "second",
+          "expect": "0\u000f\u0000\u0006room/1\u0000second"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "c",
+                "timeout": 1
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "first"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "unsubscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "second"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connected": "c"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            null,
+            "0\u000e\u0000\u0006room/1\u0000first",
+            null,
+            {
+              "$bytes": "sAQAAgAA"
+            },
+            null,
+            null,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the same session over TLS (mqtts://)",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "tls",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "user",
+            "password": "ok"
+          },
+          "bind": "connect",
+          "expect": {
+            "$bytes": "EBkABE1RVFQEwgA8AAN0bHMABHVzZXIAAm9r"
+          }
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "c",
+                "transport": "tls"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "ping",
+                  "path": "/0"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "close": "c"
+              },
+              {
+                "connected": "c"
+              },
+              {
+                "log": "c"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            {
+              "$bytes": "0AA="
+            },
+            null,
+            false,
+            [
+              [
+                "open"
+              ],
+              [
+                "receive",
+                " \u0002\u0000\u0000"
+              ],
+              [
+                "receive",
+                {
+                  "$bytes": "0AA="
+                }
+              ],
+              [
+                "close"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "listen() receives until the broker closes, then sending fails",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "listener",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "connect",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\blistener"
+        },
+        {
+          "op": "v3.disconnect",
+          "args": {},
+          "bind": "disconnect",
+          "expect": {
+            "$bytes": "4AA="
+          }
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "connect": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "listen": "c"
+              },
+              {
+                "connected": "c"
+              },
+              {
+                "log": "c"
+              },
+              {
+                "send": "c",
+                "data": "x"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            null,
+            false,
+            [
+              [
+                "open"
+              ],
+              [
+                "receive",
+                " \u0002\u0000\u0000"
+              ],
+              [
+                "close"
+              ]
+            ],
+            {
+              "error": "RuntimeException",
+              "message": "Not connected to MQTT broker"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

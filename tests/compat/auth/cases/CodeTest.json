@@ -1,0 +1,307 @@
+{
+  "source": "packages/auth/tests/Proofs/CodeTest.php",
+  "cases": [
+    {
+      "name": "generate",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^\\d{6}$/",
+            "value": {
+              "$ref": "c"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "hash and verify",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.hash_name",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": "argon2"
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": "<masked>"
+        },
+        {
+          "op": "proof.hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "c"
+            }
+          },
+          "bind": "h",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted argon2"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "h"
+            },
+            "start": 0,
+            "length": 10
+          },
+          "expect": "$argon2id$"
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "c"
+            },
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": "000000x",
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "custom length",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code",
+            "length": 8
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^\\d{8}$/",
+            "value": {
+              "$ref": "c"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "get and set length",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^\\d{4}$/",
+            "value": {
+              "$ref": "c"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "invalid lengths",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Code length must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "proof.set_length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "length": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Code length must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "proof.length",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "code",
+            "length": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Code length must be greater than 0"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

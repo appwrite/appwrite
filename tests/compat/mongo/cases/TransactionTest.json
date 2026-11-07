@@ -1,0 +1,1673 @@
+{
+  "source": "vendor/utopia-php/mongo/tests/TransactionTest.php",
+  "cases": [
+    {
+      "name": "testSessionManagement",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "options": {
+              "causalConsistency": true,
+              "defaultTransactionOptions": {
+                "readConcern": {
+                  "level": "majority"
+                },
+                "writeConcern": {
+                  "w": 1,
+                  "j": true
+                }
+              }
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "none",
+            "txnNumber": 0,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "error": "Session not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTransactionStateManagement",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.is_replica_set",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "options": {
+              "readConcern": {
+                "level": "majority"
+              },
+              "writeConcern": {
+                "w": 1
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "in_progress",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "document": {
+              "name": "test_doc",
+              "value": 42
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: writeConcern is not allowed within a multi-statement transaction"
+            }
+          }
+        },
+        {
+          "op": "client.commit_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "mask": {
+            "paths": [
+              "/$exception/message"
+            ],
+            "reason": "the server names the session (a random id) in the message"
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "<masked>",
+              "code": 251,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "in_progress",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTransactionAbort",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "document": {
+              "name": "abort_test",
+              "value": 999
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "name": "abort_test",
+            "value": 999,
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.abort_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "aborted",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "abort_test"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithTransactionHelper",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "test_collection"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.with_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "client.insert",
+                  "args": {
+                    "collection": "test_collection",
+                    "document": {
+                      "name": "with_transaction_1",
+                      "counter": 1
+                    }
+                  }
+                },
+                {
+                  "op": "client.insert",
+                  "args": {
+                    "collection": "test_collection",
+                    "document": {
+                      "name": "with_transaction_2",
+                      "counter": 2
+                    }
+                  }
+                }
+              ],
+              "return": "transaction_completed"
+            },
+            "options": {
+              "readConcern": {
+                "level": "majority"
+              },
+              "writeConcern": {
+                "w": 1
+              },
+              "maxRetries": 3
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: writeConcern is not allowed within a multi-statement transaction"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "with_transaction_1"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "with_transaction_2"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "aborted",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.with_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "client.insert",
+                  "args": {
+                    "collection": "test_collection",
+                    "document": {
+                      "name": "rolled back"
+                    }
+                  }
+                }
+              ],
+              "throw": {
+                "message": "callback failed",
+                "code": 7
+              }
+            },
+            "options": {
+              "maxRetries": 0
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "callback failed",
+              "code": 7,
+              "transient": true,
+              "network": true,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Network Error"
+            }
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "rolled back"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "aborted",
+            "txnNumber": 2,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testReadWriteConcerns",
+      "steps": [
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "w": "majority",
+              "j": true,
+              "wtimeout": 5000
+            }
+          },
+          "expect": {
+            "w": "majority",
+            "j": true,
+            "wtimeout": 5000
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": "majority"
+            }
+          },
+          "expect": {
+            "level": "majority"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": "invalid"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: invalid"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testCRUDWithSessionAndConcerns",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "test_collection"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "document": {
+              "name": "crud_test",
+              "status": "active"
+            },
+            "options": {
+              "writeConcern": {
+                "w": 1,
+                "j": true
+              }
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: writeConcern is not allowed within a multi-statement transaction",
+              "code": 72,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "in_progress",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "document": {
+              "name": "crud_test",
+              "status": "active"
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "name": "crud_test",
+            "status": "active",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "crud_test"
+            },
+            "options": {
+              "readConcern": {
+                "level": "local"
+              }
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "crud_test",
+                        "status": "active"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "where": {
+              "name": "crud_test"
+            },
+            "updates": {
+              "$set": {
+                "status": "updated"
+              }
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection",
+            "filters": {
+              "name": "crud_test"
+            },
+            "options": {
+              "readConcern": {
+                "level": "local"
+              }
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "client.commit_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "crud_test",
+                        "status": "updated"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "t"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConnectionValidation",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCausalConsistency",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.get_operation_time",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$bson": "<masked>"
+          }
+        },
+        {
+          "op": "client.get_cluster_time",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$object": "<masked>"
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "test_collection"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.test_collection"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_operation_time",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$bson": "<masked>"
+          }
+        },
+        {
+          "op": "client.get_cluster_time",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$object": "<masked>"
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSessionCleanup",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s1",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s2",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s3",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 3,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": []
+          },
+          "expect": {}
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s4",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.cleanup_stale_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 1,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": false,
+            "operationTimeSet": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction misuse",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.commit_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "No active transaction to commit",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.abort_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "No active transaction to abort",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Session already has a transaction in progress",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "txn",
+            "document": {
+              "_id": 1
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "_id": 1
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "txn",
+            "document": {
+              "_id": 1
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E11000 duplicate key error collection: ${ns}.txn index: _id_ dup key: { _id: 1 }",
+              "code": 11000,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": true,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Duplicate Key Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_session_state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "sessionId": "<masked>",
+            "state": "in_progress",
+            "txnNumber": 1,
+            "lastUse": "<masked>",
+            "retryableWriteNumber": 0
+          }
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid session provided to startTransaction",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.commit_transaction",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "session": {
+              "$ref": "s"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid session provided to commitTransaction",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "txn"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [],
+                  "id": 0,
+                  "ns": "${ns}.txn"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[package]
+name = "utopia-user-agent"
+description = "User-agent parsing: operating system, client, device and bot."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/user-agent"
+publish.workspace = true
+
+[dependencies]
+aho-corasick.workspace = true
+memchr.workspace = true
+php-std.workspace = true
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "b254acaf49e5ae867e4e5030bae482ce22c84dfe"

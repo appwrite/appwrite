@@ -1,0 +1,839 @@
+{
+  "source": "packages/cache/tests/CodecTest.php",
+  "cases": [
+    {
+      "name": "json: round trip of \"text\"",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": "text"
+          },
+          "bind": "e",
+          "expect": "\"text\""
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": "text"
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of 42",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": 42
+          },
+          "bind": "e",
+          "expect": "42"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": 42
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of 1.5",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": 1.5
+          },
+          "bind": "e",
+          "expect": "1.5"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": 1.5
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of true",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": true
+          },
+          "bind": "e",
+          "expect": "true"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of null",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": null
+          },
+          "bind": "e",
+          "expect": "null"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of []",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": []
+          },
+          "bind": "e",
+          "expect": "[]"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of {\"a\": 1, \"b\": [2, 3]}",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": {
+              "a": 1,
+              "b": [
+                2,
+                3
+              ]
+            }
+          },
+          "bind": "e",
+          "expect": "{\"a\":1,\"b\":[2,3]}"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                1
+              ],
+              [
+                "b",
+                [
+                  2,
+                  3
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "json: round trip of [1, 2, 3]",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": [
+              1,
+              2,
+              3
+            ]
+          },
+          "bind": "e",
+          "expect": "[1,2,3]"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "json: testPreservesEmptyObjects",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": {
+              "empty": {},
+              "nested": {
+                "empty": {}
+              },
+              "list": [
+                {},
+                {
+                  "x": 1
+                }
+              ],
+              "emptyArray": []
+            }
+          },
+          "bind": "e",
+          "expect": "{\"empty\":{},\"nested\":{\"empty\":{}},\"list\":[{},{\"x\":1}],\"emptyArray\":[]}"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "json: testDecodeThrowsOnForeignBytes",
+      "steps": [
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": {
+              "$bytes": "AAFub3QgYSBwYXlsb2Fk"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Control character error, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of \"text\"",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": "text"
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0011\u0004text"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": "text"
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of 42",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": 42
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0006*"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": 42
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of 1.5",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": 1.5
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "AAAAAgw/+AAAAAAAAA=="
+          }
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": 1.5
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of true",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": true
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0005"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of null",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": null
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0000"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of []",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": []
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0014\u0000"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of {\"a\": 1, \"b\": [2, 3]}",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "a": 1,
+              "b": [
+                2,
+                3
+              ]
+            }
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0014\u0002\u0011\u0001a\u0006\u0001\u0011\u0001b\u0014\u0002\u0006\u0000\u0006\u0002\u0006\u0001\u0006\u0003"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                1
+              ],
+              [
+                "b",
+                [
+                  2,
+                  3
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "igbinary: round trip of [1, 2, 3]",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": [
+              1,
+              2,
+              3
+            ]
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0014\u0003\u0006\u0000\u0006\u0001\u0006\u0001\u0006\u0002\u0006\u0002\u0006\u0003"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "igbinary: testPreservesEmptyObjects",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "empty": {},
+              "nested": {
+                "empty": {}
+              },
+              "list": [
+                {},
+                {
+                  "x": 1
+                }
+              ],
+              "emptyArray": []
+            }
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0014\u0004\u0011\u0005empty\u0017\bstdClass\u0014\u0000\u0011\u0006nested\u0014\u0001\u000e\u0000\u001a\u0001\u0014\u0000\u0011\u0004list\u0014\u0002\u0006\u0000\u001a\u0001\u0014\u0000\u0006\u0001\u0014\u0001\u0011\u0001x\u0006\u0001\u0011\nemptyArray\u0014\u0000"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "igbinary: testDecodeThrowsOnForeignBytes",
+      "steps": [
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$bytes": "AAFub3QgYSBwYXlsb2Fk"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "igbinary_unserialize_header: unsupported version: 93807, should be 1 or 2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonDecodesObjectsToArrays",
+      "steps": [
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": "{\"a\":{\"b\":1}}"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                {
+                  "$array": [
+                    [
+                      "b",
+                      1
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonWritesTheHistoricalWireFormat",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": {
+              "time": 1,
+              "data": "x"
+            }
+          },
+          "expect": "{\"time\":1,\"data\":\"x\"}"
+        }
+      ]
+    },
+    {
+      "name": "testIgbinaryDecodesItsOwnNull",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "igbinary",
+            "value": null
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0000"
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testIgbinaryRejectsEmptyInput",
+      "steps": [
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "igbinary",
+            "bytes": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Value is not an igbinary payload."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "json: empty objects next to NUL property names",
+      "steps": [
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": "{\"\\u0000a\":1}"
+          },
+          "expect": {
+            "$array": [
+              [
+                "\u0000a",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": "{\"\\u0000a\":1,\"b\":{}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "The decoded property name is invalid"
+            }
+          }
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": "{\"7\":{\"8\":{ }},\"x\":\"{}\"}"
+          },
+          "expect": {
+            "$array": [
+              [
+                7,
+                {
+                  "$array": [
+                    [
+                      8,
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "x",
+                "{}"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "codec.decode",
+          "args": {
+            "codec": "json",
+            "bytes": "[{},{\"0\":\"a\"}]"
+          },
+          "expect": [
+            {
+              "$object": []
+            },
+            [
+              "a"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "json: unencodable values",
+      "steps": [
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "codec.encode",
+          "args": {
+            "codec": "json",
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Inf and NaN cannot be JSON encoded"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3867 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/FilterTypeBranchesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FilterTypeBranchesTest::test_vector_requires_a_numeric_array_of_the_declared_size",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1516"
+          },
+          "bind": "s2415",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1517"
+          },
+          "bind": "s2416",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1518"
+          },
+          "bind": "s2417",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1519"
+          },
+          "bind": "s2418",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1516"
+                },
+                {
+                  "$obj": "o1517"
+                },
+                {
+                  "$obj": "o1518"
+                },
+                {
+                  "$obj": "o1519"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1520"
+          },
+          "bind": "s2419",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            },
+            "as": "o1521"
+          },
+          "bind": "s2420",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1521"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "vector",
+              "values": [
+                "not-an-array"
+              ]
+            },
+            "as": "o1522"
+          },
+          "bind": "s2422",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "vector",
+              "values": [
+                "not-an-array"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1522"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector query value must be an array"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  "two",
+                  3.0
+                ]
+              ]
+            },
+            "as": "o1523"
+          },
+          "bind": "s2425",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  "two",
+                  3.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1523"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector query value must contain only numeric values"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o1524"
+          },
+          "bind": "s2428",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1524"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1520"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector query value must have 3 elements"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_spatial_requires_an_array_value",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1525"
+          },
+          "bind": "s2431",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1526"
+          },
+          "bind": "s2432",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1527"
+          },
+          "bind": "s2433",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1528"
+          },
+          "bind": "s2434",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1525"
+                },
+                {
+                  "$obj": "o1526"
+                },
+                {
+                  "$obj": "o1527"
+                },
+                {
+                  "$obj": "o1528"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1529"
+          },
+          "bind": "s2435",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "point",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o1530"
+          },
+          "bind": "s2436",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "point",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1529"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1530"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "point",
+              "values": [
+                "1,2"
+              ]
+            },
+            "as": "o1531"
+          },
+          "bind": "s2438",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "point",
+              "values": [
+                "1,2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1529"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1531"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1529"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Spatial data must be an array"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceEqual not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o1532"
+          },
+          "bind": "s2441",
+          "expect": {
+            "$query": {
+              "method": "distanceEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "NAN"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1544"
+          },
+          "bind": "s2453",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1545"
+          },
+          "bind": "s2454",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1546"
+          },
+          "bind": "s2455",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1547"
+          },
+          "bind": "s2456",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1544"
+                },
+                {
+                  "$obj": "o1545"
+                },
+                {
+                  "$obj": "o1546"
+                },
+                {
+                  "$obj": "o1547"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1548"
+          },
+          "bind": "s2457",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1548"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1532"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1548"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceNotEqual not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceNotEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o1533"
+          },
+          "bind": "s2442",
+          "expect": {
+            "$query": {
+              "method": "distanceNotEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "NAN"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1549"
+          },
+          "bind": "s2460",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1550"
+          },
+          "bind": "s2461",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1551"
+          },
+          "bind": "s2462",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1552"
+          },
+          "bind": "s2463",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1549"
+                },
+                {
+                  "$obj": "o1550"
+                },
+                {
+                  "$obj": "o1551"
+                },
+                {
+                  "$obj": "o1552"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1553"
+          },
+          "bind": "s2464",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1553"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1533"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1553"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceGreaterThan not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceGreaterThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o1534"
+          },
+          "bind": "s2443",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "NAN"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1554"
+          },
+          "bind": "s2467",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1555"
+          },
+          "bind": "s2468",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1556"
+          },
+          "bind": "s2469",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1557"
+          },
+          "bind": "s2470",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1554"
+                },
+                {
+                  "$obj": "o1555"
+                },
+                {
+                  "$obj": "o1556"
+                },
+                {
+                  "$obj": "o1557"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1558"
+          },
+          "bind": "s2471",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1558"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1534"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1558"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceLessThan not a number in meters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "NAN"
+              },
+              "meters": true
+            },
+            "as": "o1535"
+          },
+          "bind": "s2444",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "NAN"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1559"
+          },
+          "bind": "s2474",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1560"
+          },
+          "bind": "s2475",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1561"
+          },
+          "bind": "s2476",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1562"
+          },
+          "bind": "s2477",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1559"
+                },
+                {
+                  "$obj": "o1560"
+                },
+                {
+                  "$obj": "o1561"
+                },
+                {
+                  "$obj": "o1562"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1563"
+          },
+          "bind": "s2478",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1563"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1535"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1563"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceEqual infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "INF"
+              }
+            },
+            "as": "o1536"
+          },
+          "bind": "s2445",
+          "expect": {
+            "$query": {
+              "method": "distanceEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1564"
+          },
+          "bind": "s2481",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1565"
+          },
+          "bind": "s2482",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1566"
+          },
+          "bind": "s2483",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1567"
+          },
+          "bind": "s2484",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1564"
+                },
+                {
+                  "$obj": "o1565"
+                },
+                {
+                  "$obj": "o1566"
+                },
+                {
+                  "$obj": "o1567"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1568"
+          },
+          "bind": "s2485",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1568"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1536"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1568"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceNotEqual infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceNotEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "INF"
+              }
+            },
+            "as": "o1537"
+          },
+          "bind": "s2446",
+          "expect": {
+            "$query": {
+              "method": "distanceNotEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1569"
+          },
+          "bind": "s2488",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1570"
+          },
+          "bind": "s2489",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1571"
+          },
+          "bind": "s2490",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1572"
+          },
+          "bind": "s2491",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1569"
+                },
+                {
+                  "$obj": "o1570"
+                },
+                {
+                  "$obj": "o1571"
+                },
+                {
+                  "$obj": "o1572"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1573"
+          },
+          "bind": "s2492",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1573"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1537"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1573"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceGreaterThan infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceGreaterThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "INF"
+              }
+            },
+            "as": "o1538"
+          },
+          "bind": "s2447",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1574"
+          },
+          "bind": "s2495",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1575"
+          },
+          "bind": "s2496",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1576"
+          },
+          "bind": "s2497",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1577"
+          },
+          "bind": "s2498",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1574"
+                },
+                {
+                  "$obj": "o1575"
+                },
+                {
+                  "$obj": "o1576"
+                },
+                {
+                  "$obj": "o1577"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1578"
+          },
+          "bind": "s2499",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1578"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1538"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1578"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceLessThan infinite in meters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "INF"
+              },
+              "meters": true
+            },
+            "as": "o1539"
+          },
+          "bind": "s2448",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "INF"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1579"
+          },
+          "bind": "s2502",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1580"
+          },
+          "bind": "s2503",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1581"
+          },
+          "bind": "s2504",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1582"
+          },
+          "bind": "s2505",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1579"
+                },
+                {
+                  "$obj": "o1580"
+                },
+                {
+                  "$obj": "o1581"
+                },
+                {
+                  "$obj": "o1582"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1583"
+          },
+          "bind": "s2506",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1583"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1539"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1583"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceEqual negatively infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o1540"
+          },
+          "bind": "s2449",
+          "expect": {
+            "$query": {
+              "method": "distanceEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "-INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1584"
+          },
+          "bind": "s2509",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1585"
+          },
+          "bind": "s2510",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1586"
+          },
+          "bind": "s2511",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1587"
+          },
+          "bind": "s2512",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1584"
+                },
+                {
+                  "$obj": "o1585"
+                },
+                {
+                  "$obj": "o1586"
+                },
+                {
+                  "$obj": "o1587"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1588"
+          },
+          "bind": "s2513",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1588"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1540"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1588"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceNotEqual negatively infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceNotEqual",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o1541"
+          },
+          "bind": "s2450",
+          "expect": {
+            "$query": {
+              "method": "distanceNotEqual",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "-INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1589"
+          },
+          "bind": "s2516",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1590"
+          },
+          "bind": "s2517",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1591"
+          },
+          "bind": "s2518",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1592"
+          },
+          "bind": "s2519",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1589"
+                },
+                {
+                  "$obj": "o1590"
+                },
+                {
+                  "$obj": "o1591"
+                },
+                {
+                  "$obj": "o1592"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1593"
+          },
+          "bind": "s2520",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1593"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1541"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1593"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceGreaterThan negatively infinite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceGreaterThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o1542"
+          },
+          "bind": "s2451",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "-INF"
+                  },
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1594"
+          },
+          "bind": "s2523",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1595"
+          },
+          "bind": "s2524",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1596"
+          },
+          "bind": "s2525",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1597"
+          },
+          "bind": "s2526",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1594"
+                },
+                {
+                  "$obj": "o1595"
+                },
+                {
+                  "$obj": "o1596"
+                },
+                {
+                  "$obj": "o1597"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1598"
+          },
+          "bind": "s2527",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1598"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1542"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1598"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_distance_must_be_finite#distanceLessThan negatively infinite in meters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": {
+                "$float": "-INF"
+              },
+              "meters": true
+            },
+            "as": "o1543"
+          },
+          "bind": "s2452",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  {
+                    "$float": "-INF"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1599"
+          },
+          "bind": "s2530",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1600"
+          },
+          "bind": "s2531",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1601"
+          },
+          "bind": "s2532",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1602"
+          },
+          "bind": "s2533",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1599"
+                },
+                {
+                  "$obj": "o1600"
+                },
+                {
+                  "$obj": "o1601"
+                },
+                {
+                  "$obj": "o1602"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1603"
+          },
+          "bind": "s2534",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1603"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1543"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1603"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a finite distance"
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_finite_distance_is_valid",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1604"
+          },
+          "bind": "s2537",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1605"
+          },
+          "bind": "s2538",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1606"
+          },
+          "bind": "s2539",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1607"
+          },
+          "bind": "s2540",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1604"
+                },
+                {
+                  "$obj": "o1605"
+                },
+                {
+                  "$obj": "o1606"
+                },
+                {
+                  "$obj": "o1607"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1608"
+          },
+          "bind": "s2541",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": 1000,
+              "meters": true
+            },
+            "as": "o1609"
+          },
+          "bind": "s2542",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  1000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1608"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1609"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceGreaterThan",
+            "args": {
+              "attribute": "point",
+              "values": [
+                1.0,
+                2.0
+              ],
+              "distance": 0.5
+            },
+            "as": "o1610"
+          },
+          "bind": "s2544",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "point",
+              "values": [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  0.5,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1608"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1610"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_object_containment_rejects_mixed_key_arrays",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1611"
+          },
+          "bind": "s2546",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1612"
+          },
+          "bind": "s2547",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1613"
+          },
+          "bind": "s2548",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1614"
+          },
+          "bind": "s2549",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1611"
+                },
+                {
+                  "$obj": "o1612"
+                },
+                {
+                  "$obj": "o1613"
+                },
+                {
+                  "$obj": "o1614"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1615"
+          },
+          "bind": "s2550",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "object",
+              "values": [
+                {
+                  "a": 1
+                }
+              ]
+            },
+            "as": "o1616"
+          },
+          "bind": "s2551",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "object",
+              "values": [
+                {
+                  "a": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1615"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1616"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "object",
+              "values": [
+                "plain-string"
+              ]
+            },
+            "as": "o1617"
+          },
+          "bind": "s2553",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "object",
+              "values": [
+                "plain-string"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1615"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1617"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "object",
+              "values": [
+                {
+                  "a": 1,
+                  "0": "b"
+                }
+              ]
+            },
+            "as": "o1618"
+          },
+          "bind": "s2555",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "object",
+              "values": [
+                {
+                  "a": 1,
+                  "0": "b"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1615"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1618"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1615"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid object query structure for attribute \"object\""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "object",
+              "values": [
+                {
+                  "nested": {
+                    "x": 1,
+                    "0": "y"
+                  }
+                }
+              ]
+            },
+            "as": "o1619"
+          },
+          "bind": "s2558",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "object",
+              "values": [
+                {
+                  "nested": {
+                    "x": 1,
+                    "0": "y"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1615"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1619"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_a_dotted_object_path_is_validated_as_a_string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1620"
+          },
+          "bind": "s2560",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1621"
+          },
+          "bind": "s2561",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1622"
+          },
+          "bind": "s2562",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1623"
+          },
+          "bind": "s2563",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1620"
+                },
+                {
+                  "$obj": "o1621"
+                },
+                {
+                  "$obj": "o1622"
+                },
+                {
+                  "$obj": "o1623"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1624"
+          },
+          "bind": "s2564",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "object.nested",
+              "values": [
+                "a-string"
+              ]
+            },
+            "as": "o1625"
+          },
+          "bind": "s2565",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "object.nested",
+              "values": [
+                "a-string"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1624"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1625"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FilterTypeBranchesTest::test_every_value_is_checked_not_just_the_first",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "vector",
+                "key": "vector",
+                "type": "vector",
+                "array": false,
+                "size": 3
+              }
+            },
+            "as": "o1626"
+          },
+          "bind": "s2567",
+          "expect": {
+            "$document": {
+              "$id": "vector",
+              "key": "vector",
+              "type": "vector",
+              "array": false,
+              "size": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "point",
+                "key": "point",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o1627"
+          },
+          "bind": "s2568",
+          "expect": {
+            "$document": {
+              "$id": "point",
+              "key": "point",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "object",
+                "key": "object",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o1628"
+          },
+          "bind": "s2569",
+          "expect": {
+            "$document": {
+              "$id": "object",
+              "key": "object",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "text",
+                "key": "text",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1629"
+          },
+          "bind": "s2570",
+          "expect": {
+            "$document": {
+              "$id": "text",
+              "key": "text",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1626"
+                },
+                {
+                  "$obj": "o1627"
+                },
+                {
+                  "$obj": "o1628"
+                },
+                {
+                  "$obj": "o1629"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportUnsignedBigInt": true
+            },
+            "as": "o1630"
+          },
+          "bind": "s2571",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                "not-an-array"
+              ]
+            },
+            "as": "o1631"
+          },
+          "bind": "s2572",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "vector",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                "not-an-array"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1630"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1631"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1630"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector query value must be an array"
+        }
+      ]
+    }
+  ]
+}

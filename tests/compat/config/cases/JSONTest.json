@@ -1,0 +1,364 @@
+{
+  "source": "packages/config/tests/Parser/JSONTest.php",
+  "cases": [
+    {
+      "name": "testJSONBasicTypes",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "    {\n      \"string\": \"hello world\",\n      \"unicode_string\": \"ä你こحب🌍\",\n      \"integer\": 42,\n      \"float\": 3.14159,\n      \"negative\": -50,\n      \"boolean_true\": true,\n      \"boolean_false\": false,\n      \"null_value\": null\n    }"
+          },
+          "expect": {
+            "$array": [
+              [
+                "string",
+                "hello world"
+              ],
+              [
+                "unicode_string",
+                "ä你こحب🌍"
+              ],
+              [
+                "integer",
+                42
+              ],
+              [
+                "float",
+                3.14159
+              ],
+              [
+                "negative",
+                -50
+              ],
+              [
+                "boolean_true",
+                true
+              ],
+              [
+                "boolean_false",
+                false
+              ],
+              [
+                "null_value",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONArray",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "{\"simple_array\": [1, 2, 3, 4, 5], \"mixed_array\": [\"string\", 42, true, null, 3.14], \"nested_array\": [[1, 2, 3], [\"a\", \"b\", \"c\", \"d\"], [true, false]], \"empty_array\": []}"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_array",
+                [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ]
+              ],
+              [
+                "mixed_array",
+                [
+                  "string",
+                  42,
+                  true,
+                  null,
+                  3.14
+                ]
+              ],
+              [
+                "nested_array",
+                [
+                  [
+                    1,
+                    2,
+                    3
+                  ],
+                  [
+                    "a",
+                    "b",
+                    "c",
+                    "d"
+                  ],
+                  [
+                    true,
+                    false
+                  ]
+                ]
+              ],
+              [
+                "empty_array",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONObject",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "{\"simple_object\": {\"name\": \"John Doe\", \"age\": 30, \"active\": true}, \"nested_object\": {\"user\": {\"profile\": {\"name\": \"Jane\", \"settings\": {\"theme\": \"dark\"}}}}, \"empty_object\": {}}"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_object",
+                {
+                  "$array": [
+                    [
+                      "name",
+                      "John Doe"
+                    ],
+                    [
+                      "age",
+                      30
+                    ],
+                    [
+                      "active",
+                      true
+                    ]
+                  ]
+                }
+              ],
+              [
+                "nested_object",
+                {
+                  "$array": [
+                    [
+                      "user",
+                      {
+                        "$array": [
+                          [
+                            "profile",
+                            {
+                              "$array": [
+                                [
+                                  "name",
+                                  "Jane"
+                                ],
+                                [
+                                  "settings",
+                                  {
+                                    "$array": [
+                                      [
+                                        "theme",
+                                        "dark"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty_object",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONParseExceptionInvalid",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "{\"invalid\": json}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid JSON file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONParseExceptionNumber",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": 12
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONParseExceptionBoolean",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONParseExceptionNull",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": null
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONScalarTopLevelThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "\"foo\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a JSON object."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "123"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a JSON object."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "true"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a JSON object."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "null"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a JSON object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONTopLevelListThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "[\"secret\", \"other\"]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a JSON object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJSONEdgeCases",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": ""
+          },
+          "expect": []
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "{}"
+          },
+          "expect": []
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "json",
+            "contents": "[]"
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

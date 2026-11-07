@@ -1,0 +1,17 @@
+[package]
+name = "utopia-async-macros"
+description = "The #[utopia_async::main] and #[utopia_async::test] attributes: run an async function on a utopia-async runtime."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/async"
+publish.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = { workspace = true, features = ["proc-macro"] }
+quote = { workspace = true, features = ["proc-macro"] }
+syn = { workspace = true, features = ["proc-macro"] }

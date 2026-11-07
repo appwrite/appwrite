@@ -1,0 +1,114 @@
+{
+  "source": "packages/validators/tests/NullableTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateNull",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 0
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Nullable",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              }
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "text"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": null
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": 123
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanReturnValidator",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 0
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Nullable",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              }
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "property": "validator"
+          },
+          "expect": {
+            "description": "Value must be a valid string and at least 1 chars",
+            "type": "string"
+          }
+        }
+      ]
+    }
+  ]
+}

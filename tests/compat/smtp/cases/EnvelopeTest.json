@@ -1,0 +1,233 @@
+{
+  "source": "packages/smtp/tests/EnvelopeTest.php",
+  "cases": [
+    {
+      "name": "carries blind recipients",
+      "op": "envelope.from_message",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "cc": [
+            {
+              "email": "ada@example.test"
+            }
+          ],
+          "bcc": [
+            {
+              "email": "eve@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test",
+          "ada@example.test",
+          "eve@example.test"
+        ],
+        "international": false
+      }
+    },
+    {
+      "name": "an address listed twice is sent once",
+      "op": "envelope.from_message",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "bcc": [
+            {
+              "email": "john@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": false
+      }
+    },
+    {
+      "name": "a message whose headers need UTF-8",
+      "op": "envelope.from_message",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "reply_to": [
+            {
+              "email": "jäne@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": true
+      }
+    },
+    {
+      "name": "an empty sender is allowed for bounces",
+      "op": "envelope.new",
+      "args": {
+        "sender": "",
+        "recipients": [
+          "john@example.test"
+        ]
+      },
+      "expect": {
+        "sender": "",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": false
+      }
+    },
+    {
+      "name": "rejects an envelope with no recipients",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jane@example.test",
+        "recipients": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "An envelope needs at least one recipient"
+        }
+      }
+    },
+    {
+      "name": "rejects a command injected through a path",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test>\r\nRCPT TO:<eve@example.test"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "A path must not span lines"
+        }
+      }
+    },
+    {
+      "name": "rejects a command injected through the sender",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jane@example.test\n",
+        "recipients": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "An envelope needs at least one recipient"
+        }
+      }
+    },
+    {
+      "name": "detects an international path",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jäne@example.test",
+        "recipients": [
+          "john@example.test"
+        ]
+      },
+      "expect": {
+        "sender": "jäne@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": true
+      }
+    },
+    {
+      "name": "an ASCII envelope is not international",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ]
+      },
+      "expect": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": false
+      }
+    },
+    {
+      "name": "asks for UTF-8 when told to",
+      "op": "envelope.new",
+      "args": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "utf8": true
+      },
+      "expect": {
+        "sender": "jane@example.test",
+        "recipients": [
+          "john@example.test"
+        ],
+        "international": true
+      }
+    }
+  ]
+}

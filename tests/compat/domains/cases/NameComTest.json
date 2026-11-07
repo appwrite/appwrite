@@ -1,0 +1,5066 @@
+{
+  "source": "packages/domains/tests/E2E/Registrar/NameComTest.php",
+  "cases": [
+    {
+      "name": "getName",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getName",
+            "args": {}
+          },
+          "expect": {
+            "result": "namecom",
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "available",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.com",
+                "google.com",
+                "kqzxwvbnmt.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"kqzxwvbnmt.com\", \"purchasable\": true, \"purchasePrice\": 12.99, \"renewalPrice\": 14.99}, {\"domainName\": \"google.com\", \"purchasable\": false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.com": true,
+              "google.com": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"kqzxwvbnmt.com\",\"google.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "available in multiple batches",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwv-1.com",
+                "kqzxwv-2.com",
+                "kqzxwv-3.com",
+                "kqzxwv-4.com",
+                "kqzxwv-5.com",
+                "kqzxwv-6.com",
+                "kqzxwv-7.com",
+                "kqzxwv-8.com",
+                "kqzxwv-9.com",
+                "kqzxwv-10.com",
+                "kqzxwv-11.com",
+                "kqzxwv-12.com",
+                "kqzxwv-13.com",
+                "kqzxwv-14.com",
+                "kqzxwv-15.com",
+                "kqzxwv-16.com",
+                "kqzxwv-17.com",
+                "kqzxwv-18.com",
+                "kqzxwv-19.com",
+                "kqzxwv-20.com",
+                "kqzxwv-21.com",
+                "kqzxwv-22.com",
+                "kqzxwv-23.com",
+                "kqzxwv-24.com",
+                "kqzxwv-25.com",
+                "kqzxwv-26.com",
+                "kqzxwv-27.com",
+                "kqzxwv-28.com",
+                "kqzxwv-29.com",
+                "kqzxwv-30.com",
+                "kqzxwv-31.com",
+                "kqzxwv-32.com",
+                "kqzxwv-33.com",
+                "kqzxwv-34.com",
+                "kqzxwv-35.com",
+                "kqzxwv-36.com",
+                "kqzxwv-37.com",
+                "kqzxwv-38.com",
+                "kqzxwv-39.com",
+                "kqzxwv-40.com",
+                "kqzxwv-41.com",
+                "kqzxwv-42.com",
+                "kqzxwv-43.com",
+                "kqzxwv-44.com",
+                "kqzxwv-45.com",
+                "kqzxwv-46.com",
+                "kqzxwv-47.com",
+                "kqzxwv-48.com",
+                "kqzxwv-49.com",
+                "kqzxwv-50.com",
+                "kqzxwv-51.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"kqzxwv-1.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-2.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-3.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-4.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-5.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-6.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-7.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-8.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-9.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-10.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-11.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-12.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-13.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-14.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-15.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-16.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-17.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-18.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-19.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-20.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-21.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-22.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-23.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-24.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-25.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-26.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-27.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-28.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-29.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-30.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-31.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-32.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-33.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-34.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-35.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-36.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-37.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-38.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-39.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-40.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-41.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-42.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-43.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-44.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-45.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-46.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-47.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-48.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-49.com\", \"purchasable\": true}, {\"domainName\": \"kqzxwv-50.com\", \"purchasable\": true}]}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"kqzxwv-51.com\", \"purchasable\": true}, {\"domainName\": \"unasked.com\", \"purchasable\": true}, {\"purchasable\": true}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "kqzxwv-1.com": true,
+              "kqzxwv-2.com": true,
+              "kqzxwv-3.com": true,
+              "kqzxwv-4.com": true,
+              "kqzxwv-5.com": true,
+              "kqzxwv-6.com": true,
+              "kqzxwv-7.com": true,
+              "kqzxwv-8.com": true,
+              "kqzxwv-9.com": true,
+              "kqzxwv-10.com": true,
+              "kqzxwv-11.com": true,
+              "kqzxwv-12.com": true,
+              "kqzxwv-13.com": true,
+              "kqzxwv-14.com": true,
+              "kqzxwv-15.com": true,
+              "kqzxwv-16.com": true,
+              "kqzxwv-17.com": true,
+              "kqzxwv-18.com": true,
+              "kqzxwv-19.com": true,
+              "kqzxwv-20.com": true,
+              "kqzxwv-21.com": true,
+              "kqzxwv-22.com": true,
+              "kqzxwv-23.com": true,
+              "kqzxwv-24.com": true,
+              "kqzxwv-25.com": true,
+              "kqzxwv-26.com": true,
+              "kqzxwv-27.com": true,
+              "kqzxwv-28.com": true,
+              "kqzxwv-29.com": true,
+              "kqzxwv-30.com": true,
+              "kqzxwv-31.com": true,
+              "kqzxwv-32.com": true,
+              "kqzxwv-33.com": true,
+              "kqzxwv-34.com": true,
+              "kqzxwv-35.com": true,
+              "kqzxwv-36.com": true,
+              "kqzxwv-37.com": true,
+              "kqzxwv-38.com": true,
+              "kqzxwv-39.com": true,
+              "kqzxwv-40.com": true,
+              "kqzxwv-41.com": true,
+              "kqzxwv-42.com": true,
+              "kqzxwv-43.com": true,
+              "kqzxwv-44.com": true,
+              "kqzxwv-45.com": true,
+              "kqzxwv-46.com": true,
+              "kqzxwv-47.com": true,
+              "kqzxwv-48.com": true,
+              "kqzxwv-49.com": true,
+              "kqzxwv-50.com": true,
+              "kqzxwv-51.com": true
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"kqzxwv-1.com\",\"kqzxwv-2.com\",\"kqzxwv-3.com\",\"kqzxwv-4.com\",\"kqzxwv-5.com\",\"kqzxwv-6.com\",\"kqzxwv-7.com\",\"kqzxwv-8.com\",\"kqzxwv-9.com\",\"kqzxwv-10.com\",\"kqzxwv-11.com\",\"kqzxwv-12.com\",\"kqzxwv-13.com\",\"kqzxwv-14.com\",\"kqzxwv-15.com\",\"kqzxwv-16.com\",\"kqzxwv-17.com\",\"kqzxwv-18.com\",\"kqzxwv-19.com\",\"kqzxwv-20.com\",\"kqzxwv-21.com\",\"kqzxwv-22.com\",\"kqzxwv-23.com\",\"kqzxwv-24.com\",\"kqzxwv-25.com\",\"kqzxwv-26.com\",\"kqzxwv-27.com\",\"kqzxwv-28.com\",\"kqzxwv-29.com\",\"kqzxwv-30.com\",\"kqzxwv-31.com\",\"kqzxwv-32.com\",\"kqzxwv-33.com\",\"kqzxwv-34.com\",\"kqzxwv-35.com\",\"kqzxwv-36.com\",\"kqzxwv-37.com\",\"kqzxwv-38.com\",\"kqzxwv-39.com\",\"kqzxwv-40.com\",\"kqzxwv-41.com\",\"kqzxwv-42.com\",\"kqzxwv-43.com\",\"kqzxwv-44.com\",\"kqzxwv-45.com\",\"kqzxwv-46.com\",\"kqzxwv-47.com\",\"kqzxwv-48.com\",\"kqzxwv-49.com\",\"kqzxwv-50.com\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"kqzxwv-51.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "available skips invalid batches",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "bad..com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"None of the submitted domains are valid\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "bad..com": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"bad..com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "x.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Internal\", \"details\": \"boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Internal(boom)",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"x.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"order\": 4242, \"totalPaid\": 12.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "4242",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": [
+                {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                {
+                  "firstname": "Admin",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              ],
+              "nameservers": [
+                "ns1.x.com"
+              ],
+              "autorenewEnabled": true,
+              "purchasePrice": 120.0,
+              "periodYears": 2
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.net\",\"nameservers\":[\"ns1.x.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Admin\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":true},\"years\":2,\"purchasePrice\":120}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.org",
+              "contacts": {
+                "registrant": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "3": {
+                  "firstname": "Billing",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"order\": \"A1\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "A1",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.org\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Billing\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase taken domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "google.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Domain is not available\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Failed to purchase domain: Domain is not available",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"google.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with invalid contact",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": [
+                {
+                  "firstname": "John",
+                  "lastname": "Doe",
+                  "phone": "+1234567890",
+                  "email": "invalid-email",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "InvalidCountry",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Invalid Argument\", \"details\": \"Invalid value for contacts.registrant.email\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidContactException",
+              "message": "Failed to purchase domain: Invalid Argument(Invalid value for contacts.registrant.email)",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"companyName\":\"Test Inc\",\"email\":\"invalid-email\",\"phone\":\"+1234567890\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"InvalidCountry\"},\"admin\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"companyName\":\"Test Inc\",\"email\":\"invalid-email\",\"phone\":\"+1234567890\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"InvalidCountry\"},\"tech\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"companyName\":\"Test Inc\",\"email\":\"invalid-email\",\"phone\":\"+1234567890\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"InvalidCountry\"},\"billing\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"companyName\":\"Test Inc\",\"email\":\"invalid-email\",\"phone\":\"+1234567890\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"InvalidCountry\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase without contacts",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": []
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to purchase domain: Contacts must be a non-empty array",
+              "code": 400
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with invalid credentials",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 401,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unauthorized\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\AuthException",
+              "message": "Failed to purchase domain: Unauthorized",
+              "code": 401
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase unsupported tld",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.zz",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 422,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unsupported TLD\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\UnsupportedTldException",
+              "message": "Failed to purchase domain: Unsupported TLD",
+              "code": 422
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.zz\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase rate limited",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 429,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Slow down\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\RateLimitException",
+              "message": "Rate limit exceeded: Slow down",
+              "code": 429
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 403,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Rate Limit Exceeded for account\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\RateLimitException",
+              "message": "Rate limit exceeded: Rate Limit Exceeded for account",
+              "code": 429
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domain\":{\"domainName\":\"kqzxwvbnmt.com\",\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"],\"contacts\":{\"registrant\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"admin\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"tech\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"},\"billing\":{\"firstName\":\"Test\",\"lastName\":\"Tester\",\"companyName\":\"Test Inc\",\"email\":\"testing@test.com\",\"phone\":\"+18031234567\",\"address1\":\"123 Main St\",\"address2\":\"Suite 100\",\"city\":\"San Francisco\",\"state\":\"CA\",\"zip\":\"94105\",\"country\":\"US\"}},\"autorenewEnabled\":false},\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain info",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"domainName\": \"owned.com\", \"createDate\": \"2025-01-15T10:00:00Z\", \"expireDate\": \"2026-01-15T10:00:00Z\", \"autorenewEnabled\": true, \"nameservers\": [\"ns1.name.com\", \"ns2.name.com\"]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "domain": "owned.com",
+              "createdAt": "2025-01-15T10:00:00.000000+00:00",
+              "expiresAt": "2026-01-15T10:00:00.000000+00:00",
+              "autoRenew": true,
+              "nameservers": [
+                "ns1.name.com",
+                "ns2.name.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "bare.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"domainName\": \"bare.com\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "domain": "bare.com",
+              "createdAt": null,
+              "expiresAt": null,
+              "autoRenew": false,
+              "nameservers": []
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/bare.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "gone.com"
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Not Found\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get domain information: Not Found",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/gone.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "odd.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"createDate\": \"not a date\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get domain information: Failed to parse time string (not a date) at position 0 (n): The timezone could not be found in the database",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/odd.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "cancelPurchase",
+            "args": {}
+          },
+          "expect": {
+            "result": true,
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "tlds",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "tlds",
+            "args": {},
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"pricing\": [{\"tld\": \"com\"}, {\"tld\": \"net\"}, {\"price\": 1}], \"nextPage\": 2}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"pricing\": [{\"tld\": \"org\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [
+              "com",
+              "net",
+              "org"
+            ],
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/tldpricing?perPage=1000&page=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/tldpricing?perPage=1000&page=2",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "tlds": [
+                "com",
+                ".net",
+                "org"
+              ],
+              "limit": 5
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"example.net\", \"purchasable\": true, \"purchasePrice\": 11.99, \"renewalPrice\": 13.99, \"purchaseType\": \"registration\"}, {\"domainName\": \"example.shop\", \"purchasable\": true, \"purchasePrice\": 2500, \"premium\": true}, {\"domainName\": \"ex.com\", \"purchasable\": true, \"purchasePrice\": 5000, \"purchaseType\": \"aftermarket\"}, {\"domainName\": \"\"}, {\"domainName\": \"example.org\", \"purchasable\": false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.net": {
+                "available": true,
+                "price": 11.99,
+                "renewalPrice": 13.99,
+                "purchaseType": "registration",
+                "type": "suggestion"
+              },
+              "example.shop": {
+                "available": true,
+                "price": 2500.0,
+                "renewalPrice": null,
+                "purchaseType": "registration",
+                "type": "premium"
+              },
+              "ex.com": {
+                "available": true,
+                "price": 5000.0,
+                "renewalPrice": null,
+                "purchaseType": "aftermarket",
+                "type": "premium"
+              },
+              "example.org": {
+                "available": false,
+                "price": null,
+                "renewalPrice": null,
+                "purchaseType": "registration",
+                "type": "suggestion"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:search",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"keyword\":\"example\",\"tldFilter\":[\"com\",\"net\",\"org\"],\"limit\":5}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest premium domains",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "business",
+              "tlds": [
+                "com"
+              ],
+              "limit": 2,
+              "filterType": "premium",
+              "priceMax": 10000,
+              "priceMin": 100
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"business.net\", \"purchasable\": true, \"purchasePrice\": 50, \"premium\": true}, {\"domainName\": \"a.com\", \"purchasable\": true, \"purchasePrice\": 150, \"premium\": true}, {\"domainName\": \"b.com\", \"purchasable\": true, \"purchasePrice\": 20000, \"premium\": true}, {\"domainName\": \"c.com\", \"purchasable\": true, \"purchasePrice\": 12}, {\"domainName\": \"d.com\", \"purchasable\": true, \"purchasePrice\": 300, \"purchaseType\": \"aftermarket\"}, {\"domainName\": \"e.com\", \"purchasable\": true, \"purchasePrice\": 400, \"premium\": true}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "a.com": {
+                "available": true,
+                "price": 150.0,
+                "renewalPrice": null,
+                "purchaseType": "registration",
+                "type": "premium"
+              },
+              "d.com": {
+                "available": true,
+                "price": 300.0,
+                "renewalPrice": null,
+                "purchaseType": "aftermarket",
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:search",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"keyword\":\"business\",\"tldFilter\":[\"com\"],\"limit\":2}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest with filter",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": [
+                "test",
+                "domain"
+              ],
+              "tlds": [
+                "com"
+              ],
+              "limit": 5,
+              "filterType": "suggestion"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"testdomain.com\", \"purchasable\": true, \"purchasePrice\": 9.99}, {\"domainName\": \"testdomain.shop\", \"purchasable\": true, \"purchasePrice\": 999, \"premium\": true}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "testdomain.com": {
+                "available": true,
+                "price": 9.99,
+                "renewalPrice": null,
+                "purchaseType": "registration",
+                "type": "suggestion"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:search",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"keyword\":\"test domain\",\"tldFilter\":[\"com\"],\"limit\":5}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "none"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:search",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"keyword\":\"none\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "oops"
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Internal Error\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Internal Error",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:search",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"keyword\":\"oops\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "periodYears": 1,
+              "regType": "new"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"example-test-domain.com\", \"purchasable\": false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/example-test-domain.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"example-test-domain.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "regType": "renewal"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"down\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 14.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/example-test-domain.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"example-test-domain.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "regType": "trade"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": []}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Price not found for domain: example-test-domain.com",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/example-test-domain.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"example-test-domain.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price of an aftermarket domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "shop.dev"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"shop.dev\", \"purchasable\": true, \"purchasePrice\": 3500, \"renewalPrice\": 0, \"purchaseType\": \"aftermarket\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 3500.0,
+              "premium": true
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/shop.dev:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"shop.dev\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "shop.dev",
+              "regType": "renewal"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"shop.dev\", \"purchasable\": true, \"purchasePrice\": \"3500.50\", \"renewalPrice\": 40, \"premium\": true}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 40.0,
+              "premium": true
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/shop.dev:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"shop.dev\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with invalid domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "invalid.invalidtld"
+            },
+            "responses": [
+              {
+                "status": 422,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unsupported TLD\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\UnsupportedTldException",
+              "message": "Failed to get price for domain: invalid.invalidtld - Unsupported TLD",
+              "code": 422
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/invalid.invalidtld:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "invalid.invalidtld"
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Not Found\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Failed to get price for domain: invalid.invalidtld - Not Found",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/invalid.invalidtld:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "in valid.com"
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Invalid Domain Name\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Failed to get price for domain: in valid.com - Invalid Domain Name",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/in%20valid.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "x.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": []}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Price not found for domain: x.com",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/x.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"x.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "x.com"
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get price for domain: x.com - Boom",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/x.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "x.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/html"
+                },
+                "body": "not json"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get price for domain: x.com - Failed to parse response from Name.com: Invalid JSON",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/x.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with invalid period",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.ai",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Invalid value for years for this domain\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidPeriodException",
+              "message": "Failed to get price for domain: kqzxwvbnmt.ai - Invalid value for years for this domain",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/kqzxwvbnmt.ai:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "ttl": 3600
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"example-test-domain.com\", \"purchasable\": false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/example-test-domain.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"example-test-domain.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "ttl": 3600
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "regType": "transfer"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 11.99,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example-test-domain.com",
+              "regType": "trade"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get price for domain: example-test-domain.com - Failed to send request to Name.com: no recorded response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/example-test-domain.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with cache after a failed availability",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "a.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 503,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unavailable\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/a.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"a.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "a.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"a.com\", \"purchasable\": false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/a.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"a.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price after available",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.com",
+                "google.com",
+                "kqzxwvbnmt.ai"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"kqzxwvbnmt.com\", \"purchasable\": true, \"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"purchaseType\": \"registration\"}, {\"domainName\": \"google.com\", \"purchasable\": false}, {\"domainName\": \"kqzxwvbnmt.ai\", \"purchasable\": true, \"purchasePrice\": 160, \"renewalPrice\": 0}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.com": true,
+              "google.com": false,
+              "kqzxwvbnmt.ai": true
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"kqzxwvbnmt.com\",\"google.com\",\"kqzxwvbnmt.ai\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "regType": "renewal"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 14.99,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "regType": "transfer"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 11.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/kqzxwvbnmt.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "google.com",
+              "regType": "new"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/google.com:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.ai",
+              "periodYears": 2,
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 160.0,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.ai",
+              "periodYears": 2,
+              "regType": "renewal"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 14.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/kqzxwvbnmt.ai:getPricing?years=2",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "periodYears": 3
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 12.99,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/kqzxwvbnmt.com:getPricing?years=3",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get premium price after available",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "shop.dev"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"results\": [{\"domainName\": \"shop.dev\", \"purchasable\": true, \"purchasePrice\": 3500, \"renewalPrice\": 40, \"premium\": true}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "shop.dev": true
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains:checkAvailability",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainNames\":[\"shop.dev\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "shop.dev",
+              "regType": "new"
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 3500.0,
+              "premium": true
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "shop.dev",
+              "regType": "transfer"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"purchasePrice\": 12.99, \"renewalPrice\": 14.99, \"transferPrice\": 11.99}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 11.99,
+              "premium": true
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/shop.dev:getPricing?years=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update nameservers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "owned.com",
+              "nameservers": [
+                "ns1.name.com",
+                "ns2.name.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"nameservers\": [\"ns1.name.com\", \"ns2.name.com\"]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "successful": true,
+              "nameservers": [
+                "ns1.name.com",
+                "ns2.name.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:setNameservers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"nameservers\":[\"ns1.name.com\",\"ns2.name.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "owned.com",
+              "nameservers": [
+                "ns1.name.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "successful": true,
+              "nameservers": [
+                "ns1.name.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:setNameservers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"nameservers\":[\"ns1.name.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "gone.com",
+              "nameservers": [
+                "ns1.name.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Not Found\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "successful": false,
+              "error": "Not Found"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/gone.com:setNameservers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"nameservers\":[\"ns1.name.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "gone.com",
+              "nameservers": [
+                "ns1.name.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 429,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Too many\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\RateLimitException",
+              "message": "Rate limit exceeded: Too many",
+              "code": 429
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/gone.com:setNameservers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"nameservers\":[\"ns1.name.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "owned.com",
+              "autoRenew": true
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"domainName\": \"owned.com\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "PATCH",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"autorenewEnabled\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Details must include autoRenew",
+              "code": 400
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "owned.com",
+              "autoRenew": false
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to update domain: Boom",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "PATCH",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"autorenewEnabled\":false}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "owned.com",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"order\": 777, \"domain\": {\"expireDate\": \"2027-01-15T10:00:00Z\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "orderId": "777",
+              "expiresAt": "2027-01-15T10:00:00.000000+00:00"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:renew",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"years\":1}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "owned.com",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "orderId": "",
+              "expiresAt": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:renew",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"years\":1}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "gone.com",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Not Found\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to renew domain: Not Found",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/domains/gone.com:renew",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"years\":1}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"order\": 999}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "999",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"test-auth-code\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "test-auth-code",
+              "purchasePrice": 99.5
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"We were unable to get authoritative domain information from the registry. This usually means that the domain name or auth code provided was not correct.\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidAuthCodeException",
+              "message": "Failed to transfer domain: We were unable to get authoritative domain information from the registry. This usually means that the domain name or auth code provided was not correct.",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"test-auth-code\",\"purchasePrice\":99.5}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "x"
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"The requested domain does not exist.\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainNotTransferableException",
+              "message": "Failed to transfer domain: The requested domain does not exist.",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"x\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "x"
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Domain is not available\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Failed to transfer domain: Domain is not available",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"x\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "x"
+            },
+            "responses": [
+              {
+                "status": 401,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unauthorized\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\AuthException",
+              "message": "Failed to transfer domain: Unauthorized",
+              "code": 401
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"x\"}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.com",
+              "authCode": "x"
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to transfer domain: Boom",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.com\",\"authCode\":\"x\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer unsupported tld dot in",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.in",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"We do not support transfers for .in domains\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\UnsupportedTldException",
+              "message": "Failed to transfer domain: We do not support transfers for .in domains",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.in\",\"authCode\":\"test-auth-code\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer unsupported tld dot xyz",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.xyz",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 422,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Unsupported TLD\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\UnsupportedTldException",
+              "message": "Failed to transfer domain: Unsupported TLD",
+              "code": 422
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.dev.name.com/core/v1/transfers",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": "{\"domainName\":\"kqzxwvbnmt.xyz\",\"authCode\":\"test-auth-code\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get auth code",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"authCode\": \"Xy1!\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "Xy1!",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"authCode\": 1234}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "1234",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Auth code not found in response",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 403,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Forbidden\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Forbidden",
+              "code": 403
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "check transfer status",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"Pending_Transfer\", \"statusDetails\": \"Waiting\", \"created\": \"2025-02-01T00:00:00+02:00\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "pending_registry",
+              "reason": "Waiting",
+              "timestamp": "2025-02-01T00:00:00.000000+02:00"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"completed\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "completed",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"canceled_pending_refund\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "cancelled",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"pending_insert\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "pending_admin",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"pending_unlock\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "pending_owner",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"status\": \"failed\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "not_transferrable",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "moving.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "not_transferrable",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/moving.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "gone.com"
+            },
+            "responses": [
+              {
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Not Found\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainNotFoundException",
+              "message": "Domain not found: gone.com",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/gone.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "gone.com"
+            },
+            "responses": [
+              {
+                "status": 500,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"message\": \"Boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to check transfer status: Boom",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/transfers/gone.com",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transport failures",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "user",
+              "token": "token",
+              "endpoint": "https://api.dev.name.com"
+            },
+            "nameservers": [
+              "ns1.name.com",
+              "ns2.name.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Failed to send request to Name.com: no recorded response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "tlds",
+            "args": {}
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to send request to Name.com: no recorded response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/tldpricing?perPage=1000&page=1",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{not json"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Failed to parse response from Name.com: Invalid JSON",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "null"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Auth code not found in response",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "owned.com"
+            },
+            "responses": [
+              {
+                "status": 502,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Unknown error",
+              "code": 502
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/owned.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dXNlcjp0b2tlbg==",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint without https",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "u",
+              "token": "t",
+              "endpoint": "http://api.dev.name.com"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "a.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"authCode\": \"a\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "a",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/a.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dTp0",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bare endpoint",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "namecom",
+              "username": "u",
+              "token": "t",
+              "endpoint": "api.dev.name.com"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "a.com"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": "{\"authCode\": \"a\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "a",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.dev.name.com/core/v1/domains/a.com:getAuthCode",
+                "headers": {
+                  "authorization": "Basic dTp0",
+                  "content-type": "application/json"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

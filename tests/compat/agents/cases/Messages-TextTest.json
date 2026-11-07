@@ -1,0 +1,75 @@
+{
+  "source": "packages/agents/tests/Messages/TextTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "op": "message.inspect",
+      "args": {
+        "message": "Hello, world!"
+      },
+      "expect": {
+        "role": "user",
+        "content": "Hello, world!",
+        "mime": "text/plain",
+        "hasAttachments": false,
+        "attachments": []
+      }
+    },
+    {
+      "name": "get content",
+      "op": "message.inspect",
+      "args": {
+        "message": "Test message content"
+      },
+      "expect": {
+        "role": "user",
+        "content": "Test message content",
+        "mime": "text/plain",
+        "hasAttachments": false,
+        "attachments": []
+      }
+    },
+    {
+      "name": "empty content",
+      "op": "message.inspect",
+      "args": {
+        "message": ""
+      },
+      "expect": {
+        "role": "user",
+        "content": "",
+        "mime": null,
+        "hasAttachments": false,
+        "attachments": []
+      }
+    },
+    {
+      "name": "multiline content",
+      "op": "message.inspect",
+      "args": {
+        "message": "Line 1\nLine 2\nLine 3"
+      },
+      "expect": {
+        "role": "user",
+        "content": "Line 1\nLine 2\nLine 3",
+        "mime": "text/plain",
+        "hasAttachments": false,
+        "attachments": []
+      }
+    },
+    {
+      "name": "special characters",
+      "op": "message.inspect",
+      "args": {
+        "message": "Special chars: !@#$%^&*()_+ 😀 🌟"
+      },
+      "expect": {
+        "role": "user",
+        "content": "Special chars: !@#$%^&*()_+ 😀 🌟",
+        "mime": "text/plain",
+        "hasAttachments": false,
+        "attachments": []
+      }
+    }
+  ]
+}

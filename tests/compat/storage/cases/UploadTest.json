@@ -1,0 +1,82 @@
+{
+  "source": "packages/storage/tests/Validator/UploadTest.php",
+  "cases": [
+    {
+      "name": "values",
+      "steps": [
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": "packages/storage/tests/resources/disk-a/kitten-2.jpg"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": "packages/storage/tests/resources/disk-b/kitten-1.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": "packages/storage/tests/resources/disk-b/kitten-2.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": "packages/storage/tests/Validator/UploadTest.php"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "upload.validate",
+          "args": {
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Not a valid upload file",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,765 @@
+{
+  "ops": {
+    "adapter.open": {
+      "doc": "A bare adapter, without a Database: Postgres (service database-postgres), `driver` \"mariadb\"|\"mysql\", or `engine` \"sqlite\" (file /tmp/compat-fs/${ns}/<file ?? \"adapter.sqlite\">) | \"memory\", one connection of its own; its Authorization (`roles`, `status`), setDatabase(database ?? ${ns}), setNamespace(namespace ?? \"ns\"), setSharedTables, setTenant, setTenantPerDocument, and the write hooks `hooks` (default [\"Permissions\"]). Returns a handle",
+      "services": [
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite",
+            "memory"
+          ]
+        }
+      ]
+    },
+    "adapter.call": {
+      "doc": "$adapter->{method}(...args) on an adapter.open handle, arguments decoded by name as database.* decodes them"
+    },
+    "adapter.fuzz_find": {
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order (ending with $sequence ASC unless ordered on, as Database::find() does, so ties page alike on every server), limit, offset; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\SQL::find"
+      ],
+      "services": [
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite"
+          ]
+        }
+      ],
+      "fuzz": [
+        {
+          "name": "filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        },
+        {
+          "name": "SQLite: filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "engine": {
+                "gen": "const",
+                "value": "sqlite"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        },
+        {
+          "name": "filter programs (MariaDB)",
+          "iterations": 500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mariadb"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        },
+        {
+          "name": "filter programs (MySQL)",
+          "iterations": 500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mysql"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
+        }
+      ]
+    },
+    "adapter.fuzz_roundtrip": {
+      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}; `driver` (postgres, mariadb or mysql) picks the adapter; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Postgres::createDocument",
+        "Utopia\\Database\\Adapter\\SQL::getDocument"
+      ],
+      "services": [
+        "database-postgres",
+        "database-mariadb",
+        "database-mysql"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite"
+          ]
+        }
+      ],
+      "fuzz": [
+        {
+          "name": "string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              }
+            }
+          }
+        },
+        {
+          "name": "SQLite: string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "engine": {
+                "gen": "const",
+                "value": "sqlite"
+              }
+            }
+          }
+        },
+        {
+          "name": "string literals (MariaDB)",
+          "iterations": 800,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mariadb"
+              }
+            }
+          }
+        },
+        {
+          "name": "string literals (MySQL)",
+          "iterations": 800,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "driver": {
+                "gen": "const",
+                "value": "mysql"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "generators": {
+    "adapter.literal": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 40,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "'\\\"%_:?$-/*\n\t\u0000é"
+        },
+        {
+          "gen": "bytes",
+          "max": 12
+        }
+      ]
+    },
+    "adapter.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.query": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "contains",
+                "containsAny",
+                "containsAll",
+                "notContains",
+                "search",
+                "notSearch",
+                "isNull",
+                "isNotNull",
+                "between",
+                "notBetween",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "exists"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "title",
+                "year",
+                "rating",
+                "active",
+                "tags",
+                "meta",
+                "released",
+                "$id",
+                "$sequence",
+                "$createdAt",
+                "$updatedAt",
+                "missing",
+                "meta.k",
+                "meta.s"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "adapter.qvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 2100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Alpha 0",
+            "beta",
+            "a",
+            "y",
+            "x",
+            "%",
+            "_",
+            "o'b",
+            "Ünïcödé",
+            "2000-01-05 00:00:00",
+            "1990",
+            "^b.*",
+            "[",
+            "\"Gamma 2\"",
+            true,
+            false,
+            null
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "int",
+              "min": 0,
+              "max": 5
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "s": {
+              "gen": "pick",
+              "from": [
+                "a",
+                "b",
+                [
+                  "a"
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Database\\Adapter\\Postgres::createIndex",
+      "description": "createIndex() maps a 42P07 (the index name exists) through processException() as 'Collection already exists', and a unique violation on existing rows as Unique('Unique index violation')",
+      "case": "Adapter-Schema.json#indexes"
+    },
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::getDocument",
+      "description": "A select of `true` reads as '*' (in_array compares loosely); a null selection reaches filter(string), a TypeError naming SQL.php's line, and an array one strpos(), a TypeError",
+      "case": "Adapter-Find.json#comparisons, logic and nulls"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Database\\Adapter\\SQL::reconnect",
+      "php": "Utopia\\Database\\PDO reconnects and retries a statement whose connection was lost outside a transaction (Swoole's DetectsLostConnections)",
+      "reason": "The wrapper is PHP runtime plumbing (waived); the Rust adapter reports a lost connection ('server closed the connection unexpectedly') and reconnects only through reconnect()"
+    }
+  ]
+}

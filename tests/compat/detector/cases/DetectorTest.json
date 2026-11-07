@@ -1,0 +1,4821 @@
+{
+  "source": "packages/detector/tests/DetectorTest.php",
+  "cases": [
+    {
+      "name": "testDetectPackager",
+      "steps": [
+        {
+          "op": "packager.detect",
+          "args": {
+            "options": [
+              "pnpm",
+              "yarn",
+              "npm"
+            ],
+            "inputs": [
+              "bun.lockb",
+              "fly.toml",
+              "package.json",
+              "remix.config.js"
+            ]
+          },
+          "expect": "npm"
+        },
+        {
+          "op": "packager.detect",
+          "args": {
+            "options": [
+              "pnpm",
+              "yarn",
+              "npm"
+            ],
+            "inputs": [
+              "yarn.lock"
+            ]
+          },
+          "expect": "yarn"
+        },
+        {
+          "op": "packager.detect",
+          "args": {
+            "options": [
+              "pnpm",
+              "yarn",
+              "npm"
+            ],
+            "inputs": [
+              "pnpm-lock.yaml"
+            ]
+          },
+          "expect": "pnpm"
+        },
+        {
+          "op": "packager.detect",
+          "args": {
+            "options": [
+              "pnpm",
+              "yarn",
+              "npm"
+            ],
+            "inputs": [
+              "composer.json"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testDetectRuntimeByFilematch",
+      "steps": [
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "package-lock.json",
+              "yarn.lock",
+              "tsconfig.json"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "pnpm install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "yarn",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "package-lock.json",
+              "yarn.lock",
+              "tsconfig.json"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "yarn install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "composer.json",
+              "composer.lock"
+            ]
+          },
+          "expect": {
+            "name": "php",
+            "commands": "composer install && composer run build",
+            "entrypoint": "index.php"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "pubspec.yaml"
+            ]
+          },
+          "expect": {
+            "name": "dart",
+            "commands": "dart pub get",
+            "entrypoint": "main.dart"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "Gemfile",
+              "Gemfile.lock"
+            ]
+          },
+          "expect": {
+            "name": "ruby",
+            "commands": "bundle install && bundle exec rake build",
+            "entrypoint": "main.rb"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "filematch",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "index.html",
+              "style.css"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testDetectRuntimeByLanguage",
+      "steps": [
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "languages",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "TypeScript",
+              "JavaScript",
+              "DockerFile"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "pnpm install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "languages",
+            "packager": "yarn",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "TypeScript",
+              "JavaScript",
+              "DockerFile"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "yarn install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "languages",
+            "packager": "pnpm",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "HTML"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testDetectRuntimeByFileExtension",
+      "steps": [
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "extension",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "main.ts",
+              "main.js",
+              "DockerFile"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "pnpm install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "extension",
+            "packager": "yarn",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "main.ts",
+              "main.js",
+              "DockerFile"
+            ]
+          },
+          "expect": {
+            "name": "node",
+            "commands": "yarn install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "extension",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "composer.json",
+              "index.php",
+              "DockerFile"
+            ]
+          },
+          "expect": {
+            "name": "php",
+            "commands": "composer install && composer run build",
+            "entrypoint": "index.php"
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "extension",
+            "options": [
+              "node",
+              "bun",
+              "deno",
+              "php",
+              "python",
+              "dart",
+              "swift",
+              "ruby",
+              "java",
+              "cpp",
+              "dotnet"
+            ],
+            "inputs": [
+              "index.html",
+              "style.css"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "invalid strategy",
+      "steps": [
+        {
+          "op": "strategy.new",
+          "args": {
+            "value": "filematch"
+          },
+          "expect": "filematch"
+        },
+        {
+          "op": "strategy.new",
+          "args": {
+            "value": "extension"
+          },
+          "expect": "extension"
+        },
+        {
+          "op": "strategy.new",
+          "args": {
+            "value": "languages"
+          },
+          "expect": "languages"
+        },
+        {
+          "op": "strategy.new",
+          "args": {
+            "value": "FILEMATCH"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid strategy: FILEMATCH"
+            }
+          }
+        },
+        {
+          "op": "strategy.new",
+          "args": {
+            "value": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid strategy: "
+            }
+          }
+        },
+        {
+          "op": "runtime.detect",
+          "args": {
+            "strategy": "magic",
+            "options": [
+              "node"
+            ],
+            "inputs": [
+              "main.ts"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid strategy: magic"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFrameworkDetection",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "src",
+              "types",
+              "makefile",
+              "components.js",
+              "debug.js",
+              "package.json",
+              "svelte.config.js"
+            ]
+          },
+          "expect": {
+            "name": "sveltekit",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "app",
+              "backend",
+              "public",
+              "Dockerfile",
+              "docker-compose.yml",
+              "ecosystem.config.js",
+              "middleware.ts",
+              "next.config.js",
+              "package-lock.json",
+              "package.json",
+              "server.js",
+              "tsconfig.json"
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.next"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "assets",
+              "components",
+              "layouts",
+              "pages",
+              "babel.config.js",
+              "error.vue",
+              "nuxt.config.js",
+              "yarn.lock"
+            ]
+          },
+          "expect": {
+            "name": "nuxt",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.output"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "lynx.config.js"
+            ]
+          },
+          "expect": {
+            "name": "lynx",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "src",
+              "package.json",
+              "tsconfig.json",
+              "angular.json",
+              "logo.png"
+            ]
+          },
+          "expect": {
+            "name": "angular",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist/angular"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "app",
+              "public",
+              "remix.config.js",
+              "remix.env.d.ts",
+              "sandbox.config.js",
+              "tsconfig.json",
+              "package.json"
+            ]
+          },
+          "expect": {
+            "name": "remix",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "public",
+              "src",
+              "astro.config.mjs",
+              "package-lock.json",
+              "package.json",
+              "tsconfig.json"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "src",
+              "static",
+              "scripts",
+              "eslint.config.js",
+              "package.json",
+              "pnpm-lock.yaml",
+              "svelte.config.js",
+              "tsconfig.js",
+              "vite.config.js",
+              "vite.config.lib.js"
+            ]
+          },
+          "expect": {
+            "name": "sveltekit",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "index.html",
+              "style.css"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "files": [
+              "package.json"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testRenderingDetection",
+      "steps": [
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/pages/index.html",
+              "server/pages/api/users.js",
+              ".next/server/unrelated-file.js"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "server/pages/index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/pages/api/users.js",
+              ".next/server/pages/_app.js"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/pages/index.html",
+              "server/pages/api/users.js",
+              ".next/turbopack"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/pages/index.html",
+              "server/pages/api/users.js",
+              ".next/server/webpack-runtime.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              ".next/some-standalone-files.js",
+              "server.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "nuxt.config.js",
+              "server/index.mjs",
+              "server.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "nuxt.config.js",
+              "index.html",
+              "server.js"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "nuxt.config.js",
+              "200.html",
+              "202.html",
+              "server.js"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "about.html",
+              "404.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "nitro.json",
+              "server/index.mjs"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "angular",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/server.mjs"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "analog",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/index.mjs"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "tanstack-start",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/index.mjs"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "_nuxt/something.js"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "sveltekit",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/pages/index.js",
+              "prerendered/about.html",
+              "handler.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "jaspr",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "app",
+              "index.html",
+              "main.dart.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "jaspr",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "main.dart.js",
+              "styles.css"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "sveltekit",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "about.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nextjs",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "style.css"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "astro",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "server/entry.mjs",
+              "server/renderers.mjs",
+              "server/pages/"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "astro",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "about.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "remix",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "build/server/index.js",
+              "build/server/renderers.js"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "remix",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "about.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "remix",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "about.html",
+              "style.css"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "about.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "flutter",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "style.css"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "tanstack-start",
+            "options": [
+              "ssr",
+              "static"
+            ],
+            "inputs": [
+              "index.html",
+              "about.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "rendering options keep their fallback",
+      "steps": [
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [
+              {
+                "type": "ssr",
+                "fallback": "200.html"
+              },
+              "static"
+            ],
+            "inputs": [
+              "server/index.mjs",
+              "index.html"
+            ]
+          },
+          "expect": {
+            "name": "ssr",
+            "fallback": "200.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "nuxt",
+            "options": [],
+            "inputs": [
+              "server/index.mjs",
+              "index.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.detect",
+          "args": {
+            "framework": "unknown",
+            "options": [
+              "ssr"
+            ],
+            "inputs": [
+              "server/index.mjs",
+              "a.HTML",
+              "b.html"
+            ]
+          },
+          "expect": {
+            "name": "static",
+            "fallback": "b.html"
+          }
+        },
+        {
+          "op": "rendering.describe",
+          "args": {
+            "rendering": "ssr",
+            "framework": "tanstack-start"
+          },
+          "expect": {
+            "name": "ssr",
+            "files": [
+              "server/server.js",
+              "server/index.mjs"
+            ],
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.describe",
+          "args": {
+            "rendering": "ssr",
+            "framework": "flutter"
+          },
+          "expect": {
+            "name": "ssr",
+            "files": [],
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.describe",
+          "args": {
+            "rendering": "ssr",
+            "framework": "unknown"
+          },
+          "expect": {
+            "name": "ssr",
+            "files": [],
+            "fallback": null
+          }
+        },
+        {
+          "op": "rendering.describe",
+          "args": {
+            "rendering": {
+              "type": "static",
+              "fallback": "index.html"
+            },
+            "framework": "nextjs"
+          },
+          "expect": {
+            "name": "static",
+            "files": [],
+            "fallback": "index.html"
+          }
+        },
+        {
+          "op": "rendering.describe",
+          "args": {
+            "rendering": "static",
+            "framework": "nextjs"
+          },
+          "expect": {
+            "name": "static",
+            "files": [],
+            "fallback": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTanStackStartDetectionWithPackages",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "nuxt",
+              "astro",
+              "remix",
+              "sveltekit",
+              "nextjs",
+              "lynx",
+              "angular",
+              "analog",
+              "tanstack-start"
+            ],
+            "packages": [
+              "{\"name\":\"my-app\",\"dependencies\":{\"@tanstack/react-start\":\"^1.0.0\",\"react\":\"^18.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "tanstack-start",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.output"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTanStackStartDetectionWithDevPackages",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "pnpm",
+            "options": [
+              "tanstack-start"
+            ],
+            "packages": [
+              "{\"name\":\"my-app\",\"devDependencies\":{\"@tanstack/react-start\":\"^1.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "tanstack-start",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.output"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFrameworkDetectorRejectsInvalidInputType",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "inputs": [
+              {
+                "content": "JavaScript",
+                "type": "language"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid input type 'language'"
+            }
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "inputs": [
+              {
+                "content": "package.json",
+                "type": ""
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid input type ''"
+            }
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "nextjs"
+            ],
+            "inputs": [
+              {
+                "content": "next.config.js",
+                "type": "file"
+              },
+              {
+                "content": "{\"dependencies\":{\"next\":\"1\"}}",
+                "type": "packages"
+              }
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.next"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFrameworkEdgeCases",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\"}}"
+            ]
+          },
+          "expect": {
+            "name": "react",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\",\"next\":\"^12.0.7\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.next"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "next.config.js"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.next"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\",\"react-native\":\"^0.68.2\"}}"
+            ]
+          },
+          "expect": {
+            "name": "react-native",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\",\"@tanstack/react-start\":\"^1.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "tanstack-start",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.output"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "remix.config.js"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\"}}"
+            ]
+          },
+          "expect": {
+            "name": "remix",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./build"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "lynx.config.ts"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\"}}"
+            ]
+          },
+          "expect": {
+            "name": "lynx",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"^17.0.2\",\"@lynx-js/react\":\"^1.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "lynx",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"@angular\\/core\":\"^14.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "angular",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist/angular"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "angular.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"@angular/core\":\"^14.0.0\",\"@analogjs/platform\":\"^14.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "analog",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist/analog"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"vue\":\"^3.2.47\"}}"
+            ]
+          },
+          "expect": {
+            "name": "vue",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "nuxt.config.js"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"vue\":\"^3.2.47\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nuxt",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.output"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"vue\":\"^3.2.47\",\"nuxt\":\"^3.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nuxt",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.output"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\",\"react\":\"^18.2.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\",\"@angular/core\":\"^18.2.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "angular.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json",
+              "angular.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\",\"angular\":\"^18.2.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"astro\":\"^5.0.0\",\"vue\":\"^3.2.47\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"svelte\":\"^3.54.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "svelte",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./build"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"svelte\":\"^3.54.0\",\"@sveltejs/kit\":\"^1.0.0\"}}"
+            ]
+          },
+          "expect": {
+            "name": "sveltekit",
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./build"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFrameworkDetectionReturnsNullWithoutFrameworkSignals",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"lodash\":\"^4\"}}"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{\"devDependencies\":{\"turbo\":\"^2\"}}"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "analog",
+              "angular",
+              "astro",
+              "flutter",
+              "lynx",
+              "nextjs",
+              "nuxt",
+              "react",
+              "react-native",
+              "remix",
+              "svelte",
+              "sveltekit",
+              "tanstack-start",
+              "vue"
+            ],
+            "files": [
+              "package.json"
+            ],
+            "packages": [
+              "{}"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "options sharing a name share a score",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "react",
+              "nextjs",
+              "react"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"1\",\"next\":\"1\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.next"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "flutter",
+              "jaspr",
+              "flutter"
+            ],
+            "files": [
+              "pubspec.yaml"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "astro",
+              "react"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"1\"}}"
+            ]
+          },
+          "expect": {
+            "name": "react",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "astro"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"1\"}}"
+            ]
+          },
+          "expect": {
+            "name": "astro",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "options": [
+              "nextjs",
+              "remix"
+            ],
+            "packages": [
+              "{\"dependencies\":{\"react\":\"1\"}}",
+              "{\"devDependencies\":{\"react\":\"1\"}}"
+            ]
+          },
+          "expect": {
+            "name": "nextjs",
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.next"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTanStackStartAdapterDetection",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "export default defineConfig({ plugins: [tanstackStart()] })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: ['/'] } })] })"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "export default defineConfig({ plugins: [tanstackStart({ \"prerender\": false })] })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "// prerender: true\nexport default defineConfig({})"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "server: { url: \"https://example.com\" },\nprerender: { routes: ['/'] }"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "import { nitro } from 'nitro/vite'\nexport default defineConfig({ plugins: [tanstackStart(), nitro({ prerender: { routes: ['/'], crawlLinks: true } })] })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "import { nitroV2Plugin } from '@tanstack/nitro-v2-vite-plugin'\nexport default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), nitroV2Plugin()] })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "tanstack-start",
+            "config": "// import { nitro } from 'nitro/vite'\nexport default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } })] })"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "tanstack-start"
+          },
+          "expect": {
+            "name": "tanstack-start",
+            "files": [],
+            "packages": [
+              "@tanstack/react-start",
+              "@tanstack/solid-start",
+              "react"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.output",
+            "configFiles": [
+              "vite.config.ts",
+              "vite.config.js",
+              "vite.config.mjs"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSvelteKitAdapterDetection",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "sveltekit",
+            "config": "import adapter from '@sveltejs/adapter-auto'; export default { kit: { adapter: adapter() } }"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "sveltekit",
+            "config": "import adapter from '@sveltejs/adapter-static'; export default { kit: { adapter: adapter() } }"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "sveltekit",
+            "config": "{\"dependencies\":{\"@sveltejs/adapter-static\":\"^3.0.0\"}}"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "sveltekit",
+            "config": "// import adapter from '@sveltejs/adapter-static'\nimport adapter from '@sveltejs/adapter-auto'"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "sveltekit"
+          },
+          "expect": {
+            "name": "sveltekit",
+            "files": [
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts"
+            ],
+            "packages": [
+              "@sveltejs/kit",
+              "svelte"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build",
+            "configFiles": [
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts",
+              "package.json"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAstroAdapterDetection",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ integrations: [] })"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output: 'server', adapter: node({ mode: 'standalone' }) })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output: \"server\" })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output: 'hybrid' })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output  :  'server' })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "// output: 'server'\nexport default defineConfig({})"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "site: \"https://example.com\",\noutput: \"server\""
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output: `server` })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "astro",
+            "config": "export default defineConfig({ output: `hybrid` })"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "astro"
+          },
+          "expect": {
+            "name": "astro",
+            "files": [
+              "astro.config.mjs",
+              "astro.config.js",
+              "astro.config.ts",
+              "angular.json",
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts"
+            ],
+            "packages": [
+              "astro",
+              "@angular/core",
+              "react",
+              "vue",
+              "svelte"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist",
+            "configFiles": [
+              "astro.config.mjs",
+              "astro.config.js",
+              "astro.config.ts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRemixAdapterDetection",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "remix",
+            "config": "{\"dependencies\":{\"@remix-run/react\":\"^2.0.0\"}}"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "remix",
+            "config": "{\"dependencies\":{\"@remix-run/serve\":\"^2.0.0\"}}"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "remix",
+            "config": "{\"dependencies\":{\"@remix-run/node\":\"^2.0.0\"}}"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "remix",
+            "config": ""
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "remix"
+          },
+          "expect": {
+            "name": "remix",
+            "files": [
+              "remix.config.js",
+              "remix.config.ts",
+              "remix.config.mjs"
+            ],
+            "packages": [
+              "@remix-run/react",
+              "react"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build",
+            "configFiles": [
+              "package.json"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "frameworks without an adapter",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "nextjs",
+            "config": "output: 'server'"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "flutter",
+            "config": "jaspr:\n  mode: server\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "vue",
+            "config": ""
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "testDartFrameworkDetection",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\nenvironment:\n  sdk: ^3.8.0\n\ndependencies:\n  jaspr: ^0.23.0\n\ndev_dependencies:\n  jaspr_builder: ^0.23.0\n\njaspr:\n  mode: server"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\nenvironment:\n  sdk: ^3.8.0\n\ndependencies:\n  jaspr: ^0.23.0\n\ndev_dependencies:\n  jaspr_builder: ^0.23.0\n\njaspr:\n  mode: server"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  'jaspr': ^0.23.0"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  'jaspr': ^0.23.0"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {jaspr: ^0.23.0, shelf: ^1.4.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {jaspr: ^0.23.0, shelf: ^1.4.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  jaspr: ^0.23.0\n  flutter:\n    sdk: flutter\n\njaspr:\n  mode: server\n  flutter: embedded"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  jaspr: ^0.23.0\n  flutter:\n    sdk: flutter\n\njaspr:\n  mode: server\n  flutter: embedded"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  jaspr: ^0.23.0"
+            ],
+            "files": [
+              "pubspec.yaml"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  jaspr: ^0.23.0"
+            ],
+            "files": [
+              "pubspec.yaml"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_app\nenvironment:\n  sdk: ^3.8.0\n\ndependencies:\n  flutter:\n    sdk: flutter\n\nflutter:\n  uses-material-design: true"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_app\nenvironment:\n  sdk: ^3.8.0\n\ndependencies:\n  flutter:\n    sdk: flutter\n\nflutter:\n  uses-material-design: true"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {shelf: ^1.4.0,\n  jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {shelf: ^1.4.0,\n  jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {local_pkg: {path: 'packages # local'}, jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {local_pkg: {path: 'packages # local'}, jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {local_pkg: {path: &local 'packages # local'}, jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies: {local_pkg: {path: &local 'packages # local'}, jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_app\ndescription: Don't enable this # {jaspr: 'example'}\n\ndependencies:\n  flutter:\n    sdk: flutter"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_app\ndescription: Don't enable this # {jaspr: 'example'}\n\ndependencies:\n  flutter:\n    sdk: flutter"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_app\n\ndependencies:\n  flutter:\n    sdk: flutter\n  # jaspr: ^0.23.0\n# dependencies: {jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_app\n\ndependencies:\n  flutter:\n    sdk: flutter\n  # jaspr: ^0.23.0\n# dependencies: {jaspr: ^0.23.0}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_app\n\ndependencies:\n  flutter:\n    sdk: flutter\n\njaspr:\n  mode: server"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_app\n\ndependencies:\n  flutter:\n    sdk: flutter\n\njaspr:\n  mode: server"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_app\ndependencies: {flutter: {sdk: flutter}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              "name: my_app\ndependencies: {flutter: {sdk: flutter}"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              ""
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        },
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "jaspr",
+              "flutter"
+            ],
+            "packages": [
+              ""
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ]
+          },
+          "expect": {
+            "name": "flutter",
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJasprBuildCommands",
+      "steps": [
+        {
+          "op": "framework.detect",
+          "args": {
+            "packager": "npm",
+            "options": [
+              "flutter",
+              "jaspr"
+            ],
+            "packages": [
+              "name: my_site\n\ndependencies:\n  jaspr: ^0.23.0\n"
+            ],
+            "files": [
+              "pubspec.yaml"
+            ]
+          },
+          "expect": {
+            "name": "jaspr",
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJasprAdapterDetection",
+      "steps": [
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: static\n"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: client\n"
+          },
+          "expect": "static"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: 'server'\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "\"jaspr\":\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: server # keep in sync\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: # mode: static\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  # mode: static\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {mode: server} # {mode: static}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  dev:\n    mode: static\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {flutter: embedded,\n  mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {dev: {port: 8080}, mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {dev-command: \"echo '\\\"'\", mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: server\ndescription: Don't ship # mode: static\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {port: 'it''s 8080', mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {dev-command: &cmd \"echo # hello\", mode: server}\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  port: !!str '8080 # default'\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  dev-command: 'serve # fast'\n  mode: server\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "name: my_site\n\njaspr:\n  mode: server\n\ndependencies:\n  jaspr: ^0.23.0\n"
+          },
+          "expect": "ssr"
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "# jaspr:\n#   mode: server\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "name: my_site\ndependencies:\n  jaspr: ^0.23.0\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  flutter: embedded\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: hybrid\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "name: my_app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr: {mode: server\n"
+          },
+          "expect": ""
+        },
+        {
+          "op": "framework.adapter",
+          "args": {
+            "framework": "jaspr",
+            "config": "jaspr:\n  mode: true\n"
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "testJasprConfigFiles",
+      "steps": [
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "jaspr"
+          },
+          "expect": {
+            "name": "jaspr",
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ],
+            "packages": [
+              "jaspr",
+              "jaspr_builder",
+              "flutter"
+            ],
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr",
+            "configFiles": [
+              "pubspec.yaml"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "every framework described",
+      "steps": [
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "analog",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "analog",
+            "files": [
+              "angular.json"
+            ],
+            "packages": [
+              "@analogjs/platform",
+              "@angular/core"
+            ],
+            "install": "yarn install",
+            "build": "yarn build",
+            "output": "./dist/analog",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "angular",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "angular",
+            "files": [
+              "angular.json"
+            ],
+            "packages": [
+              "@angular/core"
+            ],
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist/angular",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "astro"
+          },
+          "expect": {
+            "name": "astro",
+            "files": [
+              "astro.config.mjs",
+              "astro.config.js",
+              "astro.config.ts",
+              "angular.json",
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts"
+            ],
+            "packages": [
+              "astro",
+              "@angular/core",
+              "react",
+              "vue",
+              "svelte"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist",
+            "configFiles": [
+              "astro.config.mjs",
+              "astro.config.js",
+              "astro.config.ts"
+            ]
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "flutter",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "flutter",
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ],
+            "packages": [
+              "flutter"
+            ],
+            "install": "",
+            "build": "flutter build web",
+            "output": "./build/web",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "jaspr",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "jaspr",
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ],
+            "packages": [
+              "jaspr",
+              "jaspr_builder",
+              "flutter"
+            ],
+            "install": "dart pub get",
+            "build": "jaspr build",
+            "output": "./build/jaspr",
+            "configFiles": [
+              "pubspec.yaml"
+            ]
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "lynx",
+            "packager": "pnpm"
+          },
+          "expect": {
+            "name": "lynx",
+            "files": [
+              "lynx.config.ts",
+              "lynx.config.js",
+              "lynx.config.mjs"
+            ],
+            "packages": [
+              "@lynx-js/react",
+              "react"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./dist",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "nextjs",
+            "packager": "bun"
+          },
+          "expect": {
+            "name": "nextjs",
+            "files": [
+              "next.config.js",
+              "next.config.ts",
+              "next.config.mjs"
+            ],
+            "packages": [
+              "next",
+              "react"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./.next",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "nuxt",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "nuxt",
+            "files": [
+              "nuxt.config.js",
+              "nuxt.config.ts",
+              "nuxt.config.mjs"
+            ],
+            "packages": [
+              "nuxt",
+              "vue"
+            ],
+            "install": "yarn install",
+            "build": "yarn build",
+            "output": "./.output",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "react",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "react",
+            "files": [],
+            "packages": [
+              "react"
+            ],
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./dist",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "react-native",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "react-native",
+            "files": [],
+            "packages": [
+              "react-native",
+              "react"
+            ],
+            "install": "yarn install",
+            "build": "yarn build",
+            "output": "./dist",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "remix",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "remix",
+            "files": [
+              "remix.config.js",
+              "remix.config.ts",
+              "remix.config.mjs"
+            ],
+            "packages": [
+              "@remix-run/react",
+              "react"
+            ],
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./build",
+            "configFiles": [
+              "package.json"
+            ]
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "svelte",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "svelte",
+            "files": [
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts"
+            ],
+            "packages": [
+              "svelte"
+            ],
+            "install": "yarn install",
+            "build": "yarn build",
+            "output": "./build",
+            "configFiles": []
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "sveltekit",
+            "packager": ""
+          },
+          "expect": {
+            "name": "sveltekit",
+            "files": [
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts"
+            ],
+            "packages": [
+              "@sveltejs/kit",
+              "svelte"
+            ],
+            "install": "pnpm install",
+            "build": "pnpm run build",
+            "output": "./build",
+            "configFiles": [
+              "svelte.config.js",
+              "svelte.config.mjs",
+              "svelte.config.ts",
+              "package.json"
+            ]
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "tanstack-start",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "tanstack-start",
+            "files": [],
+            "packages": [
+              "@tanstack/react-start",
+              "@tanstack/solid-start",
+              "react"
+            ],
+            "install": "npm install",
+            "build": "npm run build",
+            "output": "./.output",
+            "configFiles": [
+              "vite.config.ts",
+              "vite.config.js",
+              "vite.config.mjs"
+            ]
+          }
+        },
+        {
+          "op": "framework.describe",
+          "args": {
+            "framework": "vue",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "vue",
+            "files": [],
+            "packages": [
+              "vue"
+            ],
+            "install": "yarn install",
+            "build": "yarn build",
+            "output": "./dist",
+            "configFiles": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "every runtime and packager described",
+      "steps": [
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "bun",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "bun",
+            "languages": [
+              "JavaScript",
+              "TypeScript"
+            ],
+            "extensions": [
+              "ts",
+              "tsx",
+              "js",
+              "jsx"
+            ],
+            "files": [
+              "bun.lockb"
+            ],
+            "commands": "bun install && bun build",
+            "entrypoint": "main.ts"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "cpp"
+          },
+          "expect": {
+            "name": "cpp",
+            "languages": [
+              "C++"
+            ],
+            "extensions": [
+              "cpp",
+              "h",
+              "hpp",
+              "cxx",
+              "cc"
+            ],
+            "files": [
+              "main.cpp",
+              "Solution",
+              "CMakeLists.txt"
+            ],
+            "commands": "g++ -o main.cpp && ./output",
+            "entrypoint": ""
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "dart"
+          },
+          "expect": {
+            "name": "dart",
+            "languages": [
+              "Dart"
+            ],
+            "extensions": [
+              "dart"
+            ],
+            "files": [
+              "pubspec.yaml",
+              "pubspec.lock"
+            ],
+            "commands": "dart pub get",
+            "entrypoint": "main.dart"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "deno"
+          },
+          "expect": {
+            "name": "deno",
+            "languages": [
+              "TypeScript"
+            ],
+            "extensions": [
+              "ts",
+              "tsx"
+            ],
+            "files": [
+              "mod.ts",
+              "deps.ts"
+            ],
+            "commands": "deno cache main.ts",
+            "entrypoint": "main.ts"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "dotnet"
+          },
+          "expect": {
+            "name": "dotnet",
+            "languages": [
+              "C#",
+              "Visual Basic .NET"
+            ],
+            "extensions": [
+              "cs",
+              "vb",
+              "sln",
+              "csproj",
+              "vbproj"
+            ],
+            "files": [
+              "Program.cs",
+              "Solution.sln",
+              "Function.csproj",
+              "Program.vb"
+            ],
+            "commands": "dotnet restore && dotnet build",
+            "entrypoint": "Program.cs"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "java"
+          },
+          "expect": {
+            "name": "java",
+            "languages": [
+              "Java"
+            ],
+            "extensions": [
+              "java",
+              "class",
+              "jar"
+            ],
+            "files": [
+              "pom.xml",
+              "pmd.xml",
+              "build.gradle",
+              "build.gradle.kts"
+            ],
+            "commands": "mvn install && mvn package",
+            "entrypoint": "Main.java"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "node"
+          },
+          "expect": {
+            "name": "node",
+            "languages": [
+              "JavaScript",
+              "TypeScript"
+            ],
+            "extensions": [
+              "js",
+              "ts"
+            ],
+            "files": [
+              "package-lock.json",
+              "yarn.lock",
+              "tsconfig.json"
+            ],
+            "commands": "pnpm install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "node",
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "node",
+            "languages": [
+              "JavaScript",
+              "TypeScript"
+            ],
+            "extensions": [
+              "js",
+              "ts"
+            ],
+            "files": [
+              "package-lock.json",
+              "yarn.lock",
+              "tsconfig.json"
+            ],
+            "commands": "npm install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "node",
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "node",
+            "languages": [
+              "JavaScript",
+              "TypeScript"
+            ],
+            "extensions": [
+              "js",
+              "ts"
+            ],
+            "files": [
+              "package-lock.json",
+              "yarn.lock",
+              "tsconfig.json"
+            ],
+            "commands": "yarn install",
+            "entrypoint": "index.js"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "php"
+          },
+          "expect": {
+            "name": "php",
+            "languages": [
+              "PHP"
+            ],
+            "extensions": [
+              "php"
+            ],
+            "files": [
+              "composer.json",
+              "composer.lock"
+            ],
+            "commands": "composer install && composer run build",
+            "entrypoint": "index.php"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "python"
+          },
+          "expect": {
+            "name": "python",
+            "languages": [
+              "Python"
+            ],
+            "extensions": [
+              "py"
+            ],
+            "files": [
+              "requirements.txt",
+              "setup.py"
+            ],
+            "commands": "pip install",
+            "entrypoint": "main.py"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "ruby"
+          },
+          "expect": {
+            "name": "ruby",
+            "languages": [
+              "Ruby"
+            ],
+            "extensions": [
+              "rb"
+            ],
+            "files": [
+              "Gemfile",
+              "Gemfile.lock",
+              "Rakefile",
+              "Guardfile"
+            ],
+            "commands": "bundle install && bundle exec rake build",
+            "entrypoint": "main.rb"
+          }
+        },
+        {
+          "op": "runtime.describe",
+          "args": {
+            "runtime": "swift"
+          },
+          "expect": {
+            "name": "swift",
+            "languages": [
+              "Swift"
+            ],
+            "extensions": [
+              "swift",
+              "xcodeproj",
+              "xcworkspace"
+            ],
+            "files": [
+              "Package.swift",
+              "Podfile",
+              "project.pbxproj"
+            ],
+            "commands": "swift build",
+            "entrypoint": "main.swift"
+          }
+        },
+        {
+          "op": "packager.describe",
+          "args": {
+            "packager": "npm"
+          },
+          "expect": {
+            "name": "npm",
+            "files": [
+              "package.json",
+              "package-lock.json"
+            ]
+          }
+        },
+        {
+          "op": "packager.describe",
+          "args": {
+            "packager": "pnpm"
+          },
+          "expect": {
+            "name": "pnpm",
+            "files": [
+              "pnpm-lock.yaml"
+            ]
+          }
+        },
+        {
+          "op": "packager.describe",
+          "args": {
+            "packager": "yarn"
+          },
+          "expect": {
+            "name": "yarn",
+            "files": [
+              "yarn.lock"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dependencies of manifests",
+      "steps": [
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\":{\"react\":\"1\"},\"devDependencies\":{\"vite\":\"1\"},\"peerDependencies\":{\"react-dom\":\"1\"},\"optionalDependencies\":{\"fsevents\":\"1\"}}"
+          },
+          "expect": [
+            "react",
+            "vite",
+            "react-dom",
+            "fsevents"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\":{\"0\":\"x\",\"12\":\"y\",\"-1\":\"z\"}}"
+          },
+          "expect": [
+            "0",
+            "12",
+            "-1"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\":[\"react\",\"vue\"]}"
+          },
+          "expect": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\":\"react\"}"
+          },
+          "expect": []
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "[1, 2]"
+          },
+          "expect": []
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "\"react\""
+          },
+          "expect": []
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "dependencies:\n  flutter:\n    sdk: flutter\ndev_dependencies:\n  lints: ^1\ndependency_overrides:\n  path: 1.0.0\n"
+          },
+          "expect": [
+            "flutter",
+            "lints",
+            "path"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "dependencies:\n  1: a\n  true: b\n  ~: c\n  0.5: d\n"
+          },
+          "expect": [
+            "1",
+            "",
+            "0"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "dependencies: [react, vue]"
+          },
+          "expect": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": ""
+          },
+          "expect": []
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\": {"
+          },
+          "expect": []
+        },
+        {
+          "op": "framework.dependencies",
+          "args": {
+            "manifest": "{\"dependencies\":{\"a\":1},\"dependencies\":{\"b\":2}}"
+          },
+          "expect": [
+            "b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fixtures",
+      "steps": [
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "astro-server"
+          },
+          "expect": {
+            "files": 5,
+            "packager": "yarn",
+            "runtime": {
+              "filematch": {
+                "name": "node",
+                "commands": "npm install"
+              },
+              "extension": null
+            },
+            "framework": {
+              "name": "astro",
+              "install": "npm install",
+              "build": "npm run build",
+              "output": "./dist"
+            },
+            "adapter": "ssr",
+            "rendering": {
+              "name": "ssr",
+              "fallback": null
+            }
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "flutter-app"
+          },
+          "expect": {
+            "files": 2,
+            "packager": null,
+            "runtime": {
+              "filematch": {
+                "name": "dart",
+                "commands": "dart pub get"
+              },
+              "extension": {
+                "name": "dart",
+                "commands": "dart pub get"
+              }
+            },
+            "framework": {
+              "name": "flutter",
+              "install": "",
+              "build": "flutter build web",
+              "output": "./build/web"
+            },
+            "adapter": null,
+            "rendering": null
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "jaspr-site"
+          },
+          "expect": {
+            "files": 5,
+            "packager": null,
+            "runtime": {
+              "filematch": {
+                "name": "dart",
+                "commands": "dart pub get"
+              },
+              "extension": {
+                "name": "node",
+                "commands": "npm install"
+              }
+            },
+            "framework": {
+              "name": "jaspr",
+              "install": "dart pub get",
+              "build": "jaspr build",
+              "output": "./build/jaspr"
+            },
+            "adapter": "static",
+            "rendering": {
+              "name": "static",
+              "fallback": "index.html"
+            }
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "nextjs-app"
+          },
+          "expect": {
+            "files": 7,
+            "packager": "npm",
+            "runtime": {
+              "filematch": {
+                "name": "node",
+                "commands": "npm install"
+              },
+              "extension": {
+                "name": "node",
+                "commands": "npm install"
+              }
+            },
+            "framework": {
+              "name": "nextjs",
+              "install": "npm install",
+              "build": "npm run build",
+              "output": "./.next"
+            },
+            "adapter": null,
+            "rendering": {
+              "name": "ssr",
+              "fallback": null
+            }
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "nuxt-static"
+          },
+          "expect": {
+            "files": 5,
+            "packager": "yarn",
+            "runtime": {
+              "filematch": {
+                "name": "node",
+                "commands": "npm install"
+              },
+              "extension": {
+                "name": "node",
+                "commands": "npm install"
+              }
+            },
+            "framework": {
+              "name": "nuxt",
+              "install": "npm install",
+              "build": "npm run build",
+              "output": "./.output"
+            },
+            "adapter": null,
+            "rendering": {
+              "name": "static",
+              "fallback": null
+            }
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "php-api"
+          },
+          "expect": {
+            "files": 4,
+            "packager": null,
+            "runtime": {
+              "filematch": {
+                "name": "php",
+                "commands": "composer install && composer run build"
+              },
+              "extension": {
+                "name": "php",
+                "commands": "composer install && composer run build"
+              }
+            },
+            "framework": null,
+            "adapter": null,
+            "rendering": null
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "readme-only"
+          },
+          "expect": {
+            "files": 1,
+            "packager": null,
+            "runtime": {
+              "filematch": null,
+              "extension": null
+            },
+            "framework": null,
+            "adapter": null,
+            "rendering": null
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "sveltekit-static"
+          },
+          "expect": {
+            "files": 6,
+            "packager": "pnpm",
+            "runtime": {
+              "filematch": null,
+              "extension": {
+                "name": "node",
+                "commands": "npm install"
+              }
+            },
+            "framework": {
+              "name": "sveltekit",
+              "install": "npm install",
+              "build": "npm run build",
+              "output": "./build"
+            },
+            "adapter": "static",
+            "rendering": {
+              "name": "static",
+              "fallback": "index.html"
+            }
+          }
+        },
+        {
+          "op": "detect.fixture",
+          "args": {
+            "fixture": "tanstack-start"
+          },
+          "expect": {
+            "files": 5,
+            "packager": "npm",
+            "runtime": {
+              "filematch": {
+                "name": "bun",
+                "commands": "bun install && bun build"
+              },
+              "extension": {
+                "name": "node",
+                "commands": "npm install"
+              }
+            },
+            "framework": {
+              "name": "tanstack-start",
+              "install": "npm install",
+              "build": "npm run build",
+              "output": "./.output"
+            },
+            "adapter": "ssr",
+            "rendering": {
+              "name": "ssr",
+              "fallback": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

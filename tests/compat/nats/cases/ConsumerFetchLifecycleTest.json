@@ -1,0 +1,861 @@
+{
+  "source": "packages/nats/tests/ConsumerFetchLifecycleTest.php",
+  "cases": [
+    {
+      "name": "fetch releases its inbox subscription",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "fetch releases its inbox subscription when it throws",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "max_payload": 4
+            },
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "repeated failed fetches do not accumulate subscriptions",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "max_payload": 4
+            },
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "the server pull expiry lands before the client deadline",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.05
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.API.CONSUMER.MSG.NEXT.STREAM.durable _INBOX.* 30\r\n{\"batch\":1,\"expires\":45000000}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "fetch keeps the pull exception when unsubscribe also fails",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "max_payload": 4
+            },
+            "rules": [
+              {
+                "when": {
+                  "prefix": "UNSUB "
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "Failed to reconnect to any NATS server"
+                    }
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 30 exceeds server maximum of 4"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "fetch surfaces an unsubscribe failure after a successful pull",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "UNSUB "
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "Failed to reconnect to any NATS server"
+                    }
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to reconnect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "consumer accessors",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.names",
+          "args": {
+            "consumer": {
+              "$ref": "k"
+            }
+          },
+          "expect": [
+            "durable",
+            "STREAM"
+          ]
+        },
+        {
+          "op": "consumer.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            }
+          },
+          "expect": {
+            "stream_name": "STREAM",
+            "name": "durable",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant"
+            },
+            "created": false,
+            "num_ack_pending": 0,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 0,
+            "delivered": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "ack_floor": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "push_bound": false,
+            "cluster": null,
+            "metadata": null
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "S",
+            "info": {
+              "name": "n"
+            },
+            "prefix": "$JS.hub.API"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "p"
+            },
+            "batch": 1,
+            "timeout": 0.01,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.hub.API.CONSUMER.MSG.NEXT.S.n _INBOX.* 26\r\n{\"batch\":1,\"no_wait\":true}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "next pulls one message",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.x 1 $JS.ACK.STREAM.durable.1.7.1.1700000000000000000.0 3\r\nabc\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "timeout": 0.5
+          },
+          "expect": {
+            "handle": {
+              "$handle": "*"
+            },
+            "subject": "_INBOX.x",
+            "data": "abc",
+            "headers": null,
+            "reply": true
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.API.CONSUMER.MSG.NEXT.STREAM.durable _INBOX.* 31\r\n{\"batch\":1,\"expires\":450000000}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "info refresh on an unresponsive server keeps the cached info",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "requestTimeout": 0.02
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "refresh": true
+          },
+          "expect": {
+            "stream_name": "STREAM",
+            "name": "durable",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant"
+            },
+            "created": false,
+            "num_ack_pending": 0,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 0,
+            "delivered": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "ack_floor": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "push_bound": false,
+            "cluster": null,
+            "metadata": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "info refresh reports API errors",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB $JS.API.CONSUMER.INFO"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "$JS.API.CONSUMER.INFO.",
+                      "payload": "{\"error\":{\"code\":404,\"err_code\":10014,\"description\":\"consumer not found\"}}"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "refresh": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "consumer not found"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

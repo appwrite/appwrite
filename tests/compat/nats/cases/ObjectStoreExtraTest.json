@@ -1,0 +1,1197 @@
+{
+  "source": "packages/nats/tests/E2E/ObjectStoreExtraTest.php",
+  "cases": [
+    {
+      "name": "watch fires on put and delete",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            }
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "watched.txt",
+            "data": "hello"
+          },
+          "expect": {
+            "name": "watched.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 5,
+            "chunks": 1,
+            "digest": "SHA-256=LPJNul-wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "obj.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "watched.txt"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "meta",
+              {
+                "name": "watched.txt",
+                "bucket": "objx_${ns}",
+                "nuid": "*",
+                "size": 5,
+                "chunks": 1,
+                "digest": "SHA-256=LPJNul-wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ",
+                "mtime": "*"
+              }
+            ],
+            [
+              "meta",
+              {
+                "name": "watched.txt",
+                "bucket": "objx_${ns}",
+                "nuid": "",
+                "size": 0,
+                "chunks": 0,
+                "digest": "",
+                "mtime": "*",
+                "deleted": true
+              }
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "watch with history delivers the current meta first",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "existing.txt",
+            "data": "already here"
+          },
+          "expect": {
+            "name": "existing.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 12,
+            "chunks": 1,
+            "digest": "SHA-256=VzlU2TZY2zq7wfG9INBSohz6C8cq0QXHs7gi3ZlaSXA",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "include_history": true
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "meta",
+              {
+                "name": "existing.txt",
+                "bucket": "objx_${ns}",
+                "nuid": "*",
+                "size": 12,
+                "chunks": 1,
+                "digest": "SHA-256=VzlU2TZY2zq7wfG9INBSohz6C8cq0QXHs7gi3ZlaSXA",
+                "mtime": "*"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a link resolves to its target bytes",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "target.bin",
+            "data": "the real payload"
+          },
+          "expect": {
+            "name": "target.bin",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 16,
+            "chunks": 1,
+            "digest": "SHA-256=gQFDNfk3RVVGfWQRYVmXICQWkyTXZ2Z8wtVBNYgyWk8",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.add_link",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "alias.bin",
+            "target": "target.bin"
+          },
+          "expect": {
+            "name": "alias.bin",
+            "bucket": "objx_${ns}",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "mtime": "*",
+            "options": {
+              "link": {
+                "bucket": "objx_${ns}",
+                "name": "target.bin"
+              }
+            }
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "alias.bin"
+          },
+          "expect": {
+            "size": 16,
+            "sha256": "81014335f9374555467d64116159972024169324d767667cc2d5413588325a4f",
+            "data": "the real payload"
+          }
+        },
+        {
+          "op": "obj.add_link",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "target.bin",
+            "target": "alias.bin"
+          },
+          "expect": {
+            "name": "target.bin",
+            "bucket": "objx_${ns}",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "mtime": "*",
+            "options": {
+              "link": {
+                "bucket": "objx_${ns}",
+                "name": "alias.bin"
+              }
+            }
+          }
+        },
+        {
+          "op": "obj.list",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            }
+          },
+          "expect": [
+            "alias.bin",
+            "target.bin"
+          ]
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a bucket link cannot be read",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.add_bucket_link",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "otherbucket",
+            "bucket": "SOME_OTHER_BUCKET"
+          },
+          "expect": {
+            "name": "otherbucket",
+            "bucket": "objx_${ns}",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "mtime": "*",
+            "options": {
+              "link": {
+                "bucket": "SOME_OTHER_BUCKET"
+              }
+            }
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "otherbucket"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ObjectStoreException",
+              "message": "cannot get a bucket link: otherbucket"
+            }
+          }
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "updateMeta changes the description and keeps the bytes",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt",
+            "data": "immutable bytes"
+          },
+          "expect": {
+            "name": "doc.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 15,
+            "chunks": 1,
+            "digest": "SHA-256=Wdh5IBilGkCNJzjzHu3r1v6ZJsxCYPoWijhxC8UdfjA",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.update_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt",
+            "description": "a helpful description"
+          },
+          "expect": {
+            "name": "doc.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 15,
+            "chunks": 1,
+            "digest": "SHA-256=Wdh5IBilGkCNJzjzHu3r1v6ZJsxCYPoWijhxC8UdfjA",
+            "description": "a helpful description",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.get_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt"
+          },
+          "expect": {
+            "name": "doc.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 15,
+            "chunks": 1,
+            "digest": "SHA-256=Wdh5IBilGkCNJzjzHu3r1v6ZJsxCYPoWijhxC8UdfjA",
+            "description": "a helpful description",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt"
+          },
+          "expect": {
+            "size": 15,
+            "sha256": "59d8792018a51a408d2738f31eedebd6fe9926cc4260fa168a38710bc51d7e30",
+            "data": "immutable bytes"
+          }
+        },
+        {
+          "op": "obj.update_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt",
+            "metadata": {
+              "k": "v"
+            }
+          },
+          "expect": {
+            "name": "doc.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 15,
+            "chunks": 1,
+            "digest": "SHA-256=Wdh5IBilGkCNJzjzHu3r1v6ZJsxCYPoWijhxC8UdfjA",
+            "description": "a helpful description",
+            "mtime": "*",
+            "metadata": {
+              "k": "v"
+            }
+          }
+        },
+        {
+          "op": "obj.get_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc.txt"
+          },
+          "expect": {
+            "name": "doc.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 15,
+            "chunks": 1,
+            "digest": "SHA-256=Wdh5IBilGkCNJzjzHu3r1v6ZJsxCYPoWijhxC8UdfjA",
+            "description": "a helpful description",
+            "mtime": "*",
+            "metadata": {
+              "k": "v"
+            }
+          }
+        },
+        {
+          "op": "obj.update_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Object not found: missing"
+            }
+          }
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "after seal, put fails",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "before.txt",
+            "data": "written before seal"
+          },
+          "expect": {
+            "name": "before.txt",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 19,
+            "chunks": 1,
+            "digest": "SHA-256=YiOtHHRznlzOmV_dBEoi4dtE3sN4Ut5gNBfNzrOujDI",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.seal",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "after.txt",
+            "data": "should be rejected"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "invalid operation on sealed stream"
+            }
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "before.txt"
+          },
+          "expect": {
+            "size": 19,
+            "sha256": "6223ad1c74739e5cce995fdd044a22e1db44dec37852de603417cdceb3ae8c32",
+            "data": "written before seal"
+          }
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a delete conflict leaves the replacement intact",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.create_or_update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "objx_${ns}"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc",
+            "data": "v1"
+          },
+          "expect": {
+            "name": "doc",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 2,
+            "chunks": 1,
+            "digest": "SHA-256=O_wmlZTvZJIo6adLqwDwQu_JHVrMb77jGjgugNQjiP4",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.read_meta",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc"
+          },
+          "bind": "stale",
+          "expect": {
+            "meta": {
+              "$handle": "*"
+            },
+            "seq": 2
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc",
+            "data": "v2"
+          },
+          "expect": {
+            "name": "doc",
+            "bucket": "objx_${ns}",
+            "nuid": "*",
+            "size": 2,
+            "chunks": 1,
+            "digest": "SHA-256=-wTctpcOTD0Yc95R_VpQ17tGszgxE2AmZcNQ7EC1-ZA",
+            "mtime": "*"
+          }
+        },
+        {
+          "op": "obj.delete_version",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "meta": {
+              "$ref": "stale",
+              "path": "/meta"
+            },
+            "seq": {
+              "$ref": "stale",
+              "path": "/seq"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ObjectStoreException",
+              "message": "conflicting concurrent write for object: doc"
+            }
+          }
+        },
+        {
+          "op": "obj.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "doc"
+          },
+          "expect": {
+            "size": 2,
+            "sha256": "fb04dcb6970e4c3d1873de51fd5a50d7bb46b3383113602665c350ec40b5f990",
+            "data": "v2"
+          }
+        },
+        {
+          "op": "js.delete_object_store",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "objx_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

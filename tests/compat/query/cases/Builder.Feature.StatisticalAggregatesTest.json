@@ -1,0 +1,984 @@
+{
+  "source": "packages/query/tests/Builder/Feature/StatisticalAggregatesTest.php",
+  "cases": [
+    {
+      "name": "testStddevEmitsStddevFunctionForMySQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "sd"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+        [],
+        [],
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores`"
+      ]
+    },
+    {
+      "name": "testStddevPopAndSampEmitSeparateFunctions",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddevPop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "v",
+              "sp"
+            ]
+          },
+          {
+            "call": "stddevSamp",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "v",
+              "ss"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT STDDEV_POP(`v`) AS `sp`, STDDEV_SAMP(`v`) AS `ss` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV_POP(`v`) AS `sp`, STDDEV_SAMP(`v`) AS `ss` FROM `scores`",
+        [],
+        [],
+        "SELECT STDDEV_POP(`v`) AS `sp`, STDDEV_SAMP(`v`) AS `ss` FROM `scores`",
+        "SELECT STDDEV_POP(`v`) AS `sp`, STDDEV_SAMP(`v`) AS `ss` FROM `scores`"
+      ]
+    },
+    {
+      "name": "testVarianceAndVarPopAndVarSampEmitCorrectFunctions",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "variance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "v",
+              "a"
+            ]
+          },
+          {
+            "call": "varPop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "v",
+              "b"
+            ]
+          },
+          {
+            "call": "varSamp",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "v",
+              "c"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT VARIANCE(`v`) AS `a`, VAR_POP(`v`) AS `b`, VAR_SAMP(`v`) AS `c` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT VARIANCE(`v`) AS `a`, VAR_POP(`v`) AS `b`, VAR_SAMP(`v`) AS `c` FROM `scores`",
+        [],
+        [],
+        "SELECT VARIANCE(`v`) AS `a`, VAR_POP(`v`) AS `b`, VAR_SAMP(`v`) AS `c` FROM `scores`",
+        "SELECT VARIANCE(`v`) AS `a`, VAR_POP(`v`) AS `b`, VAR_SAMP(`v`) AS `c` FROM `scores`"
+      ]
+    },
+    {
+      "name": "testStddevOnPostgreSQLUsesDoubleQuoting",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "sd"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT STDDEV(\"value\") AS \"sd\" FROM \"scores\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV(\"value\") AS \"sd\" FROM \"scores\"",
+        [],
+        [],
+        "SELECT STDDEV(\"value\") AS \"sd\" FROM \"scores\"",
+        "SELECT STDDEV(\"value\") AS \"sd\" FROM \"scores\""
+      ]
+    },
+    {
+      "name": "testStddevOnClickHouseUsesBacktickQuoting",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "sd"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT stddevPop(`value`) AS `sd` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT stddevPop(`value`) AS `sd` FROM `scores`",
+        [],
+        [],
+        "SELECT stddevPop(`value`) AS `sd` FROM `scores`",
+        "SELECT stddevPop(`value`) AS `sd` FROM `scores`"
+      ]
+    },
+    {
+      "name": "testVarianceOnClickHouseEmitsVarPop",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "variance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "var"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT varPop(`value`) AS `var` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT varPop(`value`) AS `var` FROM `scores`",
+        [],
+        [],
+        "SELECT varPop(`value`) AS `var` FROM `scores`",
+        "SELECT varPop(`value`) AS `var` FROM `scores`",
+        "SELECT varPop(`value`) AS `var` FROM `scores`"
+      ]
+    },
+    {
+      "name": "testStatisticalAggregateDoesNotAddBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "sd"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+        [],
+        [],
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores`",
+        []
+      ]
+    },
+    {
+      "name": "testStatisticalAggregateWithWhereUsesCorrectBindingOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "sd"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "category",
+              [
+                "a"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "category",
+            "values": [
+              "a"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT STDDEV(`value`) AS `sd` FROM `scores` WHERE `category` IN (?)",
+            "bindings": [
+              "a"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores` WHERE `category` IN (?)",
+        [
+          "a"
+        ],
+        [
+          "a"
+        ],
+        "SELECT STDDEV(`value`) AS `sd` FROM `scores` WHERE `category` IN (?)",
+        [
+          "a"
+        ]
+      ]
+    },
+    {
+      "name": "testStddevWithoutAliasOmitsAs",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores"
+            ]
+          },
+          {
+            "call": "stddev",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT STDDEV(`value`) FROM `scores`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STDDEV(`value`) FROM `scores`",
+        [],
+        [],
+        "SELECT STDDEV(`value`) FROM `scores`",
+        "SELECT STDDEV(`value`) FROM `scores`",
+        "SELECT STDDEV(`value`) FROM `scores`"
+      ]
+    }
+  ]
+}

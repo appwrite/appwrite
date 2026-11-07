@@ -1,0 +1,71 @@
+{
+  "source": "packages/agents/tests/Roles/AssistantTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "op": "role.inspect",
+      "args": {
+        "kind": "assistant",
+        "id": "test-id",
+        "name": "Test Assistant"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "Test Assistant",
+        "identifier": "assistant"
+      }
+    },
+    {
+      "name": "constructor without name",
+      "op": "role.inspect",
+      "args": {
+        "kind": "assistant",
+        "id": "test-id"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "",
+        "identifier": "assistant"
+      }
+    },
+    {
+      "name": "get identifier",
+      "steps": [
+        {
+          "op": "role.inspect",
+          "args": {
+            "kind": "assistant",
+            "id": "test-id"
+          },
+          "expect": {
+            "id": "test-id",
+            "name": "",
+            "identifier": "assistant"
+          }
+        },
+        {
+          "op": "role.constants",
+          "expect": {
+            "assistant": "assistant",
+            "user": "user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set name",
+      "op": "role.inspect",
+      "args": {
+        "kind": "assistant",
+        "id": "test-id",
+        "name": "a",
+        "rename": "b"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "b",
+        "identifier": "assistant"
+      }
+    }
+  ]
+}

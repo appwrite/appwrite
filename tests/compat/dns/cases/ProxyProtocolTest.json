@@ -1,0 +1,535 @@
+{
+  "source": "packages/dns/tests/ProxyProtocolTest.php",
+  "cases": [
+    {
+      "name": "v1 TCP4",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 192.168.0.1 192.168.0.11 56324 443\r\npayload"
+          },
+          "expect": {
+            "length": 47,
+            "ip": "192.168.0.1",
+            "port": 56324
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 TCP6",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP6 2001:db8::1 2001:db8::2 4124 53\r\n"
+          },
+          "expect": {
+            "length": 44,
+            "ip": "2001:db8::1",
+            "port": 4124
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 unknown",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY UNKNOWN\r\n"
+          },
+          "expect": {
+            "length": 15,
+            "ip": null,
+            "port": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "incomplete returns null",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "P"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 192.168.0.1"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "v2 incomplete addresses returns null",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011\u0000\f"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "garbage throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "GET / HTTP/1.1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol header."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 invalid address throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 999.0.0.1 192.168.0.11 56324 443\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 invalid protocol throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP9 192.168.0.1 192.168.0.11 56324 443\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 header."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 unterminated throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v1 header is not terminated."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 TCP4",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011\u0000\f\n\u0001\u0002\u0003\n\u0000\u0000\u0001\u0010\u001c\u00005payload"
+          },
+          "expect": {
+            "length": 28,
+            "ip": "10.1.2.3",
+            "port": 4124
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 TCP6",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": {
+              "$bytes": "DQoNCgANClFVSVQKISEAJCABDbgAAAAAAAAAAAAAAAEgAQ24AAAAAAAAAAAAAAACEBwANQ=="
+            }
+          },
+          "expect": {
+            "length": 52,
+            "ip": "2001:db8::1",
+            "port": 4124
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 with TLV extension",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011\u0000\u0011\n\u0001\u0002\u0003\n\u0000\u0000\u0001\u0010\u001c\u00005\u0004\u0000\u0002ok"
+          },
+          "expect": {
+            "length": 33,
+            "ip": "10.1.2.3",
+            "port": 4124
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 local",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n \u0000\u0000\u0000"
+          },
+          "expect": {
+            "length": 16,
+            "ip": null,
+            "port": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 invalid version throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n1\u0011\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v2 header."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 truncated addresses throws",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011\u0000\u0004abcd"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v2 header is missing addresses."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge cases",
+      "steps": [
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY "
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY UNKNOWN extra stuff\r\n"
+          },
+          "expect": {
+            "length": 27,
+            "ip": null,
+            "port": null
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 5.6.7.8 1 2 3\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 header."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 5.6.7.8 65536 2\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 5.6.7.8 -1 2\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 5.6.7.8 +80 2\r\n"
+          },
+          "expect": {
+            "length": 34,
+            "ip": "1.2.3.4",
+            "port": 80
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 5.6.7.8 080 2\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP6 1.2.3.4 5.6.7.8 80 2\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 ::1 ::1 80 2\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v1 source address."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1.2.3.4 x 0 x\r\n"
+          },
+          "expect": {
+            "length": 26,
+            "ip": "1.2.3.4",
+            "port": 0
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v1 header exceeds the maximum length."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v1 header exceeds the maximum length."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROXY TCP4 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v1 header is not terminated."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "proxy TCP4"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol header."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "PROX"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUI"
+          },
+          "expect": null
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!1\u0000\u0000"
+          },
+          "expect": {
+            "length": 16,
+            "ip": null,
+            "port": null
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0001\u0000\u0003abc"
+          },
+          "expect": {
+            "length": 19,
+            "ip": null,
+            "port": null
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n\"\u0011\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid PROXY protocol v2 header."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!!\u0000\f\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v2 header is missing addresses."
+            }
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n \u0011\u0000\u0002xy"
+          },
+          "expect": {
+            "length": 18,
+            "ip": null,
+            "port": null
+          }
+        },
+        {
+          "op": "proxy.parse",
+          "args": {
+            "buffer": "\r\n\r\n\u0000\r\nQUIT\n!\u0011\u0000\u000b\n\u0001\u0002\u0003\n\u0000\u0000\u0001\u0010\u001c\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "PROXY protocol v2 header is missing addresses."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

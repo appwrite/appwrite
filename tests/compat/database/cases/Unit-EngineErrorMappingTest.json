@@ -1,0 +1,326 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/EngineErrorMappingTest.php"
+  ],
+  "cases": [
+    {
+      "name": "EngineErrorMappingTest::testSQLiteReadOnAnUnknownColumnIsAttributeNotFound",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o504"
+          },
+          "bind": "s794",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o504"
+              },
+              "cache": "none"
+            },
+            "as": "o505"
+          },
+          "bind": "s795",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "engine_errors"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "engine"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o506"
+          },
+          "bind": "s798",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o506"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 20
+            },
+            "as": "o507"
+          },
+          "bind": "s801",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 20,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o508"
+          },
+          "bind": "s802",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o508"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "orders",
+              "attributes": [
+                {
+                  "$obj": "o507"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "o509"
+          },
+          "bind": "s804",
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 20,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o509"
+              }
+            },
+            "as": "o510"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 20,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "equal",
+                      "args": {
+                        "attribute": "no_such_attribute",
+                        "values": [
+                          "x"
+                        ]
+                      },
+                      "as": "o511"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o505"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "orders",
+                        "queries": [
+                          {
+                            "$obj": "o511"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s806",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

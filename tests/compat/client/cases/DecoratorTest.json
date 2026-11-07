@@ -1,0 +1,289 @@
+{
+  "source": "packages/client/tests/DecoratorTest.php",
+  "cases": [
+    {
+      "name": "delegates send to the inner adapter",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delegates stream to the inner adapter",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/chunked?chunks=2&size=3"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "chuchu"
+          }
+        }
+      ]
+    },
+    {
+      "name": "forwards configuration to a reconfigured inner clone",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connect_timeout",
+                1
+              ],
+              [
+                "timeout",
+                0.2
+              ],
+              [
+                "ssl_verification",
+                false
+              ],
+              [
+                "custom_ca",
+                "/tmp/compat-fs/client-certs/ca.pem"
+              ],
+              [
+                "min_tls",
+                "V1_2"
+              ],
+              [
+                "connection_reuse",
+                true
+              ],
+              [
+                "follow_redirects",
+                [
+                  true,
+                  3
+                ]
+              ]
+            ],
+            "retry": {
+              "random": 1.0,
+              "max_attempts": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/slow?ms=600"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message quotes elapsed milliseconds (and the connect target), which vary between runs and runtimes"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\TimeoutException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "forwards TLS configuration",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "custom_ca",
+                "/tmp/compat-fs/client-certs/ca.pem"
+              ],
+              [
+                "min_tls",
+                "V1_3"
+              ]
+            ],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "https://${https}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${https}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "forwards destinations",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "destinations",
+                {
+                  "type": "public"
+                }
+              ]
+            ],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message quotes the connected address, each runtime's own route to the fixture server"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\DestinationException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
