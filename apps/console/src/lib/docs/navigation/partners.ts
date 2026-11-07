@@ -35,6 +35,17 @@ export const DOCS_PARTNERS_GLOBAL_NAV: DocsNavTree = [
     ],
   },
   {
+    label: 'Guides',
+    items: [
+      {
+        label: "Manage a customer's project",
+        href: '/docs/partners/guides/oauth-connect',
+        icon: 'book-open',
+        new: true,
+      },
+    ],
+  },
+  {
     label: 'Partners APIs',
     items: [
       {
