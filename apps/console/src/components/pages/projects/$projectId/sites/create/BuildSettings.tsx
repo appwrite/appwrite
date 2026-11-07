@@ -18,7 +18,7 @@ import {
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  frameworkHasStaticAdapter,
+  frameworkHasSsrAdapter,
   getFrameworkAdapterDefaults,
 } from '@/lib/frameworks'
 import { useWizard } from './WizardContext'
@@ -56,9 +56,10 @@ export function BuildSettings({
   const t = useT()
   const { getFramework, getFrameworkDefaults } = useWizard()
   const framework = frameworkKey ? getFramework(frameworkKey) : undefined
-  const isSsrOnlyFramework =
-    !!framework && !frameworkHasStaticAdapter(framework)
-  const showFallbackFile = !!onFallbackFileChange && !isSsrOnlyFramework
+  // The fallback file is only sent when create pins the static adapter,
+  // which only static-only frameworks get
+  const isSsrFramework = !!framework && frameworkHasSsrAdapter(framework)
+  const showFallbackFile = !!onFallbackFileChange && !isSsrFramework
   const fallbackDisabled = disabled || !frameworkKey
   const staticDefaults = useMemo(
     () => getFrameworkAdapterDefaults(framework, 'static'),
