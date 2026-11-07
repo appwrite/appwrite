@@ -3,11 +3,13 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -292,9 +294,14 @@ class Create extends Action
 
         $contentType = $deviceForLocal->getFileMimeType($fileTmpName);
         $metadata = ['content_type' => $contentType];
+        // Disabled while a rollout still runs pods that cannot read segmented files.
+        $segmented = System::getEnv('_APP_STORAGE_ENCRYPTION_SEGMENTED', 'enabled') !== 'disabled';
         // A resumed upload keeps the key stored with its first chunk.
-        if ($bucket->getAttribute('encryption', true)) {
+        if ($segmented && $bucket->getAttribute('encryption', true)) {
             $metadata['encryption'] = Encryption::create();
+        }
+        if (!$segmented && $bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER && EncryptionKey::current() === '') {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
         $completed = false;
         $finished = null;
@@ -391,7 +398,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user, &$finished): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, $segmented, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user, &$finished): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -522,6 +529,8 @@ class Create extends Action
 
                 // Changes to the content are made in memory and written once, still encrypted.
                 $data = null;
+                $iv = '';
+                $tag = '';
                 if ($strip || $algorithm !== Compression::NONE || $encrypt) {
                     $data = (string) $deviceForFiles->read($path);
                     if ($cipher !== null) {
@@ -542,9 +551,18 @@ class Create extends Action
                         default => (new GZIP())->compress($data),
                     };
 
-                    if ($encrypt) {
+                    if ($encrypt && $segmented) {
                         $metadata['encryption'] = Encryption::create();
                         $cipher = Encryption::cipher($metadata['encryption']);
+                    }
+
+                    if ($encrypt && !$segmented) {
+                        $key = EncryptionKey::current();
+                        if ($key === '') {
+                            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
+                        }
+                        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                        $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
                     }
 
                     if ($cipher !== null) {
@@ -566,6 +584,13 @@ class Create extends Action
                 if ($cipher !== null) {
                     $openSSLVersion = $metadata['encryption']['version'];
                     $openSSLCipher = Cipher::NAME;
+                }
+
+                if ($encrypt && !$segmented) {
+                    $openSSLVersion = EncryptionKey::version();
+                    $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
+                    $openSSLTag = \bin2hex($tag);
+                    $openSSLIV = \bin2hex($iv);
                 }
 
                 if ($file->isEmpty()) {
