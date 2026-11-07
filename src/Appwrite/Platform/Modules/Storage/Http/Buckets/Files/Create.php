@@ -300,6 +300,9 @@ class Create extends Action
         if ($segmented && $bucket->getAttribute('encryption', true)) {
             $metadata['encryption'] = Encryption::create();
         }
+        if (!$segmented && $bucket->getAttribute('encryption', true) && EncryptionKey::current() === '') {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
+        }
         $completed = false;
         $finished = null;
         // True when prepareUpload created the pending document in this request.
