@@ -141,12 +141,17 @@ class XList extends Action
             $documentId = $cursor->getValue();
 
             try {
-                $cursorDocument = $dbForDatabases->resolveCursor(
-                    $collectionTableId,
-                    (string) $documentId,
-                    $cursor->getMethod() === QueryMethod::CursorAfter ? CursorDirection::After : CursorDirection::Before,
-                    $queries,
-                );
+                // resolveCursor reads without authorization, so the caller must be able to read the cursor first
+                $cursorDocument = $dbForDatabases->getDocument($collectionTableId, (string) $documentId);
+
+                if (!$cursorDocument->isEmpty()) {
+                    $cursorDocument = $dbForDatabases->resolveCursor(
+                        $collectionTableId,
+                        (string) $documentId,
+                        $cursor->getMethod() === QueryMethod::CursorAfter ? CursorDirection::After : CursorDirection::Before,
+                        $queries,
+                    );
+                }
             } catch (NotFoundException) {
                 // The collection metadata document exists but the backing store (e.g. a
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
