@@ -290,7 +290,8 @@ class Create extends Action
 
         $lockKey = 'storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId;
 
-        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        $contentType = $deviceForLocal->getFileMimeType($fileTmpName);
+        $metadata = ['content_type' => $contentType];
         // A resumed upload keeps the key stored with its first chunk.
         if ($bucket->getAttribute('encryption', true)) {
             $metadata['encryption'] = Encryption::create();
@@ -500,7 +501,11 @@ class Create extends Action
                 }
 
                 // The signature describes the plaintext, in the format the device reports for it.
-                $fileHash = $cipher === null ? ($info->etag ?? $deviceForFiles->getFileHash($path)) : $this->signature($metadata['digests'] ?? []);
+                $fileHash = match (true) {
+                    $cipher === null => $info->etag ?? $deviceForFiles->getFileHash($path),
+                    $chunks > 1 && $deviceForFiles->getType() === DeviceType::Local => $this->hash($deviceForFiles, $path, $fileSize, $metadata),
+                    default => $this->signature($metadata['digests'] ?? []),
+                };
 
                 $algorithm = $bucket->getAttribute('compression', Compression::NONE);
                 if ($fileSize > APP_STORAGE_READ_BUFFER) {
@@ -650,13 +655,18 @@ class Create extends Action
         try {
             // upload() can finalize and remove chunk files itself. Keep preparation,
             // transfer and document completion under the same per-file lock.
-            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $path, $chunk, &$chunks, &$metadata): void {
+            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $contentType, $path, $chunk, &$chunks, &$metadata): void {
                 $prepareUpload();
 
                 if ($completed) {
                     $queueForEvents->reset();
 
                     return;
+                }
+
+                // Out-of-order uploads take the type from the first chunk, whenever it arrives.
+                if ($chunk === 1) {
+                    $metadata['content_type'] = $contentType;
                 }
 
                 // Restart the lease so the transfer gets the full window,
@@ -728,7 +738,26 @@ class Create extends Action
     }
 
     /**
-     * MD5 of a single chunk, or the S3 multipart form (MD5 of the part digests, dash, part count).
+     * MD5 of the whole plaintext, as the local device reports for files it stores as sent. Streams one segment at a time.
+     *
+     * @param array<string, mixed> $metadata
+     */
+    private function hash(Device $deviceForFiles, string $path, int $fileSize, array $metadata): string
+    {
+        $context = \hash_init('md5');
+        $file = new Document([
+            'path' => $path,
+            'sizeOriginal' => $fileSize,
+            'openSSLCipher' => Cipher::NAME,
+            'metadata' => $metadata,
+        ]);
+        (new Encryption($file))->stream($deviceForFiles, static fn (string $chunk) => \hash_update($context, $chunk));
+
+        return \hash_final($context);
+    }
+
+    /**
+     * MD5 of a single chunk, or the S3 multipart ETag form (MD5 of the part digests, dash, part count).
      *
      * @param array<int, string> $digests
      */
