@@ -234,6 +234,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/migrations/railway",
+    "title": "Migrate from Railway",
+    "description": "Move a Railway project to Appwrite. Copy PostgreSQL, MySQL, and bucket data, redeploy services on Sites and Functions, and re-create variables, cron jobs, and domains.",
+    "excerpt": "Railway runs your code as long-lived services next to the databases, buckets, and volumes they use. Most of a typical Railway project has a direct home on Appwrite: web apps move to Sites, HTTP APIs and cron jobs move to Functions, databases move to managed PostgreSQL and MySQL, and buckets move to Storage. Some pieces, such as always-on workers and Redis, have no direct equivalent, and this guide says so where it applies. There is no automated Migrations source for…",
+    "breadcrumbs": [
+      "Migrations",
+      "Guides",
+      "From Railway"
+    ]
+  },
+  {
     "slug": "advanced/migrations/self-hosted",
     "title": "Migrate from self-hosted",
     "description": "Migrate to Appwrite from self-hosted platforms seamlessly. Learn how to move your applications and data to Appwrite for enhanced flexibility and control.",
