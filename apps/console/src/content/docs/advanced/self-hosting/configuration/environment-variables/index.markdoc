@@ -114,7 +114,7 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 
 | Name                                        | Description                                                                                                                                                                                                                         |
 |---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `_APP_SMS_PROVIDER`  | **version >= 0.15.0** Provider used for delivering SMS for Phone authentication. Use the following format: `sms://<USER>:<SECRET>@<PROVIDER>`. Ensure `<USER>` and `<SECRET>` are URL encoded if they contain any non-alphanumeric characters. Available providers are twilio, text-magic, telesign, msg91, and vonage. |
+| `_APP_SMS_PROVIDER`  | **version >= 0.15.0** Provider used for delivering SMS for Phone authentication. Use the following format: `sms://<USER>:<SECRET>@<PROVIDER>`. Ensure `<USER>` and `<SECRET>` are URL encoded if they contain any non-alphanumeric characters. Available providers are twilio, textmagic, telesign, msg91, and vonage. |
 | `_APP_SMS_FROM`  | **version >= 0.15.0** Phone number, or an alphanumeric sender ID where the provider supports it, used for sending out messages. A phone number must start with a leading '+' and have a maximum of 15 digits without spaces (+123456789). If using Twilio, this may also be a Messaging Service SID, starting with MG. |
 
 # Storage {% #storage %}
