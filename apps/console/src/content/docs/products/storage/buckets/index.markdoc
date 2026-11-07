@@ -306,7 +306,7 @@ Folders are derived from these paths, so there is nothing to create or manage se
 # Encryption {% #encryption %}
 Appwrite provides added security settings for your buckets. Enable encryption under your bucket's **Settings** > **Security settings**.
 You can enable encryption to encrypt files in your buckets. If your files are leaked, encrypted files cannot be read by the malicious actor.
-Files bigger than 20MB cannot be encrypted.
+Files of any size are encrypted.
 
 # Compression {% #compression %}
 Appwrite allows you to compress your files.
