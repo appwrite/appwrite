@@ -7,6 +7,7 @@ use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,7 +18,6 @@ use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\IP;
 
@@ -179,15 +179,10 @@ class Action extends PlatformAction
         }
 
         // Ensure CAA won't block certificate issuance
+        $caaValidator = null;
         $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
         if (!empty($caaTarget)) {
-            $validationStart = \microtime(true);
-            $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
-            if (!$validator->isValid($domain->get())) {
-                Span::add('dns.timing_caa', \microtime(true) - $validationStart);
-                Span::add('dns.domain', $domain->get());
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
-            }
+            $caaValidator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
         }
 
         $targetCNAMEs = [];
@@ -220,15 +215,11 @@ class Action extends PlatformAction
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
-        if (\count($targetCNAMEs) > 0) {
-            $cnameValidators = [];
-            foreach ($targetCNAMEs as $targetCNAME) {
-                $cnameValidators[] = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
-            }
-
-            $validator = new AnyOf($cnameValidators);
+        foreach ($targetCNAMEs as $targetCNAME) {
+            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
             $validators[] = $validator;
 
+            // A failure reports the last target, as the AnyOf over them did
             $mainValidator = $validator;
         }
 
@@ -257,14 +248,55 @@ class Action extends PlatformAction
             }
         }
 
+        // Query CAA and every target at once, so slow resolvers wait in parallel rather than add up
+        $checks = $validators;
+        if (!\is_null($caaValidator)) {
+            $checks['caa'] = $caaValidator;
+        }
+
+        $validationStart = \microtime(true);
+        $wg = new WaitGroup();
+        $results = [];
+        $errors = [];
+
+        foreach ($checks as $key => $check) {
+            $wg->add();
+
+            \go(function () use ($check, $key, $domain, $wg, &$results, &$errors) {
+                try {
+                    $results[$key] = $check->isValid($domain->get());
+                } catch (\Throwable $error) {
+                    // Uncaught in a coroutine it would end the process, so the caller handles it instead
+                    $errors[$key] = $error;
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+
+        $wg->wait();
+
+        if (isset($errors['caa'])) {
+            throw $errors['caa'];
+        }
+
+        if (!\is_null($caaValidator) && !$results['caa']) {
+            Span::add('dns.timing_caa', \microtime(true) - $validationStart);
+            Span::add('dns.domain', $domain->get());
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $caaValidator->getDescription());
+        }
+        unset($results['caa']);
+
         if (empty($validators)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
         }
 
-        $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
+        if (!\in_array(true, $results, true)) {
+            // A target that threw only decides the outcome when no other target passed
+            if ($errors !== []) {
+                throw \reset($errors);
+            }
 
-        $validationStart = \microtime(true);
-        if (!$validator->isValid($domain->get())) {
             Span::add('dns.timing', \microtime(true) - $validationStart);
             Span::add('dns.domain', $domain->get());
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());

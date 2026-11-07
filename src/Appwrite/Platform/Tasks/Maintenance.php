@@ -27,6 +27,12 @@ class Maintenance extends Action
      */
     private const CERTIFICATE_RENEWAL_DEADLINE = 60 * 60 * 24 * 7;
 
+    /**
+     * How long after expiry a certificate is still checked, so a late provider
+     * renewal or a DNS fix still recovers it.
+     */
+    private const CERTIFICATE_EXPIRED_WINDOW = 60 * 60 * 24 * 30;
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -145,12 +151,13 @@ class Maintenance extends Action
         ]);
 
         // Out of attempts or without a renew date, a renewal is never scheduled
-        // again and its certificate would expire silently. One about to expire is
-        // checked regardless, so the worker renews it or reports why it cannot.
+        // again and its certificate would expire silently. One about to expire, or
+        // expired within the window, is checked regardless, so the worker renews
+        // it or reports why it cannot.
         $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
         try {
             $expiring = $dbForPlatform->find('certificates', [
-                Query::greaterThan('expireDate', $time),
+                Query::greaterThan('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), -self::CERTIFICATE_EXPIRED_WINDOW)),
                 Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
                 Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
                 Query::orderAsc('expireDate'),
