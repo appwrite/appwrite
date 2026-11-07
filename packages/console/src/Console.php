@@ -161,8 +161,22 @@ class Console
 
             $procStatus = proc_get_status($process);
             if (! $procStatus['running']) {
+                // The process may exit between the reads above and the status check; drain what is still buffered.
+                stream_set_blocking($pipes[1], true);
+                stream_set_blocking($pipes[2], true);
+                stream_set_blocking($pipes[3], true);
+
+                $outputContents = stream_get_contents($pipes[1]) ?: '';
+                if (isset($onProgress) && ($outputContents !== '' && $outputContents !== '0')) {
+                    $onProgress($outputContents, $process);
+                }
+                $stdout .= $outputContents;
+                $stderr .= stream_get_contents($pipes[2]) ?: '';
+                $status .= stream_get_contents($pipes[3]);
+
                 fclose($pipes[1]);
                 fclose($pipes[2]);
+                fclose($pipes[3]);
                 proc_close($process);
 
                 return ($status !== '')
