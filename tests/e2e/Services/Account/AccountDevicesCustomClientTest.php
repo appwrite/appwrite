@@ -383,11 +383,13 @@ final class AccountDevicesCustomClientTest extends Scope
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        $headers = ['x-appwrite-project' => $projectId, 'cookie' => $deviceCookie];
+        // The cookies set when the flow started ride along on the Appwrite hops; the provider never sees them
+        $headers = ['x-appwrite-project' => $projectId];
+        $appwriteHeaders = $headers + ['cookie' => \implode('; ', [$deviceCookie, ...\array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])])];
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
         for ($hop = 0; $hop < 3; $hop++) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
         $this->assertArrayHasKey($sessionKey, $response['cookies']);
