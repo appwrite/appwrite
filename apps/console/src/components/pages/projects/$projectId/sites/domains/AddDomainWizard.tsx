@@ -32,7 +32,10 @@ import {
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 
@@ -60,6 +63,7 @@ export function AddDomainWizard() {
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimRequired, setClaimRequired] = useState(false)
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/sites/${siteId}/domains`
@@ -141,7 +145,6 @@ export function AddDomainWizard() {
     setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
-        skipForSites: true,
         region: project?.region,
       })
     } catch (err: unknown) {
@@ -158,6 +161,9 @@ export function AddDomainWizard() {
       await createRule(d)
     } catch (err) {
       if (isDomainClaimError(err)) {
+        setClaimRequired(
+          getAppwriteErrorInfo(err).type === 'rule_claim_required',
+        )
         setClaimDomain(d)
         return
       }
@@ -279,6 +285,7 @@ export function AddDomainWizard() {
       >
         <ClaimDomainContent
           domain={claimDomain}
+          claimRequired={claimRequired}
           projectId={projectId!}
           verificationError={verificationError}
         />

@@ -179,6 +179,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate blocked': 'הנפקת התעודה חסומה',
   'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים ולאחר מכן נסו שוב.',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
@@ -411,6 +413,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'אימות בעלות על הדומיין',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',

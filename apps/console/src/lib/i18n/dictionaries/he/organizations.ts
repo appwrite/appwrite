@@ -724,7 +724,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
   'Appwrite nameservers': 'שרתי השמות של Appwrite',
   'External nameservers': 'שרתי שמות חיצוניים',
-  'External DNS': 'DNS חיצוני',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
