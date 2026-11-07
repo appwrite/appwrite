@@ -51,6 +51,14 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
         $this->seedGaugeRow('proj.users', 5, 'user', '-60 days');
         $this->seedGaugeRow('proj.users', 0, 'user', '-1 hour');
         $this->seedGaugeRow('proj.users', 2, 'team', '-50 days');
+        // One part with many distinct timestamps distinguishes the compact
+        // latest-value projection from the time-keyed per-sample projection across multiple granules.
+        $this->queryRaw(
+            $this->adapter,
+            "INSERT INTO `{$database}`.`{$gauges}` (id, metric, value, time, resourceType, tenant) "
+            . "SELECT concat('history-', toString(number)), 'proj.users', 5, "
+            . "now64(3) - INTERVAL 2 HOUR + toIntervalMillisecond(number), 'user', '1' FROM numbers(100000)"
+        );
     }
 
     protected function tearDown(): void
@@ -114,6 +122,8 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
     {
         // The adapter's own grouped read (the billing prefetch shape) must
         // agree with the projection-served result.
+        $queryId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($queryId);
         $rows = $this->usage->find('1', [
             Query::equal('metric', ['proj.users']),
             UsageQuery::groupBy('resourceType'),
@@ -130,5 +140,28 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
 
         $this->assertSame(0, $byType['user'] ?? null);
         $this->assertSame(2, $byType['team'] ?? null);
+
+        $this->queryRaw($this->adapter, 'SYSTEM FLUSH LOGS');
+        $raw = $this->queryRaw(
+            $this->adapter,
+            "SELECT projections, read_rows FROM system.query_log WHERE query_id = '{$queryId}' "
+            . "AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1 FORMAT JSON"
+        );
+        $decoded = json_decode($raw, true);
+        $this->assertIsArray($decoded);
+        $records = $decoded['data'] ?? null;
+        $this->assertIsArray($records);
+        $record = $records[0] ?? null;
+        $this->assertIsArray($record);
+        $projections = $record['projections'] ?? null;
+        $this->assertIsArray($projections);
+        $readRows = $record['read_rows'] ?? null;
+        if (!is_numeric($readRows)) {
+            $this->fail('The query log must report rows read');
+        }
+        $gauges = $this->resolveTableName($this->adapter, 'getGaugesTableName');
+        $database = $this->databaseName($this->adapter);
+        $this->assertContains("{$database}.{$gauges}.p_latest_by_resourceType", $projections);
+        $this->assertLessThan(100000, (int) $readRows, 'Latest reads must not scan every historical sample');
     }
 }
