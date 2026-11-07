@@ -349,6 +349,92 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
+    public function testDeviceHidesProviderTokens(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $device = $this->createDevice();
+        $deviceCookie = $deviceKey . '=' . $device['cookie'];
+
+        // Drive the mock provider back to the success URL, sending the device cookie on every hop as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $deviceCookie,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The cookies set when the flow started ride along on the Appwrite hops; the provider never sees them
+        $headers = ['x-appwrite-project' => $projectId];
+        $appwriteHeaders = $headers + ['cookie' => \implode('; ', [$deviceCookie, ...\array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])])];
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($sessionKey, $response['cookies']);
+
+        // The OAuth2 session holds provider tokens, so the empty values below are redaction, not absence
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $oauthSessionId = $response['body']['$id'];
+
+        $email = \uniqid() . 'provider@localhost.test';
+        $this->createUserWithPassword($email, 'password');
+        $response = $this->signIn($device['cookie'], $email, 'password');
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - neither device response carries another account's provider tokens
+         */
+        $responses = [
+            $this->getDevice($device['cookie']),
+            $this->client->call(Client::METHOD_POST, '/account/devices', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $deviceCookie,
+            ]),
+        ];
+
+        foreach ($responses as $response) {
+            $this->assertContains($response['headers']['status-code'], [200, 201]);
+            $this->assertCount(2, $response['body']['sessions']);
+            $this->assertContains($oauthSessionId, \array_column($response['body']['sessions'], '$id'));
+
+            foreach ($response['body']['sessions'] as $session) {
+                $this->assertSame('', $session['providerAccessToken']);
+                $this->assertSame('', $session['providerRefreshToken']);
+            }
+        }
+    }
+
     public function testDeviceDropsSessionsDeletedElsewhere(): void
     {
         $projectId = $this->getProject()['$id'];
