@@ -454,19 +454,18 @@ class Create extends Action
                     );
 
                     // ClamAV reads a path, so an encrypted file is scanned from a decrypted temporary copy.
-                    $scanned = $path;
-                    if ($cipher !== null) {
-                        $scanned = \tempnam(\sys_get_temp_dir(), 'scan');
-                        \file_put_contents($scanned, $cipher->decrypt((string) $deviceForFiles->read($path), 0, true));
+                    $temporary = $cipher === null ? null : \tempnam(\sys_get_temp_dir(), 'scan');
+                    if ($temporary !== null) {
+                        \file_put_contents($temporary, $cipher->decrypt((string) $deviceForFiles->read($path), 0, true));
                     }
 
                     try {
-                        $scan = $antivirus->scanInStream($scanned);
+                        $scan = $antivirus->scanInStream($temporary ?? $path);
                     } catch (\RuntimeException $e) {
                         $scan = ScanResult::failed($e->getMessage());
                     } finally {
-                        if ($scanned !== $path) {
-                            \unlink($scanned);
+                        if ($temporary !== null) {
+                            \unlink($temporary);
                         }
                     }
 
