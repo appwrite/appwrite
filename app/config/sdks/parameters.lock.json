@@ -2039,7 +2039,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2183,7 +2184,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3668,7 +3670,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3804,7 +3807,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6262,7 +6266,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6396,7 +6401,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -7809,7 +7815,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7935,7 +7942,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",

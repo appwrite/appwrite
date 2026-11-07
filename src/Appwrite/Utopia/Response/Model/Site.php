@@ -186,6 +186,12 @@ class Site extends Model
                 'default' => false,
                 'example' => false,
             ])
+            ->addRule('providerComments', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether a build comment is posted on pull requests. Checks on commits are still reported when disabled.',
+                'default' => true,
+                'example' => true,
+            ])
             ->addRule('providerBranches', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of branch name patterns that trigger automatic deployments. Supports glob wildcards. Empty list deploys on all branches.',
