@@ -32,8 +32,11 @@ import { pageTitle } from '@/lib/utils/page-title'
 const searchSchema = (
   search: Record<string, unknown>,
 ): { user_code?: string } => ({
+  // The router JSON-parses search values, so an all-digit code arrives as a number.
   user_code:
-    typeof search.user_code === 'string' ? search.user_code : undefined,
+    typeof search.user_code === 'string' || typeof search.user_code === 'number'
+      ? String(search.user_code)
+      : undefined,
 })
 
 export const Route = createFileRoute('/_auth/oauth2/device')({

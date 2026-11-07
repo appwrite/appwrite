@@ -10,8 +10,11 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { isZeroAccount } from '@/lib/zero/session'
 
 const transferSearchSchema = z.object({
-  transferId: z.string().optional(),
-  secret: z.string().optional(),
+  // Values come from links built outside the Console (emails, other sites). The router
+  // JSON-parses search values, so a number-like one (`2024`, `true`) arrives as a number
+  // or boolean: coerce it back to its text rather than fail the page.
+  transferId: z.coerce.string().optional(),
+  secret: z.coerce.string().optional(),
 })
 
 export const Route = createFileRoute('/transfer')({

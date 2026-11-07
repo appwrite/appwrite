@@ -11,16 +11,19 @@ import { QuickDeployView } from '@/components/pages/projects/$projectId/sites/cr
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
-  repo: z.string().optional(),
-  owner: z.string().optional(),
-  framework: z.string().optional(),
-  branch: z.string().optional(),
-  root: z.string().optional(),
-  installCommand: z.string().optional(),
-  buildCommand: z.string().optional(),
-  startCommand: z.string().optional(),
-  outputDirectory: z.string().optional(),
-  envKeys: z.string().optional(), // Comma-separated list of env var keys
+  // Values come from links built outside the Console (emails, other sites). The router
+  // JSON-parses search values, so a number-like one (`2024`, `true`) arrives as a number
+  // or boolean: coerce it back to its text rather than fail the page.
+  repo: z.coerce.string().optional(),
+  owner: z.coerce.string().optional(),
+  framework: z.coerce.string().optional(),
+  branch: z.coerce.string().optional(),
+  root: z.coerce.string().optional(),
+  installCommand: z.coerce.string().optional(),
+  buildCommand: z.coerce.string().optional(),
+  startCommand: z.coerce.string().optional(),
+  outputDirectory: z.coerce.string().optional(),
+  envKeys: z.coerce.string().optional(), // Comma-separated list of env var keys
 })
 
 export const Route = createFileRoute(

@@ -35,6 +35,7 @@ import {
 import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
 import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useRouter } from '@tanstack/react-router'
+import { getRawSearchParam } from '@/lib/table-filters'
 
 const searchSchema = z.object({
   redirect: z
@@ -43,9 +44,12 @@ const searchSchema = z.object({
     .refine((val) => !val || isValidRelativeRedirect(val), {
       message: 'Redirect must be a relative URL',
     }),
-  userId: z.string().optional(),
-  secret: z.string().optional(),
-  expire: z.string().optional(),
+  // Values come from links built outside the Console (emails, other sites). The router
+  // JSON-parses search values, so a number-like one (`2024`, `true`) arrives as a number
+  // or boolean: coerce it back to its text rather than fail the page.
+  userId: z.coerce.string().optional(),
+  secret: z.coerce.string().optional(),
+  expire: z.coerce.string().optional(),
 })
 
 function isInvalidTokenError(error: unknown): boolean {
@@ -73,8 +77,8 @@ function getVerificationParamsFromUrl(): {
 } | null {
   if (typeof window === 'undefined') return null
   const params = new URLSearchParams(window.location.search)
-  const userId = params.get('userId')
-  const secret = params.get('secret')
+  const userId = getRawSearchParam(params, 'userId')
+  const secret = getRawSearchParam(params, 'secret')
   if (userId && secret) return { userId, secret }
   return null
 }

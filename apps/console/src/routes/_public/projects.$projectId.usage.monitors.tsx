@@ -33,7 +33,8 @@ import { pageTitle } from '@/lib/utils/page-title'
  * filled in; `?monitor=` opens that monitor.
  */
 const searchSchema = z.object({
-  monitor: z.string().optional().catch(undefined),
+  // Linked from alert emails; a custom all-digit id is JSON-parsed to a number by the router.
+  monitor: z.coerce.string().optional().catch(undefined),
   metric: z.string().optional().catch(undefined),
   resourceType: z.string().optional().catch(undefined),
   resourceId: z.string().optional().catch(undefined),

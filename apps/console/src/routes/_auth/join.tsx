@@ -30,11 +30,14 @@ function getJoinRedirectUrl(): string {
 }
 
 const searchSchema = z.object({
-  teamId: z.string().optional(),
-  membershipId: z.string().optional(),
-  userId: z.string().optional(),
-  secret: z.string().optional(),
-  teamName: z.string().optional(),
+  // Values come from links built outside the Console (emails, other sites). The router
+  // JSON-parses search values, so a number-like one (`2024`, `true`) arrives as a number
+  // or boolean: coerce it back to its text rather than fail the page.
+  teamId: z.coerce.string().optional(),
+  membershipId: z.coerce.string().optional(),
+  userId: z.coerce.string().optional(),
+  secret: z.coerce.string().optional(),
+  teamName: z.coerce.string().optional(),
 })
 
 export const Route = createFileRoute('/_auth/join')({

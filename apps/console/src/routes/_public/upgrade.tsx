@@ -15,14 +15,20 @@ import {
 import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizardFullscreen'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { searchParamsFromRouterLocation } from '@/lib/table-filters'
+import {
+  getRawSearchParam,
+  searchParamsFromRouterLocation,
+} from '@/lib/table-filters'
 
 const upgradeSearchSchema = z.object({
-  orgId: z.string().optional(),
-  plan: z.string().optional(),
-  code: z.string().optional(),
-  type: z.string().optional(),
-  invites: z.string().optional(),
+  // Values come from links built outside the Console (emails, other sites). The router
+  // JSON-parses search values, so a number-like one (`2024`, `true`) arrives as a number
+  // or boolean: coerce it back to its text rather than fail the page.
+  orgId: z.coerce.string().optional(),
+  plan: z.coerce.string().optional(),
+  code: z.coerce.string().optional(),
+  type: z.coerce.string().optional(),
+  invites: z.coerce.string().optional(),
 })
 
 export const Route = createFileRoute('/_public/upgrade')({
@@ -40,7 +46,8 @@ export const Route = createFileRoute('/_public/upgrade')({
 
     const { queryClient } = context
     const orgId =
-      searchParamsFromRouterLocation(location).get('orgId') ?? undefined
+      getRawSearchParam(searchParamsFromRouterLocation(location), 'orgId') ??
+      undefined
 
     const sharedPrefetches: Promise<unknown>[] = [
       queryClient.ensureQueryData(organizationsQueryOptions()),
