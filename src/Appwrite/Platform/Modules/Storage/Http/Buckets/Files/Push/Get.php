@@ -180,6 +180,10 @@ class Get extends Action
                 }
                 return;
             }
+
+            // Sent from here even when empty, so a zero-byte file never falls through to the stored bytes.
+            $response->send($encryption->decrypt((string) $deviceForFiles->read($path)));
+            return;
         }
 
         $source = '';
