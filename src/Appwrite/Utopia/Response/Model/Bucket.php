@@ -62,7 +62,7 @@ class Bucket extends Model
             ])
             ->addRule('maximumFileSize', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Maximum file size supported.',
+                'description' => 'Maximum file size supported in bytes. A value of 0 uses the server or plan limit.',
                 'default' => 0,
                 'example' => 100,
             ])
