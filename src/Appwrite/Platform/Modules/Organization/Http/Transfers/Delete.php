@@ -7,6 +7,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -40,7 +41,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a project transfer, so its secret can no longer be used to claim the project.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -53,6 +54,7 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -62,8 +64,11 @@ class Delete extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
     ) {
+        $this->assertOwner($targetUser, $team);
+
         $transfer = $this->getOwnTransfer($transferId, $team, $dbForPlatform, $authorization);
 
         if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('transfers', $transfer->getId()))) {

@@ -679,4 +679,45 @@ final class UserTest extends TestCase
         $this->assertContains(Role::member(Id::custom('def'))->toString(), $roles);
         $this->assertContains(Role::member(Id::custom('abc'))->toString(), $roles);
     }
+
+    public function testIsOwner(): void
+    {
+        $user = new User([
+            '$id' => Id::custom('123'),
+            'memberships' => [
+                new Document([
+                    '$id' => Id::custom('owned'),
+                    'teamId' => Id::custom('ownedTeam'),
+                    'confirm' => true,
+                    'roles' => [User::ROLE_OWNER],
+                ]),
+                new Document([
+                    '$id' => Id::custom('joined'),
+                    'teamId' => Id::custom('joinedTeam'),
+                    'confirm' => true,
+                    'roles' => [User::ROLE_DEVELOPER, 'project-app-owner'],
+                ]),
+                new Document([
+                    '$id' => Id::custom('invited'),
+                    'teamId' => Id::custom('invitedTeam'),
+                    'confirm' => false,
+                    'roles' => [User::ROLE_OWNER],
+                ]),
+            ],
+        ]);
+
+        $this->assertTrue($user->isOwner(Id::custom('ownedTeam')));
+
+        // A developer, and a role scoped to one project, are not owners of the organization
+        $this->assertFalse($user->isOwner(Id::custom('joinedTeam')));
+
+        // An invitation that was never accepted grants nothing
+        $this->assertFalse($user->isOwner(Id::custom('invitedTeam')));
+
+        $this->assertFalse($user->isOwner(Id::custom('otherTeam')));
+        $this->assertFalse($user->isOwner(''));
+
+        // An API key carries no membership, so it is never an owner
+        $this->assertFalse((new User())->isOwner(Id::custom('ownedTeam')));
+    }
 }
