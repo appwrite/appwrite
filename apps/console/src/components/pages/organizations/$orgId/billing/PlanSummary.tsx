@@ -95,7 +95,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     ...organizationInvoiceQueryOptions(orgId, organization?.billingInvoiceId),
     enabled: canReadInvoice && !!orgId && !!organization?.billingInvoiceId,
   })
-  const { data: aggregation, error: usageError } = useQuery({
+  const {
+    data: aggregation,
+    error: usageError,
+    refetch: retryUsage,
+    isFetching: fetchingUsage,
+  } = useQuery({
     ...organizationBillingAggregationQueryOptions(
       orgId,
       organization?.billingAggregationId,
@@ -118,41 +123,42 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const lines = useMemo(() => invoice?.items ?? [], [invoice?.items])
   const {
     projectBreakdowns,
-    organizationLines,
+    organizationLinesByResource,
     organizationUsageCategories,
     organizationItems,
   } = useMemo(() => {
+    const linesByProject = groupLines(lines, 'projectId')
+    const projects = new Map(
+      aggregation?.breakdown.map((project) => [project.$id, project]),
+    )
     const projectIds = [
       ...new Set([
-        ...(aggregation?.breakdown ?? []).map((project) => project.$id),
-        ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
+        ...projects.keys(),
+        ...Array.from(linesByProject.keys()).filter(Boolean),
       ]),
     ]
     const projectBreakdowns = projectIds.map((projectId) => {
-      const project = aggregation?.breakdown.find(
-        (project) => project.$id === projectId,
-      )
-      const items = lines.filter((item) => item.projectId === projectId)
+      const project = projects.get(projectId)
+      const items = linesByProject.get(projectId) ?? []
       return {
         projectId,
         projectName: project?.name || projectId,
         items,
-        categories: usageCategories(
-          project?.resources,
-          items,
-          plan,
-          dedicatedDbBillingSpecLookup,
-        ),
+        resources: project?.resources,
         total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
       }
     })
-    const organizationLines = lines.filter((item) => !item.projectId)
+    const organizationLines = linesByProject.get('') ?? []
+    const organizationLinesByResource = groupLines(
+      organizationLines,
+      'resourceId',
+    )
     const organizationUsageCategories =
       plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
         ? []
         : usageCategories(
             aggregation?.resources,
-            organizationLines,
+            organizationLinesByResource,
             plan,
             dedicatedDbBillingSpecLookup,
           )
@@ -166,15 +172,30 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     )
     return {
       projectBreakdowns,
-      organizationLines,
+      organizationLinesByResource,
       organizationUsageCategories,
       organizationItems,
     }
   }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup])
   const totalProjects = projectBreakdowns.length
-  const displayedBreakdowns = projectBreakdowns.slice(
-    (displayedPage - 1) * pageLimit,
-    displayedPage * pageLimit,
+  const displayedBreakdowns = useMemo(
+    () =>
+      projectBreakdowns
+        .slice((displayedPage - 1) * pageLimit, displayedPage * pageLimit)
+        .map((project) => {
+          const linesByResource = groupLines(project.items, 'resourceId')
+          return {
+            ...project,
+            linesByResource,
+            categories: usageCategories(
+              project.resources,
+              linesByResource,
+              plan,
+              dedicatedDbBillingSpecLookup,
+            ),
+          }
+        }),
+    [projectBreakdowns, displayedPage, plan, dedicatedDbBillingSpecLookup],
   )
   const toggleProject = (id: string) =>
     setExpandedProjects((previous) => {
@@ -221,7 +242,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const billingCycleLabel = t('Monthly')
 
   if (error) throw error
-  if (usageError) throw usageError
   if (!canReadInvoice) return null
 
   return (
@@ -331,6 +351,22 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
+            {usageError && (
+              <div
+                role="status"
+                className="flex items-center justify-between gap-4 text-[12px] text-muted-foreground"
+              >
+                <span>{t('Usage unavailable')}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={fetchingUsage}
+                  onClick={() => void retryUsage()}
+                >
+                  {t('Try again')}
+                </Button>
+              </div>
+            )}
             {invoice?.items?.length ? (
               organizationItems.map((item, index) => (
                 <RecordedLine key={index} item={item} currency={currency} />
@@ -363,7 +399,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                     <BillingProjectResourceCategorySection
                       key={category.id}
                       category={category}
-                      items={organizationLines}
+                      linesByResource={organizationLinesByResource}
                       currency={currency}
                       plan={plan}
                       dedicatedDbBillingSpecLookup={
@@ -420,7 +456,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               <BillingProjectResourceCategorySection
                                 key={category.id}
                                 category={category}
-                                items={project.items}
+                                linesByResource={project.linesByResource}
                                 currency={currency}
                                 plan={plan}
                                 dedicatedDbBillingSpecLookup={
@@ -566,10 +602,10 @@ function BillingProjectResourceCategorySection({
   plan,
   dedicatedDbBillingSpecLookup,
   onUpgrade,
-  items,
+  linesByResource,
   currency,
 }: {
-  items: readonly Models.InvoiceItem[]
+  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
   currency: string
   category: BillingProjectResourceCategoryGroup
   plan: Models.BillingPlan | null | undefined
@@ -596,7 +632,7 @@ function BillingProjectResourceCategorySection({
             <BillingDedicatedDbSpecGroup
               key={group.key}
               group={group}
-              items={items}
+              linesByResource={linesByResource}
               currency={currency}
             />
           ))}
@@ -604,7 +640,7 @@ function BillingProjectResourceCategorySection({
             <RecordedUsageRow
               key={resource.resourceId}
               resource={resource}
-              items={items}
+              linesByResource={linesByResource}
               currency={currency}
               onUpgrade={onUpgrade}
             />
@@ -624,7 +660,7 @@ function BillingProjectResourceCategorySection({
           <RecordedUsageRow
             key={resource.resourceId}
             resource={resource}
-            items={items}
+            linesByResource={linesByResource}
             currency={currency}
             onUpgrade={onUpgrade}
           />
@@ -636,10 +672,10 @@ function BillingProjectResourceCategorySection({
 
 function BillingDedicatedDbSpecGroup({
   group,
-  items,
+  linesByResource,
   currency,
 }: {
-  items: readonly Models.InvoiceItem[]
+  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
   currency: string
   group: DedicatedDbBillingSpecGroup
 }) {
@@ -655,10 +691,8 @@ function BillingDedicatedDbSpecGroup({
           {group.title}
         </span>
         <span className="text-[12px] font-semibold text-foreground shrink-0 tabular-nums">
-          {items.some((line) =>
-            group.items.some(
-              (resource) => resource.resourceId === line.resourceId,
-            ),
+          {group.items.some((resource) =>
+            linesByResource.has(resource.resourceId),
           )
             ? formatCurrency(group.totalCost, currency)
             : '-'}
@@ -680,21 +714,17 @@ function BillingDedicatedDbSpecGroup({
             <BillingDedicatedDbMetricRow
               item={item}
               currency={currency}
-              recorded={items.filter(
-                (line) => line.resourceId === item.resourceId,
-              )}
+              recorded={linesByResource.get(item.resourceId) ?? []}
             />
-            {items
-              .filter((line) => line.resourceId === item.resourceId)
-              .map((line, index) => (
-                <div
-                  key={index}
-                  className="px-3 pb-1 text-[11px] text-muted-foreground"
-                >
-                  {line.description}
-                  <LinePeriod item={line} />
-                </div>
-              ))}
+            {(linesByResource.get(item.resourceId) ?? []).map((line, index) => (
+              <div
+                key={index}
+                className="px-3 pb-1 text-[11px] text-muted-foreground"
+              >
+                {line.description}
+                <LinePeriod item={line} />
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -917,9 +947,23 @@ function formatResourceLimit(
   return formatNumber(value)
 }
 
+function groupLines(
+  items: readonly Models.InvoiceItem[],
+  by: 'projectId' | 'resourceId',
+) {
+  const groups = new Map<string, Models.InvoiceItem[]>()
+  for (const item of items) {
+    const key = item[by] || ''
+    const group = groups.get(key)
+    if (group) group.push(item)
+    else groups.set(key, [item])
+  }
+  return groups
+}
+
 function usageCategories(
   resources: AggregationResourceLike[] | null | undefined,
-  items: readonly Models.InvoiceItem[],
+  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>,
   plan: Models.BillingPlan | null | undefined,
   specifications: ReturnType<typeof buildDedicatedDbBillingSpecLookup>,
 ): BillingProjectResourceCategoryGroup[] {
@@ -930,13 +974,13 @@ function usageCategories(
       ...usage.flatMap((resource) =>
         resource.resourceId ? [resource.resourceId] : [],
       ),
-      ...items.flatMap((item) => (item.resourceId ? [item.resourceId] : [])),
+      ...Array.from(linesByResource.keys()).filter(Boolean),
     ]),
   ]
   const rows: BillingProjectResourceItem[] = []
   for (const id of ids) {
     const resource = usage.find((resource) => resource.resourceId === id)
-    const recorded = items.filter((item) => item.resourceId === id)
+    const recorded = linesByResource.get(id) ?? []
     const mapping =
       resolveBillingProjectResourceMapping(id, plan, specifications) ??
       (id.startsWith('addon_')
@@ -1029,18 +1073,16 @@ function RecordedLine({
 
 function RecordedUsageRow({
   resource,
-  items,
+  linesByResource,
   currency,
   onUpgrade,
 }: {
   resource: BillingProjectResourceItem
-  items: readonly Models.InvoiceItem[]
+  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
   currency: string
   onUpgrade?: () => void
 }) {
-  const recorded = items.filter(
-    (item) => item.resourceId === resource.resourceId,
-  )
+  const recorded = linesByResource.get(resource.resourceId) ?? []
   if (recorded.length === 0)
     return (
       <BillingProjectResourceRow
