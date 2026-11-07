@@ -18,7 +18,7 @@ class Language extends Model
             ])
             ->addRule('code', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Language two-character ISO 639-1 codes.',
+                'description' => 'Language ISO 639-1 (two-character) or ISO 639-3 (three-character) code.',
                 'default' => '',
                 'example' => 'it',
             ])
