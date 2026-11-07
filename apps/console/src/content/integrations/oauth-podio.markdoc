@@ -1,0 +1,63 @@
+---
+layout: integration
+title: OAuth with Podio
+description: Authenticate users with an existing Podio account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-podio/cover.avif
+category: auth
+product:
+    vendor: Podio
+    description: "Podio is a work management platform where teams build custom apps and workspaces to track projects, contacts, and processes."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Podio is a work management platform where teams build custom apps and workspaces to track projects, contacts, and processes without writing code. Teams that already organize their work in Podio can sign in to your app with the same account, which suits tools that extend or report on their Podio workspaces.
+
+# How does the integration work?
+
+You can use the Podio OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable.
+
+Appwrite uses Podio's server-side authorization flow, which doesn't take scopes. After the user approves your app, Appwrite reads their user ID, name, and main email address from the Podio API. The email address is marked as verified only when Podio reports it as verified.
+
+# How to implement
+
+To implement the Podio OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Generate a Podio API key
+
+First, sign in to Podio, open your account settings, and go to the **API key** tab. Enter a name for your application and the domain that your Appwrite API runs on, such as `fra.cloud.appwrite.io` for a project in the Frankfurt region or your own domain if you self-host Appwrite. Podio requires the redirect URI to be on the same domain you register here.
+
+Generate the key and save the **Client ID** and **Client Secret** for later use.
+
+## Step 2: Add the Podio OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Podio** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from Podio, turn the provider on, and click **Update**.
+
+The provider settings also show the **Redirect URI** that Podio sends users back to. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/podio/<PROJECT_ID>
+```
+
+Podio checks the domain of this URI against the domain you registered for your API key, so make sure they match. If they differ, generate a new API key with the domain from this URI.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Podio` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Podio and Appwrite Auth
+
+If you would like to learn more about Podio and Appwrite Auth, we have some resources that you should visit:
+
+- [Podio API authentication](https://developers.podio.com/authentication)
+- [Podio server-side authentication flow](https://developers.podio.com/authentication/server_side)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

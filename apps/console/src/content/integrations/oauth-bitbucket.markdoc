@@ -1,0 +1,81 @@
+---
+layout: integration
+title: OAuth with Bitbucket
+description: Authenticate users with an existing Bitbucket account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-bitbucket/cover.avif
+category: auth
+product:
+    vendor: Bitbucket
+    description: "Bitbucket is Atlassian's Git hosting and code collaboration service for teams."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Bitbucket](https://bitbucket.org/) is Atlassian's Git hosting service for teams. It combines repositories and pull requests with Bitbucket Pipelines for CI/CD and close integration with Jira, which makes it a common home for engineering teams that already use Atlassian tools.
+
+# How does the integration work?
+
+You can use the Bitbucket OAuth adapter in Appwrite Auth to let users sign in with their Bitbucket Cloud account. This fits developer tools, dashboards, and internal apps whose users already work in Bitbucket, since they can start without creating another password.
+
+Appwrite signs users in through `bitbucket.org`, reads their profile, and uses the first confirmed email address on the account, which it marks as verified. Appwrite doesn't request extra scopes, so the access comes from the permissions you set on the OAuth consumer. Only Bitbucket Cloud is supported.
+
+# How to implement
+
+To implement the Bitbucket OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an OAuth consumer on Bitbucket
+
+Bitbucket issues OAuth credentials through OAuth consumers that belong to a workspace. Open your workspace, select the **Settings** cog, and choose **Workspace settings**. Under **Apps and features**, select **OAuth consumers**, then **Add consumer**.
+
+Configure the consumer:
+
+- **Name**: a name your users recognize on the consent screen.
+- **Callback URL**: Bitbucket requires one for OAuth 2.0 consumers. Temporarily enter `https://temporary-endpoint.com/`. You'll replace it with the URI from Appwrite in the next step.
+- **Permissions**: allow the consumer to read the account and its email addresses (the `account` and `email` scopes). Appwrite needs both to read the user's profile and confirmed email.
+
+Save the consumer, then select its name in the list to reveal the **Key** and **Secret**. Save both values for later use.
+
+## Step 2: Add Bitbucket OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Bitbucket** under the **OAuth2 Providers** section.
+
+Paste the consumer's **Key** and **Secret** into the matching fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/bitbucket/<PROJECT_ID>`, but always copy the exact value from the Console. Edit the OAuth consumer on Bitbucket and replace the temporary **Callback URL** with it.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Bitbucket` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Bitbucket,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Bitbucket and Appwrite Auth
+
+If you would like to learn more about Bitbucket and Appwrite Auth, we have some resources that you should visit:
+
+- [Use OAuth on Bitbucket Cloud](https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

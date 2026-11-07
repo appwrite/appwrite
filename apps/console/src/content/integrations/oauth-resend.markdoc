@@ -1,0 +1,97 @@
+---
+layout: integration
+title: OAuth with Resend
+description: Authenticate users with their Resend account and act on it with their consent
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-resend/cover.avif
+category: auth
+product:
+    vendor: Resend
+    description: "Resend is an email API for developers that sends transactional and marketing email through a REST API and SDKs."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Resend](https://resend.com) is an email API for developers. It sends transactional and marketing email through a REST API and SDKs, and it supports OAuth so other products can act on a user's Resend account. Sign in with Resend fits products that send email through their users' own Resend accounts, such as a newsletter tool or a transactional email builder.
+
+# How does the integration work?
+
+You can use the Resend OAuth adapter in Appwrite Auth to sign users in with their Resend account. The same flow signs the user in and gives your server a token to call the Resend API on their behalf, so you don't need a separate "connect your account" step. The session stores the token as `providerAccessToken`, and Appwrite can refresh it through [`updateSession`](/docs/products/auth/oauth2#refresh-tokens).
+
+Resend has no identity-only scope, so you choose the access you need: `emails:send` to send email, or `full_access` for the rest of the API. Resend requires PKCE on every authorization code exchange, and Appwrite generates the verifier and challenge for you. Resend doesn't share the account's email address or name over OAuth, so Appwrite creates the user without an email and recognizes them on later sign-ins by their Resend account ID.
+
+{% info title="Self-hosted availability" %}
+Sign in with Resend is available on Appwrite Cloud and in self-hosted Appwrite 2.0 and later.
+{% /info %}
+
+# How to implement
+
+To implement the Resend OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Register a Resend OAuth client
+
+Resend issues OAuth clients through registration rather than a dashboard page, and the registration needs the redirect URI from Appwrite. If you haven't already, [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting). Then, in the Appwrite Console, open your project, head over to the **Auth** page, open the **Settings** tab, and click **Resend** under the **OAuth2 Providers** section. Copy the **Redirect URI**. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/resend/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Resend requires an HTTPS redirect URI for remote clients.
+
+Next, register a confidential client with Resend's registration endpoint, as described in [Resend's OAuth client guide](https://resend.com/docs/guides/building-a-resend-oauth-client). Appwrite sends the client secret in the body of the token request, so set `token_endpoint_auth_method` to `client_secret_post`. Set `scope` to the scopes your app will request, separated by a space:
+
+```bash
+curl -X POST 'https://api.resend.com/oauth/register' \
+     -H 'Content-Type: application/json' \
+     -d '{
+       "client_name": "My Appwrite app",
+       "redirect_uris": ["https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/resend/<PROJECT_ID>"],
+       "grant_types": ["authorization_code", "refresh_token"],
+       "response_types": ["code"],
+       "token_endpoint_auth_method": "client_secret_post",
+       "scope": "emails:send"
+     }'
+```
+
+Save the `client_id` and `client_secret` from the response. Resend shows the secret only once, so store it securely. Resend also offers pre-registration, where it issues a fixed client ID and client secret for your app.
+
+## Step 2: Add the Resend OAuth adapter to your Appwrite project
+
+Back in the Resend provider settings in the Appwrite Console, enter the **Client ID** and **Client Secret** from Resend, turn the provider on, and click **Update**. Appwrite checks the credentials with Resend when you turn the provider on and shows an error if they're invalid.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Resend` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server, and always pass a Resend scope:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Resend,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+    scopes: ['emails:send'], // or 'full_access'
+});
+```
+
+Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs. If your app needs an email address for Resend users, ask for it after sign-in and set it from your server with the Users API.
+
+# Read more about Resend and Appwrite Auth
+
+If you would like to learn more about Resend and Appwrite Auth, we have some resources that you should visit:
+
+- [Building a Resend OAuth client](https://resend.com/docs/guides/building-a-resend-oauth-client)
+- [Announcing six new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

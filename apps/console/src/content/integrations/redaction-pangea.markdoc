@@ -1,0 +1,84 @@
+---
+layout: integration
+title: Redact sensitive data with Pangea
+description: Remove emails, phone numbers, and other sensitive data from text with Pangea Redact
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/redaction-pangea/cover.avif
+category: ai
+product:
+    vendor: Pangea
+    description: "Pangea provides security services as APIs, including Redact, which finds and removes sensitive information from text."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Pangea](https://pangea.cloud/) offers security features as API services that developers call from their own apps. Its **Redact** service detects sensitive information in text, such as email addresses, phone numbers, and credit card numbers, and replaces it based on rules you configure.
+
+# How does the integration work?
+
+The **Censor with Redact** function template puts Pangea Redact behind an Appwrite Function. Send it text, and it returns the same text with the sensitive parts replaced, so you can clean messages, comments, or support tickets before you store or display them.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves a demo form for trying the function |
+| `POST /` | Redacts the `text` field of the JSON body and returns `{"ok": true, "redacted": "..."}` |
+
+The template is available for Node.js, Python, and Dart.
+
+{% info title="The template calls Pangea's EU endpoint" %}
+Every runtime of the released template sends requests to `https://redact.aws.eu.pangea.cloud/v1/redact`. Pangea serves each project from a domain that depends on its region, and the Redact service's **Overview** page in the Pangea console shows yours. If it isn't `aws.eu.pangea.cloud`, connect the function to a repository and change the URL in the function code to `https://redact.<YOUR_DOMAIN>/v1/redact`.
+{% /info %}
+
+# How to implement
+
+To implement the Pangea Redact integration, there are several steps you must complete:
+
+## Step 1: Set up Pangea Redact
+
+[Sign up for Pangea](https://console.pangea.cloud/) and enable the **Redact** service in your project. Note the domain on the service's **Overview** page, then open **API Credentials** and copy the default service token from the **Service Tokens** tab. Tokens start with `pts_`.
+
+Keep a single Redact configuration in the project. The template doesn't send a configuration ID, and Pangea rejects requests without one when a project has several configurations.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a runtime the template supports in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Censor with Redact**, and click **Create from template**. Under **Template variables**, set `PANGEA_REDACT_TOKEN` to your Pangea token.
+
+If your Pangea domain is `aws.eu.pangea.cloud`, you can choose **Connect later** to deploy right away. Otherwise, choose **Connect your repository** so you can update the endpoint in the cloned code, as described above. Then click **Create and deploy**.
+
+## Step 3: Test the function
+
+Copy the function's domain from the **Domains** tab and open it in your browser to try the demo form, or send a request:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN> \
+  -H "Content-Type: application/json" \
+  -d '{"text": "My email address is myname2000@gmail.com"}'
+```
+
+The response contains the redacted text, for example:
+
+```json
+{
+  "ok": true,
+  "redacted": "My email address is <EMAIL_ADDRESS>"
+}
+```
+
+What Redact replaces, and how, depends on the rules in your Redact configuration in the Pangea console.
+
+The template allows anyone to execute the function, so anyone who finds its domain can send text to Redact with your Pangea token. Before you use it in a public app, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about Pangea and Appwrite Functions
+
+If you would like to learn more about Pangea and Appwrite Functions, we have some resources that you should visit:
+
+- [Pangea Redact documentation](https://pangea.cloud/docs/redact/)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Appwrite Functions environment variables](/docs/products/functions/environment-variables)
+- [Censor with Redact template source](https://github.com/appwrite/templates/tree/1.2.0/node/censor-with-redact)

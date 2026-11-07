@@ -1,0 +1,100 @@
+---
+layout: integration
+title: Phone auth with Telesign
+description: Deliver one-time passwords for phone authentication through Telesign
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-telesign/cover.avif
+category: auth
+product:
+    vendor: Telesign
+    description: "Telesign is a digital identity and communications platform that provides SMS, voice, and phone verification APIs."
+platform:
+    - 'Self-hosted'
+---
+
+[Telesign](https://www.telesign.com) is a digital identity and communications platform. Its APIs send SMS and voice messages and verify phone numbers, and its portal manages your customer ID, API keys, and sender numbers.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use Telesign to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Phone authentication lets users sign in without a password, which suits mobile apps where users already have their phone at hand.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the Telesign provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up Telesign
+
+First, sign up for a Telesign account and open the [Telesign portal](https://portal.telesign.com). Save the following information for later use:
+
+| Field name | |
+| --- | --- |
+| Customer ID | Head to **Telesign portal** > **Profile** > **Customer ID**. |
+| API key | Head to **Telesign portal** > **Profile** > **API Keys**. |
+| Phone number | The phone number your SMS messages are sent from. You may need to purchase a number from Telesign first. |
+
+Telesign's guide to [finding your customer ID and API key](https://support.telesign.com/s/article/Find-Customer-ID-and-API-Key) walks through the portal.
+
+## Step 2: Add Telesign to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<CUSTOMER_ID>:<API_KEY>@telesign
+_APP_SMS_FROM=<TELESIGN_PHONE_NUMBER>
+```
+
+Write the phone number with a leading `+` and the country code, such as `+14155550123`. If your API key contains characters such as `/`, `+`, or `=`, URL-encode it before you add it to `_APP_SMS_PROVIDER`. Appwrite only turns on SMS delivery when both variables are set.
+
+Then recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for your phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+14255550123'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about Telesign and Appwrite Auth
+
+If you would like to learn more about phone authentication with Telesign and Appwrite Auth, we have some resources that you should visit:
+
+- [Find your Telesign customer ID and API key](https://support.telesign.com/s/article/Find-Customer-ID-and-API-Key)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [SMS with Telesign in Appwrite Messaging](/integrations/sms-telesign)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

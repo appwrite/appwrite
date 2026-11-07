@@ -1,0 +1,106 @@
+---
+layout: integration
+title: Host an MCP server on Appwrite Functions
+description: Deploy your own MCP server on Appwrite Functions and connect it to Claude Code, Cursor, and other AI clients
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-server-functions/cover.avif
+category: mcp
+product:
+    vendor: Model Context Protocol
+    description: "The Model Context Protocol (MCP) is an open standard that lets AI applications discover and call external tools and data sources."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+The [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) is an open standard for giving AI applications new capabilities. An MCP server exposes tools, and clients such as Claude Code, Cursor, and Claude Desktop discover and call them while they work.
+
+# How does the integration work?
+
+The **MCP server** function template deploys a stateless MCP server on Appwrite Functions, built with the official MCP Python SDK (`mcp==2.0.0`). Your function's domain becomes the server URL. It speaks JSON-RPC over HTTPS and handles both the legacy handshake for clients on protocol version `2025-06-18` and the stateless protocol from the [MCP 2026-07-28 specification](/blog/post/mcp-goes-stateless-in-the-2026-07-28-specification).
+
+The template ships with two demo tools, `echo` and `add`, so you can test the full loop before writing code. You add your own tools in `src/app.py`, and each request carries an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key), so tools can read and write your project's data without credentials you manage.
+
+This is for hosting tools you write. To let AI tools manage Appwrite itself, use the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) instead.
+
+# How to implement
+
+To host your own MCP server on Appwrite Functions, there are several steps you must complete:
+
+## Step 1: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a Python runtime from 3.10 to 3.14 in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **MCP server**, and click **Create from template**. The **Template variables** are all optional:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MCP_SERVER_NAME` | `appwrite-hosted-mcp` | The server name clients see in the `initialize` handshake |
+| `MCP_AUTH_MODE` | `none` | `none` keeps the endpoint open, `bearer` requires a shared secret, and `oauth` signs users in through your project's OAuth2 server |
+| `MCP_AUTH_TOKEN` | Empty | The shared secret for `bearer` mode |
+| `MCP_AUTH_SCOPES` | Empty | `oauth` mode only: space-separated scopes advertised to clients, such as `openid tasks.read` |
+| `MCP_TOOL_TIMEOUT` | `25` | A soft deadline in seconds for each request |
+
+Choose **Connect your repository**, so you can add tools by pushing to Git, then click **Create and deploy**.
+
+## Step 2: Secure the endpoint
+
+The endpoint is open by default, which is fine while you experiment. Before you expose anything internal, set `MCP_AUTH_MODE` to `bearer` and `MCP_AUTH_TOKEN` to a long random secret, and mark the token as a [secret variable](/docs/products/functions/environment-variables#secret-variables). The server then rejects any request without a matching `Authorization: Bearer` header. Redeploy the function after changing variables.
+
+To sign each user in instead, `oauth` mode sends MCP clients through your project's [OAuth2 server](/docs/products/auth/oauth-server) on Appwrite Cloud, and tools act as the signed-in user, so row permissions apply. The template requests the `users.write` scope for this mode. Follow the [OAuth setup in the template's README](https://github.com/appwrite/templates/tree/1.3.0/python/mcp-server#per-user-sign-in-oauth).
+
+## Step 3: Connect your AI client
+
+Copy the function's domain from the **Domains** tab. In Claude Code, add the server with one command:
+
+```bash
+claude mcp add --transport http my-mcp https://<FUNCTION_DOMAIN>
+```
+
+In Cursor or Claude Desktop, add the URL to your MCP configuration. With bearer authentication, pass the token in `headers`:
+
+```json
+{
+  "mcpServers": {
+    "my-mcp": {
+      "url": "https://<FUNCTION_DOMAIN>",
+      "headers": {
+        "Authorization": "Bearer <MCP_AUTH_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+Ask your agent to list the server's tools, then call `echo` to see the request travel to your function and back.
+
+## Step 4: Add your own tools
+
+Register tools in `src/app.py` with the `@server.tool` decorator. Python type hints become each tool's input schema:
+
+```python
+from mcp.server.mcpserver import MCPServer
+
+server = MCPServer(name="my-mcp", version="0.1.0")
+
+@server.tool(description="Do something useful.")
+def my_tool(query: str) -> str:
+    return f"got: {query}"
+```
+
+Push the change to your connected repository, and Appwrite builds and activates the new deployment. Clients pick up the updated tool list.
+
+Two limits apply. The server returns plain JSON, so there is no streaming and no server-initiated messages. Requests to the function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions) capped at 30 seconds, so keep `MCP_TOOL_TIMEOUT` at 25 and have long jobs return a handle that another tool can poll.
+
+# Read more about MCP and Appwrite Functions
+
+If you would like to learn more about MCP and Appwrite Functions, we have some resources that you should visit:
+
+- [Build and deploy an MCP server with Appwrite Functions](/blog/post/announcing-mcp-server-template)
+- [MCP goes stateless in the 2026-07-28 specification](/blog/post/mcp-goes-stateless-in-the-2026-07-28-specification)
+- [Connect AI tools to Appwrite with the Appwrite MCP server](/docs/tooling/ai/mcp-servers)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [MCP server template source](https://github.com/appwrite/templates/tree/1.3.0/python/mcp-server)

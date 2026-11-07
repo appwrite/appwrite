@@ -1,0 +1,142 @@
+---
+layout: integration
+title: Next.js with managed PostgreSQL and MySQL
+description: Query an Appwrite native PostgreSQL or MySQL database from Next.js Route Handlers, Server Actions, and Server Components
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-nextjs/cover.avif
+category: databases
+product:
+    vendor: Vercel
+    description: 'Next.js is an open-source React framework from Vercel with server rendering, Route Handlers, and Server Actions.'
+platform:
+    - 'Cloud'
+---
+
+[Next.js](https://nextjs.org/) is a React framework for full-stack web applications. With the App Router, Route Handlers, Server Actions, and Server Components all run on the server, so they can query a database directly without an API layer in between.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. A Next.js app queries them with a standard driver, such as postgres.js or mysql2, or with an ORM like Prisma or Drizzle, from any server-side code on the Node.js runtime.
+
+Serverless deployments route runtime traffic through the database's connection pooler. Routes on the Edge runtime can't open TCP sockets, so they call the database's SQL API over HTTPS instead.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To query an Appwrite native database from Next.js, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set environment variables
+
+Add a pooled `DATABASE_URL` for runtime traffic and a direct `DIRECT_URL` for migrations to `.env.local`, and set the same values on your hosting platform:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+MYSQL_SSL="true"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Never import a driver into a Client Component or expose these values to the browser.
+
+## Step 3: Create a singleton client
+
+Create one client per module scope and cache it on `globalThis` in development, so hot reload doesn't leak connections:
+
+{% tabs %}
+{% tabsitem #client-postgresql title="PostgreSQL" %}
+```ts
+// lib/db.ts
+import postgres from 'postgres';
+
+const globalForDb = globalThis as unknown as { sql?: ReturnType<typeof postgres> };
+
+// The pooler's transaction mode has no server-side prepared statements
+export const sql = globalForDb.sql ?? postgres(process.env.DATABASE_URL!, { prepare: false });
+
+if (process.env.NODE_ENV !== 'production') globalForDb.sql = sql;
+```
+{% /tabsitem %}
+
+{% tabsitem #client-mysql title="MySQL" %}
+```ts
+// lib/db.ts
+import mysql, { type Pool } from 'mysql2/promise';
+
+const globalForDb = globalThis as unknown as { mysqlPool?: Pool };
+
+function createPool() {
+    const url = new URL(process.env.DATABASE_URL!);
+
+    return mysql.createPool({
+        host: url.hostname,
+        port: Number(url.port || 3306),
+        user: decodeURIComponent(url.username),
+        password: decodeURIComponent(url.password),
+        database: decodeURIComponent(url.pathname.slice(1)),
+        connectionLimit: 5,
+        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: true } : undefined
+    });
+}
+
+export const pool = globalForDb.mysqlPool ?? createPool();
+
+if (process.env.NODE_ENV !== 'production') globalForDb.mysqlPool = pool;
+```
+
+On the pooler, send queries with `pool.query()` and `?` placeholders.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 4: Query from server code
+
+Import the client in a Route Handler, Server Action, or Server Component:
+
+```ts
+// app/users/route.ts
+import { sql } from '@/lib/db';
+
+export async function GET() {
+    const users = await sql`SELECT id, email FROM users ORDER BY created_at DESC LIMIT 10`;
+    return Response.json(users);
+}
+```
+
+For a typed schema and migrations, use Prisma or Drizzle with the same pooled and direct URL split, and run migrations against `DIRECT_URL` in your build or release step.
+
+## Step 5: Use the SQL API on the Edge runtime
+
+Routes with `export const runtime = 'edge'` can't open TCP sockets. From those routes, `POST` one parameterized statement to `https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/executions` (or `/v1/mysql/<DATABASE_ID>/executions`) with your project ID and an API key in the `X-Appwrite-Project` and `X-Appwrite-Key` headers, and a JSON body of `sql` and `bindings`. Bindings are sent separately and never interpolated into the SQL string, and the response contains `rows`, `rowCount`, and `columns`. The [PostgreSQL](/docs/products/databases/postgresql/integrations/nextjs#edge) and [MySQL](/docs/products/databases/mysql/integrations/nextjs#edge) guides show the full request and the API key scope it needs.
+
+For throwaway data during development, point `.env.local` at a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Next.js and Appwrite Databases
+
+If you would like to learn more about Next.js and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Next.js with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/nextjs)
+- [Use Next.js with a native MySQL database](/docs/products/databases/mysql/integrations/nextjs)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Next.js documentation](https://nextjs.org/docs)

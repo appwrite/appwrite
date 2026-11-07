@@ -1,0 +1,82 @@
+---
+layout: integration
+title: OAuth with Hugging Face
+description: Authenticate users with an existing Hugging Face account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-hugging-face/cover.avif
+category: auth
+product:
+    vendor: Hugging Face
+    description: 'Hugging Face is a platform where the AI community hosts and shares models, datasets, and Spaces.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Hugging Face](https://huggingface.co/) hosts the models, datasets, and Spaces that much of the open source AI community builds on. If your app sits on top of the Hub, such as a model playground, a fine-tuning dashboard, or a tool for Spaces, your users already have a Hugging Face account.
+
+# How does the integration work?
+
+You can use the Hugging Face OAuth adapter in Appwrite Auth to let users sign in with their Hugging Face account. The session stores Hugging Face's access token as `providerAccessToken`, so with the right scopes your server can call the Hub or Inference Providers on the user's behalf.
+
+Appwrite signs users in with Hugging Face's OpenID Connect scopes, `openid`, `profile`, and `email`, and stores their name, email, and profile photo. It marks the email as verified only when Hugging Face reports it as verified. To call the Hub for the user, add scopes such as `read-repos` or `inference-api` when you start the session.
+
+{% info title="Self-hosted availability" %}
+Hugging Face sign-in is available on Appwrite Cloud and in self-hosted Appwrite 2.0 and later.
+{% /info %}
+
+# How to implement
+
+To implement the Hugging Face OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an OAuth app on Hugging Face
+
+Open [your Hugging Face settings](https://huggingface.co/settings/applications/new) and create a new OAuth app. Give it a name and select the `openid`, `profile`, and `email` scopes, plus any Hub scopes your app needs. Create the app with a client secret, since Appwrite exchanges codes as a confidential client. Organizations on a Team or Enterprise plan can also own OAuth apps from the organization's settings.
+
+Hugging Face requires the redirect URI in each request to exactly match one registered on the app. If the form asks for one now, temporarily enter `https://temporary-endpoint.com/`. You'll replace it with the URI from Appwrite in the next step.
+
+Save the app's **Client ID** and **Client Secret** for later use.
+
+## Step 2: Add Hugging Face OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Hugging Face** under the **OAuth2 Providers** section.
+
+Paste the app's credentials into the **Client ID** and **Client Secret** fields, turn the provider on, and click **Update**. Appwrite checks the credentials with Hugging Face when you enable the provider and returns an error if Hugging Face rejects them.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/huggingface/<PROJECT_ID>`, but always copy the exact value from the Console. Add it to the redirect URIs of your Hugging Face OAuth app, replacing any temporary value.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Huggingface` value. Appwrite adds your `scopes` to its defaults, so the example below still signs the user in with `openid`, `profile`, and `email`. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Huggingface,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+    scopes: ['inference-api'], // optional
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Hugging Face and Appwrite Auth
+
+If you would like to learn more about Hugging Face and Appwrite Auth, we have some resources that you should visit:
+
+- [Sign in with Hugging Face](https://huggingface.co/docs/hub/oauth)
+- [Announcing six new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

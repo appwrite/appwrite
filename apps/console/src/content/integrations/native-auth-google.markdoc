@@ -1,0 +1,132 @@
+---
+layout: integration
+title: Native auth with Google
+description: Sign users in with Google's on-device account picker and exchange the ID token for an Appwrite session
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/native-auth-google/cover.avif
+category: auth
+product:
+    vendor: Google
+    description: "Sign in with Google lets users sign in to apps with the Google Account they already use on their device."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Sign in with Google lets users sign in with the Google Account they already use. On Android, Credential Manager shows Google's account picker in a system dialog and returns a signed ID token for the account the user picks, without opening a browser.
+
+# How does the integration work?
+
+Native sign-in in Appwrite Auth creates a session from the ID token that Google issues to your app on the device. Your app calls Google's sign-in API, sends the token to Appwrite with `createIdTokenSession`, and gets a session back in the same request. Appwrite verifies the token against Google's published signing keys and only accepts tokens issued for a client ID you added to the Google provider.
+
+Compared with [OAuth2 login](/docs/products/auth/oauth2), no redirect passes through Appwrite and the provider configuration holds no client secret. Native sign-in creates an [identity](/docs/products/auth/identities) for the user, just like OAuth2 login, and stores the ID token from the most recent sign-in in its `providerIdToken` field.
+
+# How to implement
+
+To implement native sign-in with Google, there are several steps you must complete:
+
+## Step 1: Create the Google Cloud clients
+
+Native sign-in needs one web client and one Android client in the same Google Cloud project. The web client represents Appwrite: your app passes its ID to Google as the server client ID, and it is the only Google client ID you enter in Appwrite. The Android client ties your package name to the SHA-1 fingerprint of the certificate that signs your app.
+
+To create the web client:
+
+1. Open [Google Auth Platform](https://console.cloud.google.com/auth/overview) in the Google Cloud console and select your project. If the project has no app registered yet, select **Get started** and enter the app details.
+2. Go to **Clients** and select **Create client**.
+3. Set **Application type** to **Web application** and enter a name, such as `Appwrite`.
+4. Leave **Authorized JavaScript origins** and **Authorized redirect URIs** empty, then select **Create**.
+5. Copy the client ID.
+
+To create the Android client, get the SHA-1 fingerprint of your signing certificate. For the debug keystore that Android Studio creates, run:
+
+```bash
+keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
+```
+
+Then go to **Clients** > **Create client** again, set **Application type** to **Android**, and enter your app's package name and the SHA-1 fingerprint. Each signing certificate needs its own Android client, so create one for your debug keystore and one for your release key. If you distribute through Google Play with Play App Signing, use the SHA-1 of the **App signing key** from Play Console.
+
+## Step 2: Turn on native sign-in in Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+1. In the Appwrite Console, open your project and go to **Auth**, then the **Social providers** tab.
+2. Select **Google**.
+3. Turn on **Native sign-in**.
+4. Paste the web client ID into the **Web client IDs** field and press Enter. Do not enter the Android client ID.
+5. Select **Update**.
+
+Native sign-in needs no client secret. That field belongs to browser sign-in, which you can turn on separately with the same web client.
+
+## Step 3: Request an ID token in your app
+
+Show Google's account picker, take the ID token from the account the user picks, and pass it to `createIdTokenSession`. On Android, add the Credential Manager and Google ID dependencies to your app module's `build.gradle.kts`:
+
+```kotlin
+implementation("androidx.credentials:credentials:1.5.0")
+implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+```
+
+Then build a Google ID option with your web client ID, ask Credential Manager for a credential, and send the ID token to Appwrite:
+
+```kotlin
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import io.appwrite.Client
+import io.appwrite.enums.IdTokenProvider
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                            // Your project ID
+
+val account = Account(client)
+val credentialManager = CredentialManager.create(context)
+
+// Ask Credential Manager for a Google ID token
+val option = GetGoogleIdOption.Builder()
+    .setServerClientId("<GOOGLE_WEB_CLIENT_ID>")
+    .setFilterByAuthorizedAccounts(false)
+    .build()
+
+val request = GetCredentialRequest.Builder()
+    .addCredentialOption(option)
+    .build()
+
+val result = credentialManager.getCredential(activity, request)
+val credential = result.credential as CustomCredential
+val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+
+val session = account.createIdTokenSession(
+    provider = IdTokenProvider.GOOGLE,
+    idToken = idToken,
+)
+```
+
+In Flutter, pass the web client ID as `serverClientId` to the [`google_sign_in`](https://pub.dev/packages/google_sign_in) package. In React Native, pass it as `webClientId` to [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/docs/install). The [native sign-in docs](/docs/products/auth/native-sign-in#google-token) include examples for both.
+
+## Step 4: Test native sign-in
+
+Run your app on a device with a Google account, sign in, and pick an account. The user appears on the **Auth** page of your project with a Google identity. If the user signed in with the same Google account before, or has a verified email that matches an existing user, Appwrite signs them in to that user instead of creating a new one.
+
+If sign-in fails, check these common causes:
+
+- `Audience mismatch`: your app doesn't pass the web client ID, or that ID isn't under **Web client IDs** in Appwrite.
+- `project_provider_disabled`: native sign-in is off for Google, or no client ID is configured.
+- Error code `28444` or `DEVELOPER_ERROR`: no Android client matches your app's package name and signing certificate.
+
+# Read more about Google and Appwrite Auth
+
+If you would like to learn more about Google and Appwrite Auth, we have some resources that you should visit:
+
+- [Native sign-in with Appwrite Auth](/docs/products/auth/native-sign-in)
+- [Announcing native sign-in: Create Appwrite sessions from Apple and Google ID tokens](/blog/post/announcing-native-sign-in)
+- [Sign in with Google using Credential Manager](https://developer.android.com/identity/sign-in/credential-manager-siwg)
+- [OAuth2 login with Appwrite Auth](/docs/products/auth/oauth2)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

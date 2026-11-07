@@ -1,0 +1,76 @@
+---
+layout: integration
+title: Slash commands with Discord
+description: Answer Discord slash commands from an Appwrite Function with Discord Interactions
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/slash-commands-discord/cover.avif
+category: messaging
+product:
+    vendor: Discord
+    description: "Discord is a voice, video, and text chat platform where communities gather in servers organized into channels."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Discord](https://discord.com/) is a chat platform where communities talk in servers organized into channels. Apps extend servers with slash commands: when someone types a command such as `/hello`, Discord sends an interaction to the app's endpoint, and the app replies in the channel.
+
+# How does the integration work?
+
+The **Discord Command Bot** function template turns an Appwrite Function into the interactions endpoint of your Discord app, so you don't run a bot server. During the build, the Node.js version of the template registers a global `/hello` command for your app. At runtime, the function verifies the Ed25519 signature Discord attaches to every request, answers `/hello` with `Hello, World!`, and answers Discord's `PING` checks so the endpoint stays verified.
+
+From there, you can add your own commands and logic in the function code.
+
+# How to implement
+
+To implement the Discord integration, there are several steps you must complete:
+
+## Step 1: Create a Discord app
+
+Open the [Discord Developer Portal](https://discord.com/developers/applications) and create a new application. Save these values for later:
+
+| Value | Where to find it |
+| --- | --- |
+| Application ID | **General Information** > **Application ID** |
+| Public key | **General Information** > **Public Key** |
+| Bot token | **Bot** > **Token**. Click **Reset Token** and copy the token, which Discord shows only once. |
+
+Then open the **Installation** page. For **Guild Install**, add the `applications.commands` and `bot` scopes under **Default Install Settings**, copy the **Install Link**, and use it to add the app to a server you can test in.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a Node.js runtime in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Discord Command Bot**, and click **Create from template**. Pick a Node.js runtime: its build command, `npm install && npm run setup`, registers the `/hello` command with Discord.
+
+Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `DISCORD_PUBLIC_KEY` | Your app's public key |
+| `DISCORD_APPLICATION_ID` | Your app's application ID |
+| `DISCORD_TOKEN` | Your bot token |
+
+The template allows anyone to execute the function, which Discord needs to reach it, so keep that setting. Choose **Connect your repository** to clone the template into a Git repository you can extend later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+## Step 3: Set the interactions endpoint
+
+Once the deployment is ready, copy the function's domain from the **Domains** tab. Back in the Discord Developer Portal, open **General Information**, paste the domain into **Interactions Endpoint URL**, and save your changes.
+
+Discord sends a signed `PING` to verify the URL before saving it. The function checks the signature with your public key and responds, so the URL saves. If Discord rejects it, check that `DISCORD_PUBLIC_KEY` matches the key in the portal.
+
+## Step 4: Test the command
+
+In the server where you installed the app, type `/hello` in any channel. The function replies with `Hello, World!`. You can follow each interaction in the function's **Executions** tab.
+
+# Read more about Discord and Appwrite Functions
+
+If you would like to learn more about Discord and Appwrite Functions, we have some resources that you should visit:
+
+- [Discord interactions overview](https://docs.discord.com/developers/interactions/overview)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Execute functions through their domains](/docs/products/functions/execute#domains)
+- [Discord Command Bot template source](https://github.com/appwrite/templates/tree/1.2.0/node/discord-command-bot)
