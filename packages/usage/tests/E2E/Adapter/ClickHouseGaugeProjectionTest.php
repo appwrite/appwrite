@@ -48,9 +48,9 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
 
         // Two samples per series so argMax has something to resolve, plus a
         // second resourceType under the same metric.
-        $this->seedGaugeRow('proj.users', 5, 'user', '-3 days');
-        $this->seedGaugeRow('proj.users', 9, 'user', '-1 hour');
-        $this->seedGaugeRow('proj.users', 2, 'team', '-2 days');
+        $this->seedGaugeRow('proj.users', 5, 'user', '-60 days');
+        $this->seedGaugeRow('proj.users', 0, 'user', '-1 hour');
+        $this->seedGaugeRow('proj.users', 2, 'team', '-50 days');
     }
 
     protected function tearDown(): void
@@ -104,7 +104,7 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
         }
 
         $this->assertSame(
-            ['user' => 9, 'team' => 2],
+            ['user' => 0, 'team' => 2],
             ['user' => $byType['user'] ?? null, 'team' => $byType['team'] ?? null],
             'the projection-served read must return the latest sample per series, same as raw argMax',
         );
@@ -128,7 +128,7 @@ class ClickHouseGaugeProjectionTest extends ClickHouseTestCase
             }
         }
 
-        $this->assertSame(9, $byType['user'] ?? null);
+        $this->assertSame(0, $byType['user'] ?? null);
         $this->assertSame(2, $byType['team'] ?? null);
     }
 }
