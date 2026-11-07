@@ -1,14 +1,14 @@
 ---
 layout: tutorial
 title: Add database
-description: Connect a database to your React Native application using Appwrite Web SDK.
+description: Connect a database to your React Native application using the Appwrite React Native SDK.
 step: 6
 ---
 In this step, you'll set up a database to store ideas in Appwrite, configure permissions, then create a
 context to manage ideas in your React Native app.
 
 # Create table {% #create-table %}
-In Appwrite, data is stored as a table of rows. Create a table in the [Appwrite Console](https://cloud.appwrite.io/) to store our ideas.
+In Appwrite, data is stored as a table of rows. In the [Appwrite Console](https://cloud.appwrite.io/), create a database, then create a table in it to store our ideas.
 
 {% only_dark %}
 ![Create project screen](/images/docs/tutorials/dark/idea-tracker-table.avif)
@@ -43,54 +43,77 @@ Remember to click the **Update** button to apply your changes.
 
 Now that you have a table to hold ideas, we can read and write to it from our app.
 Like you did with the user data, we will create a React context to hold our ideas.
-Create a new file `contexts/IdeasContext.jsx` and add the following code to it.
+Create a new file `src/contexts/IdeasContext.tsx` and add the following code to it.
+Replace `<DATABASE_ID>` and `<TABLE_ID>` with the IDs of the database and table you created.
 
 ```client-react-native
-import { ID, Permission, Role, Query } from "react-native-appwrite";
-import { createContext, useContext, useEffect, useState } from "react";
-import { tablesDB } from "../lib/appwrite";
-import { toast } from "../lib/toast";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { ID, Permission, Query, Role, type Models } from "react-native-appwrite";
+import { tablesDB } from "@/lib/appwrite";
+import { toast } from "@/lib/toast";
 
-export const IDEAS_DATABASE_ID = "default"; // Replace with your database ID
-export const IDEAS_TABLE_ID = "ideas-tracker"; // Replace with your table ID
+export const IDEAS_DATABASE_ID = "<DATABASE_ID>"; // Replace with your database ID
+export const IDEAS_TABLE_ID = "<TABLE_ID>"; // Replace with your table ID
 
-const IdeasContext = createContext();
+export type Idea = Models.Row & {
+  userId: string;
+  title: string;
+  description: string | null;
+};
+
+type NewIdea = {
+  userId: string;
+  title: string;
+  description: string;
+};
+
+type IdeasContextValue = {
+  current: Idea[];
+  add: (idea: NewIdea) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+};
+
+const IdeasContext = createContext<IdeasContextValue | null>(null);
 
 export function useIdeas() {
-  return useContext(IdeasContext);
+  const context = useContext(IdeasContext);
+  if (!context) {
+    throw new Error("useIdeas must be used inside an IdeasProvider");
+  }
+  return context;
 }
 
-export function IdeasProvider(props) {
-  const [ideas, setIdeas] = useState([]);
+export function IdeasProvider({ children }: { children: ReactNode }) {
+  const [ideas, setIdeas] = useState<Idea[]>([]);
 
-  async function add(idea) {
-    const response = await tablesDB.createRow({
+  async function add(idea: NewIdea) {
+    const response = await tablesDB.createRow<Idea>({
       databaseId: IDEAS_DATABASE_ID,
       tableId: IDEAS_TABLE_ID,
       rowId: ID.unique(),
       data: idea,
-      permissions: [Permission.write(Role.user(idea.userId))]
+      permissions: [Permission.write(Role.user(idea.userId))],
     });
-    toast('Ideas added');
+    toast("Idea added");
     setIdeas((ideas) => [response, ...ideas].slice(0, 10));
   }
 
-  async function remove(id) {
+  async function remove(id: string) {
     await tablesDB.deleteRow({
       databaseId: IDEAS_DATABASE_ID,
       tableId: IDEAS_TABLE_ID,
-      rowId: id
+      rowId: id,
     });
-    toast('Idea removed');
+    toast("Idea removed");
     setIdeas((ideas) => ideas.filter((idea) => idea.$id !== id));
     await init(); // Refetch ideas to ensure we have 10 items
   }
 
   async function init() {
-    const response = await tablesDB.listRows({
+    const response = await tablesDB.listRows<Idea>({
       databaseId: IDEAS_DATABASE_ID,
       tableId: IDEAS_TABLE_ID,
-      queries: [Query.orderDesc("$createdAt"), Query.limit(10)]
+      queries: [Query.orderDesc("$createdAt"), Query.limit(10)],
     });
     setIdeas(response.rows);
   }
@@ -101,7 +124,7 @@ export function IdeasProvider(props) {
 
   return (
     <IdeasContext.Provider value={{ current: ideas, add, remove }}>
-      {props.children}
+      {children}
     </IdeasContext.Provider>
   );
 }
@@ -110,32 +133,42 @@ export function IdeasProvider(props) {
 Notice that new ideas have the added permission `Permission.write(Role.user(idea.userId))`.
 This permission ensures that only the user who created the idea can modify it.
 
-Remeber to add the `IdeasProvider` to your `App.js` file.
+Remember to add the `IdeasProvider` to your `src/app/_layout.tsx` file.
 
 ```client-react-native
+import { Stack } from "expo-router";
+import { IdeasProvider } from "@/contexts/IdeasContext";
+import { UserProvider, useUser } from "@/contexts/UserContext";
 
-import { StyleSheet, Text, View } from 'react-native';
-import { UserProvider } from './contexts/UserContext';
-import { IdeasProvider } from './contexts/IdeasContext'; // Add import
-import { Router } from './lib/Router';
+function RootNavigator() {
+  const user = useUser();
 
-export default function App() {
+  // Wait until the current session is checked before choosing a screen.
+  if (user.loading) {
+    return null;
+  }
+
+  const isLoggedIn = user.current !== null;
+
   return (
-    <UserProvider>
-      <!-- Add the Ideas Provider -->
-      <IdeasProvider>
-        <Router />
-      </IdeasProvider>
-    </UserProvider >
+    <Stack>
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="index" options={{ title: "Home" }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="login" options={{ title: "Login" }} />
+      </Stack.Protected>
+    </Stack>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <IdeasProvider>
+        <RootNavigator />
+      </IdeasProvider>
+    </UserProvider>
+  );
+}
 ```
