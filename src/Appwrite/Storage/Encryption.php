@@ -3,6 +3,7 @@
 namespace Appwrite\Storage;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Compression\Compression;
 use Utopia\Database\Document;
@@ -31,7 +32,7 @@ final readonly class Encryption
     {
         $master = EncryptionKey::current();
         if ($master === '') {
-            throw new StorageException('Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
 
         return [
@@ -47,11 +48,14 @@ final readonly class Encryption
     {
         $wrapped = \base64_decode($envelope['key'], true);
         $master = EncryptionKey::get($envelope['version']);
-        if ($wrapped === false || $master === '') {
-            throw new StorageException('Unable to unwrap the file key with _APP_OPENSSL_KEY_V' . $envelope['version']);
+        if ($wrapped !== false && $master !== '') {
+            try {
+                return Cipher::unwrap($wrapped, $master);
+            } catch (StorageException) {
+            }
         }
 
-        return Cipher::unwrap($wrapped, $master);
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to unwrap the file key. Please check _APP_OPENSSL_KEY_V' . $envelope['version'] . ' in .env file.');
     }
 
     /**
@@ -84,7 +88,7 @@ final readonly class Encryption
         );
 
         if ($decrypted === false) {
-            throw new StorageException('Failed to decrypt file ' . $this->file->getId());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to decrypt file ' . $this->file->getId());
         }
 
         return $decrypted;
@@ -110,7 +114,7 @@ final readonly class Encryption
 
     private function open(): Cipher
     {
-        return self::cipher($this->file->getAttribute('metadata', [])['encryption'] ?? throw new StorageException('File ' . $this->file->getId() . ' has no key'));
+        return self::cipher($this->file->getAttribute('metadata', [])['encryption'] ?? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File ' . $this->file->getId() . ' has no encryption key'));
     }
 
     private function path(): string
