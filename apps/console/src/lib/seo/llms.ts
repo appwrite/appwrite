@@ -283,7 +283,7 @@ export function buildAppwriteLlmsTxt(
           title: 'Agent setup',
           url: `${origin}/setup.md`,
           description:
-            'Instructions a coding agent should fetch to install Appwrite MCP.',
+            'Instructions a coding agent fetches to set up Appwrite MCP, skills, CLI, and SDKs, then build the app.',
         },
         {
           title: 'For coding agents',
