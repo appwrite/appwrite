@@ -853,6 +853,9 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                if (! empty($request->getNegotiatedParams())) {
+                    $response->addHeader('Vary', 'Accept');
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);

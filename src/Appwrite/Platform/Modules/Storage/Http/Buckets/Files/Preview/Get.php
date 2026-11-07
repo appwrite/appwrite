@@ -15,6 +15,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -27,7 +28,6 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Image\Image;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -44,6 +44,16 @@ class Get extends Action
     use HTTP;
 
     private const GRAVITY_AUTO = 'auto';
+
+    private const OUTPUT_AUTO = 'auto';
+
+    /**
+     * Formats `output=auto` picks from, in preference order, when the client's Accept header lists them.
+     */
+    private const OUTPUT_AUTO_FORMATS = [
+        'avif' => 'image/avif',
+        'webp' => 'image/webp',
+    ];
 
     public static function getName()
     {
@@ -65,6 +75,7 @@ class Get extends Action
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
             ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])
+            ->label('cache.negotiate', ['output' => self::OUTPUT_AUTO_FORMATS])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -93,7 +104,7 @@ class Get extends Action
             ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
             ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
             ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, enum: new Enum(name: 'ImageFormat'))
+            ->param('output', '', new WhiteList([...\array_keys(Config::getParam('storage-outputs')), self::OUTPUT_AUTO], true), 'Output format type (jpeg, jpg, png, gif, webp, heic and avif). Pass auto to serve avif or webp when the client\'s Accept header supports it, falling back to the original format.', true, enum: new Enum(name: 'ImageFormat'))
             // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
             ->param('token', '', new Text(512), 'File token for accessing this file.', true)
             ->inject('request')
@@ -203,6 +214,12 @@ class Get extends Action
 
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $negotiated = $output === self::OUTPUT_AUTO;
+        if ($negotiated) {
+            // resolved the same way as the cache key, so cached and fresh responses match
+            $output = $request->getNegotiatedParams()['output'] ?? '';
         }
 
         if (empty($output)) {
@@ -375,6 +392,10 @@ class Get extends Action
             resourceToken: $resourceToken,
             fileSecurity: $fileSecurity,
         ));
+
+        if ($negotiated) {
+            $response->addHeader('Vary', 'Accept');
+        }
 
         $response
             ->addHeader('Cache-Control', $cacheControl)

@@ -255,6 +255,72 @@ final class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
+    #[DataProvider('acceptedTypeCases')]
+    public function testGetAcceptedType(string $accept, ?string $expected): void
+    {
+        $this->request->addHeader('accept', $accept);
+
+        $this->assertSame($expected, $this->request->getAcceptedType(['image/avif', 'image/webp']));
+    }
+
+    public static function acceptedTypeCases(): \Iterator
+    {
+        yield 'browser with avif' => ['image/avif,image/webp,image/apng,image/*,*/*;q=0.8', 'image/avif'];
+        yield 'server preference wins over header order' => ['image/webp, image/avif', 'image/avif'];
+        yield 'webp only' => ['image/webp,*/*', 'image/webp'];
+        yield 'refused with zero quality' => ['image/avif;q=0, image/webp;q=0.5', 'image/webp'];
+        yield 'case and spacing' => [' IMAGE/AVIF ; Q=1 ', 'image/avif'];
+        yield 'wildcards do not count' => ['image/*,*/*', null];
+        yield 'empty' => ['', null];
+    }
+
+    public function testGetNegotiatedParamsResolvesAuto(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/webp,*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => 'webp'], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsFallsBackToEmpty(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', '*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => ''], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsIgnoresExplicitValues(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/avif');
+        $this->request->setQueryString(['output' => 'png']);
+
+        $this->assertSame([], $this->request->getNegotiatedParams());
+    }
+
+    public function testCacheIdentifierKeysAutoByNegotiatedValue(): void
+    {
+        $avif = $this->negotiatedRequest('image/avif,image/webp', ['output' => 'auto', 'width' => '100']);
+        $webp = $this->negotiatedRequest('image/webp', ['output' => 'auto', 'width' => '100']);
+        $none = $this->negotiatedRequest('*/*', ['output' => 'auto', 'width' => '100']);
+
+        $this->assertNotSame($avif->cacheIdentifier(), $webp->cacheIdentifier());
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['output' => 'avif', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($webp->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['output' => 'webp', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['width' => '100'])->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptForExplicitValues(): void
+    {
+        $first = $this->negotiatedRequest('image/avif', ['output' => 'png']);
+        $second = $this->negotiatedRequest('*/*', ['output' => 'png']);
+
+        $this->assertSame($first->cacheIdentifier(), $second->cacheIdentifier());
+    }
+
     public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
@@ -494,5 +560,33 @@ final class RequestTest extends TestCase
         $this->request->addFilter(new First());
         $this->request->addFilter(new Second());
         $this->request->setRoute($route);
+    }
+
+    /**
+     * @param array<string, string> $query
+     */
+    private function negotiatedRequest(string $accept, array $query): Request
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['accept' => $accept];
+        $request = new Request($swoole);
+        $request->setQueryString($query);
+        $request->setRoute($this->negotiatedRoute());
+
+        return $request;
+    }
+
+    private function setupNegotiatedRoute(): void
+    {
+        $this->request->setRoute($this->negotiatedRoute());
+    }
+
+    private function negotiatedRoute(): Route
+    {
+        $route = new Route(Request::METHOD_GET, '/preview');
+        $route->label('cache.params', ['output', 'width']);
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+
+        return $route;
     }
 }
