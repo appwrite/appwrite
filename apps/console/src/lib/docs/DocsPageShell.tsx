@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { DocsLeftNav } from '@/components/pages/docs/DocsLeftNav'
+import { DocsProjectProvider } from '@/components/pages/docs/project-context/DocsProjectContext'
 import {
   DocsSearchProvider,
   useDocsSearchContext,
@@ -30,10 +31,11 @@ function DocsScrollToTop() {
   const previousNormalizedPathRef = useRef<string | null>(null)
 
   useLayoutEffect(() => {
-    const { nextNormalizedPath, shouldScroll } = shouldResetDocsScrollOnPathChange(
-      previousNormalizedPathRef.current,
-      pathname,
-    )
+    const { nextNormalizedPath, shouldScroll } =
+      shouldResetDocsScrollOnPathChange(
+        previousNormalizedPathRef.current,
+        pathname,
+      )
     previousNormalizedPathRef.current = nextNormalizedPath
     if (!shouldScroll) return
     // The persistent shell owns cross-page resets, even when an article remounts.
@@ -67,9 +69,7 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
   )
 
   if (nestedInMarketing) {
-    return (
-      <ApiReferenceUiPrefsProvider>{article}</ApiReferenceUiPrefsProvider>
-    )
+    return <ApiReferenceUiPrefsProvider>{article}</ApiReferenceUiPrefsProvider>
   }
 
   const layout = (
@@ -100,14 +100,16 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
     </ConsoleLayout>
   )
 
-  return (
-    <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
-  )
+  return <ApiReferenceUiPrefsProvider>{layout}</ApiReferenceUiPrefsProvider>
 }
 
 export function DocsPageShell({ children }: DocsPageShellProps) {
   const nestedInMarketing = useMarketingSiteLayoutProvided()
-  const layout = <DocsPageShellLayout>{children}</DocsPageShellLayout>
+  const layout = (
+    <DocsProjectProvider>
+      <DocsPageShellLayout>{children}</DocsPageShellLayout>
+    </DocsProjectProvider>
+  )
   if (nestedInMarketing) return layout
   return <DocsSearchProvider>{layout}</DocsSearchProvider>
 }
