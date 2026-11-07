@@ -6,7 +6,9 @@ namespace Utopia\Storage\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Cipher;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Exception\StorageException;
 
 final class CipherTest extends TestCase
@@ -96,5 +98,50 @@ final class CipherTest extends TestCase
 
         $this->expectException(StorageException::class);
         new Cipher(\str_repeat('x', 32))->decrypt($encrypted, 0, true);
+    }
+
+    public function testWrappedKeyRestoresCipher(): void
+    {
+        $encrypted = $this->cipher->encrypt('secret', 0, true);
+        $wrapped = $this->cipher->wrap('master');
+
+        $this->assertSame('secret', Cipher::unwrap($wrapped, 'master')->decrypt($encrypted, 0, true));
+    }
+
+    public function testWrongMasterFails(): void
+    {
+        $wrapped = Cipher::generate()->wrap('master');
+
+        $this->expectException(StorageException::class);
+        Cipher::unwrap($wrapped, 'other');
+    }
+
+    #[DataProvider('sizes')]
+    public function testStoredFile(int $size): void
+    {
+        $data = \substr(\random_bytes(\max(1, $size)), 0, $size);
+        $device = new Local(\sys_get_temp_dir());
+        $path = $device->getPath('cipher-' . \bin2hex(\random_bytes(4)));
+        $target = $path . '-copy';
+        $device->write($path, new Stream($this->cipher->encrypt($data, 0, true)), 'application/octet-stream');
+
+        try {
+            $streamed = '';
+            $this->cipher->stream($device, $path, $size, static function (string $chunk) use (&$streamed): void {
+                $streamed .= $chunk;
+            });
+            $this->assertSame($data, $streamed);
+
+            if ($size > 20) {
+                $start = \intdiv($size, 2) - 10;
+                $this->assertSame(\substr($data, $start, 20), $this->cipher->range($device, $path, $size, $start, $start + 19));
+            }
+
+            $this->cipher->copy($device, $path, $size, $device, $target, 'application/octet-stream', Cipher::SEGMENT * 2);
+            $this->assertSame($data, (string) $device->read($target));
+        } finally {
+            $device->delete($path);
+            $device->delete($target);
+        }
     }
 }
