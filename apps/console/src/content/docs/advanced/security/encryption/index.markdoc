@@ -10,9 +10,10 @@ or data, encrypted files and data cannot be deciphered, adding a further layer o
 
 ## Storage {% #storage %}
 
-For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that are smaller than 20MB will be encrypted in the storage provider.
+For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket is encrypted before it reaches the storage provider, whatever its size.
 You can enable encryption by going to your bucket's **Settings** > **Security settings** > toggle **Encryption**.
-Files are encrypted with AES-128 in Galois/Counter Mode (GCM).
+Each file gets its own random key, which is itself encrypted with the server's encryption key. Files are encrypted with AES-256 in Galois/Counter Mode (GCM) in 64 KB segments, so large files are streamed and range requests decrypt only the segments they read.
+Files encrypted before this change keep AES-128-GCM and remain readable.
 
 ## Databases {% #databases %}
 Database columns support encryption for text columns (varchar, text, mediumtext, and longtext). This feature is available on Pro plans and higher. When creating a text column in the UI, encryption can be enabled using a toggle option.
