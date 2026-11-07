@@ -35,7 +35,6 @@ const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
-const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
