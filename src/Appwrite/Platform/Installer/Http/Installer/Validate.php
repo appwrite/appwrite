@@ -61,6 +61,7 @@ class Validate extends Action
 
     public static function validateSecret(Request $request): bool
     {
-        return Server::secret()->matches($request->getHeaderLine(Secret::HEADER));
+        return Server::hasSession($request->getCookie(Server::SESSION_COOKIE))
+            || Server::secret()->matches($request->getHeaderLine(Secret::HEADER));
     }
 }
