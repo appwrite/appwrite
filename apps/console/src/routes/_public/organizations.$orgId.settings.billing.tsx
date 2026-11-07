@@ -59,17 +59,17 @@ export const Route = createFileRoute(
     const billingAccess = await resolveOrganizationAccess(queryClient, orgId)
     const canFetchBillingInvoices = canSeeOrganizationBilling(billingAccess)
 
+    // Usage enriches saved charges, so it must not block billing navigation.
+    if (canFetchBillingInvoices && orgData?.billingAggregationId) {
+      void queryClient.prefetchQuery(
+        organizationBillingAggregationQueryOptions(
+          orgId,
+          orgData.billingAggregationId,
+        ),
+      )
+    }
+
     await Promise.all([
-      ...(canFetchBillingInvoices && orgData?.billingAggregationId
-        ? [
-            queryClient.ensureQueryData(
-              organizationBillingAggregationQueryOptions(
-                orgId,
-                orgData.billingAggregationId,
-              ),
-            ),
-          ]
-        : []),
       queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
       ...(canFetchBillingInvoices
         ? [
