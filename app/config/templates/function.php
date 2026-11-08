@@ -1660,7 +1660,7 @@ return [
         'providerVersion' => '1.2.0',
         'variables' => [
             [
-                'name' => 'REPLICATE_API_KEY',
+                'name' => 'REPLICATE_API_TOKEN',
                 'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
@@ -1758,43 +1758,6 @@ return [
         'scopes' => []
     ],
     [
-        'icon' => 'icon-chip',
-        'id' => 'generate-with-replicate',
-        'name' => 'Generate with Replicate',
-        'score' => 5,
-        'tagline' => "Generate text, audio and images using Replicate's API.",
-        'permissions' => ['any'],
-        'events' => [],
-        'cron' => '',
-        'timeout' => 300,
-        'useCases' => [FunctionUseCases::AI],
-        'runtimes' => [
-            ...getRuntimes(
-                $templateRuntimes['NODE'],
-                'npm install',
-                'src/main.js',
-                'node/generate-with-replicate',
-                $allowList
-            )
-        ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-replicate">file</a>.',
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
-        'variables' => [
-            [
-                'name' => 'REPLICATE_API_KEY',
-                'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ]
-        ],
-        'scopes' => []
-    ],
-    [
         'icon' => 'icon-document-search',
         'id' => 'sync-with-pinecone',
         'name' => 'Sync with Pinecone',
@@ -1836,7 +1799,7 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
@@ -1901,7 +1864,7 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
