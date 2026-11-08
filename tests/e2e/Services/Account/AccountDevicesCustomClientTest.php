@@ -659,6 +659,111 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertCount(1, $response['body']['sessions']);
     }
 
+    /**
+     * A JWT names the session it was minted from, but holding one is not proof of that
+     * session's secret: it is a short-lived, non-exchangeable delegation that function
+     * runtimes and app backends routinely hold. Adopting the named session would let any
+     * holder trade the token for the device secret, and the device session endpoint would
+     * then hand back a full, long-lived session secret for the account.
+     */
+    public function testDeviceDoesNotAdoptTheSessionNamedInAJwt(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $email = \uniqid() . 'jwtdevice@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($email, $password);
+
+        // A plain sign-in, no device cookie: the session lands on no device, the default
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionId = $session['body']['$id'];
+        $sessionCookie = $session['cookies'][$sessionKey];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        /**
+         * Test for SUCCESS - a JWT-only caller still gets a device, but the session the token
+         * names is not adopted into it
+         */
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $device['headers']['status-code']);
+        $this->assertEquals([], $device['body']['sessions']);
+        $this->assertEquals('', $device['body']['activeSessionId']);
+        $this->assertArrayHasKey($deviceKey, $device['cookies']);
+
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        /**
+         * Test for FAILURE - so the device secret cannot be traded for a session cookie
+         */
+        $switch = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $sessionId,
+        ]);
+
+        $this->assertEquals(404, $switch['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $switch['body']['type']);
+        $this->assertArrayNotHasKey($sessionKey, $switch['cookies']);
+
+        /**
+         * Test for SUCCESS - and the session secret the browser holds was not rotated away
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($email, $account['body']['email']);
+
+        /**
+         * Test for SUCCESS - the session secret itself does adopt, so signing in before the
+         * device exists still puts that account on the device
+         */
+        $adopted = $this->client->call(Client::METHOD_POST, '/account/devices', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $adopted['headers']['status-code']);
+        $this->assertCount(1, $adopted['body']['sessions']);
+        $this->assertEquals($sessionId, $adopted['body']['sessions'][0]['$id']);
+        $this->assertEquals($sessionId, $adopted['body']['activeSessionId']);
+    }
+
     public function testAccountDevicesPolicy(): void
     {
         $projectId = $this->getProject()['$id'];
