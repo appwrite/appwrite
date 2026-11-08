@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "encrypting-every-file-in-appwrite-storage",
+    "href": "/blog/post/encrypting-every-file-in-appwrite-storage",
+    "title": "Encrypted buckets now encrypt every file, of any size",
+    "description": "Appwrite Storage now encrypts every file in an encrypted bucket, with its own AES-256 key, in 64 KB segments. The 20 MB limit is gone, encrypted uploads are about as fast as unencrypted ones, and range requests decrypt only what they read.",
+    "date": "2026-11-08",
+    "lastUpdated": "2026-11-08",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements",
+    "featured": false,
+    "draft": false,
+    "cover": "/images/blog/encrypting-every-file-in-appwrite-storage/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-push-notifications-to-your-android-app",
     "href": "/blog/post/add-push-notifications-to-your-android-app",
     "title": "Add push notifications to your Android app without Firebase",

@@ -1,0 +1,26 @@
+---
+layout: changelog
+title: Encrypted buckets now encrypt files of every size
+date: 2026-11-08
+cover: /images/blog/encrypting-every-file-in-appwrite-storage/cover.avif
+tags: storage, security
+---
+
+[Bucket encryption](/docs/products/storage/buckets#encryption) now covers files of any size. Until now, files larger than 20 MB were stored unencrypted, even in a bucket with encryption on.
+
+With this change:
+
+- Each file gets its own random key and is encrypted with AES-256-GCM in 64 KB segments before it reaches storage.
+- Encrypted uploads take about as long as unencrypted ones, and range requests decrypt only the segments they read.
+- An encrypted file now takes up about the same storage as the original, instead of about a third more.
+- Files you uploaded before keep working. Files larger than 20 MB uploaded before this change stay unencrypted until you upload them again.
+
+The change is live on Appwrite Cloud, and comes to self-hosted Appwrite in the next release. You don't need to change any code.
+
+{% arrow_link href="/blog/post/encrypting-every-file-in-appwrite-storage" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/security/encryption#storage" %}
+Learn how storage encryption works
+{% /arrow_link %}
