@@ -271,7 +271,7 @@ class Create extends Action
         // The session joins the account switching device and becomes its active one, before the
         // response goes out so the device reads consistently on the client's next request
         if ($authDevice !== null) {
-            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $proofForToken, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
             AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
         }
 

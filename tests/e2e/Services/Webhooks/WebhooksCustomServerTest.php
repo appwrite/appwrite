@@ -307,6 +307,9 @@ final class WebhooksCustomServerTest extends Scope
             ]);
             $this->assertEquals(201, $session['headers']['status-code']);
 
+            // Joining a session rotates the device secret, so carry the re-issued cookie on
+            $deviceCookie = $session['cookies'][$deviceKey];
+
             $sessions[$session['body']['$id']] = $user['body']['$id'];
         }
 

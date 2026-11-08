@@ -56,6 +56,8 @@ class Create extends Action
                 Create an account switching device. A device is a container, scoped to one browser or app install, that holds multiple sessions and tracks which one is active. Once a device exists, session creation endpoints attach the new session to it automatically, so a single browser can stay signed in to several accounts and switch between them. A device holds at most one session per user: signing in again as a user it already holds replaces that user's session. The device lives as long as its newest session.
 
                 The device secret is returned in a cookie. Run this on app start: if the browser already has a valid device, the existing one is returned with the same status code instead of an error, so it is always safe to call.
+
+                Every session that joins the device rotates the device secret and re-issues the cookie, so an earlier copy of the secret stops working. A client that keeps the secret itself, rather than relying on the cookie, must replace it from each session response.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -148,6 +150,13 @@ class Create extends Action
 
         $device = $authorization->skip(fn () => $dbForProject->createDocument('devices', $device));
 
+        $store = new Store();
+        $store
+            ->setKey($project->getDeviceKey())
+            ->setProperty('id', $deviceId)
+            ->setProperty('secret', $secret);
+        $encoded = $store->encode();
+
         // Adopt the caller's current session so the account they are already signed in as is
         // in the device and switchable, not just sessions created after the device exists.
         // A session still pointing at a device that no longer exists (expired and swept) is
@@ -160,16 +169,11 @@ class Create extends Action
                 'deviceInternalId' => $device->getSequence(),
             ])));
 
-            $device = AuthDevice::attach($dbForProject, $authorization, $device, $current, $publisherForDeletes, $project, $mqtt);
+            // Attaching rotates the device secret, so the cookies below carry the rotated one
+            $device = AuthDevice::attach($dbForProject, $authorization, $proofForToken, $device, $current, $publisherForDeletes, $project, $mqtt);
             $expire = $device->getAttribute('expire');
+            $encoded = $device->getAttribute(AuthDevice::ATTRIBUTE_COOKIE, $encoded);
         }
-
-        $store = new Store();
-        $store
-            ->setKey($project->getDeviceKey())
-            ->setProperty('id', $deviceId)
-            ->setProperty('secret', $secret);
-        $encoded = $store->encode();
 
         if (!$domainVerification) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));

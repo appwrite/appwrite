@@ -152,6 +152,9 @@ final class AccountDevicesCustomClientTest extends Scope
         $sessionOneId = $response['body']['$id'];
         $userOneId = $response['body']['userId'];
 
+        // Joining a session rotates the device secret, so the browser carries the re-issued cookie on
+        $deviceCookie = $response['cookies'][$deviceKey];
+
         $response = $this->getDevice($deviceCookie);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -169,6 +172,8 @@ final class AccountDevicesCustomClientTest extends Scope
         $sessionTwoId = $response['body']['$id'];
         $userTwoId = $response['body']['userId'];
         $this->assertNotEquals($userOneId, $userTwoId);
+
+        $deviceCookie = $response['cookies'][$deviceKey];
 
         $response = $this->getDevice($deviceCookie);
 
@@ -293,6 +298,80 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals('user_device_not_found', $response['body']['type']);
     }
 
+    public function testDeviceSecretRotatesWhenASessionJoins(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+
+        $emailOne = \uniqid() . 'rotate1@localhost.test';
+        $emailTwo = \uniqid() . 'rotate2@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($emailOne, $password, 'Rotate One');
+        $this->createUserWithPassword($emailTwo, $password, 'Rotate Two');
+
+        // A device whose secret a third party knows, planted in the browser before anyone signs in
+        $planted = $this->createDevice()['cookie'];
+
+        /**
+         * Test for SUCCESS - a session joining the device is handed a different device secret
+         */
+        $response = $this->signIn($planted, $emailOne, $password);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertArrayHasKey($deviceKey, $response['cookies']);
+        $sessionOneId = $response['body']['$id'];
+        $rotated = $response['cookies'][$deviceKey];
+        $this->assertNotEquals($planted, $rotated);
+
+        /**
+         * Test for FAILURE - the secret known before the sign-in no longer resolves the device
+         */
+        $response = $this->getDevice($planted);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_not_found', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - so it cannot mint a session cookie for the account that just signed in
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $deviceKey . '=' . $planted,
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $sessionOneId,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS - the browser, which received the new secret, keeps the device
+         */
+        $response = $this->getDevice($rotated);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionOneId, $response['body']['activeSessionId']);
+
+        /**
+         * Test for SUCCESS - and every later sign-in rotates again, retiring the previous secret
+         */
+        $response = $this->signIn($rotated, $emailTwo, $password);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $again = $response['cookies'][$deviceKey];
+        $this->assertNotEquals($rotated, $again);
+
+        $this->assertEquals(404, $this->getDevice($rotated)['headers']['status-code']);
+
+        $response = $this->getDevice($again);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['sessions']);
+    }
+
     public function testDeviceHoldsOneSessionPerUser(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -308,6 +387,7 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(201, $first['headers']['status-code']);
         $firstSessionId = $first['body']['$id'];
         $firstSessionCookie = $first['cookies'][$sessionKey];
+        $device['cookie'] = $first['cookies']['a_device_' . $projectId];
 
         /**
          * Test for SUCCESS - signing in again as the same user replaces the session instead of adding one
@@ -316,6 +396,7 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(201, $second['headers']['status-code']);
         $secondSessionId = $second['body']['$id'];
         $this->assertNotEquals($firstSessionId, $secondSessionId);
+        $device['cookie'] = $second['cookies']['a_device_' . $projectId];
 
         $response = $this->getDevice($device['cookie']);
 
@@ -394,6 +475,9 @@ final class AccountDevicesCustomClientTest extends Scope
         }
         $this->assertArrayHasKey($sessionKey, $response['cookies']);
 
+        // The OAuth2 session joined the device, rotating its secret: keep the re-issued cookie
+        $device['cookie'] = $response['cookies'][$deviceKey];
+
         // The OAuth2 session holds provider tokens, so the empty values below are redaction, not absence
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
             'origin' => 'http://localhost',
@@ -409,6 +493,8 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->createUserWithPassword($email, 'password');
         $response = $this->signIn($device['cookie'], $email, 'password');
         $this->assertEquals(201, $response['headers']['status-code']);
+        $device['cookie'] = $response['cookies'][$deviceKey];
+        $deviceCookie = $deviceKey . '=' . $device['cookie'];
 
         /**
          * Test for SUCCESS - neither device response carries another account's provider tokens
@@ -451,10 +537,12 @@ final class AccountDevicesCustomClientTest extends Scope
         $first = $this->signIn($device['cookie'], $emailOne, $password);
         $this->assertEquals(201, $first['headers']['status-code']);
         $firstSessionId = $first['body']['$id'];
+        $device['cookie'] = $first['cookies']['a_device_' . $projectId];
 
         $second = $this->signIn($device['cookie'], $emailTwo, $password);
         $this->assertEquals(201, $second['headers']['status-code']);
         $secondSessionId = $second['body']['$id'];
+        $device['cookie'] = $second['cookies']['a_device_' . $projectId];
 
         // Read the device once so it is cached holding both sessions
         $response = $this->getDevice($device['cookie']);
@@ -540,19 +628,22 @@ final class AccountDevicesCustomClientTest extends Scope
         $short = $this->signIn($device['cookie'], $email, $password, ['duration' => 60]);
         $this->assertEquals(201, $short['headers']['status-code']);
         $this->assertLessThan($deviceExpire, $short['body']['expire']);
+        $device['cookie'] = $short['cookies'][$deviceKey];
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($deviceExpire, $response['body']['expire']);
 
         /**
-         * Test for SUCCESS - a session that outlives the device extends it, and the cookie is re-issued to match
+         * Test for SUCCESS - a session that outlives the device extends it, and the cookie is re-issued
+         * with the rotated secret to match
          */
         $long = $this->signIn($device['cookie'], $email, $password);
         $this->assertEquals(201, $long['headers']['status-code']);
         $this->assertGreaterThan($deviceExpire, $long['body']['expire']);
         $this->assertArrayHasKey($deviceKey, $long['cookies']);
-        $this->assertEquals($device['cookie'], $long['cookies'][$deviceKey]);
+        $this->assertNotEquals($device['cookie'], $long['cookies'][$deviceKey]);
+        $device['cookie'] = $long['cookies'][$deviceKey];
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -573,6 +664,8 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $refreshed['headers']['status-code']);
         $this->assertGreaterThan($deviceExpire, $refreshed['body']['expire']);
         $this->assertArrayHasKey($deviceKey, $refreshed['cookies']);
+        // No session joined the device, so the secret stands and only the expiry moved
+        $this->assertEquals($device['cookie'], $refreshed['cookies'][$deviceKey]);
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -622,7 +715,9 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertIsArray($fallback);
         $this->assertArrayHasKey($sessionKey, $fallback);
         $this->assertArrayHasKey($deviceKey, $fallback);
-        $this->assertEquals($deviceFallback, $fallback[$deviceKey]);
+        // Joining a session rotated the device secret, so the entry carries the new one
+        $this->assertNotEquals($deviceFallback, $fallback[$deviceKey]);
+        $deviceFallback = $fallback[$deviceKey];
         $sessionExpire = $response['body']['expire'];
 
         /**
