@@ -11,7 +11,7 @@ tags: storage, security
 With this change:
 
 - Each file gets its own random key and is encrypted with AES-256-GCM in 64 KB segments before it reaches storage.
-- Encrypted uploads take about as long as unencrypted ones, and range requests decrypt only the segments they read.
+- Encrypted uploads take about as long as unencrypted ones. In buckets without compression, range requests decrypt only the segments they read.
 - An encrypted file now takes up about the same storage as the original, instead of about a third more.
 - Files you uploaded before keep working. Files larger than 20 MB uploaded before this change stay unencrypted until you upload them again.
 

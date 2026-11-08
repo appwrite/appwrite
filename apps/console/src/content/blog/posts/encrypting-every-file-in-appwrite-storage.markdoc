@@ -18,7 +18,7 @@ faqs:
   - question: "Does this change my storage usage?"
     answer: "Storage usage counts the size of the stored file. An encrypted file used to be stored about a third larger than the original. A file encrypted in the new format is 28 bytes larger per 64 KB, about 0.04 percent. Files you uploaded before keep their stored size."
   - question: "Do compression, image previews, and antivirus scanning still work?"
-    answer: "Yes. Compression and image metadata stripping decrypt, transform, and re-encrypt the file in memory, with a single write. Previews, downloads, and views decrypt the file as before. Antivirus scanning on self-hosted Appwrite scans a decrypted temporary copy."
+    answer: "Yes. Compression and image metadata stripping still run after the upload: Appwrite reads the file back, decrypts it, transforms it, then encrypts it and writes it again. Previews, downloads, and views decrypt the file as before. Antivirus scanning on self-hosted Appwrite scans a decrypted temporary copy."
   - question: "Can I use the S3-compatible API with an encrypted bucket?"
     answer: "No. A bucket used through the S3-compatible API still needs encryption off, because S3 clients expect stored files to match their uploads."
   - question: "When does this reach self-hosted Appwrite?"
@@ -36,7 +36,7 @@ Today, that limit is gone. Every file you upload to an encrypted bucket is encry
 - **Every file is encrypted.** A 1 KB avatar and a 2 GB video get the same protection.
 - **Each file has its own key.** Appwrite generates a random 256-bit key for every file and encrypts that key with the server's encryption key. The file key is never returned by the API.
 - **Encrypted uploads are about as fast as unencrypted ones.** The extra work no longer shows up in the upload time.
-- **Range requests read only what they need.** A video player that seeks, or a download that resumes, decrypts only the part of the file it asks for.
+- **Range requests read only what they need.** In a bucket without compression, a video player that seeks, or a download that resumes, decrypts only the part of the file it asks for.
 - **Encrypted files are stored at about their real size.** The old format stored files about a third larger than the original. The new format adds 0.04 percent.
 
 # Why there was a limit
@@ -55,9 +55,9 @@ Appwrite now encrypts files in **64 KB segments** with AES-256-GCM.
 
 Because each segment knows its position, segments can't be swapped, reordered, or cut off without the read failing. Because chunks are encrypted where they land in the file, chunked uploads, resumed uploads, and chunks that arrive out of order all keep working.
 
-Reads use the same structure. A range request finds the segments that cover the range, decrypts only those, and returns the bytes you asked for. A full download streams the file one segment at a time, so memory stays flat, whatever the file size.
+Reads use the same structure. A range request finds the segments that cover the range, decrypts only those, and returns the bytes you asked for. A full download streams the file one segment at a time, so memory stays flat, whatever the file size. Files in a bucket with compression on are still decrypted and decompressed as a whole, because compressed data can't be read from the middle.
 
-The old upload also wrote every encrypted file twice: once as uploaded, then again after it was read back and encrypted. Now each chunk is encrypted on its way in, and written once.
+The old upload also wrote every encrypted file twice: once as uploaded, then again after it was read back and encrypted. Now each chunk is encrypted on its way in, and the file is written once. Buckets that compress files or strip image metadata are the exception: those files are still read back and written again after the upload.
 
 # The numbers
 
@@ -89,7 +89,7 @@ We measured both versions on the same deployment, with every request crossing th
 * Encrypted, and downloads within noise of unencrypted
 {% /table %}
 
-Encryption now costs about the same at any file size. On Appwrite Cloud, the change also cut the number of writes to the storage provider by more than half, because encrypted files are no longer written twice.
+Encryption now costs about the same at any file size. On Appwrite Cloud, the change also cut the number of writes to the storage provider by more than half, because most encrypted files are no longer written twice.
 
 # Files you uploaded before
 
