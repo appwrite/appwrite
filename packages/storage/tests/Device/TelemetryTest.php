@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\Telemetry;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
 final class TelemetryTest extends TestCase
@@ -45,6 +46,13 @@ final class TelemetryTest extends TestCase
         $this->assertSame(md5('one'), $etag);
         $this->assertSame(md5('two'), $device->replace($path, new Stream('two'), $etag, 'text/plain'));
         $this->assertSame('two', (string) $device->read($path, 0, null, md5('two')));
+
+        try {
+            $device->read($path, modifiedSince: new \DateTimeImmutable('+1 hour'));
+            $this->fail('The time must reach the decorated device');
+        } catch (NotModifiedException) {
+            $this->assertSame('two', (string) $device->read($path, modifiedSince: new \DateTimeImmutable('@1')));
+        }
         $this->assertSame(3, $device->getFileInfo($path)->size);
 
         $underlying->delete($path);

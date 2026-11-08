@@ -190,7 +190,7 @@
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
-        "rector/rector": "^2.4",
+        "rector/rector": "^2.8.4",
         "shipmonk/dead-code-detector": "^0.13"
     },
     "provide": {

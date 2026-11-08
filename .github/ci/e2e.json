@@ -571,6 +571,20 @@
       "services": ["Functions", "Project", "Storage", "Videos"]
     },
     {
+      "label": "Response Cache",
+      "group": "responseCache",
+      "path": "/usr/src/code/tests/e2e/Services/Storage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "s3",
+      "wait": "",
+      "storage_cache_percent": "50",
+      "worker_per_core": "1",
+      "services": [
+        "Storage"
+      ]
+    },
+    {
       "label": "Usage Outage",
       "group": "usageOutage",
       "path": "/usr/src/code/tests/e2e/Services/Usage",

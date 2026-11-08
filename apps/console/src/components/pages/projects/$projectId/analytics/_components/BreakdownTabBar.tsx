@@ -11,12 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { BreakdownTab } from './BreakdownPanel'
 
-/** Prop tabs are labelled with the site's own key, which is never translated. */
+/** A prop tab labelled with the site's own key is never translated. */
 export function breakdownTabLabel(
   t: Translator,
   tab: BreakdownTab,
 ): string {
-  return tab.propKey ? tab.label : t(tab.label)
+  return tab.propKey === tab.label ? tab.label : t(tab.label)
 }
 
 /** Same look as `TabsTrigger`, for the group tab that opens a menu. */

@@ -6,6 +6,7 @@ import {
   organizationInvoicesQueryOptions,
   organizationQueryOptions,
   organizationPlanQueryOptions,
+  organizationInvoiceQueryOptions,
   organizationBillingAggregationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
@@ -15,9 +16,6 @@ import {
   canSeeOrganizationBilling,
   resolveOrganizationAccess,
 } from '@/lib/react-query/hooks'
-import {
-  DEFAULT_BILLING_PROJECTS_LIMIT,
-} from '@/lib/react-query/hooks/constants'
 
 const INVOICES_PER_PAGE = 5
 const CREDITS_PER_PAGE = 5
@@ -62,6 +60,16 @@ export const Route = createFileRoute(
     const canFetchBillingInvoices = canSeeOrganizationBilling(billingAccess)
 
     await Promise.all([
+      ...(canFetchBillingInvoices && orgData?.billingAggregationId
+        ? [
+            queryClient.ensureQueryData(
+              organizationBillingAggregationQueryOptions(
+                orgId,
+                orgData.billingAggregationId,
+              ),
+            ),
+          ]
+        : []),
       queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
       ...(canFetchBillingInvoices
         ? [
@@ -76,15 +84,10 @@ export const Route = createFileRoute(
       ),
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
-      ...(orgData?.billingAggregationId
+      ...(canFetchBillingInvoices && orgData?.billingInvoiceId
         ? [
             queryClient.ensureQueryData(
-              organizationBillingAggregationQueryOptions(
-                orgId,
-                orgData.billingAggregationId,
-                DEFAULT_BILLING_PROJECTS_LIMIT,
-                0,
-              ),
+              organizationInvoiceQueryOptions(orgId, orgData.billingInvoiceId),
             ),
           ]
         : []),

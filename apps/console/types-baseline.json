@@ -245,9 +245,6 @@
   "src/components/pages/organizations/$orgId/billing/PaymentMethodForm.tsx": {
     "TS2305: Module '\"@stripe/stripe-js\"' has no exported member 'PaymentElement'.": 1
   },
-  "src/components/pages/organizations/$orgId/billing/PlanSummary.tsx": {
-    "TS2571: Object is of type 'unknown'.": 1
-  },
   "src/components/pages/organizations/$orgId/billing/change-plan/PlanSummaryCard.tsx": {
     "TS18046: 'charge' is of type 'unknown'.": 4,
     "TS18046: 'item' is of type 'unknown'.": 3,
@@ -1217,8 +1214,6 @@
     "TS6133: 'MysqlListTablesOptions' is declared but its value is never read.": 1
   },
   "src/lib/react-query/hooks/organizations.ts": {
-    "TS2339: Property 'code' does not exist on type '{}'.": 1,
-    "TS2339: Property 'response' does not exist on type '{}'.": 1,
     "TS2454: Variable 'result' is used before being assigned.": 1,
     "TS2571: Object is of type 'unknown'.": 6
   },
@@ -1242,7 +1237,6 @@
     "TS2769: No overload matches this call.": 1
   },
   "src/lib/react-query/hooks/usage-events.ts": {
-    "TS2552: Cannot find name 'StorageUsageChartOverview'. Did you mean 'DatabaseUsageChartOverview'?": 1,
     "TS6133: 'dateRangePresetId' is declared but its value is never read.": 5,
     "TS6133: 'keepPreviousUsageChartDataForResource' is declared but its value is never read.": 1,
     "TS6133: 'logRetentionHours' is declared but its value is never read.": 5,

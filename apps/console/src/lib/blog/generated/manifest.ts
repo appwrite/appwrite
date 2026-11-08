@@ -3,6 +3,73 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-push-notifications-to-your-android-app",
+    "href": "/blog/post/add-push-notifications-to-your-android-app",
+    "title": "Add push notifications to your Android app without Firebase",
+    "description": "Send push notifications to a Kotlin app with Appwrite Push. Notify customers when an order ships, deliver while the app is closed, and open the order on tap.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-push-notifications-to-your-android-app/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "add-push-notifications-to-your-ios-app",
+    "href": "/blog/post/add-push-notifications-to-your-ios-app",
+    "title": "Add push notifications to your iOS app with Appwrite Push",
+    "description": "Send push notifications to a SwiftUI app with Appwrite Push. Notify customers when an order ships, show the message while the app is suspended, and open the order on tap.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 10,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-push-notifications-to-your-ios-app/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "add-push-notifications-to-your-react-native-app",
+    "href": "/blog/post/add-push-notifications-to-your-react-native-app",
+    "title": "Add push notifications to your React Native app without Firebase",
+    "description": "Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-push-notifications-to-your-react-native-app/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-appwrite-push",
+    "href": "/blog/post/announcing-appwrite-push",
+    "title": "Announcing Appwrite Push: push notifications without Firebase",
+    "description": "Appwrite Push delivers push notifications from Appwrite straight to your Android, iOS, web, Flutter, and React Native apps, with no Firebase project, service account, or device token to manage.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 7,
+    "author": "arnab-chatterjee",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-push/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "customer-story-creators-mind",
+    "href": "/blog/post/customer-story-creators-mind",
+    "title": "How Creators Mind runs 2,600+ coaching apps on Appwrite",
+    "description": "Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite that powers 2,600+ coaching apps for Indian educators and reaches nearly 10 million students.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-creators-mind/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-apns-one-click-setup",
     "href": "/blog/post/announcing-apns-one-click-setup",
     "title": "Announcing one-click APNs setup with the Appwrite CLI",

@@ -4,6 +4,10 @@ namespace Appwrite\Platform\Modules\Account\Services;
 
 use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Create as CreateDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Delete as DeleteDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Get as GetDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Sessions\Update as UpdateDeviceSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Email\Update as UpdateEmail;
 use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Identities\Delete as DeleteIdentity;
@@ -82,6 +86,10 @@ class Http extends Service
             ->addAction('getSession', GetSession::class)
             ->addAction('deleteSession', DeleteSession::class)
             ->addAction('updateSession', UpdateSession::class)
+            ->addAction('createDevice', CreateDevice::class)
+            ->addAction('getDevice', GetDevice::class)
+            ->addAction('updateDeviceSession', UpdateDeviceSession::class)
+            ->addAction('deleteDevice', DeleteDevice::class)
             ->addAction('createEmailPasswordSession', CreateEmailPasswordSession::class)
             ->addAction('createAnonymousSession', CreateAnonymousSession::class)
             ->addAction('createSession', CreateSession::class)

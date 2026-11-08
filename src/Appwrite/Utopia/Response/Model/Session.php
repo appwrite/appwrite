@@ -34,6 +34,12 @@ class Session extends Model
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the user the session belongs to. Lets a client label the account, for example in an account switcher.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Session expiration date in ISO 8601 format.',

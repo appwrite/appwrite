@@ -238,6 +238,7 @@ Actions should read like a story. The `action()` method is the plot: [`Teams/Htt
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
 - Do not add regular expressions (`preg_*`, regex patterns passed to validators). Use string functions (`str_starts_with`, `str_ends_with`, `str_contains`, `strlen`, `substr`, `explode`, `ctype_*`) or an existing validator instead; regex is hard to review and easy to get subtly wrong. If nothing else works, explain why in the PR.
+- Build every command with `Utopia\Console\Command` and run it with `Console::execute()`, never as a string. PHPStan rejects `exec()`, `shell_exec()`, `system()`, `passthru()`, `popen()`, `escapeshellarg()` and `escapeshellcmd()`, and `proc_open()` or `Console::execute()` given a string. A script that needs shell logic is a constant passed to `sh -c`, with its values as positional parameters (`"$1"`): see `Git::cloneCommand()`. `proc_open()` with an argv array is allowed for a child that needs the terminal.
 - When updating documents, pass only changed attributes as a sparse Document:
 
 ```php

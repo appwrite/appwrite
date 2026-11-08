@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -11,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
@@ -18,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -58,6 +61,7 @@ class Update extends Action
             ))
             ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to update the current device session.', true, ['dbForProject'])
+            ->inject('request')
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
@@ -65,11 +69,16 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('session')
             ->inject('clientForOAuth2')
+            ->inject('authDevice')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
         ?string $sessionId,
+        Request $request,
         Response $response,
         User $user,
         Database $dbForProject,
@@ -77,6 +86,10 @@ class Update extends Action
         Event $queueForEvents,
         ?Document $current,
         Client $clientForOAuth2,
+        ?Document $authDevice,
+        bool $domainVerification,
+        ?string $cookieDomain,
+        Authorization $authorization,
     ): void {
         $sessionId = ($sessionId === 'current')
             ? $current?->getId()
@@ -143,6 +156,15 @@ class Update extends Action
         // Save changes
         $dbForProject->updateDocument('sessions', $sessionId, $session);
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        // The account switching device holding this session lives as long as its newest session,
+        // so the extended expiry carries over to it, and to its cookie when this browser holds it
+        $device = AuthDevice::extend($dbForProject, $authorization, $session, $authDevice);
+        if ($device !== null) {
+            AuthDevice::refreshCookie($request, $response, $project, $device, $request->getProtocol(), $domainVerification, $cookieDomain);
+        }
+
+        $session->setAttribute('userName', $user->getAttribute('name', ''));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

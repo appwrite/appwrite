@@ -81,7 +81,7 @@ That bar is largely a compliance and infrastructure problem. Whether HIPAA appli
 
 This is where a backend that handles the platform layer for you matters. [Appwrite Cloud is HIPAA compliant](/blog/post/announcing-appwrite-is-hipaa-compliant), so the technical and organizational safeguards a health app needs are already in place. A few primitives map directly onto the model OpenAI shipped:
 
-Encryption can be enabled for supported database text columns and Storage buckets. When bucket encryption is enabled, Storage files smaller than 20 MB are encrypted, while files above 20 MB are not. Encrypted database columns also cannot be queried. Review these limits and use an appropriate additional encryption approach for PHI that falls outside them. See the [encryption docs](/docs/advanced/security/encryption).
+Encryption can be enabled for supported database text columns and Storage buckets. When bucket encryption is enabled, Storage files of any size are encrypted. Encrypted database columns cannot be queried, so plan how you look up PHI stored in them. See the [encryption docs](/docs/advanced/security/encryption).
 * **Permissions** let you scope read and write access down to the individual document, so a patient's records are only ever readable by that patient and the roles you explicitly grant. Read the [permissions docs](/docs/products/databases/permissions).
 * **Authentication** gives you MFA, session management, and OAuth out of the box, so you are not hand-rolling the front door to sensitive data. Start with [Appwrite Auth](/docs/products/auth).
 * **Audit logs** track who accessed what, which is a requirement rather than a nice-to-have under HIPAA.
