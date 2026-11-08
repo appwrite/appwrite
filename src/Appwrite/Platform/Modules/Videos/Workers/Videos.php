@@ -118,9 +118,6 @@ class Videos extends Action
      */
     private const PRESIGN_SLACK = 3600;
 
-    /** Longest a SigV4 query signature may last (7 days). */
-    private const PRESIGN_LIMIT = 604800;
-
     /** Histogram bucket boundaries in seconds. */
     private const JOB_BUCKETS = [1, 5, 10, 30, 60, 120, 300, 600, 1200, 1800, 3600];
     private const PHASE_BUCKETS = [0.1, 0.5, 1, 5, 10, 30, 60, 120, 300, 600, 1800];
@@ -2045,9 +2042,9 @@ class Videos extends Action
         // encode unbounded, and SigV4 will not sign past 7 days, so either
         // case is copied: a URL that expires mid-read fails a later range
         // request. Clamping the lifetime instead would hide the same gap.
-        $cap = (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600');
+        $cap = $this->cap();
         $expires = $cap + self::PRESIGN_SLACK;
-        if ($cap > 0 && $expires <= self::PRESIGN_LIMIT) {
+        if ($cap > 0 && $expires <= S3::MAX_PRESIGN_SECONDS) {
             Span::add('source.read', 'url');
 
             return $device->getPresignedUrl($fullPath, $expires);
@@ -2400,11 +2397,20 @@ class Videos extends Action
     }
 
     /**
+     * Seconds one ffmpeg run may take at most, from _APP_VIDEOS_ENCODE_TIMEOUT;
+     * 0 disables the limit.
+     */
+    private function cap(): int
+    {
+        return (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600');
+    }
+
+    /**
      * Seconds an ffmpeg run over this source may take. An unknown duration gets the cap.
      */
     private function timeout(Document $video, int $factor): int
     {
-        $cap = (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600');
+        $cap = $this->cap();
         $seconds = (int) \ceil(((int) $video->getAttribute('duration', 0)) / 1000);
         if ($seconds <= 0) {
             return $cap;

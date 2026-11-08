@@ -66,7 +66,7 @@ class S3 extends Device
 
     private const int MAX_COPY_OBJECT_SIZE = 5368709120; // 5 GB — the CopyObject limit; larger objects copy server side part by part
 
-    private const int MAX_PRESIGN_SECONDS = 604800; // 7 days — the longest a SigV4 query signature may last
+    public const int MAX_PRESIGN_SECONDS = 604800; // 7 days — the longest a SigV4 query signature may last
 
     private readonly string $fqdn;
 
