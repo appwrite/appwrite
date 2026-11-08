@@ -5,7 +5,7 @@
  * Create function, domain, variables, then createTemplateDeployment (tag).
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,11 +26,7 @@ import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  ID,
-  TemplateReferenceType,
-  type Runtime,
-} from '@appwrite.io/console'
+import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useFunctionTemplate,
@@ -95,7 +91,14 @@ export function TemplateConfigView({
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
-  const [isPublic, setIsPublic] = useState(true)
+  const [isPublic, setIsPublic] = useState(() =>
+    Array.isArray(template?.permissions)
+      ? template.permissions.includes('any')
+      : true,
+  )
+  const lastInitializedTemplateIdRef = useRef<string | null>(
+    template ? template.id || templateId : null,
+  )
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
@@ -157,6 +160,13 @@ export function TemplateConfigView({
 
   useEffect(() => {
     if (template) {
+      const currentTemplateId = template.id || templateId
+      if (lastInitializedTemplateIdRef.current !== currentTemplateId) {
+        lastInitializedTemplateIdRef.current = currentTemplateId
+        if (Array.isArray(template.permissions)) {
+          setIsPublic(template.permissions.includes('any'))
+        }
+      }
       if (!functionName) setFunctionName(template.name)
       // Pre-fill template variables and auto-replace placeholders
       if (template.variables?.length && variables.length === 0) {
@@ -297,11 +307,7 @@ export function TemplateConfigView({
         functionId: finalFunctionId,
         name: functionName.trim(),
         runtime: runtime as Runtime,
-        execute: isPublic
-          ? ['any']
-          : template.permissions?.length
-            ? template.permissions
-            : [],
+        execute: isPublic ? ['any'] : [],
         events: template.events?.length ? template.events : undefined,
         schedule: template.cron || undefined,
         timeout: template.timeout ?? undefined,
@@ -808,8 +814,7 @@ export function TemplateConfigView({
                     setVariables(newVars)
                   }}
                   placeholder={
-                    templateVar?.placeholder ||
-                    `${t('Enter')} ${variable.key}`
+                    templateVar?.placeholder || `${t('Enter')} ${variable.key}`
                   }
                   type={templateVar?.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
