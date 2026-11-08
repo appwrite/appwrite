@@ -2474,12 +2474,13 @@ class Deletes extends Action
             }
 
             $path = $root . '/' . $name;
-            $stdout = '';
-            $stderr = '';
-            $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
-
-            if ($code !== 0) {
-                Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+            // The device walks the tree itself; no shell, no escaping. A job
+            // clearing its own folder at the same time fails the walk but
+            // leaves nothing behind, which is all that matters here.
+            if (!(new Local($root))->deletePath($name)) {
+                if (\is_dir($path)) {
+                    Console::error('Failed removing video tmp [' . $path . ']');
+                }
                 continue;
             }
 

@@ -960,11 +960,11 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A source that is neither encrypted nor compressed (the 23 MB fixture is
-     * over the 20 MB limit the files endpoint encrypts up to) is read where it
-     * is stored: in place on a local device, over a presigned URL on S3, which
-     * the s3 lane runs. The encode's scratch never holds a copy of it, and the
-     * rendition still plays.
+     * A source that is neither encrypted nor compressed (uploaded to a bucket
+     * with encryption off; every other file is encrypted whatever its size) is
+     * read where it is stored: in place on a local device, over a presigned URL
+     * on S3, which the s3 lane runs. The encode's scratch never holds a copy of
+     * it, and the rendition still plays.
      *
      * Segments are uploaded and removed while ffmpeg runs, so scratch never
      * holds the whole rendition at once. The rendition's progress is driven
@@ -974,7 +974,32 @@ final class VideosCustomServerTest extends Scope
     #[Group('s3')]
     public function testAnUnencryptedSourceIsNeverCopiedIntoScratch(): void
     {
-        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'unique()',
+            'name' => 'Plain videos',
+            'fileSecurity' => false,
+            'encryption' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $uploaded = $this->uploadVideoTo($bucketId, name: 'large-file.mp4');
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $uploaded['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertFalse($file['body']['encryption'], 'the source was stored encrypted');
+        $videoId = $this->createReadyVideo(['$id' => $uploaded['$id'], 'bucketId' => $bucketId])['$id'];
         $renditionId = $this->createRendition($videoId, 'hls');
 
         $observed = 0;

@@ -7,8 +7,8 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
 use Appwrite\Video\Dash as DashManifest;
@@ -1978,12 +1978,12 @@ class Videos extends Action
             return;
         }
 
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute('rm -rf ' . \escapeshellarg($basePath), '', $stdout, $stderr, 30);
-
-        if ($code !== 0) {
-            Console::error('Failed removing files from [' . $basePath . ']: ' . $stderr);
+        // The device walks the tree itself; no shell, no escaping. Its root
+        // carries no trailing slash: deletePath() rebuilds nested paths from it.
+        // A sweep removing the same tree at the same time fails the walk but
+        // leaves nothing behind, which is all that matters here.
+        if (!(new Local(\rtrim($root, '/')))->deletePath(\substr($basePath, \strlen($root))) && \is_dir($basePath)) {
+            Console::error('Failed removing files from [' . $basePath . ']');
         }
     }
 
@@ -2007,9 +2007,9 @@ class Videos extends Action
     /**
      * Where ffmpeg reads a video source from, copying it only when it must.
      *
-     * Encrypted or compressed uploads (never above APP_STORAGE_READ_BUFFER, the
-     * size the files endpoint stops encrypting and compressing at) are decoded
-     * into the workspace. Otherwise a local device's file is read where it is,
+     * Encrypted or compressed uploads are decoded into the workspace: a
+     * segmented file in segments, straight to disk; an older one whole.
+     * Otherwise a local device's file is read where it is,
      * and an S3 device's through a presigned URL that ffmpeg range-reads, so the
      * workspace never holds a copy. The URL is a credential: it is kept off
      * spans, logs and stored errors, and only `source.path` is recorded. An
@@ -2073,35 +2073,48 @@ class Videos extends Action
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
+        $contentType = (string) $file->getAttribute('mimeType', '');
         $local = new Local('/');
 
-        if ($hasEncryption || $hasCompression) {
-            $data = (string) $deviceForFiles->read($fullPath);
-
-            if ($hasEncryption) {
-                $data = OpenSSL::decrypt(
-                    $data,
-                    $file->getAttribute('openSSLCipher'),
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
+        if (!$hasEncryption && !$hasCompression) {
+            if (!$deviceForFiles->copy($fullPath, $localPath, $local)) {
+                throw new \Exception('Unable to transfer source to ' . $localPath);
             }
 
-            if ($hasCompression) {
-                $data = match ($compression) {
-                    Compression::ZSTD => (new Zstd())->decompress($data),
-                    Compression::GZIP => (new GZIP())->decompress($data),
-                    default => $data,
-                };
-            }
+            return $localPath;
+        }
 
-            if (!$local->write($localPath, new Stream($data), $file->getAttribute('mimeType'))) {
-                throw new \Exception('Unable to write decrypted source to ' . $localPath);
-            }
-        } elseif (!$deviceForFiles->copy($fullPath, $localPath, $local)) {
-            throw new \Exception('Unable to transfer source to ' . $localPath);
+        $encryption = new Encryption($file);
+        if ($encryption->isSegmented()) {
+            // Decrypted segment by segment straight into the workspace, so a
+            // source of any size is never held whole in memory.
+            $encryption->copy($deviceForFiles, $local, $localPath, $contentType);
+
+            return $localPath;
+        }
+
+        // Written before segmented encryption: one envelope over the whole
+        // file, possibly compressed, so it is read whole as the storage
+        // endpoints read it.
+        $data = (string) $deviceForFiles->read($fullPath);
+        if ($hasEncryption) {
+            $data = $encryption->decrypt($data);
+        }
+        if ($hasCompression) {
+            $decompressed = match ($compression) {
+                Compression::ZSTD => (new Zstd())->decompress($data),
+                Compression::GZIP => (new GZIP())->decompress($data),
+                default => $data,
+            };
+            // A decompressor reports failure as an empty string. Files stored
+            // above the read buffer before 1.5.0 recorded an algorithm they
+            // were never compressed with; their bytes are already the source.
+            $data = $decompressed === '' && (int) $file->getAttribute('sizeOriginal', 0) > 0
+                ? $data
+                : $decompressed;
+        }
+        if (!$local->write($localPath, new Stream($data), $contentType)) {
+            throw new \Exception('Unable to write decrypted source to ' . $localPath);
         }
 
         return $localPath;
