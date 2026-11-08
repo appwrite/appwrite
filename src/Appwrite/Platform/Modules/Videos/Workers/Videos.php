@@ -2541,7 +2541,7 @@ class Videos extends Action
         $words = [];
         foreach (\explode(' ', \str_replace(["\r", "\n", "\t"], ' ', $text)) as $word) {
             $bare = \ltrim($word, '"\'([:,');
-            if ($word === '' || \str_starts_with($bare, '/') || \preg_match('#^https?://#i', $bare) === 1) {
+            if ($word === '' || \str_starts_with($bare, '/') || \str_contains($bare, '://')) {
                 continue;
             }
             $words[] = $word;
@@ -2552,11 +2552,26 @@ class Videos extends Action
 
     /**
      * Cuts the query string off every URL in a command line or ffmpeg's output,
-     * so a presigned source never reaches a span with its signature.
+     * so a presigned source never reaches a span with its signature. A URL runs
+     * to the next space or line break; whatever follows its `?` goes, a closing
+     * quote included.
      */
     private function withoutSignatures(string $text): string
     {
-        return (string) \preg_replace('#(https?://[^\s?\'"]+)\?[^\s\'"]*#i', '$1', $text);
+        $lines = [];
+        foreach (\explode("\n", $text) as $line) {
+            $words = [];
+            foreach (\explode(' ', $line) as $word) {
+                $query = \strpos($word, '?');
+                if ($query !== false && \str_contains(\substr($word, 0, $query), '://')) {
+                    $word = \substr($word, 0, $query);
+                }
+                $words[] = $word;
+            }
+            $lines[] = \implode(' ', $words);
+        }
+
+        return \implode("\n", $lines);
     }
 
     /**

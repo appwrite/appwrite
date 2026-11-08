@@ -1003,7 +1003,7 @@ final class VideosCustomServerTest extends Scope
             if ($status === 'started') {
                 $progress[] = (int) ($rendition['body']['progress'] ?? 0);
             }
-            \usleep(20000);
+            \usleep(250000);
         }
 
         $this->assertSame('ready', $status);
@@ -2728,6 +2728,26 @@ final class VideosCustomServerTest extends Scope
                 $this->assertSame($case['height'], $image->getImageHeight(), $case['type']);
             }
         }
+
+        // The cache is keyed by the format the client gets, not by the Accept
+        // string: two browsers that both list webp share one entry, and a client
+        // without webp is served the jpeg one.
+        $first = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
+            'accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        ]));
+        $this->assertEquals(200, $first['headers']['status-code']);
+        $this->assertEquals('image/webp', $first['headers']['content-type'] ?? '');
+
+        $second = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
+            'accept' => 'text/html,image/webp;q=0.9,*/*;q=0.5',
+        ]));
+        $this->assertEquals(200, $second['headers']['status-code']);
+        $this->assertEquals('image/webp', $second['headers']['content-type'] ?? '');
+        $this->assertEquals('hit', $second['headers']['x-appwrite-cache'] ?? '', 'a different Accept string that also lists webp must reuse the webp entry');
+
+        $plain = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), ['accept' => 'image/jpeg']));
+        $this->assertEquals(200, $plain['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $plain['headers']['content-type'] ?? '');
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);

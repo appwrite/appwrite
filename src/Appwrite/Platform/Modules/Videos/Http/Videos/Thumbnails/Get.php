@@ -46,8 +46,10 @@ class Get extends Base
             ->label('cache', true)
             ->label('cache.resourceType', 'video/{request.videoId}')
             ->label('cache.resource', 'thumbnail/{request.thumbnailId}')
-            // The format is negotiated on Accept when output is omitted, so the
-            // cached bytes must be keyed by it too.
+            // The format is negotiated on Accept when output is omitted: the cache
+            // is keyed by the format the client gets, and Vary tells HTTP caches
+            // to split on Accept.
+            ->label('cache.accept', ['image/webp'])
             ->label('cache.vary', ['accept'])
             ->label('sdk', new Method(
                 namespace: 'videos',
@@ -121,7 +123,7 @@ class Get extends Base
         if (empty($output)) {
             // Thumbnail sheets are written as JPEG; only upgrade to webp when the client
             // actually advertises support for it.
-            $output = \str_contains($request->getHeaderLine('accept'), 'image/webp') ? 'webp' : 'jpg';
+            $output = $request->accepts('image/webp') ? 'webp' : 'jpg';
         }
 
         if (!\array_key_exists($output, $outputs)) {
