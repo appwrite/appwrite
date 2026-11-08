@@ -1096,7 +1096,8 @@ final class VideosCustomServerTest extends Scope
     /**
      * Segments are uploaded while ffmpeg is still encoding and removed from
      * scratch. Whatever went up then, every segment every playlist names must
-     * be served, the way a player walks the whole ladder.
+     * be served, the way a player walks the whole ladder, and storage must
+     * hold exactly those bytes: every segment once, nothing left over.
      */
     public function testEverySegmentOfAShippedRenditionIsServed(): void
     {
@@ -1104,6 +1105,7 @@ final class VideosCustomServerTest extends Scope
         $renditionId = $this->createReadyRendition($videoId, 'hls');
 
         $served = 0;
+        $bytes = 0;
         foreach ($this->renditionPlaylists($videoId, $renditionId) as $uri => $playlist) {
             $listed = 0;
             foreach (\explode("\n", $playlist) as $raw) {
@@ -1116,14 +1118,92 @@ final class VideosCustomServerTest extends Scope
                 $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $line);
                 $this->assertNotEmpty($segment['body'], 'Empty segment: ' . $line);
                 $served++;
+                $bytes += \strlen((string) $segment['body']);
             }
             $this->assertSame(\substr_count($playlist, '#EXTINF'), $listed, 'Playlist lists a segment without a duration: ' . $uri);
         }
 
         $this->assertGreaterThan(1, $served, 'a 4K fixture should cut into several segments');
+
+        $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+        $this->assertEquals(200, $rendition['headers']['status-code']);
+        $directory = $this->renditionStoragePath($videoId, $rendition['body']['name'], $renditionId);
+        $this->assertSame($served, $this->storedFiles($directory), 'storage holds a different number of files than the playlists name');
+        $this->assertSame($bytes, $this->storedBytes($directory), 'storage holds different bytes than the playlists serve');
+
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a shipped encode');
         });
+    }
+
+    /**
+     * A segment upload the store rejects fails the rendition: the uploader
+     * keeps the error, the next hand-over throws it, ffmpeg is stopped, and
+     * nothing of the rendition is left in storage or scratch. A plain file
+     * where the video's storage directory should be stands in for a store
+     * that is down: the local device cannot create the rendition directory
+     * under it. Local device only, so not in the s3 group.
+     */
+    public function testAFailedSegmentUploadFailsTheRendition(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+        // The timeline job writes here too; let it finish before taking the directory away.
+        $this->assertEquals(200, $this->waitForTimeline($videoId)['headers']['status-code']);
+        $directory = $this->videoStoragePath($videoId);
+        $this->removeDirectory($directory);
+        $this->assertNotFalse(\file_put_contents($directory, 'not a directory'));
+
+        try {
+            $renditionId = $this->createRendition($videoId, 'hls');
+            $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+
+            $this->assertEquals('error', $body['status'], 'A rejected upload did not fail the rendition');
+            $this->assertNotEmpty($body['startedAt']);
+            $this->assertNotEmpty($body['endedAt']);
+            // Internal by default: the store's complaint stays on the span.
+            $this->assertStringStartsWith('An internal error occurred during the ', (string) $body['error']);
+            $this->assertStringNotContainsString('/storage', (string) $body['error']);
+            $this->assertStringNotContainsString('://', (string) $body['error']);
+
+            $this->assertEventually(function () use ($videoId) {
+                $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed upload');
+            });
+            \clearstatcache(true, $directory);
+            $this->assertTrue(\is_file($directory), 'the rendition was written somewhere under the blocked path');
+        } finally {
+            @\unlink($directory);
+        }
+    }
+
+    /**
+     * A rendition parked while ffmpeg is still running is halted at the next
+     * progress tick, and the segments already uploaded are removed. The
+     * uploader is waited for before the delete, so nothing lands after it.
+     */
+    public function testHaltingAnEncodeRemovesTheSegmentsAlreadyUploaded(): void
+    {
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+        // A 1080p encode of the 4K fixture is still running when the park
+        // lands; a 360p one is done before it, and a finished rendition stays.
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->profile('1080p')['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+        $renditionId = $create['body']['$id'];
+        $directory = $this->renditionStoragePath($videoId, $create['body']['name'], $renditionId);
+
+        // The first segment is up, so ffmpeg is running and storage has been written to.
+        $this->waitUntilPathExists($directory, 120);
+        $this->timeTravelRendition($this->getProject()['$id'], $renditionId, status: 'aborted');
+
+        $this->waitUntilPathGone($directory, 120);
+        $this->assertEventually(function () use ($videoId, $renditionId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a halted encode');
+            $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+            $this->assertEquals(200, $rendition['headers']['status-code']);
+            $this->assertEquals('aborted', $rendition['body']['status'], 'the halted run settled the rendition');
+        }, 60000);
     }
 
     /**
@@ -1151,6 +1231,52 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($playlists, 'the master names no playlist of this rendition');
 
         return $playlists;
+    }
+
+    /**
+     * Files directly under a rendition's storage directory.
+     */
+    private function storedFiles(string $directory): int
+    {
+        $count = 0;
+        foreach (\scandir($directory) ?: [] as $name) {
+            if ($name[0] !== '.' && \is_file($directory . '/' . $name)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Bytes of the files directly under a rendition's storage directory.
+     */
+    private function storedBytes(string $directory): int
+    {
+        $bytes = 0;
+        foreach (\scandir($directory) ?: [] as $name) {
+            if ($name[0] !== '.' && \is_file($directory . '/' . $name)) {
+                $bytes += \filesize($directory . '/' . $name) ?: 0;
+            }
+        }
+
+        return $bytes;
+    }
+
+    private function removeDirectory(string $directory): void
+    {
+        if (!\is_dir($directory)) {
+            return;
+        }
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($files as $file) {
+            $file->isDir() ? \rmdir($file->getPathname()) : \unlink($file->getPathname());
+        }
+        \rmdir($directory);
     }
 
     /**

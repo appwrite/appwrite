@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
 use Appwrite\Video\Dash as DashManifest;
+use Appwrite\Video\Uploader;
 use Captioning\Format\SubripFile;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -727,10 +728,14 @@ class Videos extends Action
         // paths are keyed by rendition id, so a stale redelivery that mkdir+rm's
         // the same tree would delete segments out from under a live ffmpeg.
         $workspace = null;
+        // Started once the encode is set up; finished in the upload stage and
+        // abandoned in finally, before the rendition path is removed.
+        $uploader = null;
         $startedAt = \microtime(true);
         $storageBytes = 0;
-        // Set once this run has written anything under the rendition's path, so
-        // a run that does not reach `ready` removes what it wrote (finally).
+        // Set once this run has handed a segment to the uploader or written under
+        // the rendition's path, so a run that does not reach `ready` removes what
+        // it wrote (finally).
         $path = null;
         $wrote = false;
         $output = $videoMessage->output !== ''
@@ -899,8 +904,12 @@ class Videos extends Action
             $path = $deviceForVideos->getPath($video->getId())
                 . '/' . $rendition->getAttribute('name')
                 . '-' . $rendition->getId() . '/';
-            $local = new Local('/');
-            $shippedBytes = 0;
+            // Segments go up while ffmpeg runs, from a coroutine of their own:
+            // the hand-over never waits, so the store's time never counts
+            // against the ffmpeg timeout, and scratch holds only the segments
+            // the store has not taken yet.
+            $uploader = new Uploader($deviceForVideos, $path);
+            $uploader->start();
 
             $lastProgress = -1;
             $lastStatusCheck = 0.0;
@@ -913,24 +922,16 @@ class Videos extends Action
                     ->format($format)
                     ->add($representation)
                     ->output($target)
-                    // Each segment is uploaded and removed as soon as ffmpeg has
-                    // finished it, so scratch holds a few segments, not the whole
-                    // rendition. A failed write throws, which stops ffmpeg; the
+                    // Each segment is handed to the uploader as soon as ffmpeg has
+                    // finished it and leaves scratch once it is up. A failed upload
+                    // is thrown here at the next segment, which stops ffmpeg; the
                     // objects already written are removed in finally.
-                    ->on(Packager::SEGMENT, function (mixed $written) use ($deviceForVideos, $local, $path, &$shippedBytes, &$wrote) {
+                    ->on(Packager::SEGMENT, function (mixed $written) use ($uploader, &$wrote) {
                         if (!$written instanceof Written) {
                             return;
                         }
                         $wrote = true;
-                        $deviceForVideos->write(
-                            $path . $written->file,
-                            $local->read($written->path),
-                            \mime_content_type($written->path) ?: 'application/octet-stream'
-                        );
-                        $shippedBytes += $written->size;
-                        if (!@\unlink($written->path)) {
-                            Console::warning('Videos worker: failed to remove shipped segment ' . $written->path);
-                        }
+                        $uploader->take($written);
                     })
                     ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last, &$advancedAt, &$advancedTime) {
                         if (!$progress instanceof Progress) {
@@ -992,13 +993,22 @@ class Videos extends Action
                         );
                     })
                     ->pack(\rtrim($workspace['outDir'], '/'));
+                // Closed here so the phase measures ffmpeg, not the uploads it left behind.
+                $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
             } catch (\Throwable $th) {
                 // phase() only closes a completed phase, but how long ffmpeg ran
                 // is the first question on a timeout, a stall or an abort.
                 Span::add('timings.encode', \round(\microtime(true) - $phaseStart, 3));
                 throw $th;
+            } finally {
+                // ffmpeg is done or gone: nothing more will be handed over. The
+                // uploader finishes what is queued and is waited for in the
+                // upload stage, or in the outer finally, before this run touches
+                // scratch or the rendition path again.
+                $uploader->close();
+                // Segments the store had not taken when ffmpeg exited: its lag.
+                Span::add('encode.backlog', $uploader->pending());
             }
-            $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
             // pack() was the last reader; free a copied or decoded source before
             // persist/upload. A source read in place or over a URL is not ours.
             if (\str_starts_with($inPath, $workspace['inDir']) && \is_file($inPath) && !@\unlink($inPath)) {
@@ -1087,44 +1097,39 @@ class Videos extends Action
             $stage = 'upload';
             $phaseStart = \microtime(true);
             $wrote = true;
-            // Most segments were shipped during the encode and are gone from
-            // disk; this uploads what was left (init segments, the last of each
-            // sequence) and counts both towards the rendition's size.
-            $storageBytes = $shippedBytes + $this->uploadFiles(
-                $package->files(),
-                $path,
-                $deviceForVideos,
-                function () use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, $path) {
-                    $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
-                    if (
-                        $current->isEmpty()
-                        || !\in_array($current->getAttribute('status'), [Base::STATUS_STARTED, Base::STATUS_ENDED], true)
-                    ) {
-                        return;
-                    }
+            // Announced before waiting: the uploader may still be sending what
+            // ffmpeg left behind, and every file may be gone from disk by then.
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+            if (
+                !$current->isEmpty()
+                && \in_array($current->getAttribute('status'), [Base::STATUS_STARTED, Base::STATUS_ENDED], true)
+            ) {
+                $rendition = $dbForProject->updateDocument(
+                    'videosRenditions',
+                    $rendition->getId(),
+                    new Document([
+                        'progress' => '100',
+                        'status' => Base::STATUS_UPLOADING,
+                        'path' => $path,
+                    ])
+                );
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $rendition,
+                    'videos.[videoId].renditions.[renditionId].update',
+                    [
+                        'videoId' => $rendition->getAttribute('videoId', ''),
+                        'renditionId' => $rendition->getId(),
+                    ],
+                    $permissions
+                );
+            }
 
-                    $rendition = $dbForProject->updateDocument(
-                        'videosRenditions',
-                        $rendition->getId(),
-                        new Document([
-                            'progress' => '100',
-                            'status' => Base::STATUS_UPLOADING,
-                            'path' => $path,
-                        ])
-                    );
-                    $this->notify(
-                        $queueForRealtime,
-                        $project,
-                        $rendition,
-                        'videos.[videoId].renditions.[renditionId].update',
-                        [
-                            'videoId' => $rendition->getAttribute('videoId', ''),
-                            'renditionId' => $rendition->getId(),
-                        ],
-                        $permissions
-                    );
-                }
-            );
+            // Segments the uploader shipped are gone from disk; this uploads what
+            // is left (a segment whose unlink failed) and counts both towards the
+            // rendition's size.
+            $storageBytes = $uploader->finish() + $this->uploadFiles($package->files(), $path, $deviceForVideos);
 
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
@@ -1231,6 +1236,11 @@ class Videos extends Action
             }
             throw $th;
         } finally {
+            // Waited for on every path before the rendition path is removed: a
+            // write still in flight after the delete would leave an object
+            // behind, and the workspace cleanup would pull its file away.
+            $uploader?->abandon();
+
             Span::add('rendition.outcome', $outcome);
             Span::add('rendition.status', $status);
             Span::add('rendition.claimed', $claimed);
@@ -2413,22 +2423,11 @@ class Videos extends Action
      * Files no longer on disk were shipped during the encode and are skipped.
      *
      * @param  list<string>  $files
-     * @param  callable():void|null  $onStart
      */
-    private function uploadFiles(
-        array $files,
-        string $remoteDir,
-        Device $deviceForVideos,
-        ?callable $onStart = null
-    ): int {
+    private function uploadFiles(array $files, string $remoteDir, Device $deviceForVideos): int
+    {
         $bytes = 0;
         $local = new Local('/');
-
-        // Called once, before anything is written, so the stage is announced
-        // even when every file was already shipped during the encode.
-        if ($onStart !== null) {
-            $onStart();
-        }
 
         foreach ($files as $localPath) {
             if (!\is_file($localPath)) {
