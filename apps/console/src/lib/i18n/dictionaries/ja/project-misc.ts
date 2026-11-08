@@ -705,6 +705,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
   'No identified users in this range': 'この期間に識別されたユーザーはいません',
   'Event properties': 'イベントの属性',
+  'Models and tools': 'モデルとツール',
+  'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
+  'No calls in this range': 'この期間の呼び出しはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -3950,4 +3953,79 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'これらのアラートは引き続きコンソール通知に表示されます。',
   'Saving...': '保存中...',
+  // Firewall rule schedules
+  'Times are in your local time zone:':
+    '時刻はローカルのタイムゾーンで表示されます:',
+  'Times follow the time zone this schedule was created in:':
+    '時刻はこのスケジュールを作成したタイムゾーンに従います:',
+  'Your local time zone:': 'ローカルのタイムゾーン:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
+  'Remove schedule': 'スケジュールを削除',
+  'The schedule will be removed when you save.': '保存するとスケジュールが削除されます。',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
+  Repeat: '繰り返し',
+  'Selected days every week': '毎週の選択した曜日',
+  'Selected days every other week': '隔週の選択した曜日',
+  'Weekends (Sat and Sun)': '週末（土・日）',
+  'Every few days': '数日ごと',
+  'Days of the week': '曜日',
+  'Select at least one day.': '曜日を 1 つ以上選択してください。',
+  'Repeat every (days)': '繰り返し間隔（日）',
+  'Starting on': '開始日',
+  'The week of this date is the first active week.':
+    'この日付を含む週が最初の有効な週になります。',
+  'The first active day. The rule is never active before it.':
+    '最初の有効日です。この日より前はルールが有効になりません。',
+  'All day': '終日',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    '開始時刻と終了時刻は異なる値にしてください。1 日中有効にするには「終日」をオンにします。',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'この時間帯は午前 0 時をまたぎます。選択した各曜日に始まり、翌朝に終わります。',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'プロジェクトのリソース',
+  'View all databases': 'すべてのデータベースを表示',
+  'View all sites': 'すべてのサイトを表示',
+  'Files up to': 'ファイル上限',
+  'View all functions': 'すべての関数を表示',
+  'View all buckets': 'すべてのバケットを表示',
+  'View all users': 'すべてのユーザーを表示',
+  'View all topics': 'すべてのトピックを表示',
+  'View all API keys': 'すべての API キーを表示',
+  'Failed to load sites': 'サイトの読み込みに失敗しました',
+  'Failed to load functions': '関数の読み込みに失敗しました',
+  'Failed to load buckets': 'バケットの読み込みに失敗しました',
+  'Failed to load users': 'ユーザーの読み込みに失敗しました',
+  'Failed to load topics': 'トピックの読み込みに失敗しました',
+  'Store, query, and sync your app data with a managed database.':
+    'マネージドデータベースで、アプリのデータを保存、クエリ、同期できます。',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'HTTP リクエスト、イベント、スケジュールに応じてバックエンドのコードを実行します。',
+  'Keep data apart by environment, customer, or workload.':
+    '環境、顧客、ワークロードごとにデータを分けて管理できます。',
+  'Deploy another app, a landing page, or your docs.':
+    '別のアプリ、ランディングページ、ドキュメントをデプロイできます。',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'Webhook、スケジュールジョブ、イベントハンドラーを追加できます。',
+  'Group files with their own permissions and limits.':
+    '権限と制限を個別に設定して、ファイルをまとめられます。',
+  'Add a user by hand, or let people sign up from your app.':
+    'ユーザーを手動で追加するか、アプリからサインアップしてもらえます。',
+  'Group subscribers to message them all at once.':
+    'サブスクライバーをまとめて、一度にメッセージを送信できます。',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'このプロジェクトを呼び出すウェブ、モバイル、デスクトップアプリをそれぞれ追加します。',
+  'Give your servers and scripts scoped access to this project.':
+    'サーバーやスクリプトに、スコープを限定したこのプロジェクトへのアクセスを付与します。',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'サーバーや環境ごとにキーを分け、必要なスコープだけを付与しましょう。',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    '権限、暗号化、画像プレビューを備えたファイルのアップロードと配信ができます。',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'メール、OAuth プロバイダー、電話番号、パスキーでユーザーをサインインさせます。',
+  'Send email, SMS, and push notifications to your users.':
+    'ユーザーにメール、SMS、プッシュ通知を送信します。',
+  'Auto-deploy on every push': 'push のたびに自動デプロイ',
 }

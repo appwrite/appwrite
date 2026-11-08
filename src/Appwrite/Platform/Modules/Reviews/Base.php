@@ -2,8 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Reviews;
 
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Request;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -97,6 +100,60 @@ class Base extends Action
         }
 
         return $documents;
+    }
+
+    /**
+     * Token totals of `reviewUsage` rows as the project's usage metrics, overall and per model,
+     * broken down by the repository the review or chat ran on. These calls come from the review
+     * service, not the project, so the metrics are published for the named project directly.
+     *
+     * @param array<Document> $documents
+     */
+    protected function publishTokens(Document $project, Document $resource, array $documents, UsagePublisher $publisherForUsage): void
+    {
+        $usage = $this->getRepositoryUsage($resource);
+
+        foreach ($documents as $document) {
+            $model = $document->getAttribute('model');
+            $input = $document->getAttribute('inputTokens', 0);
+            $output = $document->getAttribute('outputTokens', 0);
+
+            $usage
+                ->addMetric(METRIC_REVIEWS_TOKENS_INPUT, $input)
+                ->addMetric(METRIC_REVIEWS_TOKENS_OUTPUT, $output)
+                ->addMetric(METRIC_REVIEWS_TOKENS_CACHED_INPUT, $document->getAttribute('cachedInputTokens', 0))
+                ->addMetric(METRIC_REVIEWS_TOKENS_REASONING, $document->getAttribute('reasoningTokens', 0))
+                ->addMetric(\str_replace('{model}', $model, METRIC_REVIEWS_MODEL_TOKENS_INPUT), $input)
+                ->addMetric(\str_replace('{model}', $model, METRIC_REVIEWS_MODEL_TOKENS_OUTPUT), $output);
+        }
+
+        $this->publishUsage($project, $usage, $publisherForUsage);
+    }
+
+    /**
+     * Usage of a review or chat, attributed to the repository it ran on.
+     */
+    protected function getRepositoryUsage(Document $resource): UsageContext
+    {
+        $usage = new UsageContext();
+
+        return $usage
+            ->setService('reviews')
+            ->setResource('repository')
+            ->setResourceId($resource->getAttribute('repositoryId', ''))
+            ->setResourceInternalId($resource->getAttribute('repositoryInternalId', ''));
+    }
+
+    protected function publishUsage(Document $project, UsageContext $usage, UsagePublisher $publisherForUsage): void
+    {
+        if ($usage->isEmpty()) {
+            return;
+        }
+
+        $publisherForUsage->enqueue(new UsageMessage(
+            project: $project,
+            metrics: $usage->getMetrics(),
+        ));
     }
 
     /**

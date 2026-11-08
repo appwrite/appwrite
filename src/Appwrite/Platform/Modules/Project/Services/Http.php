@@ -62,6 +62,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as U
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
@@ -83,6 +84,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\AccountDevices\Update as UpdateAccountDevicesPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Update as UpdateDenyAliasedEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
@@ -213,6 +215,7 @@ class Http extends Service
         $this->addAction('updateProjectDenyFreeEmailPolicy', UpdateDenyFreeEmailPolicy::class);
         $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
+        $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
 
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
@@ -270,5 +273,6 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);
     }
 }

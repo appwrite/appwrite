@@ -243,7 +243,7 @@ export function DatabaseArrayFieldEditor({
           onChange={(event) => {
             updateItem(index, coerceArrayItemValue(elementType, event.target.value))
           }}
-          step={elementType === 'double' ? 0.1 : 1}
+          step={elementType === 'double' ? 'any' : 1}
           placeholder={placeholder}
           className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0"
         />

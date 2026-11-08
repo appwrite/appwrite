@@ -1,19 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
-import {
-  Plus,
-  Plug2,
-  Check,
-  Copy,
-  Key,
-} from 'lucide-react'
-import {
-  RESOURCE_CARD_GRID_CLASSNAME,
-  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-  RESOURCE_CARD_PADDED_CLASSNAME,
-  RESOURCE_CARD_SHELL_CLASSNAME,
-} from '../shared/ResourceCard'
+import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { useI18n } from '@/lib/i18n'
 import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'
 import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -81,18 +70,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { PlatformIcon } from '@/components/global/shared/Icon'
-import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
-import {
-  getPlatformDisplayName,
-  getPlatformIdentifier,
-  type ProjectPlatform,
-} from '@/lib/utils/platform'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
+import type { ProjectPlatform } from '@/lib/utils/platform'
+import type { AddAppKind } from '@/lib/add-app-wizard/types'
+import type { ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
-import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
@@ -104,11 +86,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ConnectAgentCta } from '@/components/global/shared/ConnectAgentCta'
 import { PremiumGeoOverviewBanner } from './_components/PremiumGeoOverviewBanner'
-import { McpIcon } from '@/components/global/shared/McpIcon'
-import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import { ProjectResources } from './_components/ProjectResources'
+import { AppsCard, overviewConnectRows } from './_components/AppsCard'
+import { ApiKeysCard } from './_components/ApiKeysCard'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
@@ -153,41 +135,6 @@ interface OverviewTab {
   isLoading?: boolean
 }
 
-interface Integration {
-  id: string
-  name: string
-  type: 'web' | 'app'
-  identifier: string // hostname for web, app ID for apps
-  icon: React.ReactNode
-  docsUrl: string
-  platform: ProjectPlatform
-}
-
-const supportedPlatforms = [
-  { id: 'web', platform: 'web' },
-  { id: 'react-native', platform: 'react-native' },
-  { id: 'flutter', platform: 'flutter' },
-  { id: 'apple', platform: 'apple' },
-  { id: 'android', platform: 'android' },
-  { id: 'windows', platform: 'windows' },
-  { id: 'linux', platform: 'linux' },
-] as const
-
-const supportedLanguages = [
-  { id: 'node', name: 'Node.js' },
-  { id: 'python', name: 'Python' },
-  { id: 'php', name: 'PHP' },
-  { id: 'ruby', name: 'Ruby' },
-  { id: 'go', name: 'Go' },
-  { id: 'deno', name: 'Deno' },
-  { id: 'bun', name: 'Bun' },
-  { id: 'dart', name: 'Dart' },
-  { id: 'swift', name: 'Swift' },
-  { id: 'kotlin', name: 'Kotlin' },
-  { id: 'java', name: 'Java' },
-  { id: 'dotnet', name: '.NET' },
-] as const
-
 export interface OverviewInitialData {
   apiKeys: ApiKey[]
   /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
@@ -206,8 +153,8 @@ interface ViewProps {
 
 export function View({ projectId, initialData }: ViewProps) {
   const t = useT()
+  const { catalog } = useI18n()
   const navigate = useNavigate()
-  const projectConnect = useProjectConnectDialog()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
     useState<OverviewStorageBreakdownType>('buckets')
@@ -820,10 +767,6 @@ export function View({ projectId, initialData }: ViewProps) {
     setCreateDrawerOpen(true)
   }
 
-  const handleCreateApiKeyForLanguage = () => {
-    setCreateDrawerOpen(true)
-  }
-
   const handleCreate = (data: {
     name: string
     scopes?: string[]
@@ -870,41 +813,10 @@ export function View({ projectId, initialData }: ViewProps) {
       : isLoadingPlatforms
         ? (initialData?.platforms ?? [])
         : platformsFromHook
-  const integrations = useMemo(() => {
-    if (platformsForIntegrations.length === 0) return []
-
-    return platformsForIntegrations.map((platform) => {
-      const platformType = (platform.type ?? 'web') as string
-      const platformId = platform.$id
-      // Use platform name if available, otherwise fall back to display name from type
-      const platformName = (platform.name ||
-        getPlatformDisplayName(platformType)) as string
-      const identifier = getPlatformIdentifier(platform)
-
-      // Determine if it's web or app based on platform type
-      const type: 'web' | 'app' = platformType === 'web' ? 'web' : 'app'
-
-      // Randomly decide which icon shows first for web platforms
-      const initialIcon =
-        platformType === 'web' ? (Math.random() < 0.5 ? 'ts' : 'js') : undefined
-
-      return {
-        id: platformId,
-        name: platformName,
-        type,
-        identifier,
-        icon: (
-          <PlatformIcon
-            platform={platformType}
-            size="md"
-            initialIcon={initialIcon}
-          />
-        ),
-        docsUrl: '#',
-        platform,
-      } as Integration
-    })
-  }, [platformsForIntegrations])
+  const connectRows = overviewConnectRows(
+    platformsForIntegrations.length,
+    effectiveApiKeys.length,
+  )
 
   // Get endpoint from project region (centralized in SDK)
   const projectEndpoint = useMemo(
@@ -1480,217 +1392,42 @@ export function View({ projectId, initialData }: ViewProps) {
           </div>
         )}
 
-        {/* Integrations Section */}
-        <div className={visibleOverviewChartTabs.length > 0 ? 'mt-6' : 'mt-0'}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-foreground">{t('Apps')}</h2>
-            <Button
-              variant="brandCta"
-              onClick={() => goToAddAppWizard()}
-              size="sm"
-              className="h-8 gap-1.5 text-[13px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Add app')}
-            </Button>
-          </div>
-          {integrations.length === 0 ? (
-            <EmptyState icon={Plug2} variant="card" isEmpty={true}>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Plug2 className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  {t('No apps connected')}
-                </h3>
-                <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  {t('Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.')} {/* pragma: allowlist secret */}
-                </p>
-                <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="font-medium text-foreground/80">
-                    {t('Connect with your stack')}
-                  </span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <div className="flex w-full flex-wrap justify-center gap-2">
-                  {supportedPlatforms.map(({ id, platform }) => (
-                    <Button
-                      key={id}
-                      onClick={() => goToAddAppWizard(id as AddAppKind)}
-                      variant="outline"
-                      size="lg"
-                    >
-                      <PlatformIcon platform={platform} size="sm" />
-                      <span>{getPlatformDisplayName(platform)}</span>
-                    </Button>
-                  ))}
-                </div>
-                {projectConnect ? (
-                  <>
-                    <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="font-medium text-foreground/80">
-                        {t('or')}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="gap-1.5"
-                      onClick={() => projectConnect.openConnect('mcp')}
-                    >
-                      <McpIcon className="h-4 w-4" />
-                      {t('Build with an agent')}
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </EmptyState>
-          ) : (
-            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-              {integrations.map((integration) => (
-                <PlatformContextMenu
-                  key={integration.id}
-                  projectId={projectId}
-                  platform={integration.platform}
-                  onUpdate={(p) => {
-                    setSelectedPlatform(p)
-                    setPlatformDrawerOpen(true)
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedPlatform(integration.platform)
-                      setPlatformDrawerOpen(true)
-                    }}
-                    className={cn(
-                      RESOURCE_CARD_PADDED_CLASSNAME,
-                      RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                      'flex items-center gap-4 text-start',
-                      RESOURCE_CARD_SHELL_CLASSNAME,
-                    )}
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                      {integration.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className="truncate text-[14px] font-medium text-foreground"
-                        title={integration.name}
-                      >
-                        {integration.name}
-                      </p>
-                      {integration.identifier && (
-                        <p
-                          className="truncate text-[12px] text-muted-foreground"
-                          title={integration.identifier}
-                        >
-                          {integration.identifier}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                </PlatformContextMenu>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProjectResources
+          projectId={projectId}
+          className={visibleOverviewChartTabs.length > 0 ? 'mt-8' : undefined}
+        />
 
-        {/* API Keys Section */}
-        <div className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-foreground">
-              {t('API keys')}
-            </h2>
-            <Button
-              variant="brandCta"
-              onClick={handleCreateApiKey}
-              size="sm"
-              className="h-8 gap-1.5 text-[13px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Add API key')}
-            </Button>
-          </div>
-          {showLoadingKeys ? (
-            <div className="rounded-xl border border-border bg-card/50">
-              <div className="divide-y divide-border">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 p-4"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-4 w-4 shrink-0 rounded" />
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-16 rounded-full" />
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <Skeleton className="h-5 w-32 rounded" />
-                        <Skeleton className="h-3.5 w-3.5 rounded" />
-                        <Skeleton className="h-3.5 w-3.5 rounded" />
-                        <Skeleton className="ms-auto h-3 w-24" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-6 w-6 shrink-0 rounded" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : effectiveApiKeys.length === 0 ? (
-            <EmptyState icon={Key} variant="card" isEmpty={true}>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Key className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  {t('No API keys created')}
-                </h3>
-                <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  {t('Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.')} {/* pragma: allowlist secret */}
-                </p>
-                <div className="w-full">
-                  <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="font-medium text-foreground/80">
-                      {t('Get started with your language of choice')}
-                    </span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <div className="flex w-full flex-wrap justify-center gap-2">
-                    {supportedLanguages.map(({ id, name }) => (
-                      <Button
-                        key={id}
-                        onClick={handleCreateApiKeyForLanguage}
-                        variant="outline"
-                        size="lg"
-                      >
-                        <LanguageIcon language={id} size="sm" />
-                        <span>{name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </EmptyState>
-          ) : (
-            <ApiKeysList
+        <section aria-labelledby="overview-connect-title" className="mt-8">
+          <h2
+            id="overview-connect-title"
+            className="mb-4 text-[15px] font-semibold text-foreground"
+          >
+            {catalog.app.sidebar.sections.connect}
+          </h2>
+          <div className="grid min-w-0 grid-cols-1 gap-3 @[960px]:grid-cols-2 [&>*]:min-w-0">
+            <AppsCard
+              projectId={projectId}
+              platforms={platformsForIntegrations}
+              rows={connectRows}
+              onAdd={goToAddAppWizard}
+              onSelect={(platform) => {
+                setSelectedPlatform(platform)
+                setPlatformDrawerOpen(true)
+              }}
+            />
+            <ApiKeysCard
+              projectId={projectId}
               apiKeys={effectiveApiKeys}
-              isLoading={false}
+              isLoading={showLoadingKeys}
+              rows={connectRows}
+              copiedField={copiedField}
+              onCreate={handleCreateApiKey}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onCopy={copyToClipboard}
-              copiedField={copiedField}
-              showActions={true}
-              projectId={projectId}
             />
-          )}
-        </div>
+          </div>
+        </section>
       </div>
 
       {/* Create Drawer */}

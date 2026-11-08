@@ -512,12 +512,13 @@ final class NatsBrokerTest extends TestCase
         $broker->publish($queue, ['task' => 'keep']);
         $message = $broker->receive($queue, 2)[0] ?? null;
         $this->assertInstanceOf(Message::class, $message);
+        $releasedAt = hrtime(true);
         $broker->release($queue, $message);
 
         $this->assertCount(1, $reported, 'the refused requeue is reported');
-        $this->assertSame([], $broker->receive($queue, 0), 'held back for releaseDelay, not redelivered at once');
 
         $again = $broker->receive($queue, 3)[0] ?? null;
+        $this->assertGreaterThanOrEqual(0.5, (hrtime(true) - $releasedAt) / 1e9, 'held back for releaseDelay, not redelivered at once');
         $this->assertInstanceOf(Message::class, $again, 'the job was kept');
         $this->assertSame('keep', $again->getPayload()['task']);
         $this->assertSame(1, $again->getAttempts(), 'the fallback NAK spent one attempt');

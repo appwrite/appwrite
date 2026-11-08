@@ -532,7 +532,7 @@ trait Deployment
 
                     // VCS commit preview
                     if (!empty($providerCommitHash)) {
-                        $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
+                        $domain = ComputeBase::commitDomain($project, $resource, $providerCommitHash, $sitesDomain);
                         $ruleId = md5($domain);
                         try {
                             $rule = $authorization->skip(
