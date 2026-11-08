@@ -90,9 +90,6 @@ class Videos extends Action
     /** Packaged media segment length in seconds (HLS / DASH / CMAF). */
     private const SEGMENT_DURATION = 4;
 
-    /** ffmpeg worker threads per job; also exported as encoder.threads. */
-    private const THREADS = 4;
-
     /** Seconds one embedded caption track may take to extract before it counts as failed. */
     private const SUBTITLE_TIMEOUT = 60;
 
@@ -832,7 +829,8 @@ class Videos extends Action
                 * ((int) $profile->getAttribute('height') > 1080 ? 2 : 1)
             );
             Span::add('encode.timeout', $timeout);
-            $packager = new Packager(new FFmpeg(timeout: $timeout, threads: self::THREADS), probe: $probe, reporter: new Silent());
+            $threads = $this->threads();
+            $packager = new Packager(new FFmpeg(timeout: $timeout, threads: $threads), probe: $probe, reporter: new Silent());
 
             $stage = 'probe';
             if (!$packager->valid($inPath)) {
@@ -851,7 +849,7 @@ class Videos extends Action
             Span::add('rendition.video_bitrate', (int) $profile->getAttribute('videoBitRate'));
             Span::add('rendition.audio_bitrate', (int) $profile->getAttribute('audioBitRate'));
             Span::add('encoder.name', $packager->getName());
-            Span::add('encoder.threads', self::THREADS);
+            Span::add('encoder.threads', $threads);
 
             Console::info(
                 'Encoding video ' . $video->getId()
@@ -2406,7 +2404,16 @@ class Videos extends Action
         $probe = new FFprobe();
         $probe->setReporter(new Silent());
 
-        return new Encoder(new FFmpeg(timeout: $timeout, threads: self::THREADS), $probe, new Silent());
+        return new Encoder(new FFmpeg(timeout: $timeout, threads: $this->threads()), $probe, new Silent());
+    }
+
+    /**
+     * ffmpeg worker threads per job, from _APP_VIDEOS_THREADS; also exported as
+     * encoder.threads.
+     */
+    private function threads(): int
+    {
+        return (int) System::getEnv('_APP_VIDEOS_THREADS', '4');
     }
 
     /**

@@ -2140,6 +2140,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VIDEOS_THREADS',
+                'description' => 'The number of ffmpeg worker threads used for each encode and package job in the videos worker. The default value is 4.',
+                'introduction' => '2.6.0',
+                'default' => '4',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
                 'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
                 'introduction' => '2.7.0',

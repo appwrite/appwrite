@@ -15,6 +15,8 @@ use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Permission;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
@@ -1002,6 +1004,11 @@ final class VideosCustomServerTest extends Scope
         $videoId = $this->createReadyVideo(['$id' => $uploaded['$id'], 'bucketId' => $bucketId])['$id'];
         $renditionId = $this->createRendition($videoId, 'hls');
 
+        // Compose mounts this directory into the API container. On Kubernetes
+        // it is an emptyDir on the videos pod, so this process cannot see it.
+        $scratchRoot = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
+        $seesScratch = \is_dir($scratchRoot);
+
         $observed = 0;
         $copies = [];
         $progress = [];
@@ -1032,16 +1039,19 @@ final class VideosCustomServerTest extends Scope
         }
 
         $this->assertSame('ready', $status);
-        $this->assertGreaterThan(0, $observed, 'the encode finished before its workspace could be inspected');
-        $this->assertSame([], \array_keys($copies), 'the source was copied into scratch');
 
         $segments = 0;
         foreach ($this->renditionPlaylists($videoId, $renditionId) as $playlist) {
             $segments += \substr_count($playlist, '#EXTINF');
         }
         $this->assertGreaterThan(2, $segments, 'a 4K fixture should cut into several segments');
-        $this->assertGreaterThan(0, $mostSegments, 'no segment was ever seen in scratch');
-        $this->assertLessThan($segments, $mostSegments, 'scratch held every segment at once, so none were shipped during the encode');
+
+        if ($seesScratch) {
+            $this->assertGreaterThan(0, $observed, 'the encode finished before its workspace could be inspected');
+            $this->assertSame([], \array_keys($copies), 'the source was copied into scratch');
+            $this->assertGreaterThan(0, $mostSegments, 'no segment was ever seen in scratch');
+            $this->assertLessThan($segments, $mostSegments, 'scratch held every segment at once, so none were shipped during the encode');
+        }
 
         $sorted = $progress;
         \sort($sorted);
@@ -1152,9 +1162,9 @@ final class VideosCustomServerTest extends Scope
 
         $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
         $this->assertEquals(200, $rendition['headers']['status-code']);
-        $directory = $this->renditionStoragePath($videoId, $rendition['body']['name'], $renditionId);
-        $this->assertSame($served, $this->storedFiles($directory), 'storage holds a different number of files than the playlists name');
-        $this->assertSame($bytes, $this->storedBytes($directory), 'storage holds different bytes than the playlists serve');
+        [$stored, $storedBytes] = $this->storedRendition($videoId, $rendition['body']['name'], $renditionId);
+        $this->assertSame($served, $stored, 'storage holds a different number of files than the playlists name');
+        $this->assertSame($bytes, $storedBytes, 'storage holds different bytes than the playlists serve');
 
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a shipped encode');
@@ -1171,6 +1181,13 @@ final class VideosCustomServerTest extends Scope
      */
     public function testAFailedSegmentUploadFailsTheRendition(): void
     {
+        // A file where the video directory should be stops the local device
+        // creating the rendition under it. An S3 device has no directories, so
+        // the stand-in cannot block it; cloud's videos shard stores on MinIO.
+        if (!$this->videosDevice() instanceof Local) {
+            $this->markTestSkipped('Blocking a directory with a file only works on the local videos device.');
+        }
+
         $videoId = $this->createReadyVideo()['$id'];
         // The timeline job writes here too; let it finish before taking the directory away.
         $this->assertEquals(200, $this->waitForTimeline($videoId)['headers']['status-code']);
@@ -1216,13 +1233,13 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
         $renditionId = $create['body']['$id'];
-        $directory = $this->renditionStoragePath($videoId, $create['body']['name'], $renditionId);
+        $name = $create['body']['name'];
 
         // The first segment is up, so ffmpeg is running and storage has been written to.
-        $this->waitUntilPathExists($directory, 120);
+        $this->waitUntilRenditionStored($videoId, $name, $renditionId, 120);
         $this->timeTravelRendition($this->getProject()['$id'], $renditionId, status: 'aborted');
 
-        $this->waitUntilPathGone($directory, 120);
+        $this->waitUntilRenditionGone($videoId, $name, $renditionId, 120);
         $this->assertEventually(function () use ($videoId, $renditionId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a halted encode');
             $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
@@ -1259,33 +1276,64 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Files directly under a rendition's storage directory.
+     * The device the videos worker writes renditions to. Local in CE's own CI,
+     * S3 on cloud, where the bytes are not on this pod's disk.
      */
-    private function storedFiles(string $directory): int
+    private function videosDevice(): Device
     {
-        $count = 0;
-        foreach (\scandir($directory) ?: [] as $name) {
-            if ($name[0] !== '.' && \is_file($directory . '/' . $name)) {
-                $count++;
-            }
-        }
+        $root = \defined('APP_STORAGE_VIDEOS') ? APP_STORAGE_VIDEOS : '/storage/videos';
 
-        return $count;
+        return getDevice($root . '/app-' . $this->getProject()['$id']);
     }
 
     /**
-     * Bytes of the files directly under a rendition's storage directory.
+     * Files of one rendition and their total size, from the videos device.
+     *
+     * @return array{0: int, 1: int}
      */
-    private function storedBytes(string $directory): int
+    private function storedRendition(string $videoId, string $name, string $renditionId): array
     {
+        $device = $this->videosDevice();
+        $prefix = \rtrim($device->getPath($videoId . '/' . $name . '-' . $renditionId), '/') . '/';
+        $count = 0;
         $bytes = 0;
-        foreach (\scandir($directory) ?: [] as $name) {
-            if ($name[0] !== '.' && \is_file($directory . '/' . $name)) {
-                $bytes += \filesize($directory . '/' . $name) ?: 0;
+        $cursor = null;
+        do {
+            $page = $device->listFiles($prefix, 1000, $cursor);
+            foreach ($page->files as $file) {
+                $count++;
+                $bytes += $file->size;
             }
+            $cursor = $page->cursor;
+        } while ($cursor !== null);
+
+        return [$count, $bytes];
+    }
+
+    private function waitUntilRenditionStored(string $videoId, string $name, string $renditionId, int $timeout = 30): void
+    {
+        $deadline = \time() + $timeout;
+        while (\time() < $deadline) {
+            if ($this->storedRendition($videoId, $name, $renditionId)[0] > 0) {
+                return;
+            }
+            \usleep(100000);
         }
 
-        return $bytes;
+        $this->fail('Rendition storage never appeared: ' . $videoId . '/' . $name . '-' . $renditionId);
+    }
+
+    private function waitUntilRenditionGone(string $videoId, string $name, string $renditionId, int $timeout = 60): void
+    {
+        $deadline = \time() + $timeout;
+        while (\time() < $deadline) {
+            if ($this->storedRendition($videoId, $name, $renditionId)[0] === 0) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Rendition storage still present: ' . $videoId . '/' . $name . '-' . $renditionId);
     }
 
     private function removeDirectory(string $directory): void
