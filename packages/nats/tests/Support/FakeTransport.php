@@ -30,6 +30,15 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
+    /**
+     * Whether the server has closed the socket. Set true to emulate a peer that
+     * went away for good -- a restarted or evicted server, or a connection an
+     * intermediary reaped while idle. Writes still succeed, as they do into a
+     * kernel buffer, so only a read can tell. Cleared by connect(), so a
+     * reconnect is served normally.
+     */
+    public bool $closedByServer = false;
+
     /** Thrown by connect() when set. */
     public ?\Throwable $refuse = null;
 
@@ -58,6 +67,7 @@ final class FakeTransport implements Transport
         }
 
         $this->connected = true;
+        $this->closedByServer = false;
         $this->inbound .= $this->infoLine();
     }
 
@@ -82,6 +92,10 @@ final class FakeTransport implements Transport
 
     public function read(int $maxBytes, ?float $timeout = null): string
     {
+        if ($this->closedByServer) {
+            throw new ConnectionException('Connection closed by server');
+        }
+
         if ($this->inbound === '') {
             throw new TimeoutException('No inbound data');
         }
@@ -94,6 +108,10 @@ final class FakeTransport implements Transport
 
     public function readLine(?float $timeout = null): string
     {
+        if ($this->closedByServer) {
+            throw new ConnectionException('Connection closed by server');
+        }
+
         $pos = strpos($this->inbound, "\n");
         if ($pos === false) {
             throw new TimeoutException('No inbound line');

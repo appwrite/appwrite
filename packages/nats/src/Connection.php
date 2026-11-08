@@ -41,9 +41,10 @@ final class Connection
     private const CLIENT_LANG = 'php';
     private const CLIENT_VERSION = '0.1.0';
 
-    // Bounds on the read tick() does to collect its own PONGs. Short enough
-    // that a sweep over an idle pool stays in the low milliseconds, and capped
-    // so a connection with live subscription traffic cannot hold maintenance.
+    // Bounds on the reads tick() does. Short enough that a sweep over an idle
+    // pool costs tens of milliseconds a connection once every maintenance
+    // interval, and capped so a connection with live subscription traffic
+    // cannot hold maintenance.
     private const float TICK_READ_TIMEOUT = 0.05;
     private const int TICK_MAX_READS = 4;
 
@@ -408,11 +409,12 @@ final class Connection
     {
         $this->assertReadable();
         $this->checkPings();
-        $this->collectPongs();
+        $this->readReady();
     }
 
     /**
-     * Consume the PONGs owed for the keepalive PINGs this connection has sent.
+     * Read whatever the socket has for us: the PONGs owed for the keepalive
+     * PINGs this connection has sent, and anything else already waiting.
      *
      * checkPings() only writes: it is the read path that clears
      * $outstandingPings, and a holder that never reads has none. Ticking such a
@@ -420,16 +422,38 @@ final class Connection
      * perfectly healthy socket stale -- the keepalive would cause the outage it
      * exists to prevent. Reading here closes that loop.
      *
-     * Bounded, and only while a PONG is actually owed, so maintenance can never
-     * turn into a receive loop on a connection carrying subscription traffic.
+     * The first read is taken whether or not a PONG is owed, because a read is
+     * the only thing that can see a socket the server has closed. A server that
+     * restarts, is evicted, or has the connection reaped by an intermediary
+     * leaves one that still reads as connected with no outstanding pings, so
+     * neither checkPings() nor checkStale() can tell. Without a read here the
+     * close was instead found by the next request, whose mid-collection read
+     * refuses to reconnect because an ambiguous write must never be replayed --
+     * so a recoverable server event reached the caller as "Connection closed by
+     * server" and left the connection dead. Taken here it lands in
+     * readMessage(), which rebuilds the connection and returns.
+     *
+     * Bounded, so maintenance can never turn into a receive loop on a
+     * connection carrying subscription traffic.
      */
-    private function collectPongs(): void
+    private function readReady(): void
     {
+        // Only a connection that claims to be live. One the server closed for
+        // something a reconnect cannot fix was deliberately left dead, and
+        // reading it would rebuild it on every maintenance sweep.
+        if ($this->status !== self::STATUS_CONNECTED) {
+            return;
+        }
+
         // readMessage() rather than processMessage(): the latter checks the
         // keepalive on entry, so draining through it would send a fresh PING
         // for every PONG collected and the outstanding count could never fall.
-        for ($read = 0; $this->outstandingPings > 0 && $read < self::TICK_MAX_READS; $read++) {
+        for ($read = 0; $read < self::TICK_MAX_READS; $read++) {
             $this->readMessage(self::TICK_READ_TIMEOUT);
+
+            if ($this->outstandingPings === 0) {
+                return;
+            }
         }
     }
 

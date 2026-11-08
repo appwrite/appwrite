@@ -367,6 +367,74 @@ final class ConnectionDeathDetectionTest extends TestCase
     }
 
     /**
+     * A server that goes away between calls is only discovered by a read, and
+     * on a parked connection tick() is the only read there is.
+     *
+     * It did not take one unless it happened to owe itself a PONG, so a
+     * restarted, evicted or intermediary-reaped socket stayed at status
+     * connected with no outstanding pings -- invisible to the keepalive -- and
+     * the close was instead found by the next request, whose mid-collection
+     * read refuses to reconnect by design. A recoverable server event reached
+     * the caller as "Connection closed by server" instead.
+     */
+    public function testTickReconnectsAfterTheServerClosedTheSocket(): void
+    {
+        $reconnected = false;
+        $fake = new FakeTransport();
+        $conn = $this->connect($fake, [
+            // Nothing is due, so the keepalive has no PONG of its own to
+            // collect: the tick has to read anyway.
+            'pingInterval' => 300.0,
+            'onReconnect' => function () use (&$reconnected): void {
+                $reconnected = true;
+            },
+        ]);
+
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
+        $this->assertSame(1, $handshakes());
+
+        $fake->closedByServer = true;
+        $conn->tick();
+
+        $this->assertTrue($reconnected, 'A tick must discover a socket the server has closed');
+        $this->assertSame(2, $handshakes(), 'Discovering the close must rebuild the connection');
+        $this->assertTrue($conn->isConnected());
+
+        $conn->close();
+    }
+
+    /**
+     * The payoff, and the reported failure: a JetStream command on a connection
+     * the server closed while it was parked. The write lands in a kernel buffer
+     * and succeeds, so the close surfaces on the reply read -- inside a request
+     * batch, which must not replay an ambiguous write and so could only raise.
+     * Maintenance ticking the connection first is what makes the command run on
+     * a live socket.
+     */
+    public function testCommandAfterTickSurvivesAServerThatWentAwayWhileParked(): void
+    {
+        $fake = new FakeTransport();
+        $fake->onWrite = static function (string $wire, FakeTransport $fake): void {
+            if (!str_starts_with($wire, 'PUB ')) {
+                return;
+            }
+
+            // PUB <subject> <reply-to> <bytes>: answer on the inbox it names.
+            $inbox = explode(' ', (string) strstr($wire, "\r\n", true))[2] ?? '';
+            $fake->pushInbound("MSG {$inbox} 1 2\r\nok\r\n");
+        };
+        $conn = $this->connect($fake, ['pingInterval' => 300.0]);
+
+        $fake->closedByServer = true;
+        $conn->tick();
+
+        $this->assertSame('ok', $conn->request('$JS.API.CONSUMER.INFO', timeout: 1.0)->data);
+        $this->assertTrue($conn->isConnected());
+
+        $conn->close();
+    }
+
+    /**
      * The write path takes the keepalive verdict before writing -- and only the
      * verdict.
      *
