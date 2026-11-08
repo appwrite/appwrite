@@ -26,7 +26,6 @@ const RENDITION_STATUS: Record<
   pending: { label: 'Queued', variant: 'pending' },
   started: { label: 'Encoding', variant: 'processing' },
   ended: { label: 'Encoded', variant: 'processing' },
-  uploading: { label: 'Uploading', variant: 'processing' },
   ready: { label: 'Ready', variant: 'success' },
   error: { label: 'Failed', variant: 'error' },
   aborted: { label: 'Aborted', variant: 'warning' },

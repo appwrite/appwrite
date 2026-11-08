@@ -726,7 +726,6 @@ class Deletes extends Action
                 VideosBase::STATUS_PENDING,
                 VideosBase::STATUS_STARTED,
                 VideosBase::STATUS_ENDED,
-                VideosBase::STATUS_UPLOADING,
             ]),
             Query::lessThanEqual('$updatedAt', $date),
         ];
@@ -755,7 +754,6 @@ class Deletes extends Action
                                 VideosBase::STATUS_PENDING,
                                 VideosBase::STATUS_STARTED,
                                 VideosBase::STATUS_ENDED,
-                                VideosBase::STATUS_UPLOADING,
                             ]),
                             Query::lessThanEqual('$updatedAt', $date),
                         ]

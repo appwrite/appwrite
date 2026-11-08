@@ -140,7 +140,6 @@ abstract class Base extends Action
     public const STATUS_PENDING = 'pending';
     public const STATUS_STARTED = 'started';
     public const STATUS_ENDED = 'ended';
-    public const STATUS_UPLOADING = 'uploading';
     public const STATUS_READY = 'ready';
     public const STATUS_ERROR = 'error';
     public const STATUS_ABORTED = 'aborted';

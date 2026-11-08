@@ -36,7 +36,6 @@ export const VIDEO_RENDITION_ACTIVE_STATUSES = [
   'pending',
   'started',
   'ended',
-  'uploading',
 ] as const
 
 export function isVideoRenditionActive(status: string | undefined): boolean {

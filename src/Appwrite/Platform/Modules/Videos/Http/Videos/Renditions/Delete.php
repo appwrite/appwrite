@@ -90,12 +90,11 @@ class Delete extends Base
         }
 
         // Encode exits if the row is gone while still pending. After claim the
-        // worker still writes through started → ended → uploading, so delete
+        // worker still writes through started → ended → ready, so delete
         // must wait. Same retention as abortStaleRenditions.
         if (\in_array($rendition->getAttribute('status'), [
             self::STATUS_STARTED,
             self::STATUS_ENDED,
-            self::STATUS_UPLOADING,
         ], true)) {
             $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);

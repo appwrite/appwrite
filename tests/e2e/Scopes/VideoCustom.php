@@ -948,14 +948,14 @@ trait VideoCustom
 
     /**
      * Polls a rendition until it leaves the queue-side states (`pending`,
-     * `started`, `ended`, `uploading`) and settles on `ready` or `error`.
+     * `started`, `ended`) and settles on `ready` or `error`.
      *
      * Encoding a multi-megabyte source can take minutes, so the default timeout
      * is deliberately generous.
      */
     public function waitForRenditionTerminalState(string $videoId, string $renditionId, int $timeout = 300): array
     {
-        $pending = ['pending', 'started', 'ended', 'uploading'];
+        $pending = ['pending', 'started', 'ended'];
         $deadline = \time() + $timeout;
         $body = [];
 

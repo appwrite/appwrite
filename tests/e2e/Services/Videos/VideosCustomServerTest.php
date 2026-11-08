@@ -3324,7 +3324,7 @@ final class VideosCustomServerTest extends Scope
     // ------------------------------------------------------------------ delete
 
     /**
-     * A live encode (started/ended/uploading) within the retention window
+     * A live encode (started/ended) within the retention window
      * blocks video delete. Pending, aged live, and aborted rows do not.
      */
     public function testDeleteVideoBlockedWhileRenditionInProgress(): void
@@ -3349,7 +3349,7 @@ final class VideosCustomServerTest extends Scope
         $allowedPending = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
 
-        foreach (['started', 'ended', 'uploading'] as $status) {
+        foreach (['started', 'ended'] as $status) {
             $ready = $this->createReadyVideo();
             $videoId = $ready['$id'];
 
@@ -3398,7 +3398,7 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A live encode (started/ended/uploading) within the retention window
+     * A live encode (started/ended) within the retention window
      * blocks rendition delete. Pending and aged live rows do not.
      */
     public function testDeleteRenditionBlockedWhileInProgress(): void
@@ -3427,7 +3427,7 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
 
-        foreach (['started', 'ended', 'uploading'] as $status) {
+        foreach (['started', 'ended'] as $status) {
             $live = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
                 'profileId' => $profileId,
                 'output' => 'hls',

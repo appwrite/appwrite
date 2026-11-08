@@ -10,7 +10,7 @@ Source of truth: `node_modules/@appwrite.io/console/types/services/videos.d.ts` 
 | --- | --- | --- | --- |
 | Video | Project (references a Storage file) | `Models.Video` | No status. Metadata is filled in by the first rendition or timeline job |
 | Profile | Project | `Models.VideoProfile` | Static config, no status |
-| Rendition | Video + Profile | `Models.VideoRendition` | `pending` > `started` > `ended` > `uploading` > `ready` |
+| Rendition | Video + Profile | `Models.VideoRendition` | `pending` > `started` > `ended` > `ready` |
 | Subtitle | Video (references a Storage file, or embedded) | `Models.VideoSubtitle` | `pending` > `started` > `ready` |
 | Timeline / Preview | Video | WebVTT text / image | Generated on request |
 | Output (stream) | Video + Renditions + Subtitles | Manifests and segments | Read-only, derived |
@@ -137,7 +137,7 @@ List model: `Models.VideoRenditionList` (`{ total, renditions }`).
 ### Enums
 
 - `VideoOutput`: `hls`, `dash`, `cmaf`
-- `VideoRenditionStatus`: `pending`, `started`, `ended`, `uploading`, `ready`, `error`, `aborted`
+- `VideoRenditionStatus`: `pending`, `started`, `ended`, `ready`, `error`, `aborted`
 
 ### Rules
 

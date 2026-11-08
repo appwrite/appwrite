@@ -1067,10 +1067,11 @@ final class VideosCustomClientTest extends Scope
         $videoId = $this->createPublicVideo();
         $renditionId = $this->createRendition($videoId, 'hls');
 
-        // `uploading` is inside the in-progress gate, and it is not `pending`
-        // or `started`, so a worker that has not claimed drops the job and one
-        // that already claimed halts instead of settling the row to ready.
-        $this->timeTravelRendition($this->getProject()['$id'], $renditionId, 'uploading');
+        // Wait for the encode to finish, so no worker step moves the row again,
+        // then seed `ended`: inside the in-progress gate, and a status the
+        // worker only leaves by its own `ready` write, which is already done.
+        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status']);
+        $this->timeTravelRendition($this->getProject()['$id'], $renditionId, 'ended');
 
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
