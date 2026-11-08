@@ -733,9 +733,8 @@ class Videos extends Action
         $uploader = null;
         $startedAt = \microtime(true);
         $storageBytes = 0;
-        // Set once this run has handed a segment to the uploader or written under
-        // the rendition's path, so a run that does not reach `ready` removes what
-        // it wrote (finally).
+        // Set once this run has handed a segment to the uploader, so a run that
+        // does not reach `ready` removes what went up (finally).
         $path = null;
         $wrote = false;
         $output = $videoMessage->output !== ''
@@ -1096,41 +1095,11 @@ class Videos extends Action
 
             $stage = 'upload';
             $phaseStart = \microtime(true);
-            $wrote = true;
-            // Announced before waiting: the uploader may still be sending what
-            // ffmpeg left behind, and every file may be gone from disk by then.
-            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
-            if (
-                !$current->isEmpty()
-                && \in_array($current->getAttribute('status'), [Base::STATUS_STARTED, Base::STATUS_ENDED], true)
-            ) {
-                $rendition = $dbForProject->updateDocument(
-                    'videosRenditions',
-                    $rendition->getId(),
-                    new Document([
-                        'progress' => '100',
-                        'status' => Base::STATUS_UPLOADING,
-                        'path' => $path,
-                    ])
-                );
-                $this->notify(
-                    $queueForRealtime,
-                    $project,
-                    $rendition,
-                    'videos.[videoId].renditions.[renditionId].update',
-                    [
-                        'videoId' => $rendition->getAttribute('videoId', ''),
-                        'renditionId' => $rendition->getId(),
-                    ],
-                    $permissions
-                );
-            }
-
-            // Segments the uploader shipped are gone from disk; this uploads what
-            // is left (a segment whose unlink failed) and counts both towards the
-            // rendition's size.
-            $storageBytes = $uploader->finish() + $this->uploadFiles($package->files(), $path, $deviceForVideos);
-
+            // Every segment went through the uploader, init and last ones included:
+            // the final scan inside pack() reports them all, and no output writes
+            // manifests. This only waits for the store to take what was still queued
+            // when ffmpeg exited.
+            $storageBytes = $uploader->finish();
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
 
@@ -1138,7 +1107,7 @@ class Videos extends Action
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
-                || !\in_array($current->getAttribute('status'), [Base::STATUS_ENDED, Base::STATUS_UPLOADING], true)
+                || $current->getAttribute('status') !== Base::STATUS_ENDED
             ) {
                 $outcome = 'halted';
                 $status = (string) $current->getAttribute('status', '');
@@ -2415,37 +2384,6 @@ class Videos extends Action
             'attributes' => $attributes,
             'adaptations' => $adaptations,
         ];
-    }
-
-    /**
-     * Upload packaged artifacts to the videos device.
-     *
-     * Files no longer on disk were shipped during the encode and are skipped.
-     *
-     * @param  list<string>  $files
-     */
-    private function uploadFiles(array $files, string $remoteDir, Device $deviceForVideos): int
-    {
-        $bytes = 0;
-        $local = new Local('/');
-
-        foreach ($files as $localPath) {
-            if (!\is_file($localPath)) {
-                continue;
-            }
-
-            $data = $local->read($localPath);
-            $bytes += $data->getSize() ?? (\filesize($localPath) ?: 0);
-            $fileName = \basename($localPath);
-
-            $deviceForVideos->write(
-                $remoteDir . $fileName,
-                $data,
-                \mime_content_type($localPath) ?: 'application/octet-stream'
-            );
-        }
-
-        return $bytes;
     }
 
     /**
