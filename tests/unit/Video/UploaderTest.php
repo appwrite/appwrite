@@ -121,7 +121,7 @@ final class UploaderTest extends TestCase
             } catch (\RuntimeException $th) {
                 $thrown = $th;
             }
-            $this->assertNotNull($thrown, 'the failed upload was not thrown at the next hand-over');
+            $this->assertInstanceOf(\RuntimeException::class, $thrown, 'the failed upload was not thrown at the next hand-over');
             $this->assertSame('store down', $thrown->getMessage());
 
             $uploader->abandon();
@@ -152,7 +152,7 @@ final class UploaderTest extends TestCase
             } catch (\RuntimeException $th) {
                 $thrown = $th;
             }
-            $this->assertNotNull($thrown, 'the failed upload was not thrown by finish()');
+            $this->assertInstanceOf(\RuntimeException::class, $thrown, 'the failed upload was not thrown by finish()');
             $this->assertSame('store down', $thrown->getMessage());
 
             $this->assertSame([$this->path . 'segment_1.ts', $this->path . 'segment_2.ts'], $store->writes);
