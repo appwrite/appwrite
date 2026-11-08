@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
+import type { VideoRendition } from '@/lib/appwrite/videos'
 import {
   Copy,
   ExternalLink,
@@ -138,12 +138,12 @@ export function RenditionsSpreadsheet({
 }: {
   projectId: string
   videoId: string
-  renditions: Models.VideoRendition[]
+  renditions: VideoRendition[]
   profileNames: Map<string, string>
   canWrite: boolean
   retryPending: boolean
-  onRetry: (rendition: Models.VideoRendition) => void
-  onDelete: (rendition: Models.VideoRendition) => void
+  onRetry: (rendition: VideoRendition) => void
+  onDelete: (rendition: VideoRendition) => void
   sortBy: string
   sortOrder: 'asc' | 'desc'
   onSortColumn?: (columnKey: RenditionSortColumn) => void

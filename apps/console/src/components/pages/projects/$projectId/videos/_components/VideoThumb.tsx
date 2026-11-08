@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { Video } from '@/lib/appwrite/videos'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
@@ -10,7 +10,7 @@ export function VideoThumb({
   showDuration = false,
 }: {
   projectId: string
-  video: Pick<Models.Video, '$id' | 'name' | 'duration'>
+  video: Pick<Video, '$id' | 'name' | 'duration'>
   width?: number
   className?: string
   showDuration?: boolean

@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { VideoProfile } from '@/lib/appwrite/videos'
 import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { SpreadsheetColumnHeader } from './SpreadsheetColumnHeader'
 import {
@@ -101,10 +101,10 @@ export function ProfilesSpreadsheet({
   onSortColumn,
   className,
 }: {
-  profiles: Models.VideoProfile[]
+  profiles: VideoProfile[]
   canWrite: boolean
-  onUpdate: (profile: Models.VideoProfile) => void
-  onDelete: (profile: Models.VideoProfile) => void
+  onUpdate: (profile: VideoProfile) => void
+  onDelete: (profile: VideoProfile) => void
   sortBy: string
   sortOrder: 'asc' | 'desc'
   onSortColumn?: (columnKey: ProfileSortColumn) => void

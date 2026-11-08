@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
+
+import {
+  VideoOutput,
+  type Video,
+  type VideoProfile,
+} from '@/lib/appwrite/videos'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +42,7 @@ type CreateRenditionsProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  video: Models.Video
+  video: Video
 }
 
 export function CreateRenditions({
@@ -73,7 +77,7 @@ export function CreateRenditions({
     [renditionsData?.renditions, output],
   )
 
-  const isUpscale = (profile: Models.VideoProfile) =>
+  const isUpscale = (profile: VideoProfile) =>
     video.height > 0 && profile.height > video.height
 
   useEffect(() => {

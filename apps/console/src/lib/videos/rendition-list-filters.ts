@@ -1,9 +1,13 @@
-import type { Models, VideoOutput, VideoRenditionStatus } from '@appwrite.io/console'
+import type {
+  VideoOutput,
+  VideoRenditionStatus,
+  VideoRendition,
+} from '@/lib/appwrite/videos'
 import type { CompactFilterKey } from '@/lib/table-filters'
 
 /** Flat record for client-side FiltersPopover matching. */
 export function renditionToFilterRecord(
-  rendition: Models.VideoRendition,
+  rendition: VideoRendition,
   profileName?: string,
 ): Record<string, unknown> {
   return {
@@ -59,7 +63,7 @@ export type RenditionSortColumn =
   | 'encodingTime'
   | 'created'
 
-function encodingDurationMs(rendition: Models.VideoRendition): number {
+function encodingDurationMs(rendition: VideoRendition): number {
   if (!rendition.startedAt) return -1
   const endIso = rendition.endedAt ?? rendition.$updatedAt
   return new Date(endIso).getTime() - new Date(rendition.startedAt).getTime()
@@ -67,8 +71,8 @@ function encodingDurationMs(rendition: Models.VideoRendition): number {
 
 /** Client-side sort (`listRenditions` has no sort query params). */
 export function compareVideoRenditions(
-  a: Models.VideoRendition,
-  b: Models.VideoRendition,
+  a: VideoRendition,
+  b: VideoRendition,
   sortBy: string,
   sortOrder: 'asc' | 'desc',
   profileNames?: Map<string, string>,
@@ -93,9 +97,7 @@ export function compareVideoRenditions(
       cmp = a.width * a.height - b.width * b.height
       break
     case 'bitrate':
-      cmp =
-        a.videoBitRate - b.videoBitRate ||
-        a.audioBitRate - b.audioBitRate
+      cmp = a.videoBitRate - b.videoBitRate || a.audioBitRate - b.audioBitRate
       break
     case 'segmentLength':
       cmp = Number(a.targetDuration) - Number(b.targetDuration)
@@ -115,7 +117,6 @@ export function compareVideoRenditions(
 
   if (cmp !== 0) return direction * cmp
   return (
-    a.output.localeCompare(b.output) ||
-    b.width * b.height - a.width * a.height
+    a.output.localeCompare(b.output) || b.width * b.height - a.width * a.height
   )
 }

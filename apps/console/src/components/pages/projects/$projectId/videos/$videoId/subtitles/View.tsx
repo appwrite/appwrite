@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
+import type { VideoCaption, VideoCaptionList } from '@/lib/appwrite/videos'
 import {
   Captions,
   Copy,
@@ -73,7 +73,7 @@ const SUBTITLE_OUTPUTS = [
 ] as const
 
 type ViewProps = {
-  initialData?: { subtitles: Models.VideoCaptionList }
+  initialData?: { subtitles: VideoCaptionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -87,12 +87,12 @@ export function View({ initialData }: ViewProps = {}) {
   const { data } = useVideoSubtitles(projectId, videoId)
   const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
   const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
-  const [editing, setEditing] = useState<Models.VideoCaption | null>(null)
-  const [deleting, setDeleting] = useState<Models.VideoCaption | null>(null)
+  const [editing, setEditing] = useState<VideoCaption | null>(null)
+  const [deleting, setDeleting] = useState<VideoCaption | null>(null)
 
   const subtitles = data?.captions ?? initialData?.subtitles.captions ?? []
 
-  const setDefault = (subtitle: Models.VideoCaption, isDefault: boolean) => {
+  const setDefault = (subtitle: VideoCaption, isDefault: boolean) => {
     updateMutation.mutate(
       { subtitleId: subtitle.$id, isDefault },
       {

@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
+import type { Video, VideoCaption, VideoRendition } from '@/lib/appwrite/videos'
 import { Check, Loader2, Minus, SquareArrowOutUpRight } from 'lucide-react'
 import { CreateRenditions } from './_components/CreateRenditions'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
@@ -331,7 +331,7 @@ function SubnavHeader({
   video,
 }: {
   projectId: string
-  video: Models.Video
+  video: Video
 }) {
   const t = useT()
   return (
@@ -367,9 +367,9 @@ function SubnavLink({
   tab: VideoTabDefinition
   active: boolean
   projectId: string
-  video: Models.Video
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoCaption[]
+  video: Video
+  renditions: VideoRendition[]
+  subtitles: VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -483,9 +483,9 @@ function SubnavTrailing({
   encodingStatus,
 }: {
   tab: VideoTab
-  video: Models.Video
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoCaption[]
+  video: Video
+  renditions: VideoRendition[]
+  subtitles: VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
