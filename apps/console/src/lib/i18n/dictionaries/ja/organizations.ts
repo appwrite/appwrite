@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': '請求書の内訳は利用できません。',
+  'Recorded charges; detailed pricing unavailable.':
+    '記録済みの請求額です。料金の詳細は利用できません。',
+  'No invoice yet.': '請求書はまだありません。',
+
   'A valid transfer price is required to continue.':
     '続行するには有効な移管料金が必要です。',
   "We couldn't load a transfer price. Try again to continue.":

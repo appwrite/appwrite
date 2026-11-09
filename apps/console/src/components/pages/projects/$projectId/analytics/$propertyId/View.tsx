@@ -56,10 +56,12 @@ import {
   BotsPanel,
   EventPropertiesPanel,
   LocationsPanel,
+  ModelsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
   UsersPanel,
+  useModelTabs,
   useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
@@ -116,6 +118,7 @@ type DimensionPanel =
   | 'bots'
   | 'users'
   | 'eventProps'
+  | 'models'
 
 // Overview, custom events, users and event properties apply to every type. Mobile
 // apps have no referrers or crawlers; agents only send their own events.
@@ -140,7 +143,7 @@ const PANELS_BY_TYPE: Record<
     'users',
     'eventProps',
   ]),
-  [AnalyticsPropertyType.Agent]: new Set(['users', 'eventProps']),
+  [AnalyticsPropertyType.Agent]: new Set(['models', 'users', 'eventProps']),
 }
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
@@ -340,6 +343,13 @@ export function View({
     { projectId, propertyId, range },
     filters,
   )
+  const resolvedType = propertyType(property)
+  const panels = PANELS_BY_TYPE[resolvedType]
+  const modelTabs = useModelTabs(
+    { projectId, propertyId, range },
+    filters,
+    panels.has('models'),
+  )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
   // day, same rules as the Usage charts.
@@ -487,10 +497,9 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const resolvedType = propertyType(property)
-  const panels = PANELS_BY_TYPE[resolvedType]
   const breakdownCount = [...panels].filter(
-    (panel) => panel !== 'users' && panel !== 'eventProps',
+    (panel) =>
+      panel !== 'users' && panel !== 'eventProps' && panel !== 'models',
   ).length
 
   if (!property && !propertyLoading) {
@@ -711,6 +720,16 @@ export function View({
                     propertyId={propertyId}
                     range={range}
                   />
+                ) : null}
+                {panels.has('models') && modelTabs.length > 0 ? (
+                  <div className="lg:col-span-2">
+                    <ModelsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      tabs={modelTabs}
+                    />
+                  </div>
                 ) : null}
                 {panels.has('users') && showUsersPanel ? (
                   <UsersPanel

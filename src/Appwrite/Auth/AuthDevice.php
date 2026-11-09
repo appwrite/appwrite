@@ -205,6 +205,9 @@ class AuthDevice
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode', '')), $locale->getText('locale.country.unknown')))
                 ->setAttribute('current', $session->getId() === $activeSessionId)
                 ->setAttribute('secret', $session->getAttribute('secret', ''))
+                // A device holds other users' sessions; their provider credentials are not the caller's
+                ->setAttribute('providerAccessToken', '')
+                ->setAttribute('providerRefreshToken', '')
                 ->setAttribute('userName', $names[$session->getAttribute('userId', '')] ?? '');
 
             $sessions[$key] = $session;

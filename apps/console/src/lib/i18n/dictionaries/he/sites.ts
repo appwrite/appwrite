@@ -178,9 +178,9 @@ export const heSitesDictionary: Record<string, string> = {
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
   'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
-    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים ולאחר מכן נסו שוב.',
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
   'The certificate is waiting on a DNS record. Add the record shown in View logs.':
-    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים.',
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
