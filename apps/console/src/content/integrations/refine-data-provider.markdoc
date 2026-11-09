@@ -7,7 +7,7 @@ featured: false
 isPartner: false
 isNew: true
 cover: /images/integrations/refine-data-provider/cover.avif
-category: developer-tools
+category: databases
 product:
     vendor: Refine
     description: "Refine is an open-source React framework for building data-heavy apps such as admin panels, dashboards, and internal tools."

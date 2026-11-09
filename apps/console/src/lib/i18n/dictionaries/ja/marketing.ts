@@ -928,7 +928,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Title': 'タイトル',
   'TLS encryption': 'TLS暗号化',
   'to register and connect your domain.': 'でドメインを登録・接続。',
-  'Tools and frameworks for building on Appwrite': 'Appwriteで開発するためのツールとフレームワーク',
   'Top GitHub projects': 'トップGitHubプロジェクト',
   'Top paths': 'トップパス',
   'Topic': 'トピック',

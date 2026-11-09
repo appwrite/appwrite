@@ -14,7 +14,6 @@ export type IntegrationCategorySlug =
   | 'sites'
   | 'storage'
   | 'deployments'
-  | 'developer-tools'
   | 'migrations'
   | 'self-hosting'
 

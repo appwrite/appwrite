@@ -1189,7 +1189,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'Title': 'כותרת',
   'TLS encryption': 'הצפנת TLS',
   'to register and connect your domain.': 'כדי לרשום ולחבר את הדומיין שלכם.',
-  'Tools and frameworks for building on Appwrite': 'כלים ופריימוורקים לפיתוח על Appwrite',
   'Top GitHub projects': 'פרויקטים מובילים ב-GitHub',
   'Top paths': 'נתיבים מובילים',
   'Topic': 'נושא',

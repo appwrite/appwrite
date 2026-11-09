@@ -57,11 +57,6 @@ export const INTEGRATION_CATEGORIES: IntegrationCategory[] = [
     description: 'Seamlessly deploy your code',
   },
   {
-    slug: 'developer-tools',
-    heading: 'Developer tools',
-    description: 'Tools and frameworks for building on Appwrite',
-  },
-  {
     slug: 'migrations',
     heading: 'Migrations',
     description: 'Move your data to Appwrite',
