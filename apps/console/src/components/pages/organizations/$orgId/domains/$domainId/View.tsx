@@ -136,9 +136,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
+// The loaders leave both undefined when the domain is not found
 export type DomainDetailInitialData = {
-  domain: Models.Domain
-  records: { dnsRecords: Models.DnsRecord[]; total: number }
+  domain?: Models.Domain
+  records?: { dnsRecords: Models.DnsRecord[]; total: number }
 }
 
 type ViewProps = {
@@ -261,9 +262,10 @@ export function View({ initialData }: ViewProps = {}) {
     initialData?.records &&
     !hasRecordFilters &&
     !recordsFromHook?.length
-  const rawRecords = canUseInitialRecords
-    ? initialData!.records.dnsRecords
-    : (recordsFromHook ?? [])
+  const rawRecords =
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.dnsRecords
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (rawRecords.length === 0) return rawRecords
 
