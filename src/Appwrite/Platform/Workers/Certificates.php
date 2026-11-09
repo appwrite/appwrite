@@ -421,7 +421,7 @@ class Certificates extends Action
         } catch (Throwable $e) {
             $date = \date('H:i:s');
             $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
+            $logs .= \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n"; // Limit to 500kb
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
 
