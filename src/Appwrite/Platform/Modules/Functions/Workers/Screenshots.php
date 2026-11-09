@@ -256,8 +256,8 @@ class Screenshots extends Action
             $this->deleteScreenshots($dbForPlatform, $deviceForFiles, $bucket, $files);
 
             // Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
-            $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
-            if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
+            $refused = $th instanceof ScreenshotsException && $th->isPermanent();
+            if ($th instanceof PermanentFailure || $refused || $message->isLastAttempt()) {
                 $this->abandon($project, $deployment->getId(), $th->getMessage());
 
                 return;
