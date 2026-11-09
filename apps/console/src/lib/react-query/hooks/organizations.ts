@@ -288,7 +288,6 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
 export async function fetchOrganizations(): Promise<OrganizationListResponse> {
   // One page holds 25 organizations by default, and a member of more would miss
   // the rest: a project in one of them showed another organization's name.
-  // The total can count drafts the list leaves out, so an empty page also ends it.
   const teams: OrganizationListResponse['teams'] = []
   for (;;) {
     const last = teams.at(-1)
@@ -304,7 +303,7 @@ export async function fetchOrganizations(): Promise<OrganizationListResponse> {
         : await sdk.forConsole.teams.list({ queries: page, total: true })
     ) as OrganizationListResponse
     teams.push(...response.teams)
-    if (response.teams.length === 0 || teams.length >= response.total) {
+    if (response.teams.length < ORGANIZATIONS_PAGE_SIZE) {
       return { ...response, teams }
     }
   }
