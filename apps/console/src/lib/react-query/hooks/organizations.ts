@@ -290,6 +290,7 @@ export async function fetchOrganizations(): Promise<OrganizationListResponse> {
   // the rest: a project in one of them showed another organization's name.
   const billing = isBillingEnabled()
   const teams: OrganizationListResponse['teams'] = []
+  const seen = new Set<string>()
   for (;;) {
     const last = teams.at(-1)
     const page = [
@@ -303,11 +304,14 @@ export async function fetchOrganizations(): Promise<OrganizationListResponse> {
           })
         : await sdk.forConsole.teams.list({ queries: page, total: true })
     ) as OrganizationListResponse
-    teams.push(...response.teams)
+    const fresh = response.teams.filter((team) => !seen.has(team.$id))
+    fresh.forEach((team) => seen.add(team.$id))
+    teams.push(...fresh)
     // Organizations hides draft organizations after reading a page, so a short
-    // page there can still have more after it: only an empty one is the end.
+    // page there can still have more after it: the end is a page that adds no
+    // organization, which also stops a list that ignores the cursor.
     const end = billing
-      ? response.teams.length === 0
+      ? fresh.length === 0
       : response.teams.length < ORGANIZATIONS_PAGE_SIZE
     if (end) {
       return { ...response, teams }
