@@ -292,14 +292,8 @@ final class FastlyTlsTest extends TestCase
             authorizationState: 'passing',
             certificates: $certificates,
             expiries: $certificates === [] ? [] : ['cert_1' => 30],
+            attributes: $attributes,
         );
-        foreach ($attributes as $name => $value) {
-            if ($value === null) {
-                unset($subscription['data'][0]['attributes'][$name]);
-            } else {
-                $subscription['data'][0]['attributes'][$name] = $value;
-            }
-        }
         $client = new TestClient([$this->json($subscription), $this->json($subscription)]);
         $provider = new FastlyTls('token', '', 'certainly', $client);
 
@@ -674,9 +668,10 @@ final class FastlyTlsTest extends TestCase
      * @param list<mixed>|null $challenges
      * @param list<array{type:string,id:string}> $certificates
      * @param array<string, int> $expiries Days until each included certificate expires, by certificate ID
+     * @param array<string, mixed> $attributes Subscription attributes to set, null to remove one
      * @return array<string, mixed>
      */
-    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = [], array $expiries = []): array
+    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = [], array $expiries = [], array $attributes = []): array
     {
         $included = [];
         foreach ($expiries as $id => $days) {
@@ -687,7 +682,10 @@ final class FastlyTlsTest extends TestCase
             'data' => [[
                 'id' => 'sub_123',
                 'type' => 'tls_subscription',
-                'attributes' => ['certificate_authority' => 'certainly', 'state' => $state, 'has_active_order' => true],
+                'attributes' => array_filter(
+                    [...['certificate_authority' => 'certainly', 'state' => $state, 'has_active_order' => true], ...$attributes],
+                    fn (mixed $value): bool => $value !== null,
+                ),
                 'relationships' => [
                     'tls_authorizations' => ['data' => [['id' => 'auth_1', 'type' => 'tls_authorization']]],
                     'tls_certificates' => ['data' => $certificates],
@@ -719,11 +717,11 @@ final class FastlyTlsTest extends TestCase
      */
     private function abandoned(): array
     {
-        $subscription = $this->subscription(state: 'processing', authorizationState: 'passing');
-        $subscription['data'][0]['attributes']['has_active_order'] = false;
-        $subscription['data'][0]['attributes']['updated_at'] = gmdate('Y-m-d\TH:i:s\Z', time() - 2 * 60 * 60);
-
-        return $subscription;
+        return $this->subscription(
+            state: 'processing',
+            authorizationState: 'passing',
+            attributes: ['has_active_order' => false, 'updated_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 2 * 60 * 60)],
+        );
     }
 
     /** @return array<string, mixed> */

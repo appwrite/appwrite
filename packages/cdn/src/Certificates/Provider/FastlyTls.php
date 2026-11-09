@@ -56,7 +56,7 @@ class FastlyTls implements Provider
             $subscription = $this->createSubscription($domain);
         } elseif ($this->isAbandoned($subscription)) {
             // Fastly refuses to retry a processing subscription, so start a new one
-            $this->deleteSubscription($subscription['resource']['id']);
+            $this->deleteSubscription($subscription);
             $subscription = $this->createSubscription($domain);
         } elseif ($this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED) {
             $subscription = $this->retrySubscription($subscription['resource']['id']);
@@ -160,14 +160,17 @@ class FastlyTls implements Provider
             return;
         }
 
-        $this->deleteSubscription($subscription['resource']['id']);
+        $this->deleteSubscription($subscription);
     }
 
-    private function deleteSubscription(string $subscriptionId): void
+    /**
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     */
+    private function deleteSubscription(array $subscription): void
     {
         $result = $this->request(
             'DELETE',
-            '/tls/subscriptions/' . $subscriptionId . '?force=true',
+            '/tls/subscriptions/' . $subscription['resource']['id'] . '?force=true',
         );
 
         // Already gone, for example removed by another worker at the same time
