@@ -179,6 +179,14 @@ return [
                 'placeholder' => 'efNNehiACfcZiwsTAjcK6xiwPyu6Dpdq',
                 'required' => true,
                 'type' => 'password'
+            ],
+            [
+                'name' => 'REDIS_PORT',
+                'description' => 'The port of your Redis database. Defaults to 14714. <a class="u-bold" target="_blank" href="https://redis.io/docs/latest/operate/rc/rc-quickstart/">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '13258',
+                'required' => false,
+                'type' => 'text'
             ]
         ],
         'scopes' => []
