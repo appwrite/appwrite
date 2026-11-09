@@ -101,11 +101,11 @@ export const overviewChartContentRowClass =
 
 /** Main chart column - grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
-  'flex h-full w-full min-w-0 flex-col overflow-hidden border-b border-border px-5 pb-8 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
+  'flex h-full w-full min-w-0 flex-col overflow-hidden border-b border-border px-4 pb-8 pt-3 sm:px-6 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
 
 /** Breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =
-  'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-5 pb-8 pt-3 @[700px]:w-[400px] @[700px]:shrink-0'
+  'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-4 pb-8 pt-3 sm:px-6 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
   'mb-4 flex h-[60px] shrink-0 flex-nowrap items-center justify-between gap-x-3'
