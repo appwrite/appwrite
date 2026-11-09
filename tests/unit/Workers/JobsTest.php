@@ -93,6 +93,65 @@ final class JobsTest extends TestCase
         $this->assertSame(1, $jobs['databases']['coroutines']);
     }
 
+    public function testResolveReapOptionsDefaultValues(): void
+    {
+        $options = Jobs::resolveReapOptions($this->env([]));
+
+        $this->assertSame(300, $options['reapAfter']);
+        $this->assertNull($options['reapMaxAttempts']);
+        $this->assertNull($options['reapMaxAge']);
+    }
+
+    public function testResolveReapOptionsCustomValues(): void
+    {
+        $options = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_AFTER' => '600',
+            '_APP_QUEUE_REAP_MAX_ATTEMPTS' => '5',
+            '_APP_QUEUE_REAP_MAX_AGE' => '1200',
+        ]));
+
+        $this->assertSame(600, $options['reapAfter']);
+        $this->assertSame(5, $options['reapMaxAttempts']);
+        $this->assertSame(1200, $options['reapMaxAge']);
+    }
+
+    public function testResolveReapOptionsBoundsMinimumReapAfter(): void
+    {
+        $options = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_AFTER' => '-10',
+        ]));
+
+        $this->assertSame(1, $options['reapAfter']);
+    }
+
+    public function testResolveReapOptionsIgnoresInvalidMaxAttempts(): void
+    {
+        $optionsZero = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_MAX_ATTEMPTS' => '0',
+        ]));
+        $optionsString = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_MAX_ATTEMPTS' => 'not-a-number',
+        ]));
+
+        $this->assertNull($optionsZero['reapMaxAttempts']);
+        $this->assertNull($optionsString['reapMaxAttempts']);
+    }
+
+    public function testResolveReapOptionsIgnoresMaxAgeAtOrBelowReapAfter(): void
+    {
+        $optionsEqual = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_AFTER' => '300',
+            '_APP_QUEUE_REAP_MAX_AGE' => '300',
+        ]));
+        $optionsBelow = Jobs::resolveReapOptions($this->env([
+            '_APP_QUEUE_REAP_AFTER' => '300',
+            '_APP_QUEUE_REAP_MAX_AGE' => '250',
+        ]));
+
+        $this->assertNull($optionsEqual['reapMaxAge']);
+        $this->assertNull($optionsBelow['reapMaxAge']);
+    }
+
     /**
      * @param array<string, string> $values
      * @return callable(string, mixed=): mixed
