@@ -184,8 +184,10 @@ abstract class Base extends Action
      * Names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`. The stamp and
      * the `~` after each id are required, so a shorter id cannot match a
      * longer neighbor. An empty `$videoId` matches every job in the project.
+     * When `$job` is set (for example `rendition-{id}`), the folder must end
+     * with that exact job segment after the video id.
      */
-    public static function jobMatches(string $name, string $projectId, string $videoId = ''): bool
+    public static function jobMatches(string $name, string $projectId, string $videoId = '', string $job = ''): bool
     {
         if ($projectId === '' || \strlen($name) < 13 || $name[12] !== '~') {
             return false;
@@ -202,10 +204,20 @@ abstract class Base extends Action
         }
 
         if ($videoId === '') {
+            return $job === '';
+        }
+
+        $afterProject = \substr($rest, \strlen($projectPrefix));
+        $videoPrefix = $videoId . '~';
+        if (!\str_starts_with($afterProject, $videoPrefix)) {
+            return false;
+        }
+
+        if ($job === '') {
             return true;
         }
 
-        return \str_starts_with(\substr($rest, \strlen($projectPrefix)), $videoId . '~');
+        return \substr($afterProject, \strlen($videoPrefix)) === $job;
     }
 
     /**

@@ -1477,6 +1477,18 @@ final class VideosCustomServerTest extends Scope
         $this->timeTravelRendition($projectId, $freshId, status: 'started');
         $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
+        // Plant leftovers the worker would leave if killed mid-run. Compose
+        // shares videos-tmp with the deletes worker; maintenance must remove
+        // only the aborted rendition folder.
+        $jobsRoot = $this->tmpJobsRoot();
+        if (!\is_dir($jobsRoot)) {
+            $this->assertTrue(\mkdir($jobsRoot, 0755, true), 'Failed creating videos-tmp/jobs');
+        }
+        $staleJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $staleId;
+        $freshJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $freshId;
+        $this->assertTrue(\mkdir($staleJob . '/out', 0755, true), 'Failed creating stale scratch folder');
+        $this->assertTrue(\mkdir($freshJob . '/out', 0755, true), 'Failed creating fresh scratch folder');
+
         $stdout = '';
         $stderr = '';
         $code = Console::execute(
@@ -1487,7 +1499,7 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId) {
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleJob, $freshJob) {
             $stale = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $staleId, $this->headers());
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
@@ -1501,7 +1513,14 @@ final class VideosCustomServerTest extends Scope
             $ready = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $readyId, $this->headers());
             $this->assertEquals(200, $ready['headers']['status-code']);
             $this->assertEquals('ready', $ready['body']['status']);
+
+            $this->assertDirectoryDoesNotExist($staleJob);
+            $this->assertDirectoryExists($freshJob);
         }, 30000);
+
+        if (\is_dir($freshJob)) {
+            (new Local(\dirname($freshJob)))->deletePath(\basename($freshJob));
+        }
     }
 
     /**

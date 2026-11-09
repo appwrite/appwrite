@@ -765,6 +765,14 @@ class Deletes extends Action
                         return;
                     }
                     $aborted++;
+                    $videoId = (string) $rendition->getAttribute('videoId', '');
+                    if ($videoId !== '') {
+                        $this->deleteVideoTmpJobs(
+                            $project->getId(),
+                            $videoId,
+                            VideosBase::JOB_RENDITION . '-' . $rendition->getId()
+                        );
+                    }
                     $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
                     Console::info(
                         'Aborted stale rendition ' . $rendition->getId()
@@ -2453,7 +2461,8 @@ class Deletes extends Action
     }
 
     /**
-     * Remove scratch folders under videos-tmp/jobs for a project, or one video.
+     * Remove scratch folders under videos-tmp/jobs for a project, one video,
+     * or one job when `$job` is set (for example `rendition-{id}`).
      *
      * Each videos job clears its own folder, but one killed mid-run leaves it
      * behind. In cloud that scratch is a per-pod emptyDir this worker does not
@@ -2461,7 +2470,7 @@ class Deletes extends Action
      * is a named volume that outlives restarts, and only this sweep removes a
      * deleted project's or video's leftovers.
      */
-    private function deleteVideoTmpJobs(string $projectId, string $videoId = ''): void
+    private function deleteVideoTmpJobs(string $projectId, string $videoId = '', string $job = ''): void
     {
         $root = VideosBase::tmpJobsRoot();
         if (!\is_dir($root)) {
@@ -2469,7 +2478,7 @@ class Deletes extends Action
         }
 
         foreach (\scandir($root) ?: [] as $name) {
-            if ($name[0] === '.' || !VideosBase::jobMatches($name, $projectId, $videoId)) {
+            if ($name[0] === '.' || !VideosBase::jobMatches($name, $projectId, $videoId, $job)) {
                 continue;
             }
 

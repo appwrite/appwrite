@@ -87,4 +87,19 @@ final class BaseTest extends TestCase
         $this->assertFalse(Base::jobMatches('202610121200', 'proj1'));
         $this->assertFalse(Base::jobMatches($name, ''));
     }
+
+    public function testJobMatchesRenditionSuffix(): void
+    {
+        $name = '202610121200~proj1~vid1~rendition-ren1';
+        $neighbor = '202610121200~proj1~vid1~rendition-ren2';
+        $caption = '202610121200~proj1~vid1~caption-cap1';
+
+        $this->assertTrue(Base::jobMatches($name, 'proj1', 'vid1', 'rendition-ren1'));
+        $this->assertFalse(Base::jobMatches($name, 'proj1', 'vid1', 'rendition-ren2'));
+        $this->assertFalse(Base::jobMatches($name, 'proj1', 'vid1', 'rendition-ren'));
+        $this->assertFalse(Base::jobMatches($neighbor, 'proj1', 'vid1', 'rendition-ren1'));
+        $this->assertFalse(Base::jobMatches($caption, 'proj1', 'vid1', 'rendition-ren1'));
+        $this->assertFalse(Base::jobMatches($name, 'proj1', '', 'rendition-ren1'));
+        $this->assertTrue(Base::jobMatches($neighbor, 'proj1', 'vid1'));
+    }
 }
