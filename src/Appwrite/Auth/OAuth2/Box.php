@@ -191,7 +191,7 @@ class Box extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->resourceEndpoint . 'me',
+                $this->resourceEndpoint . 'users/me',
                 $header
             );
             $this->user = \json_decode($user, true);
