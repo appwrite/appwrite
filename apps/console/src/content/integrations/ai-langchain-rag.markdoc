@@ -85,6 +85,6 @@ If you would like to learn more about LangChain and Appwrite Functions, we have 
 
 - [LangChain's Pinecone vector store for JavaScript](https://docs.langchain.com/oss/javascript/integrations/vectorstores/pinecone)
 - [Integrate LangChain into an Appwrite Function step by step](/docs/products/ai/integrations/langchain)
-- [Vector search with Pinecone](/integrations/ai-pinecone-vector-search)
+- [Vector search with Pinecone](/integrations/search-pinecone)
 - [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
 - [RAG with LangChain template source](https://github.com/appwrite/templates/tree/1.2.0/node/rag-with-langchain)

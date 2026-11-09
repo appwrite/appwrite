@@ -6,8 +6,8 @@ date: 2026-11-09
 featured: false
 isPartner: true
 isNew: true
-cover: /images/integrations/ai-pinecone-vector-search/cover.avif
-category: ai
+cover: /images/integrations/search-pinecone/cover.avif
+category: search
 product:
     vendor: Pinecone
     description: "Pinecone is a managed vector database for storing embeddings and running similarity search at scale."
