@@ -114,7 +114,7 @@ export function AddDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid'))
+      setError(t('Please enter a valid domain'))
       return
     }
     if (behaviour === 'branch' && !hasRepo) {

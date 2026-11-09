@@ -48,6 +48,7 @@ export function RetryVerification({
     null,
   )
   const [isPendingPropagation, setIsPendingPropagation] = useState(false)
+  const [nameserversMoved, setNameserversMoved] = useState(false)
 
   const retryVerificationMutation = useRetryDomainVerification(orgId)
 
@@ -55,13 +56,17 @@ export function RetryVerification({
     if (open) {
       setVerificationError(null)
       setIsPendingPropagation(false)
+      setNameserversMoved(false)
       setCopiedField(null)
     }
   }, [open])
 
+  const wasVerified = domain.nameservers?.toLowerCase() === 'appwrite'
+
   const handleVerify = async () => {
     setVerificationError(null)
     setIsPendingPropagation(false)
+    setNameserversMoved(false)
     try {
       const updatedDomain = await retryVerificationMutation.mutateAsync(
         domain.$id,
@@ -75,6 +80,16 @@ export function RetryVerification({
         return
       }
       setIsPendingPropagation(true)
+      // A verified domain whose nameservers moved away: report the new status
+      if (wasVerified) {
+        setNameserversMoved(true)
+        setVerificationError(
+          t(
+            'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.',
+          ),
+        )
+        return
+      }
       setVerificationError(
         t(
           'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.',
@@ -104,7 +119,9 @@ export function RetryVerification({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{t('Retry verification')}</DialogTitle>
+          <DialogTitle>
+            {wasVerified ? t('Check nameservers') : t('Retry verification')}
+          </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t('Update the nameservers of your domain')}{' '}
             <strong className="font-medium text-foreground">
@@ -139,9 +156,11 @@ export function RetryVerification({
                     : 'text-[13px] font-medium text-red-600 dark:text-red-400'
                 }
               >
-                {isPendingPropagation
-                  ? t('Domain not verified yet')
-                  : t('Verification failed')}
+                {nameserversMoved
+                  ? t('Nameservers changed')
+                  : isPendingPropagation
+                    ? t('Domain not verified yet')
+                    : t('Verification failed')}
               </AlertTitle>
               <AlertDescription
                 className={

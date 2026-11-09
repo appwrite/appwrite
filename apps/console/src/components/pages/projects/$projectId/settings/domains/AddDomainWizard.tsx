@@ -98,7 +98,7 @@ export function AddDomainWizard({
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid format'))
+      setError(t('Please enter a valid domain'))
       return
     }
 

@@ -124,7 +124,7 @@ export function AddSmtpDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid format'))
+      setError(t('Please enter a valid domain'))
       return
     }
     if (!emailEnabled) {

@@ -1643,4 +1643,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
   'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Check nameservers': 'ネームサーバーを確認',
+  'Nameservers changed': 'ネームサーバーが変更されました',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
 }
