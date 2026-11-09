@@ -182,10 +182,10 @@ return [
             ],
             [
                 'name' => 'REDIS_PORT',
-                'description' => 'The port of your Redis database. Defaults to 14714. <a class="u-bold" target="_blank" href="https://redis.io/docs/latest/operate/rc/rc-quickstart/">Learn more</a>.',
-                'value' => '',
+                'description' => 'The port of your Redis database. <a class="u-bold" target="_blank" href="https://redis.io/docs/latest/operate/rc/rc-quickstart/">Learn more</a>.',
+                'value' => '14714',
                 'placeholder' => '13258',
-                'required' => false,
+                'required' => true,
                 'type' => 'text'
             ]
         ],
