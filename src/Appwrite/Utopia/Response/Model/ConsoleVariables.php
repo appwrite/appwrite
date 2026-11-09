@@ -91,6 +91,12 @@ class ConsoleVariables extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('_APP_REVIEWS_ENABLED', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if code review is enabled.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('_APP_DOMAIN_SITES', [
                 'type' => self::TYPE_STRING,
                 'description' => 'A comma separated list of domains to use for site URLs.',

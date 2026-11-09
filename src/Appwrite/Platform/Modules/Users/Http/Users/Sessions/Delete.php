@@ -90,6 +90,8 @@ class Delete extends Action
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        $session->setAttribute('userName', $user->getAttribute('name', ''));
+
         try {
             $mqtt->revoke($project->getId(), $user->getId());
         } catch (\Throwable $error) {
@@ -99,7 +101,7 @@ class Delete extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $sessionId)
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->noContent();
     }

@@ -128,12 +128,13 @@ class Create extends Action
 
         $session
             ->setAttribute('secret', $encoded)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($session, Response::MODEL_SESSION);

@@ -28,6 +28,10 @@ final class DirectoryTest extends TestCase
         yield 'inner parent' => ['functions/../../storage', false];
         yield 'trailing parent' => ['functions/..', false];
         yield 'root anchored parent' => ['/../etc', false];
+        yield 'git metadata' => ['/.git', false];
+        yield 'git metadata uppercase' => ['./.GIT/', false];
+        yield 'nested git metadata' => ['functions/.git/hooks', false];
+        yield 'git prefixed names' => ['.github/.gitkeep', true];
         yield 'null byte' => ["functions\0", false];
         yield 'newline' => ["functions\nstarter", false];
         yield 'delete' => ["functions\x7F", false];

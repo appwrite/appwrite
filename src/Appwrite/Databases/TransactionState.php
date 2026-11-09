@@ -303,6 +303,7 @@ class TransactionState
      * @param array<string, array<string, mixed>> $staged
      * @param array<Query> $queries
      * @return array<Document>
+     * @throws Exception\Query
      */
     private function listPlainDocuments(Database $dbForDatabases, string $collectionId, array $staged, array $queries, ParsedQuery $parsed): array
     {
@@ -311,6 +312,9 @@ class TransactionState
         $orders = $this->orders($parsed);
         $limit = $parsed->limit ?? self::DEFAULT_LIMIT;
         $offset = $parsed->offset ?? 0;
+        if ($offset + $limit > APP_LIMIT_COUNT) {
+            throw new Exception\Query('Offset and limit together cannot exceed ' . APP_LIMIT_COUNT . " when reading a transaction's uncommitted changes. Use cursor pagination instead.");
+        }
         $before = $parsed->cursorDirection === CursorDirection::Before;
         $cursor = $random ? null : $parsed->cursor;
 
@@ -576,68 +580,6 @@ class TransactionState
     {
         if (Query::groupByType($queries)->isAggregation()) {
             throw new Exception\Query("Aggregate and groupBy queries cannot read a transaction's uncommitted changes. Run them outside the transaction.");
-        }
-    }
-
-    /**
-     * Apply bulk update to documents in transaction state that match queries
-     *
-     * This allows bulk operations within a transaction to see each other's changes.
-     *
-     * @param string $collectionId Collection ID
-     * @param Document $updateData Document with update values
-     * @param array $queries Query filters to match documents
-     * @param array &$state Transaction state (passed by reference)
-     * @return void
-     */
-    public function applyBulkUpdateToState(
-        string $collectionId,
-        Document $updateData,
-        array $queries,
-        array &$state
-    ): void {
-        if (!isset($state[$collectionId])) {
-            return;
-        }
-
-        $filters = $this->extractFilters($queries);
-
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
-                foreach ($updateData->getArrayCopy() as $key => $value) {
-                    if ($key !== '$id') {
-                        $doc->setAttribute($key, $value);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Apply bulk delete to documents in transaction state that match queries
-     *
-     * This allows bulk operations within a transaction to see each other's changes.
-     *
-     * @param string $collectionId Collection ID
-     * @param array $queries Query filters to match documents
-     * @param array &$state Transaction state (passed by reference)
-     * @return void
-     */
-    public function applyBulkDeleteToState(
-        string $collectionId,
-        array $queries,
-        array &$state
-    ): void {
-        if (!isset($state[$collectionId])) {
-            return;
-        }
-
-        $filters = $this->extractFilters($queries);
-
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
-                unset($state[$collectionId][$docId]);
-            }
         }
     }
 

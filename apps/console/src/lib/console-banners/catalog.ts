@@ -34,17 +34,35 @@ export type ConsoleBannerDefinition = {
 export const PRODUCT_HUNT_BANNER_ID = 'product-hunt-2026-09-16'
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
 export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
+export const START_EXPANSION_PROMO_BANNER_ID = 'start-promo-expansion-2026-10'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
+export const GITHUB_STAR_WIZARD_BANNER_ID = 'github-star-wizard-2026'
+export const MCP1_LAUNCH_BANNER_ID = 'mcp1-launch-2026-11'
 
-/** Appwrite Start regional promo (IN, NP, NG, PK), inclusive UTC. */
+/** Appwrite Start regional promo for the launch countries (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
-export const START_PROMO_BANNER_END_MS = Date.UTC(
+export const START_PROMO_BANNER_END_MS = Date.UTC(2026, 10, 29, 23, 59, 59, 999)
+
+/**
+ * Appwrite Start in 15 more countries: fourteen days from 31 Oct 2026
+ * (inclusive, UTC). Each country gets its own copy and landmark.
+ */
+export const START_EXPANSION_PROMO_BANNER_START_MS = Date.UTC(
+  2026,
+  9,
+  31,
+  0,
+  0,
+  0,
+  0,
+)
+export const START_EXPANSION_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   10,
-  29,
+  13,
   23,
   59,
   59,
@@ -91,7 +109,15 @@ export const INIT_RECAP_PROMO_BANNER_END_MS = Date.UTC(
 /**
  * Native OAuth project promo: seven days from launch (inclusive, UTC).
  */
-export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 24, 0, 0, 0, 0)
+export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(
+  2026,
+  8,
+  24,
+  0,
+  0,
+  0,
+  0,
+)
 export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   8,
@@ -141,6 +167,26 @@ export const FIREWALL_SPIDER_PROMO_BANNER_END_MS = Date.UTC(
   999,
 )
 
+/**
+ * GitHub star wizard: evergreen (no campaign end), gated by visit-day
+ * tracking in `console.githubStarVisitDays` rather than by schedule
+ * (inclusive, UTC).
+ */
+export const GITHUB_STAR_WIZARD_START_MS = Date.UTC(2026, 10, 2, 0, 0, 0, 0)
+export const GITHUB_STAR_WIZARD_END_MS = Date.UTC(2099, 11, 31, 23, 59, 59, 999)
+
+/** MCP1 launch: three days from launch day, 9–11 Nov 2026 (inclusive, UTC). */
+export const MCP1_LAUNCH_BANNER_START_MS = Date.UTC(2026, 10, 9, 0, 0, 0, 0)
+export const MCP1_LAUNCH_BANNER_END_MS = Date.UTC(
+  2026,
+  10,
+  11,
+  23,
+  59,
+  59,
+  999,
+)
+
 /** Registered console promo banners (header strips, floating cards, takeovers). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   {
@@ -184,6 +230,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     event: 'start-promo-banner-learn-more',
   },
   {
+    id: START_EXPANSION_PROMO_BANNER_ID,
+    title: 'Appwrite Start in 15 more countries',
+    scope: 'console',
+    placement: 'header',
+    startMs: START_EXPANSION_PROMO_BANNER_START_MS,
+    endMs: START_EXPANSION_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'start-promo-banner-learn-more',
+  },
+  {
     id: NATIVE_OAUTH_PROMO_BANNER_ID,
     title: 'Add native OAuth to your app',
     scope: 'project',
@@ -213,6 +269,25 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     cloudOnly: true,
     event: 'firewall-spider-promo-block',
   },
+  {
+    id: GITHUB_STAR_WIZARD_BANNER_ID,
+    title: 'Star Appwrite on GitHub',
+    scope: 'console',
+    placement: 'fullscreen',
+    startMs: GITHUB_STAR_WIZARD_START_MS,
+    endMs: GITHUB_STAR_WIZARD_END_MS,
+    event: 'github-star-wizard-star',
+  },
+  {
+    id: MCP1_LAUNCH_BANNER_ID,
+    title: 'MCP1 by Appwrite: one URL for every MCP server',
+    scope: 'console',
+    placement: 'header',
+    startMs: MCP1_LAUNCH_BANNER_START_MS,
+    endMs: MCP1_LAUNCH_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'mcp1-launch-banner-try',
+  },
 ] as const
 
 export function getConsoleBannerById(
@@ -240,7 +315,9 @@ export function isConsoleBannerScheduled(
   return getConsoleBannerScheduleStatus(banner, now) === 'active'
 }
 
-export function formatConsoleBannerUtcRange(banner: ConsoleBannerDefinition): string {
+export function formatConsoleBannerUtcRange(
+  banner: ConsoleBannerDefinition,
+): string {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     month: 'short',

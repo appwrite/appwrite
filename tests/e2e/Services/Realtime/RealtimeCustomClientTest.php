@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -859,6 +860,206 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
+    public function testConnectionLimitPerUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . 'limit@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $clients = [];
+        for ($i = 0; $i < APP_LIMIT_REALTIME_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        }
+
+        // Guests are not held to the per-user limit.
+        $guest = $this->getWebsocket(['documents'], ['origin' => 'http://localhost']);
+        $this->assertSame('connected', \json_decode($guest->receive(), true)['type'] ?? null);
+        $guest->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['documents'], $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Closing a connection frees its slot once the server sees the close.
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testConnectionLimitPerGuest(): void
+    {
+        // Opening this many connections from one address would trip the abuse limit on new connections first.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $this->markTestSkipped('Abuse limits are enabled.');
+        }
+
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for FAILURE
+         */
+        // Earlier tests may still hold guest connections from this address, so open until one is refused.
+        $clients = [];
+        $refused = null;
+        for ($i = 0; $i <= APP_LIMIT_REALTIME_GUEST_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $response = \json_decode($client->receive(), true);
+            if (($response['type'] ?? null) !== 'connected') {
+                $refused = $response;
+                $this->receiveUntilClosed($client);
+                break;
+            }
+            $clients[] = $client;
+        }
+
+        $this->assertNotNull($refused, 'Guest connections from one address were not limited.');
+        $this->assertSame('error', $refused['type'] ?? null);
+        $this->assertSame(1008, $refused['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $refused['data']['message'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testDenyRealtimeGuestsPolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $guest = ['origin' => 'http://localhost'];
+        $policy = fn (bool $enabled) => $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['enabled' => $enabled]);
+
+        $this->assertSame(200, $policy(true)['headers']['status-code']);
+
+        // The guest cap test before this one closes many connections at once, which can hold up new ones for a few seconds.
+
+        try {
+            /**
+             * Test for FAILURE
+             */
+            $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(1008, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+            $this->receiveUntilClosed($client);
+
+            // Over a message the guest is refused but stays connected, so it can still sign in.
+            $client = $this->getWebsocket([], $guest, timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(401, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+
+            /**
+             * Test for SUCCESS
+             */
+            // Signing in over the same connection lets it subscribe.
+            $client->send(\json_encode(['type' => 'authentication', 'data' => ['session' => $this->getUser()['session']]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('authentication', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('subscribe', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->close();
+
+            $client = $this->getWebsocket(['documents'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
+            ], timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->close();
+        } finally {
+            $policy(false);
+        }
+
+        $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+        $client->close();
+    }
+
+    public function testConnectionChannelLimit(): void
+    {
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_REALTIME_CHANNELS));
+        $client = $this->getWebsocket($channels, $headers);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type'] ?? null);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['channels']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $channels[] = 'documents.' . (APP_LIMIT_REALTIME_CHANNELS + 1);
+        $client = $this->getWebsocket($channels, $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
+    }
+
     public function testConnectionRequiresAllFactors(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1251,6 +1452,224 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client, "users.{$userId}.delete");
     }
 
+    public function testConnectionEndsWithAccountClaim(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // Someone registers an address they do not own and keeps a connection open
+        $register = function () use ($projectId, $headers): array {
+            $email = \uniqid('claimed-', true) . '@localhost.test';
+            $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $account['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $session['headers']['status-code']);
+
+            $client = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+            ]);
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertEquals($account['body']['$id'], $response['data']['user']['$id']);
+
+            return [$account['body']['$id'], $email, $client];
+        };
+
+        // Closed before the claim's own event, which describes the claimant, reaches it.
+        $assertClosed = function (WebSocketClient $client): void {
+            $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
+            $last = \end($frames);
+            $this->assertEquals('error', $last['type'] ?? null);
+            $this->assertEquals(401, $last['data']['code'] ?? null);
+        };
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with a magic URL
+         */
+        [$userId, $email, $client] = $register();
+
+        $token = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $userId,
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $mail = $this->getLastEmailByAddress($email);
+        $secret = \substr($mail['text'], \strpos($mail['text'], '&secret=') + 8, 64);
+
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner accepts a team invitation signed out
+         */
+        [, $email, $client] = $register();
+
+        // Invited by a member, as an API key adds members without an invitation
+        $team = $this->client->call(Client::METHOD_POST, '/teams', \array_merge($headers, $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Claimed Invites',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', \array_merge($headers, $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $invite['teamId'] . '/memberships/' . $invite['membershipId'] . '/status', $headers, [
+            'userId' => $invite['userId'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner resets the password
+         */
+        [$userId, $email, $client] = $register();
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        // The registrant still owns the account when recovery is requested, so it may see that
+        $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$userId}.recovery.{$recovery['body']['$id']}.create", $message['data']['events'] ?? [], true));
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html'])['secret'];
+        $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'claimant-password',
+        ]);
+        $this->assertEquals(200, $recovery['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with an ID token
+         */
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $provider = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertEquals(204, $provider['headers']['status-code']);
+
+        [$userId, $email, $client] = $register();
+
+        $idToken = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', $headers, [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => \uniqid('claimant-', true),
+                'email' => $email,
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertEquals(200, $idToken['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', $headers, [
+            'provider' => 'mock',
+            'idToken' => $idToken['body']['token'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertEquals($userId, $session['body']['userId']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with OAuth
+         */
+        // The mock provider always returns this address, so a fresh project keeps it away from other tests
+        $oauthProjectId = $this->getProject(true)['$id'];
+        $oauthHeaders = \array_merge($headers, ['x-appwrite-project' => $oauthProjectId]);
+        $cookieKey = 'a_session_' . $oauthProjectId;
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $oauthHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $oauthHeaders, [
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookieKey . '=' . $session['cookies'][$cookieKey],
+        ], $oauthProjectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $oauthProjectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        // Follow the provider's redirects back to the app, as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $oauthHeaders, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $cookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
+        $browser = new Client();
+        $browser->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $browser->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? [] : ['cookie' => $cookies], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($cookieKey, $response['cookies']);
+        $assertClosed($client);
+    }
+
     public function testConnectionEndsWithImpersonatorSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1305,8 +1724,12 @@ final class RealtimeCustomClientTest extends Scope
             return $client;
         };
 
+        // Closed before the claim's own event, which describes the claimant, reaches it.
         $assertClosed = function (WebSocketClient $client): void {
             $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
             $last = \end($frames);
             $this->assertEquals('error', $last['type'] ?? null);
             $this->assertEquals(401, $last['data']['code'] ?? null);
@@ -1373,6 +1796,111 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $assertClosed($client);
+    }
+
+    public function testImpersonationRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $password = 'password123';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $targetId = Id::unique();
+        $target = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $targetId,
+            'email' => 'factors-target-' . $targetId . '@example.com',
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+
+        $actorId = Id::unique();
+        $actorEmail = 'factors-actor-' . $actorId . '@example.com';
+        $actor = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $actorId,
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $actor['headers']['status-code']);
+
+        $impersonator = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $server, [
+            'impersonator' => true,
+        ]);
+        $this->assertSame(200, $impersonator['headers']['status-code']);
+
+        $impersonate = function (array $headers) use ($targetId): array {
+            $connection = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'x-appwrite-impersonate-user-id' => $targetId,
+                ...$headers,
+            ]);
+
+            return [$connection, \json_decode($connection->receive(), true)];
+        };
+
+        /**
+         * Test for SUCCESS
+         */
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+
+        [$complete, $response] = $impersonate([
+            'cookie' => 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId],
+        ]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($targetId, $response['data']['user']['$id']);
+        $complete->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [...$client, 'cookie' => $cookie]);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        [$pending, $response] = $impersonate(['cookie' => $cookie]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user'], 'A session missing a factor impersonated a user over realtime.');
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $server, [
+            'name' => 'Factors ' . $targetId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        try {
+            $frame = $pending->receive();
+            $this->fail('A session missing a factor received the impersonated user\'s event: ' . $frame);
+        } catch (TimeoutException) {
+            // No event reached the connection
+        }
+
+        $pending->close();
     }
 
     public function testImpersonatedConnectionFollowsSessionExtension(): void
@@ -3296,6 +3824,24 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
         $this->assertContains("functions.*", $responseUpdate['data']['events']);
         $this->assertNotEmpty($responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('logs', $responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseUpdate['data']['payload']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $responseDelete = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("functions.{$functionId}.executions.{$executionId}.delete", $message['data']['events'] ?? [], true)
+        );
+        $this->assertSame($executionId, $responseDelete['data']['payload']['$id']);
+        $this->assertArrayNotHasKey('logs', $responseDelete['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseDelete['data']['payload']);
 
         $client->close();
 

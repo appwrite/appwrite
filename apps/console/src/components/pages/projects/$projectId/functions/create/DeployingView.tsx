@@ -5,6 +5,7 @@
  * Reuses BuildLogsCard from sites. Evolves when status becomes ready or failed.
  */
 
+import { isSmtpRule, webDomainQueries } from '@/lib/function-smtp-domain'
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -33,7 +34,7 @@ import { useFunctionWizard } from './WizardContext'
 import { ExternalLink, Play, GitBranch } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -52,6 +53,7 @@ export function DeployingView({
   deploymentId,
 }: DeployingViewProps) {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { formData, resetFormData, generateDomain, baseDomain } =
@@ -71,8 +73,11 @@ export function DeployingView({
     actualFunctionId,
     0,
     10,
+    undefined,
+    webDomainQueries(),
   )
-  const domains = domainsData?.rules ?? []
+  // Email (SMTP) rules share the list but have no web URL to open.
+  const domains = (domainsData?.rules ?? []).filter((rule) => !isSmtpRule(rule))
 
   const [status, setStatus] = useState<string>('building')
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
@@ -173,9 +178,9 @@ export function DeployingView({
   const generatedFallback =
     func?.name && baseDomain ? generateDomain(func.name) : ''
   const functionUrl = primaryDomain
-    ? domainUrl(primaryDomain)
+    ? visitUrl(primaryDomain)
     : generatedFallback
-      ? domainUrl(generatedFallback)
+      ? visitUrl(generatedFallback)
       : null
 
   const sidebarContent =

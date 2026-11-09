@@ -2,6 +2,9 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -1306,6 +1309,40 @@ final class FormatTest extends TestCase
         $this->assertSame('webhook-password', $authPassword['example']);
         $this->assertArrayNotHasKey('x-example', $authPassword);
 
+    }
+
+    public function testHashParamsHaveValidHashExamples(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $validators = ['argon2' => new Argon2(), 'bcrypt' => new Bcrypt(), 'phpass' => new PHPass()];
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_WEBHOOK,
+                    ),
+                ],
+            ));
+        foreach ($validators as $name => $validator) {
+            $route->param($name, '', $validator, 'Hash.');
+        }
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Webhook()], [], ['console' => 0], 'console'))->parse();
+        $properties = $openApi['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        foreach ($validators as $name => $validator) {
+            $this->assertSame('password', $properties[$name]['format'], $name);
+            $this->assertTrue($validator->isValid($properties[$name]['example']), $name);
+        }
     }
 
     public function testNoContentMethodsOmitProducesMetadata(): void

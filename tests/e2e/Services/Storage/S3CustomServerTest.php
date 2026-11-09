@@ -218,6 +218,50 @@ final class S3CustomServerTest extends Scope
         $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
     }
 
+    public function testPutObjectServerSideEncryptionNotReported(): void
+    {
+        $bucketId = $this->setupBucket();
+        $encryption = ['x-amz-server-side-encryption' => 'AES256'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $key = Id::unique() . '.txt';
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite', headers: $encryption);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $put['headers']);
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame('appwrite', $object['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $object['headers']);
+
+        $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $head['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $head['headers']);
+
+        $copied = Id::unique() . '.txt';
+        $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $copied, headers: \array_merge($encryption, [
+            'x-amz-copy-source' => $bucketId . '/' . $key,
+            'x-amz-metadata-directive' => 'REPLACE',
+        ]));
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+
+        $copiedObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $copied);
+        $this->assertSame(200, $copiedObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $copiedObject['headers']);
+
+        $multipartKey = 'multipart/' . Id::unique() . '.txt';
+        $uploadId = $this->createMultipartUpload($bucketId, $multipartKey, $encryption);
+        $etag = $this->uploadPart($bucketId, $multipartKey, $uploadId, 1, 'appwrite');
+        $complete = $this->completeMultipartUpload($bucketId, $multipartKey, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+        $multipartObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $multipartKey);
+        $this->assertSame(200, $multipartObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $multipartObject['headers']);
+    }
+
     public function testPutObjectControlCharacterKey(): void
     {
         $bucketId = $this->setupBucket();
@@ -234,6 +278,25 @@ final class S3CustomServerTest extends Scope
         foreach (['%0A', '%0D%0A', '%00', '%7F'] as $control) {
             $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . Id::unique() . $control . '.txt', body: 'appwrite');
             $this->assertSame(400, $put['headers']['status-code'], $control);
+        }
+    }
+
+    #[Group('s3')]
+    public function testCreateBucketRefusesPathSegments(): void
+    {
+        // The bucket ID is a segment of every object's storage path, so these would write outside the project's directory.
+        foreach (['..', '....', '..\\..\\builds'] as $bucketId) {
+            $encoded = \rawurlencode($bucketId);
+
+            $create = $this->call(Client::METHOD_PUT, '/' . $encoded . '%2F');
+            $this->assertSame(400, $create['headers']['status-code'], $bucketId . ': ' . $create['body']);
+
+            $put = $this->call(Client::METHOD_PUT, '/' . $encoded . '%2Fescaped.bin', body: 'appwrite');
+            $this->assertSame(404, $put['headers']['status-code'], $bucketId . ': ' . $put['body']);
+
+            $buckets = $this->call(Client::METHOD_GET, '');
+            $this->assertSame(200, $buckets['headers']['status-code'], $buckets['body']);
+            $this->assertStringNotContainsString('<Name>' . $bucketId . '</Name>', (string) $buckets['body']);
         }
     }
 
@@ -339,6 +402,81 @@ final class S3CustomServerTest extends Scope
 
         $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $name);
         $this->assertSame(200, $head['headers']['status-code']);
+    }
+
+    public function testS3OverwritePathsInvalidatePreviewCache(): void
+    {
+        $bucketId = $this->setupBucket();
+
+        // Create through the Storage API so the test holds the file id; the S3 gateway addresses
+        // the object by name, so a later write to the same key overwrites this same file.
+        $key = Id::unique() . '.png';
+        $created = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', $key),
+        ]);
+        $this->assertSame(201, $created['headers']['status-code'], \json_encode($created['body']));
+        $fileId = $created['body']['$id'];
+
+        $baseline = $this->fetchPreview($bucketId, $fileId);
+        $this->assertSame(200, $baseline['headers']['status-code']);
+        $this->assertNotEmpty($baseline['body']);
+
+        // Each overwrite path keeps the file id but changes the bytes, so /preview must stop serving
+        // the cached rendering. A fresh preview is re-primed as the baseline before the next path.
+
+        // 1) Plain PutObject overwrite.
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/logo-after.png')), headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $baseline = $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline['body']);
+
+        // 2) CopyObject overwrite (copies a different image onto the same key).
+        $sourceKey = Id::unique() . '.png';
+        $source = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $sourceKey, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/initials.png')), headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $source['headers']['status-code'], $source['body']);
+        $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, headers: ['x-amz-copy-source' => '/' . $bucketId . '/' . $sourceKey]);
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+        $baseline = $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
+
+        // 3) Multipart-complete overwrite. The part is sent as image/png so the client passes the
+        // bytes through unmodified (otherwise it would mangle them and break the per-part ETag).
+        $partBody = (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/file.png'));
+        $uploadId = $this->createMultipartUpload($bucketId, $key, ['content-type' => 'image/png']);
+        $part = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], $partBody, ['content-type' => 'image/png']);
+        $this->assertSame(200, $part['headers']['status-code'], $part['body']);
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => \md5($partBody)]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+        $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fetchPreview(string $bucketId, string $fileId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['width' => 64]);
+    }
+
+    /**
+     * Assert the preview stops matching $previousBody once the overwrite's cache purge runs
+     * (it runs on the deletes worker, hence eventually), and return the new rendering.
+     */
+    private function assertPreviewEventuallyChanges(string $bucketId, string $fileId, string $previousBody): string
+    {
+        $current = $previousBody;
+        $this->assertEventually(function () use ($bucketId, $fileId, $previousBody, &$current): void {
+            $preview = $this->fetchPreview($bucketId, $fileId);
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertNotSame($previousBody, $preview['body']);
+            $current = $preview['body'];
+        }, 20000, 500);
+
+        return $current;
     }
 
     #[Group('antivirus')]
@@ -537,9 +675,12 @@ final class S3CustomServerTest extends Scope
         return $bucket['body']['$id'];
     }
 
-    private function createMultipartUpload(string $bucketId, string $key): string
+    /**
+     * @param array<string, string> $headers
+     */
+    private function createMultipartUpload(string $bucketId, string $key, array $headers = []): string
     {
-        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => '']);
+        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => ''], headers: $headers);
         $this->assertSame(200, $upload['headers']['status-code'], $upload['body']);
 
         return (string) \simplexml_load_string($upload['body'])->UploadId;

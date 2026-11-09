@@ -17,6 +17,17 @@ All notable changes to `utopia-php/audit` are documented in this file.
 - `SQL::getAttribute()` declares `?Attribute` and returns `null` for an unknown
   ID, instead of an untyped array or `null`.
 
+### Added
+
+- `reason` optional ClickHouse column, read with `Log::getReason()`: why the
+  actor took the action. Stored as `Nullable(String)`; `createBatch()` never
+  throws when a caller omits it. Newly created tables include the column via
+  `setup()`. `setup()` only issues `CREATE TABLE IF NOT EXISTS`, so **existing**
+  tables do not gain the column automatically — apply it with an
+  `ALTER TABLE ... ADD COLUMN IF NOT EXISTS reason Nullable(String)` migration
+  before deploying, on every table the adapter writes (including tables set
+  with `setTable()`), since inserts and selects name every column.
+
 ### Changed
 
 - `Utopia\Audit\Query`'s legacy `TYPE_*` constants take their values from

@@ -4,7 +4,6 @@ import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
 import {
   Globe,
-  CheckCircle2,
   AlertCircle,
   RefreshCw,
   Download,
@@ -115,7 +114,7 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  usePresetRecords,
+  useCreatePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -137,9 +136,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
+// The loaders leave both undefined when the domain is not found
 export type DomainDetailInitialData = {
-  domain: Models.Domain
-  records: { dnsRecords: Models.DnsRecord[]; total: number }
+  domain?: Models.Domain
+  records?: { dnsRecords: Models.DnsRecord[]; total: number }
 }
 
 type ViewProps = {
@@ -165,15 +165,6 @@ export function View({ initialData }: ViewProps = {}) {
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
   )
-  const [selectedPreset, setSelectedPreset] = useState<
-    | 'zoho'
-    | 'mailgun'
-    | 'outlook'
-    | 'protonmail'
-    | 'icloud'
-    | 'google-workspace'
-    | null
-  >(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState('')
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -271,9 +262,10 @@ export function View({ initialData }: ViewProps = {}) {
     initialData?.records &&
     !hasRecordFilters &&
     !recordsFromHook?.length
-  const rawRecords = canUseInitialRecords
-    ? initialData!.records.dnsRecords
-    : (recordsFromHook ?? [])
+  const rawRecords =
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.dnsRecords
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (rawRecords.length === 0) return rawRecords
 
@@ -301,14 +293,13 @@ export function View({ initialData }: ViewProps = {}) {
       ? (recordsTotalFromHook ?? initialData.records.total)
       : (recordsTotalFromHook ?? 0)
 
-  // Get verification status
+  // Nameserver delegation of the zone, not a project domain's verification;
+  // short enough for one metadata column
   const verificationStatus = useMemo(() => {
     if (!domain) return null
     const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
     return {
       isVerified,
-      icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Verified' : 'Unverified',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',
@@ -366,7 +357,7 @@ export function View({ initialData }: ViewProps = {}) {
   const createRecordMutation = useCreateDnsRecord(domainId)
 
   // Preset records
-  usePresetRecords(domainId, selectedPreset)
+  const createPresetMutation = useCreatePresetRecords(domainId)
 
   const handleCreateRecord = (data: {
     type: string
@@ -548,32 +539,6 @@ export function View({ initialData }: ViewProps = {}) {
       | 'icloud'
       | 'google-workspace',
   ) => {
-    setSelectedPreset(preset)
-
-    // Fetch preset records and create them
-    try {
-      const { fetchPresetRecords } = await import('@/lib/react-query/hooks')
-      const data = await fetchPresetRecords(domainId!, preset)
-
-      if (data?.dnsRecords) {
-        await handleCreatePresetRecords(data.dnsRecords, preset)
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
-    }
-  }
-
-  const handleCreatePresetRecords = async (
-    records: Models.DnsRecord[],
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
     const presetLabels: Record<string, string> = {
       'google-workspace': 'Google Workspace',
       outlook: 'Outlook',
@@ -583,35 +548,17 @@ export function View({ initialData }: ViewProps = {}) {
       icloud: 'iCloud',
     }
 
+    // The preset endpoint adds only the records the domain does not have yet,
+    // so applying a preset again, or over matching records, is not an error.
+    // It returns all of the preset's records, so the toast states no count.
     try {
-      // Create all records from the preset
-      await Promise.all(
-        records.map((record) =>
-          createRecordMutation.mutateAsync({
-            type: record.type,
-            data: {
-              name: record.name || '@',
-              value: record.value,
-              ttl: record.ttl,
-              priority: record.priority,
-              weight: record.weight,
-              port: record.port,
-              comment: record.comment,
-            },
-          }),
-        ),
-      )
+      await createPresetMutation.mutateAsync(preset)
 
       toast.success(
-        `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
-      queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
-      setSelectedPreset(null)
     } catch (error) {
       toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
     }
   }
 
@@ -659,13 +606,19 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
   const recordsSearchWithSort =
     (queryParam: string | undefined, sortParam: string | undefined) =>
-    (prev: Record<string, unknown>) => ({
-      ...(typeof prev === 'object' && prev !== null ? prev : {}),
-      ...buildListSearchParams({
-        query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+    (prev: Record<string, unknown>) => {
+      const next: Record<string, unknown> = {
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        ...buildListSearchParams({
+          query: queryParam ?? undefined,
+          sort: sortParam ?? undefined,
+        }),
+      }
+      // Drop the old query and sort so clearing them removes them from the URL.
+      if (!queryParam) delete next.query
+      if (!sortParam) delete next.sort
+      return next
+    }
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
@@ -989,7 +942,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="flex flex-1 items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {t('Domain not verified')}
+                          {t('Nameservers not pointed to Appwrite')}
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
@@ -1023,47 +976,22 @@ export function View({ initialData }: ViewProps = {}) {
               {domain && (
                 <div className="mb-4 rounded-lg border border-border bg-card/50">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-6">
-                    {/* Status */}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        {t('Status')}
-                      </p>
-                      <div className="min-h-[1.25rem] flex items-center gap-1.5">
-                        {transferInProgress && transferStatusBadge ? (
+                    {/* Status: only while something is in progress */}
+                    {transferInProgress && transferStatusBadge && (
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+                          {t('Status')}
+                        </p>
+                        <div className="min-h-[1.25rem] flex items-center gap-1.5">
                           <Badge
                             variant={transferStatusBadge.variant}
                             className="text-[10px] shrink-0"
                           >
                             {t(transferStatusBadge.label)}
                           </Badge>
-                        ) : (
-                          verificationStatus && (
-                            <>
-                              <code
-                                className={cn(
-                                  'text-[12px] font-mono font-medium',
-                                  verificationStatus.isVerified
-                                    ? 'text-green-600 dark:text-green-500'
-                                    : 'text-yellow-600 dark:text-yellow-500',
-                                )}
-                              >
-                                {t(verificationStatus.label)}
-                              </code>
-                              {!verificationStatus.isVerified && (
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  onClick={() => setRetryDialogOpen(true)}
-                                  className={metadataActionClassName}
-                                >
-                                  {t('Verify')}
-                                </Button>
-                              )}
-                            </>
-                          )
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Registrar */}
                     <div className="min-w-0">
@@ -1084,8 +1012,14 @@ export function View({ initialData }: ViewProps = {}) {
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         {t('Nameservers')}
                       </p>
+                      {/* The banner above offers Retry Verification */}
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
-                        <code className="text-[12px] font-mono text-foreground truncate">
+                        <code
+                          className={cn(
+                            'text-[12px] font-mono font-medium truncate',
+                            verificationStatus?.className,
+                          )}
+                        >
                           {domain.nameservers || t('3rd party')}
                         </code>
                       </div>
@@ -1247,37 +1181,37 @@ export function View({ initialData }: ViewProps = {}) {
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Google Workspace
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('outlook')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Outlook
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Mailgun
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('zoho')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Zoho
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         ProtonMail
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('icloud')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         iCloud
                       </DropdownMenuItem>
@@ -1316,37 +1250,37 @@ export function View({ initialData }: ViewProps = {}) {
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Google Workspace
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('outlook')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Outlook
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Mailgun
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('zoho')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Zoho
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           ProtonMail
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('icloud')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           iCloud
                         </DropdownMenuItem>
@@ -2137,8 +2071,8 @@ export function View({ initialData }: ViewProps = {}) {
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {domain.nameservers?.toLowerCase() === 'appwrite'
-                            ? t('Verified')
-                            : t('Unverified')}
+                            ? t('Appwrite nameservers')
+                            : t('External nameservers')}
                         </p>
                       </div>
                     </div>
@@ -2187,8 +2121,8 @@ export function View({ initialData }: ViewProps = {}) {
                                   <p className="text-[11px] text-muted-foreground">
                                     {domain.nameservers?.toLowerCase() ===
                                     'appwrite'
-                                      ? t('Verified')
-                                      : t('Unverified')}
+                                      ? t('Appwrite nameservers')
+                                      : t('External nameservers')}
                                   </p>
                                 </div>
                               </div>

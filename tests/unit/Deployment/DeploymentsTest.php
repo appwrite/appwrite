@@ -8,6 +8,7 @@ use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
@@ -279,6 +280,41 @@ final class DeploymentsTest extends TestCase
             \rmdir($root . '/deployment1');
             \rmdir($root);
             \rmdir($base . '/outside');
+            \rmdir($base);
+        }
+    }
+
+    public function testOpenArtifactKeepsReadingTheCheckedFile(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/open-artifact-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1', 0o777, true);
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($base . '/secret', 'secret');
+        \symlink($base . '/secret', $root . '/deployment1/link.tar.gz');
+        $device = new Local($root);
+
+        try {
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/link.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/missing.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $base . '/secret'));
+
+            $artifact = Deployments::openArtifact($device, $root . '/deployment1/code.tar.gz');
+            $this->assertInstanceOf(StreamInterface::class, $artifact);
+            $this->assertSame(8, $artifact->getSize());
+
+            // The build swaps the checked file for a link once the download started
+            \unlink($root . '/deployment1/code.tar.gz');
+            \symlink($base . '/secret', $root . '/deployment1/code.tar.gz');
+
+            $this->assertSame('artifact', $artifact->getContents());
+            $artifact->close();
+        } finally {
+            \unlink($root . '/deployment1/code.tar.gz');
+            \unlink($root . '/deployment1/link.tar.gz');
+            \unlink($base . '/secret');
+            \rmdir($root . '/deployment1');
+            \rmdir($root);
             \rmdir($base);
         }
     }

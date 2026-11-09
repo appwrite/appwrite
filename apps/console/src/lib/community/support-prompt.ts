@@ -39,10 +39,7 @@ export type CommunitySupportAction = {
 }
 
 /** Which console profiles may see this example. */
-export type CommunitySupportShareAudience =
-  | 'all'
-  | 'cloud'
-  | 'self-hosted'
+export type CommunitySupportShareAudience = 'all' | 'cloud' | 'self-hosted'
 
 export type CommunitySupportShareExample = {
   text: string
@@ -174,7 +171,8 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
   {
     id: 'community',
     title: 'Join the community',
-    description: 'Help other Appwriters on Discord and grow with the community.',
+    description:
+      'Help other Appwriters on Discord and grow with the community.',
     href: MARKETING_SOCIAL_STATS.discord.link,
     external: true,
     icon: HeartHandshake,
@@ -251,6 +249,30 @@ export function shouldShowCommunitySupportPrompt(
   const lastShownMs = Date.parse(state.lastShownAt)
   if (Number.isNaN(lastShownMs)) return true
   return now.getTime() - lastShownMs >= COMMUNITY_SUPPORT_REMINDER_MS
+}
+
+/**
+ * How long another prompt should stay out of the way after this wizard was
+ * shown. Opening (and skipping) stamp `lastShownAt`, which flips the "due"
+ * check false while the wizard is still on screen.
+ */
+export const COMMUNITY_SUPPORT_PROMPT_HOLD_OFF_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Whether the community-support wizard is due now or was shown within the
+ * hold-off window. Other fullscreen prompts defer while this is true, so two
+ * takeovers never stack or chain in one session.
+ */
+export function isCommunitySupportPromptEngaged(
+  state: CommunitySupportPromptState,
+  now: Date = new Date(),
+  holdOffMs: number = COMMUNITY_SUPPORT_PROMPT_HOLD_OFF_MS,
+): boolean {
+  if (shouldShowCommunitySupportPrompt(state, now)) return true
+  if (!state.lastShownAt) return false
+  const lastShownMs = Date.parse(state.lastShownAt)
+  if (Number.isNaN(lastShownMs)) return false
+  return now.getTime() - lastShownMs < holdOffMs
 }
 
 export function withRecordedActiveDay(

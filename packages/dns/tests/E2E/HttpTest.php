@@ -58,12 +58,42 @@ final class HttpTest extends TestCase
         $this->assertNull($this->tryRequest('DELETE', self::ENDPOINT));
     }
 
+    public function testPostBodyOverMaximumMessageSizeIsRejected(): void
+    {
+        $query = Message::query(new Question('dev.appwrite.io', Record::TYPE_A))->encode();
+        $rdata = str_repeat("\xFF" . str_repeat('a', 255), 160);
+        $additional = "\x00" . pack('nnNn', Record::TYPE_TXT, Record::CLASS_IN, 0, \strlen($rdata)) . $rdata;
+        $body = substr($query, 0, 10) . pack('n', 2) . substr($query, 12) . str_repeat($additional, 2);
+
+        $this->assertGreaterThan(Message::MAX_SIZE, \strlen($body));
+        $this->assertSame(400, $this->responseStatus('POST', self::ENDPOINT, $body));
+    }
+
     protected function request(string $method, string $url, string $body = '', string $contentType = 'application/dns-message'): string
     {
         $response = $this->tryRequest($method, $url, $body, $contentType);
         $this->assertNotNull($response, \sprintf('%s %s failed', $method, $url));
 
         return $response;
+    }
+
+    protected function responseStatus(string $method, string $url, string $body, string $contentType = 'application/dns-message'): int
+    {
+        $context = stream_context_create(['http' => [
+            'method' => $method,
+            'header' => ['Content-Type: ' . $contentType],
+            'content' => $body,
+            'ignore_errors' => true,
+            'timeout' => 5,
+        ]]);
+
+        $response = @file_get_contents($url, false, $context);
+        $this->assertNotFalse($response, \sprintf('%s %s failed', $method, $url));
+
+        $status = explode(' ', http_get_last_response_headers()[0] ?? '')[1] ?? '';
+        $this->assertTrue(ctype_digit($status), 'the response carries a status line');
+
+        return (int) $status;
     }
 
     protected function tryRequest(string $method, string $url, string $body = '', string $contentType = 'application/dns-message'): ?string

@@ -1,7 +1,10 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { sdk } from '@/lib/appwrite/sdk'
 import {
   acquisitionSourceFromStorage,
   addPendingSourceClaim,
+  linkSignUpSources,
+  linkSourcesBeforeUpgrade,
   parseAcquisitionSource,
   persistAcquisitionSource,
   readPendingSourceClaims,
@@ -126,5 +129,57 @@ describe('pending source claims', () => {
     expect(readPendingSourceClaims(storage)).toEqual([])
     storage.setItem('utmSourceClaims', JSON.stringify(['a.sig', 1, '']))
     expect(readPendingSourceClaims(storage)).toEqual(['a.sig'])
+  })
+})
+
+describe('linking pending source claims', () => {
+  const HOUR = 60 * 60 * 1000
+  let storage: ReturnType<typeof memoryStorage>
+  let call: ReturnType<typeof spyOn>
+
+  beforeEach(() => {
+    storage = memoryStorage()
+    addPendingSourceClaim('a.sig', storage)
+    Object.assign(globalThis, { window: globalThis, localStorage: storage })
+    call = spyOn(sdk.forConsole.client, 'call').mockResolvedValue({})
+  })
+
+  afterEach(() => {
+    call.mockRestore()
+    Reflect.deleteProperty(globalThis, 'window')
+    Reflect.deleteProperty(globalThis, 'localStorage')
+  })
+
+  test('an existing account keeps its claims on sign-in', async () => {
+    await linkSignUpSources(new Date(Date.now() - 48 * HOUR).toISOString())
+
+    expect(call).not.toHaveBeenCalled()
+    expect(readPendingSourceClaims(storage)).toEqual(['a.sig'])
+  })
+
+  test('a new account links its claims on sign-in', async () => {
+    await linkSignUpSources(new Date(Date.now() - HOUR).toISOString())
+
+    expect(call).toHaveBeenCalledTimes(1)
+    expect(call.mock.calls[0]?.[3]).toEqual({ claims: ['a.sig'] })
+    expect(readPendingSourceClaims(storage)).toEqual([])
+  })
+
+  test('a paid upgrade links the claims', async () => {
+    await linkSourcesBeforeUpgrade()
+
+    expect(call.mock.calls[0]?.[3]).toEqual({ claims: ['a.sig'] })
+    expect(readPendingSourceClaims(storage)).toEqual([])
+  })
+
+  test('a slow link does not hold up the upgrade', async () => {
+    let finish = () => {}
+    call.mockReturnValue(new Promise((resolve) => (finish = () => resolve({}))))
+
+    await linkSourcesBeforeUpgrade(10)
+
+    expect(readPendingSourceClaims(storage)).toEqual(['a.sig'])
+    finish()
+    await linkSourcesBeforeUpgrade()
   })
 })

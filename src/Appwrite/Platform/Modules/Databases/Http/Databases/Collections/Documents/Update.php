@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -61,9 +62,7 @@ class Update extends Action
             ->label('audits.event', 'document.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -156,9 +155,11 @@ class Update extends Action
             PermissionType::Delete,
         ]);
 
+        $callerProvidedPermissions = !\is_null($permissions);
+
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && $callerProvidedPermissions) {
             foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -244,15 +245,7 @@ class Update extends Action
                 'data' => $data,
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             // Return successful response without actually updating document
             $groupId = $this->getGroupId();
@@ -275,9 +268,15 @@ class Update extends Action
         $this->validateTimestamps($data, $dbForDatabases);
 
         try {
-            $document = $dbForDatabases->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+            $document = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                fn () => $dbForDatabases->withRequestTimestamp(
+                    $requestTimestamp,
+                    fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+                ),
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

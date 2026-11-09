@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
+
 require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
@@ -67,8 +69,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -104,27 +108,35 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     $url = $platform['consoleUrl'] ?? '';
     $platformHostnames = $platform['hostnames'] ?? [];
 
-    if ($rule->isEmpty()) {
-        $denyDomains = [];
-        $denyEnvVars = [
-            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-            System::getEnv('_APP_DOMAIN_SITES', ''),
-        ];
-        foreach ($denyEnvVars as $denyEnvVar) {
-            foreach (\explode(',', $denyEnvVar) as $denyDomain) {
-                if (empty($denyDomain)) {
-                    continue;
-                }
-                $denyDomains[] = $denyDomain;
+    $denyDomains = [];
+    $denyEnvVars = [
+        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+        System::getEnv('_APP_DOMAIN_SITES', ''),
+    ];
+    foreach ($denyEnvVars as $denyEnvVar) {
+        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+            if (empty($denyDomain)) {
+                continue;
             }
+            $denyDomains[] = $denyDomain;
         }
+    }
 
+    // Reserved base domains are never served, even by a rule that claims one
+    if (\in_array($host, $denyDomains, true)) {
+        throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
+    }
+
+    // Fallback hosts are one level deep, so a rule saved before that limit cannot serve a deeper one
+    foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '')) as $fallbackDomain) {
+        if (!$rule->isEmpty() && !empty($fallbackDomain) && \str_ends_with($host, '.' . $fallbackDomain) && \str_contains(\substr($host, 0, -\strlen($fallbackDomain) - 1), '.')) {
+            throw new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
+        }
+    }
+
+    if ($rule->isEmpty()) {
         foreach ($denyDomains as $denyDomain) {
-            if ($host === $denyDomain) {
-                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
-            }
-
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
@@ -140,6 +152,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         // Act as API - no Proxy logic
         return false;
+    }
+
+    // Preview grants only apply to the rule the key was issued for
+    if (!\is_null($apiKey) && !$apiKey->isBoundTo($rule)) {
+        $apiKey = null;
     }
 
     $projectId = $rule->getAttribute('projectId');
@@ -249,7 +266,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If JWT in cookie is invalid or expired -> not authorized
             - If user is blocked or removed -> not authorized
             - If user's session is removed or expired -> not authorized
-            - If user is not member of team of this deployment -> not authorized
+            - If user lacks read permission on this project -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
         */
@@ -261,11 +278,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
-                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
                 $payload = [];
                 try {
-                    $payload = $jwt->decode($cookie);
+                    $payload = EncryptionKey::decode($cookie);
                 } catch (JWTException $error) {
                     // Authorized remains false
                 }
@@ -285,14 +300,19 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     && $user->sessionActive($jwtSessionId, Config::getParam('console')['auths']['sessionsInvalidatedAt'] ?? null)
                     && $user->sessionFactorsMet($jwtSessionId);
 
-                $membershipExists = false;
+                $hasProjectAccess = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
-                    $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true);
+                    // Same project-read check as HTTP admin mode and realtime: confirmed
+                    // membership alone is not enough when the only role is another project.
+                    $projectAuthorization = new Authorization();
+                    foreach ($user->getRoles($projectAuthorization) as $role) {
+                        $projectAuthorization->addRole($role);
+                    }
+                    $hasProjectAccess = $projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)));
                 }
 
-                if ($userExists && $sessionActive && $membershipExists) {
+                if ($userExists && $sessionActive && $hasProjectAccess) {
                     $authorized = true;
                 }
             }
@@ -413,7 +433,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $headers['x-appwrite-client-ip'] = $ip;
 
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
@@ -557,6 +577,75 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'headers' => [],
             'body' => '',
         ];
+        $streamed = null;
+        $streamParts = [];
+        $streamBody = '';
+        $canStreamResponse = !$isPreview
+            && System::getEnv('_APP_COMPUTE_STREAMING', 'enabled') === 'enabled';
+
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView, $type): void {
+            if ($name !== 'body') {
+                // Only the parts read below, and only while they still can be.
+                if ($streamed === null) {
+                    $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
+                }
+
+                return;
+            }
+
+            if ($streamed === null) {
+                $statusCode = \intval($streamParts['statusCode'] ?? 200);
+                $headers = \json_decode($streamParts['headers'] ?? '', true);
+
+                if (!\is_array($headers)) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
+                }
+
+                // A runtime may send header names in any casing.
+                $headers = \array_change_key_case($headers);
+
+                // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
+                $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
+
+                if ($streamed) {
+                    $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
+
+                    $contentType = 'text/plain';
+
+                    foreach ($headers as $header => $values) {
+                        $lowercased = \strtolower($header);
+
+                        if ($lowercased === 'content-type') {
+                            $contentType = \is_array($values) ? ($values[0] ?? $contentType) : $values;
+                            continue;
+                        }
+
+                        // Framing describes the buffered response, not the chunked one.
+                        if ($lowercased === 'transfer-encoding') {
+                            continue;
+                        }
+
+                        foreach ((array) $values as $value) {
+                            $response->addHeader($header, $value);
+                        }
+                    }
+
+                    $response
+                        ->setContentType($contentType)
+                        ->setStatusCode($statusCode);
+                }
+            }
+
+            if (!$streamed) {
+                $streamBody .= $chunk;
+
+                return;
+            }
+
+            if (!$response->stream($chunk)) {
+                throw new \RuntimeException('Failed to write response chunk.');
+            }
+        };
 
         try {
             $version = match ($type) {
@@ -617,10 +706,20 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // Temporary mitigation for slow cold starts: 60s for all
                     // synchronous executions until cold starts are addressed.
                     requestTimeout: 60,
-                    responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                    responseFormat: $canStreamResponse ? Executor::RESPONSE_FORMAT_STREAM : Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
+                    onPart: $onExecutionPart
                 );
             } catch (ExecutorTimeout $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
+            }
+
+            if ($streamed !== null) {
+                $executionResponse['body'] = $streamBody;
+            }
+
+            // Ended only here, once the executor has confirmed the rest of the envelope arrived.
+            if ($streamed === true) {
+                $response->stream('', true);
             }
 
             $headerOverrides = [];
@@ -728,6 +827,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
+            if ($streamed === true) {
+                // Content is already on the wire; a truncated response must not read as a complete one.
+                $response->abort();
+            }
+
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('responseStatusCode', 500);
@@ -764,30 +868,32 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $body = $execution['responseBody'];
 
-        $contentType = 'text/plain';
-        foreach ($executionResponse['headers'] as $name => $values) {
-            if (\strtolower($name) === 'content-type') {
-                $contentType = \is_array($values) ? $values[0] : $values;
-                continue;
-            }
-
-            if (\strtolower($name) === 'transfer-encoding') {
-                continue;
-            }
-
-            if (\is_array($values)) {
-                foreach ($values as $value) {
-                    $response->addHeader($name, $value);
+        if ($streamed !== true) {
+            $contentType = 'text/plain';
+            foreach ($executionResponse['headers'] as $name => $values) {
+                if (\strtolower($name) === 'content-type') {
+                    $contentType = \is_array($values) ? $values[0] : $values;
+                    continue;
                 }
-            } else {
-                $response->addHeader($name, $values);
-            }
-        }
 
-        $response
-            ->setContentType($contentType)
-            ->setStatusCode($execution['responseStatusCode'] ?? 200)
-            ->send($body);
+                if (\strtolower($name) === 'transfer-encoding') {
+                    continue;
+                }
+
+                if (\is_array($values)) {
+                    foreach ($values as $value) {
+                        $response->addHeader($name, $value);
+                    }
+                } else {
+                    $response->addHeader($name, $values);
+                }
+            }
+
+            $response
+                ->setContentType($contentType)
+                ->setStatusCode($execution['responseStatusCode'] ?? 200)
+                ->send($body);
+        }
 
         $bus->dispatch(new RequestCompleted(
             project: $project->getArrayCopy(),
@@ -1295,7 +1401,8 @@ Http::error()
     ->inject('project')
     ->inject('bus')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization) {
+    ->inject('localeCodes')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization, array $localeCodes) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1365,7 +1472,10 @@ Http::error()
         }
 
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
         if (Span::current()?->get('project.id') === null) {
             Span::add('project.id', $project->getId());
         }
@@ -1520,6 +1630,8 @@ Http::get('/robots.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
@@ -1554,6 +1666,8 @@ Http::get('/humans.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });

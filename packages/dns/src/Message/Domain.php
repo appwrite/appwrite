@@ -11,6 +11,7 @@ final readonly class Domain
     public const int MAX_LABEL_LEN = 63;
     public const int MAX_LABELS = 127;
     public const int MAX_DOMAIN_NAME_LEN = 255;
+    public const int MAX_POINTERS = 126;
 
     /**
      * Encode a domain name according to RFC 1035.
@@ -96,6 +97,8 @@ final readonly class Domain
 
         // Maximum labels per RFC 1035 (127 labels * 63 chars + separators = 255 max)
         $labelCount = 0;
+        $pointerCount = 0;
+        $nameLength = 1; // trailing zero-length octet
 
         while (true) {
             if ($pos >= $dataLength) {
@@ -142,6 +145,12 @@ final readonly class Domain
                 }
                 $visitedPointers[$pointer] = true;
 
+                if (++$pointerCount > self::MAX_POINTERS) {
+                    throw new DecodingException(
+                        'Domain name exceeds maximum compression pointer count',
+                    );
+                }
+
                 if (!$jumped) {
                     $offset = $pos + 2;
                 }
@@ -166,11 +175,18 @@ final readonly class Domain
 
             $labels[] = substr($data, $pos + 1, $len);
             $labelCount++;
+            $nameLength += $len + 1;
             $pos += $len + 1;
 
             if ($labelCount > self::MAX_LABELS) {
                 throw new DecodingException(
                     'Domain name exceeds maximum label count',
+                );
+            }
+
+            if ($nameLength > self::MAX_DOMAIN_NAME_LEN) {
+                throw new DecodingException(
+                    'Domain name exceeds maximum length of ' . self::MAX_DOMAIN_NAME_LEN . ' bytes',
                 );
             }
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -76,7 +77,7 @@ class Create extends Action
                     ),
                 ]
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
@@ -139,6 +140,17 @@ class Create extends Action
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+
+        // Same console rule as membership role updates: organization developer
+        // must not count as privileged enough to invite with arbitrary roles.
+        // Checked before the invitee is looked up or created below, so a
+        // caller who fails this check never causes a user account to exist.
+        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+        }
+
         if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
@@ -278,14 +290,47 @@ class Create extends Action
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
-        }
 
-        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+            foreach ([MESSAGE_TYPE_EMAIL => $email, MESSAGE_TYPE_SMS => $phone] as $providerType => $identifier) {
+                if (empty($identifier)) {
+                    continue;
+                }
 
-        // Same console rule as membership role updates: organization developer
-        // must not count as privileged enough to invite with arbitrary roles.
-        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+                try {
+                    $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($invitee->getId())),
+                            Permission::update(Role::user($invitee->getId())),
+                            Permission::delete(Role::user($invitee->getId())),
+                        ],
+                        'userId' => $invitee->getId(),
+                        'userInternalId' => $invitee->getSequence(),
+                        'providerType' => $providerType,
+                        'identifier' => $identifier,
+                    ])));
+                } catch (Duplicate) {
+                    // A deleted user's target lingers until the deletes worker removes it
+                    $existing = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                        Query::equal('identifier', [$identifier]),
+                    ]));
+                    $owner = $authorization->skip(fn () => $dbForProject->getDocument('users', $existing->getAttribute('userId', '')));
+
+                    if (!$existing->isEmpty() && $owner->isEmpty()) {
+                        $authorization->skip(fn () => $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($invitee->getId())),
+                                Permission::update(Role::user($invitee->getId())),
+                                Permission::delete(Role::user($invitee->getId())),
+                            ],
+                            'userId' => $invitee->getId(),
+                            'userInternalId' => $invitee->getSequence(),
+                            'providerType' => $providerType,
+                        ])));
+                    }
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         }
 
         $membership = $dbForProject->findOne('memberships', [
@@ -335,6 +380,9 @@ class Create extends Action
                         ], 1)
                     );
                     if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocuments('targets', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ]));
                         $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
                     }
                 }
@@ -574,13 +622,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $invitee->getSequence() === $user->getSequence());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                    ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }

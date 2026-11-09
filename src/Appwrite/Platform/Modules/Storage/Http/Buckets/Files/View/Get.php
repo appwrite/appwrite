@@ -3,12 +3,12 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\View;
 
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Encryption;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
@@ -25,7 +25,6 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Get extends Action
@@ -61,7 +60,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -180,17 +179,39 @@ class Get extends Action
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
+        $encryption = new Encryption($file);
+        // Segmented files are read by range and streamed, never held whole.
+        if ($encryption->isSegmented()) {
+            if (!empty($rangeHeader)) {
+                $response->send($encryption->range($deviceForFiles, $start, $end));
+                return;
+            }
+
+            if ($size > APP_STORAGE_READ_BUFFER) {
+                $started = false;
+                try {
+                    $encryption->stream($deviceForFiles, static function (string $chunk) use ($response, &$started): void {
+                        $started = true;
+                        $response->chunk($chunk, false);
+                    });
+                    $response->chunk('', true);
+                } catch (\Throwable $error) {
+                    if ($started) {
+                        $response->abort();
+                    }
+                    throw $error;
+                }
+                return;
+            }
+
+            // Sent from here even when empty, so a zero-byte file never falls through to the stored bytes.
+            $response->send($encryption->decrypt((string) $deviceForFiles->read($path)));
+            return;
+        }
+
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = (string) $deviceForFiles->read($path);
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
+            $source = $encryption->decrypt((string) $deviceForFiles->read($path));
         }
 
         switch ($file->getAttribute('algorithm', Compression::NONE)) {

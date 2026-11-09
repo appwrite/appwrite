@@ -185,9 +185,17 @@ class XList extends Action
                 'enabled' => $auths['corporateEmails'] ?? false,
             ]),
             new Document([
+                '$id' => 'deny-realtime-guests',
+                'enabled' => $auths['realtimeGuests'] ?? false,
+            ]),
+            new Document([
                 '$id' => 'passkey',
                 'rpId' => $auths['passkeyRpId'] ?? '',
                 'origins' => Ceremony::getOrigins($project),
+            ]),
+            new Document([
+                '$id' => 'account-devices',
+                'enabled' => $auths['accountDevices'] ?? true,
             ]),
         ];
     }

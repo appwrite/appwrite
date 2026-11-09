@@ -408,8 +408,8 @@ export function DebugDemoNavigatorOptions({
         search: {
           phase: nextPhase,
           mode: nextMode,
-          payment: nextPayment,
-          activation: nextActivation,
+          payment: String(nextPayment),
+          activation: String(nextActivation),
         },
         replace: true,
       })

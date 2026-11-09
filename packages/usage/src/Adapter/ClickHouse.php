@@ -1132,6 +1132,7 @@ class ClickHouse extends SQL
      * @var array<array{name: string, dims: array<int, string>}>
      */
     private const EVENT_PROJECTIONS = [
+        ['name' => 'p_by_resourceType', 'dims' => ['resourceType']],
         ['name' => 'p_by_path', 'dims' => ['path']],
         ['name' => 'p_by_country', 'dims' => ['country']],
         ['name' => 'p_by_service', 'dims' => ['service']],

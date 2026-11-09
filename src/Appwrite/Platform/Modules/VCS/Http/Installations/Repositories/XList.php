@@ -159,7 +159,10 @@ class XList extends Action
             $repo['id'] = \strval($repo['id'] ?? '');
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
-            $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
+            // Entire names each repository's owner, as a mirrors project holds several GitHub owners
+            $repo['organization'] = \is_string($repo['organization'] ?? null) && $repo['organization'] !== ''
+                ? $repo['organization']
+                : $installation->getAttribute('organization', '') ?? '';
             $repo['providerInstallationId'] = $installation->getAttribute('providerInstallationId', '');
             $repo['authorized'] = true;
             return $repo;

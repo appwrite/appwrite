@@ -3,7 +3,9 @@ import { CONSOLE_PROFILES } from '@/lib/console-profiles'
 import { getVisibleVcsOAuthProviders } from '@/lib/vcs/providers'
 
 const ids = (features: { extraVcsOAuth: boolean }) =>
-  getVisibleVcsOAuthProviders(features).map((provider) => provider.id)
+  getVisibleVcsOAuthProviders(features, undefined).map(
+    (provider) => provider.id,
+  )
 
 describe('Git connect providers', () => {
   test('both profiles show Entire, second after GitHub, and hide Origin', () => {
@@ -13,6 +15,7 @@ describe('Git connect providers', () => {
         'entire',
         'gitlab',
         'bitbucket',
+        'gitea',
       ])
     }
   })
@@ -24,6 +27,7 @@ describe('Git connect providers', () => {
       'origin',
       'gitlab',
       'bitbucket',
+      'gitea',
     ])
   })
 })

@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -140,6 +141,7 @@ class State
     ): array {
         $created = false;
         $counted = false;
+        $previousHash = null;
         try {
             if ($sequence !== null) {
                 $existing = $dbForProject->getAuthorization()->skip(
@@ -148,6 +150,7 @@ class State
                 if (!$existing->isEmpty() && (string) $existing->getSequence() === $sequence) {
                     $presenceDocument->setAttribute('$id', $existing->getId());
                     $presence = $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $existing->getAttribute('permissionsHash'), $presence);
 
                     return ['presence' => $presence, 'created' => false, 'counted' => false];
                 }
@@ -158,11 +161,12 @@ class State
             $duplicate = null;
             for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
-                    $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted) {
+                    $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted, &$previousHash) {
                         // Reset per attempt: a prior attempt that set $created then lost the create
                         // race must not report a creation when this retry only increments.
                         $created = false;
                         $counted = false;
+                        $previousHash = null;
 
                         $existing = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
@@ -186,12 +190,15 @@ class State
                             throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
                         }
 
+                        $previousHash = $current->getAttribute('permissionsHash');
                         $presenceDocument->setAttribute('$id', $current->getId());
                         $presenceDocument->setAttribute('connections', Operator::increment(1));
                         $counted = true;
 
                         return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
                     });
+
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
 
                     return ['presence' => $presence, 'created' => $created, 'counted' => $counted];
                 } catch (DuplicateException $e) {
@@ -305,6 +312,7 @@ class State
         $presenceDocument->setAttribute('$id', $presenceId);
 
         $presenceCreated = false;
+        $previousHash = null;
         $userId = $presenceDocument->getAttribute('userId');
         $existingQuery = \is_string($userId) && $userId !== ''
             ? [Query::equal('userId', [$userId])]
@@ -316,13 +324,37 @@ class State
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                 );
                 if ($existingPresence->isEmpty()) {
-                    $presenceCreated = true;
+                    // Create, not upsert, so a row another request inserts concurrently collides here
+                    // (duplicate) instead of being silently overwritten by this write. A genuine first
+                    // insert only adds a row and cannot leak one under a former ACL, so it never purges.
+                    try {
+                        $presence = $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
+                        $presenceCreated = true;
+                    } catch (DuplicateException $e) {
+                        // Lost the create race: the row exists now. Re-read it, upsert over it, and
+                        // purge on a real permission change so a narrowing cannot keep being served
+                        // from a page cached under the former ACL. If the re-read finds no row the
+                        // duplicate was the requested id colliding with another user's presence, not
+                        // a userId race -- propagate it to the PRESENCE_ALREADY_EXISTS handler below.
+                        $raced = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                        );
+                        if ($raced->isEmpty()) {
+                            throw $e;
+                        }
+                        $previousHash = $raced->getAttribute('permissionsHash');
+                        $presenceDocument->setAttribute('$id', $raced->getId());
+                        $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
+                        $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
+                    }
                 } else {
+                    $previousHash = $existingPresence->getAttribute('permissionsHash');
                     $presenceDocument->setAttribute('$id', $existingPresence->getId());
+                    $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
                 }
-                $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated) {
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated, &$previousHash) {
                     $existingPresence = $dbForProject->getAuthorization()->skip(
                         fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                     );
@@ -338,10 +370,16 @@ class State
                         throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
                     }
 
+                    $previousHash = $currentPresence->getAttribute('permissionsHash');
                     $presenceDocument->setAttribute('$id', $currentPresence->getId());
 
                     return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
                 });
+
+                // The transactional path holds the row for update and a racing insert fails with a
+                // duplicate rather than being silently overwritten, so a create cannot hide a prior
+                // row: purge only on a real permission change.
+                $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
             }
 
             if ($presenceCreated && $onPresenceCreated !== null) {
@@ -358,6 +396,280 @@ class State
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
+    }
+
+    /**
+     * Deletes the presence of a user who can no longer be online, such as a blocked or
+     * deleted one, so subscribers drop it now instead of at `expiresAt`. The user is already
+     * blocked or deleted when this runs, so a failure here is recorded, not thrown.
+     */
+    public function deleteForUser(
+        Database $dbForProject,
+        Document $project,
+        Document $user,
+        QueueRealtime $queueForRealtime,
+        UsageContext $usage,
+    ): void {
+        try {
+            /** @var array<Document> $presences */
+            $presences = [];
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $user, &$presences): void {
+                $dbForProject->deleteDocuments(
+                    self::COLLECTION_ID,
+                    [Query::equal('userInternalId', [$user->getSequence()])],
+                    onNext: function (Document $presence) use (&$presences): void {
+                        $presences[] = $presence;
+                    },
+                );
+            });
+
+            if (empty($presences)) {
+                return;
+            }
+
+            $this->purgeListCache($dbForProject);
+            $usage->addMetric(METRIC_USERS_PRESENCE, -\count($presences));
+
+            foreach ($presences as $presence) {
+                foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                    $presence->removeAttribute($attribute);
+                }
+
+                $queueForRealtime
+                    ->reset()
+                    ->setProject($project)
+                    ->setUser($user)
+                    ->setEvent('presences.[presenceId].delete')
+                    ->setParam('presenceId', $presence->getId())
+                    ->setPayload($presence->getArrayCopy())
+                    ->trigger();
+            }
+        } catch (Throwable $th) {
+            Span::current()?->setError($th)
+                ->set('project.id', $project->getId())
+                ->set('user.id', $user->getId());
+        }
+    }
+
+    /**
+     * Hostnames of the other realtime processes that sent a heartbeat within `$window` seconds
+     * of `$before`. Null when a live heartbeat does not name its host (written by an older
+     * version), as then no other host can be called dead. This host never counts as live: the
+     * hostname is ours now, so any earlier heartbeat under it came from a run that is gone.
+     *
+     * @return list<string>|null
+     */
+    public function getLiveHosts(
+        Database $dbForPlatform,
+        string $hostname,
+        string $before,
+        int $window = REALTIME_HEARTBEAT_WINDOW_SECONDS,
+    ): ?array {
+        $since = DateTime::addSeconds(new \DateTime($before), -$window);
+
+        return $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $hostname, $since): ?array {
+            $hosts = [];
+            foreach ($dbForPlatform->cursor('realtime', [Query::greaterThan('timestamp', $since)]) as $heartbeat) {
+                // `container` is `<process id>@<hostname>`.
+                $container = (string) $heartbeat->getAttribute('container', '');
+                $separator = \strrpos($container, '@');
+                if ($separator === false) {
+                    return null;
+                }
+
+                $host = \substr($container, $separator + 1);
+                if ($host !== $hostname) {
+                    $hosts[] = $host;
+                }
+            }
+
+            return \array_values(\array_unique($hosts));
+        });
+    }
+
+    /**
+     * Runs {@see deleteOrphaned} on every project until done or `$deadline` (unix seconds).
+     * Retries while the platform database is not ready; a failing project is recorded on the
+     * current span and skipped.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed'}
+     */
+    public function deleteOrphanedInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        float $deadline,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $projects = 0;
+        $failed = 0;
+        $error = null;
+
+        while (\microtime(true) < $deadline) {
+            $projects = 0;
+            $failed = 0;
+
+            try {
+                $liveHosts = $this->getLiveHosts($dbForPlatform, $hostname, $before);
+
+                $finished = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $getProjectDB, $hostname, $liveHosts, $before, $deadline, $publisherForUsage, $queueForRealtime, &$deleted, &$projects, &$failed): bool {
+                    foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
+                        if (\microtime(true) >= $deadline) {
+                            return false;
+                        }
+
+                        $projects++;
+                        try {
+                            $deleted += $this->deleteOrphaned($getProjectDB($project), $project, $hostname, $liveHosts, $before, $publisherForUsage, $queueForRealtime);
+                        } catch (Throwable $th) {
+                            $failed++;
+                            Span::current()?->setError($th)->set('project.id', $project->getId());
+                        }
+                    }
+
+                    return true;
+                });
+
+                return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $finished ? 'done' : 'timeout'];
+            } catch (Throwable $th) {
+                // Usually the database or schema isn't ready yet; a lasting error is retried until the deadline and set on the span.
+                $error = $th;
+                \sleep($retrySeconds);
+            }
+        }
+
+        if ($error !== null) {
+            Span::current()?->setError($error);
+        }
+
+        return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $error === null ? 'timeout' : 'failed'];
+    }
+
+    /**
+     * Finishes a sweep that {@see deleteOrphanedInProjects} left undone (timed out, failed or
+     * with failed projects), while serving. Safe then: rows written since `$before` are never
+     * deleted. Rescans every project per attempt, up to `$attempts`, with doubling backoff.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed', attempts: int}
+     */
+    public function resumeOrphanedInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $attempts = 5,
+        int $attemptSeconds = 600,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $result = ['deleted' => 0, 'projects' => 0, 'failed' => 0, 'outcome' => 'failed'];
+
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            if ($attempt > 1) {
+                \sleep($retrySeconds * 2 ** ($attempt - 2));
+            }
+
+            $result = $this->deleteOrphanedInProjects($dbForPlatform, $getProjectDB, $hostname, $before, \microtime(true) + $attemptSeconds, $publisherForUsage, $queueForRealtime, $retrySeconds);
+            $deleted += $result['deleted'];
+
+            if ($result['outcome'] === 'done' && $result['failed'] === 0) {
+                break;
+            }
+        }
+
+        return [...$result, 'deleted' => $deleted, 'attempts' => \min($attempt, $attempts)];
+    }
+
+    /**
+     * Deletes the realtime presences in one project whose host is no longer running: this
+     * host's earlier runs and any host not in `$liveHosts` (only this host's when null). Rows
+     * without a hostname are kept, as their host is unknown. Only rows untouched since
+     * `$before` go, so a socket served meanwhile keeps its presence. Purges the list cache,
+     * decrements usage and sends a realtime delete event per presence, as a socket closing
+     * does (realtime only, no webhooks or functions; no user lookup, as delivery uses the payload).
+     * Returns how many were deleted.
+     *
+     * @param list<string>|null $liveHosts
+     */
+    public function deleteOrphaned(
+        Database $dbForProject,
+        Document $project,
+        string $hostname,
+        ?array $liveHosts,
+        string $before,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+    ): int {
+        // deleteDocuments() re-applies these filters in the DELETE itself, so a row a socket
+        // updates after it was read is no longer older than `$before` and is kept.
+        $queries = [
+            Query::equal('source', ['realtime']),
+            Query::lessThan('$updatedAt', $before),
+        ];
+        if ($liveHosts === null) {
+            $queries[] = Query::equal('hostname', [$hostname]);
+        } else {
+            $queries[] = Query::isNotNull('hostname');
+            // One notEqual per host: it takes a single value.
+            foreach ($liveHosts as $liveHost) {
+                $queries[] = Query::notEqual('hostname', $liveHost);
+            }
+        }
+
+        $deleted = 0;
+        try {
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $queries, $project, $queueForRealtime, &$deleted): void {
+                if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
+                    return;
+                }
+
+                $dbForProject->deleteDocuments(
+                    self::COLLECTION_ID,
+                    $queries,
+                    // Announced as each row is deleted, so nothing is buffered and a later failure can't silence it.
+                    onNext: function (Document $presence) use ($project, $queueForRealtime, &$deleted): void {
+                        $deleted++;
+
+                        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                            $presence->removeAttribute($attribute);
+                        }
+
+                        try {
+                            $queueForRealtime
+                                ->reset()
+                                ->setProject($project)
+                                ->setEvent('presences.[presenceId].delete')
+                                ->setParam('presenceId', $presence->getId())
+                                ->setPayload($presence->getArrayCopy())
+                                ->trigger();
+                        } catch (Throwable $th) {
+                            Span::current()?->setError($th)->set('presence.id', $presence->getId());
+                        }
+                    },
+                );
+            });
+        } finally {
+            // Rows deleted before a failure are gone too, so count and purge them either way.
+            if ($deleted > 0) {
+                $this->triggerUsage($publisherForUsage, $project, -$deleted);
+
+                try {
+                    $this->purgeListCache($dbForProject);
+                } catch (Throwable $th) {
+                    Span::current()?->setError($th)->set('project.id', $project->getId());
+                }
+            }
+        }
+
+        return $deleted;
     }
 
     private function checkPermissions(array $permissions, Authorization $authorization): void
@@ -435,6 +747,20 @@ class State
         [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
 
         return $dbForProject->getCache()->purge($collectionKey);
+    }
+
+    /**
+     * Drop the list cache when a presence's effective permissions changed, so a page that was
+     * cached while the row was readable stops being served after it is narrowed. `$previousHash`
+     * is the stored row's `permissionsHash` before the write, or null when the row was just
+     * created -- a creation only adds a row, it cannot leak one to a reader who lost access, and
+     * purging on every create would drop the cache on each realtime connect and heartbeat-create.
+     */
+    private function purgeListCacheOnPermissionChange(Database $dbForProject, ?string $previousHash, Document $presence): void
+    {
+        if ($previousHash !== null && $previousHash !== $presence->getAttribute('permissionsHash')) {
+            $this->purgeListCache($dbForProject);
+        }
     }
 
     public function triggerUsage(

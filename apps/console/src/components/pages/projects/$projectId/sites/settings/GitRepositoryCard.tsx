@@ -459,9 +459,13 @@ export function GitRepositoryCard({
                 onRetry={() => refetchRepository()}
                 isRetrying={repositoryFetching}
               >
-                {t(
-                  "This site's repository details could not be loaded. Its Git connection is unchanged, but branch and root directory options are unavailable until access is restored.",
-                )}
+                {repositoryErrorKind === 'missing'
+                  ? t(
+                      "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.",
+                    )
+                  : t(
+                      "This site's repository details could not be loaded. Its Git connection is unchanged, but branch and root directory options are unavailable until access is restored.",
+                    )}
               </VcsInstallationErrorAlert>
             )}
 

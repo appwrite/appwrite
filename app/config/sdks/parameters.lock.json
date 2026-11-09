@@ -878,6 +878,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -1137,6 +1148,13 @@
             "total"
         ],
         "advisor.listReports": [
+            "queries",
+            "total"
+        ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
             "queries",
             "total"
         ],
@@ -2822,6 +2840,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "notifications.list": [
             "queries",
             "total"
@@ -2848,12 +2896,20 @@
             "expire",
             "description"
         ],
+        "organization.createProjectTransfer": [
+            "projectId",
+            "recipientId",
+            "expire"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
         "organization.deleteProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.deleteProjectTransfer": [
+            "transferId"
         ],
         "organization.getProject": [
             "projectId"
@@ -2862,7 +2918,16 @@
             "projectId",
             "keyId"
         ],
+        "organization.getProjectTransfer": [
+            "transferId",
+            "secret"
+        ],
         "organization.listProjectKeys": [
+            "projectId",
+            "queries",
+            "total"
+        ],
+        "organization.listProjectTransfers": [
             "projectId",
             "queries",
             "total"
@@ -2883,6 +2948,10 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "organization.updateProjectTransferStatus": [
+            "transferId",
+            "secret"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -2996,6 +3065,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -3052,6 +3122,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -3341,6 +3414,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -3401,6 +3484,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -3514,8 +3600,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -5002,6 +5128,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -5245,6 +5385,13 @@
             "total"
         ],
         "advisor.listReports": [
+            "queries",
+            "total"
+        ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
             "queries",
             "total"
         ],
@@ -6906,6 +7053,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -7059,6 +7236,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -7115,6 +7293,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -7404,6 +7585,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7464,6 +7655,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -7547,8 +7741,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -8943,6 +9177,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }

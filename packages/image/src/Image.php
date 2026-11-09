@@ -6,6 +6,7 @@ use Exception;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
+use Utopia\Image\Exception\UnsupportedFormatException;
 
 class Image
 {
@@ -43,12 +44,15 @@ class Image
 
     /**
      * @throws \ImagickException
+     * @throws UnsupportedFormatException
      */
     public function __construct(string $data)
     {
         $this->image = new Imagick();
 
+        $this->image->setFormat(Format::detect($data)->value);
         $this->image->readImageBlob($data);
+        $this->image->setFormat('');
 
         // Solve formats such as GIF. Otherwise width&height would be from last frame (wrong)
         $this->image->setFirstIterator();

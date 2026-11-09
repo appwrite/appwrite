@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
@@ -423,6 +424,30 @@ final class KeyTest extends TestCase
         $this->assertTrue($decoded->isProjectCheckDisabled());
     }
 
+    public static function rules(): \Iterator
+    {
+        yield 'issued rule' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment1']), true];
+        yield 'other hostname' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'victim.sites.test', 'deploymentId' => 'deployment1']), false];
+        yield 'other deployment' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment2']), false];
+        yield 'unbound key' => [[], new Document(['domain' => '', 'deploymentId' => '']), false];
+    }
+
+    /**
+     * @param array<string, string> $binding
+     */
+    #[DataProvider('rules')]
+    public function testDecodedKeyIsBoundToItsRule(array $binding, Document $rule, bool $bound): void
+    {
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test']),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, [], extra: $binding),
+        );
+
+        $this->assertSame($bound, $decoded->isBoundTo($rule));
+    }
+
     public function testDecodeExpiredEphemeral(): void
     {
         $expiredKey = self::generateKey('test', false, ['documents.read'], maxAge: 1, timestamp: time() - 60);
@@ -559,6 +584,44 @@ final class KeyTest extends TestCase
         $this->assertFalse($caller->mayCreate(API_KEY_STANDARD, [], '2030-01-01T12:00:01.000+00:00'));
     }
 
+    public function testMayGrantOnlyScopesItHolds(): void
+    {
+        $caller = new Key('test', '', '', API_KEY_STANDARD, User::ROLE_KEYS, ['functions.write', 'users.read'], 'Caller');
+
+        $this->assertTrue($caller->mayGrant([]));
+        $this->assertTrue($caller->mayGrant(['users.read']));
+        $this->assertFalse($caller->mayGrant(['users.read', 'users.write']));
+    }
+
+    public function testDecodeRefusesEphemeralKeySignedWithRetiredKey(): void
+    {
+        $variables = ['_APP_OPENSSL_KEY_V2', '_APP_OPENSSL_KEY_CURRENT', '_APP_OPENSSL_KEY_OLDEST'];
+        $previous = \array_map(\getenv(...), $variables);
+        $project = new Document(['$id' => 'test']);
+        $old = self::generateKey('test', false, ['documents.read']);
+
+        try {
+            \putenv('_APP_OPENSSL_KEY_V2=unit-test-next-key');
+            \putenv('_APP_OPENSSL_KEY_CURRENT=2');
+
+            $this->assertSame('test', Key::decode($project, new Document(), new Document(), $old)->getProjectId(), 'The old key is accepted during the grace window');
+            $this->assertSame('test', Key::decode($project, new Document(), new Document(), self::generateKey('test', false, ['documents.read']))->getProjectId());
+
+            \putenv('_APP_OPENSSL_KEY_OLDEST=2');
+
+            try {
+                Key::decode($project, new Document(), new Document(), $old);
+                $this->fail('An ephemeral key signed with the retired key was accepted');
+            } catch (Exception $exception) {
+                $this->assertSame(Exception::USER_UNAUTHORIZED, $exception->getType());
+            }
+        } finally {
+            foreach ($variables as $i => $name) {
+                \putenv($previous[$i] === false ? $name : $name . '=' . $previous[$i]);
+            }
+        }
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,
@@ -568,7 +631,7 @@ final class KeyTest extends TestCase
         array $extra = []
     ): string {
         $jwt = new JWT(
-            key: System::getEnv('_APP_OPENSSL_KEY_V1'),
+            key: EncryptionKey::current(),
             algo: 'HS256',
             maxAge: $maxAge,
             leeway: 0,

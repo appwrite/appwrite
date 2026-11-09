@@ -194,6 +194,7 @@ class XList extends Action
             } elseif ((int)$ttl > 0 && $parsed->joins === []) {
                 $cache = $dbForProject->getCache();
                 $cacheKey = $this->getListCacheKey($dbForProject, $database, $collectionId);
+                $listCache = $this->getListCache($dbForProject, $database, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
                 $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
@@ -216,16 +217,14 @@ class XList extends Action
                     }
                     $this->recordCachedOperations($operations, $documents, $cachedOperations);
                 } else {
+                    $version = $listCache->getVersion();
                     $documents = $find();
 
-                    try {
-                        if ($documents !== []) {
-                            $cache->saveMany($cacheKey, [
-                                $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
-                                $operationsField => $operations->counts($documents),
-                            ]);
-                        }
-                    } catch (\Throwable) {
+                    if ($documents !== []) {
+                        $listCache->save([
+                            $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
+                            $operationsField => $operations->counts($documents),
+                        ], $version);
                     }
                 }
 
@@ -240,11 +239,9 @@ class XList extends Action
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
+                        $version = $listCache->getVersion();
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                        try {
-                            $cache->save($cacheKey, (string) $total, $totalField);
-                        } catch (\Throwable) {
-                        }
+                        $listCache->save([$totalField => (string) $total], $version);
                     }
                 }
 

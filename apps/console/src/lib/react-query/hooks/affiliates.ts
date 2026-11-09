@@ -12,10 +12,7 @@ import {
   fillChartPointsGaps,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
-import {
-  isUsageChartIntervalValidForRange,
-  resolveUsageChartIntervalForRange,
-} from '@/lib/usage/chart-interval'
+import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   getStableUsageChartDateRange,
   resolveUsageDateBounds,
@@ -76,11 +73,11 @@ export function resolveAffiliateUsageInterval(
   interval: AffiliateUsageInterval,
   dateRange: DateRange | undefined,
 ): AffiliateUsageInterval {
-  const resolved = resolveUsageChartIntervalForRange(interval, dateRange)
-  if (resolved === '1m' || resolved === '15m') {
-    return isUsageChartIntervalValidForRange('1h', dateRange) ? '1h' : '1d'
-  }
-  return resolved
+  return resolveUsageChartIntervalWithin(
+    interval,
+    dateRange,
+    AFFILIATE_USAGE_INTERVALS,
+  )
 }
 
 /** Short codes for invite URLs (vs ~20-char ID.unique()). CustomId-safe: a-z A-Z 0-9. */
@@ -95,7 +92,8 @@ export function generateAffiliateLinkId(
   crypto.getRandomValues(bytes)
   let id = ''
   for (let i = 0; i < length; i++) {
-    id += AFFILIATE_LINK_ID_ALPHABET[bytes[i]! % AFFILIATE_LINK_ID_ALPHABET.length]!
+    id +=
+      AFFILIATE_LINK_ID_ALPHABET[bytes[i]! % AFFILIATE_LINK_ID_ALPHABET.length]!
   }
   return id
 }

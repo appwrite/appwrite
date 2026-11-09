@@ -7,10 +7,12 @@ use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\PermissionType;
 
 class Realtime extends Event
 {
-    public const CONSOLE_ALLOWLIST = ['presences', 'teams'];
+    // Account and user events reach realtime so a console user's connections end with their access.
+    public const CONSOLE_ALLOWLIST = ['presences', 'teams', 'account', 'users'];
 
     protected array $subscribers = [];
 
@@ -105,6 +107,8 @@ class Realtime extends Event
         // Can be Tables API or Collections API; generated channels include both!
         $tableOrCollection = $this->getContext('table') ?? $this->getContext('collection');
 
+        $userId = $this->getParam('userId');
+
         $target = RealtimeAdapter::fromPayload(
             event: $allEvents[0],
             payload: $payload,
@@ -112,20 +116,36 @@ class Realtime extends Event
             database: $db,
             collection: $tableOrCollection,
             bucket: $bucket,
+            userId: \is_string($userId) ? $userId : null,
         );
 
         $projectIds = !empty($this->getSubscribers())
             ? $this->getSubscribers()
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
+        $project = $this->getProject();
+        $targetProjectId = $target['projectId'] ?? null;
+
         foreach ($projectIds as $projectId) {
+            // A console-scoped event (rules, deployments) is published to
+            // ['console', projectId] but carries the project's console read roles;
+            // in the project tree those could match a colliding project-local team.
+            if ($projectId !== 'console' && $targetProjectId === 'console') {
+                continue;
+            }
+
+            // A project's roles mean nothing in the console, where they could match an unrelated account with the same ID
+            $roles = $projectId === 'console' && $project?->getId() !== 'console' && $targetProjectId !== 'console'
+                ? ($project?->getPermissionsByType(PermissionType::Read) ?? [])
+                : $target['roles'];
+
             try {
                 $this->realtime->send(
                     projectId: $projectId,
                     payload: $this->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
-                    roles: $target['roles'],
+                    roles: $roles,
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $this->getParam('userId')

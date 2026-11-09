@@ -447,8 +447,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
     'はい。ストレージは、SDK やコンソールから大きなファイルのチャンクアップロードに対応しています。バケットごとに最大ファイルサイズを設定し、大きなアセットを転送する際には再開可能なアップロードを利用できます。',
   'Yes. The Appwrite CLI runs your function in Docker on localhost with hot reload, the same runtime image as production, and optional user impersonation for Auth-aware testing.':
     'はい。Appwrite CLI は、本番と同じランタイムイメージを使い、ホットリロード付きで関数を Docker 上のローカルホストで実行します。認証を考慮したテストのために、ユーザーになりすますこともできます。',
-  'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys. Files larger than 20 MB skip encryption even when enabled.':
-    'はい。Settings からバケットごとに暗号化を有効にすると、新しいファイルは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトは鍵がなければ読み取れません。20 MB を超えるファイルは、有効にしていても暗号化の対象外です。',
+  'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys.':
+    'はい。Settings からバケットごとに暗号化を有効にすると、新しいファイルは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトは鍵がなければ読み取れません。',
   'Yes. Usage charts show requests, bandwidth, builds, and compute over selectable ranges, with breakdowns to see where traffic comes from. The Logs tab records every request with status code, method, path, and duration. Open a log entry for request and response headers. For SSR sites, console.log and console.error output appears in response logs.':
     'はい。使用状況のグラフでは、選択した期間ごとにリクエスト、帯域幅、ビルド、コンピュートを確認でき、トラフィックの発生元も内訳で確認できます。Logs タブには、ステータスコード、メソッド、パス、所要時間とともにすべてのリクエストが記録されます。ログのエントリを開けば、リクエストとレスポンスのヘッダーを確認できます。SSR サイトでは、console.log と console.error の出力がレスポンスログに表示されます。',
   'Yes. Use the Server SDK from Functions, your API server, or any trusted backend with a project API key. This is the standard pattern for transactional flows such as OTP verification, password reset, order receipts, and inventory alerts triggered by platform events or custom logic.':

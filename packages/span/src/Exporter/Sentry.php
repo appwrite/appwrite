@@ -214,7 +214,7 @@ class Sentry implements Exporter
             'event_id' => str_replace('-', '', $traceId),
             'sent_at' => date('c'),
             'dsn' => $this->dsn,
-        ]);
+        ], \JSON_INVALID_UTF8_SUBSTITUTE);
 
         $itemHeader = json_encode([
             'type' => 'event',
@@ -286,9 +286,11 @@ class Sentry implements Exporter
             $payloadData['server_name'] = $this->serverName;
         }
 
-        $payload = json_encode($payloadData);
+        $payload = json_encode($payloadData, \JSON_INVALID_UTF8_SUBSTITUTE);
 
         if ($header === false || $itemHeader === false || $payload === false) {
+            error_log('Sentry exporter: failed to encode event - ' . json_last_error_msg());
+
             return null;
         }
 
@@ -441,7 +443,7 @@ class Sentry implements Exporter
                 case SentryField::Tag:
                     // Tags must be strings, max 200 chars
                     if (\is_scalar($value) || $value === null) {
-                        $tags[$key] = substr((string) $value, 0, 200);
+                        $tags[$key] = mb_substr((string) $value, 0, 200, 'UTF-8');
                     }
                     break;
                 case SentryField::Context:

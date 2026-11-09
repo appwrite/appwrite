@@ -383,6 +383,15 @@ final class TransactionStateTest extends TestCase
         $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null]], $page([Query::cursorBefore(new Document(['$id' => 'cy', 'name' => 'Cy'])), Query::limit(2)]), 'the rows nearest before a staged row');
     }
 
+    public function testOffsetPastTheWindowInATransactionIsRejected(): void
+    {
+        $transaction = $this->shopWithStagedCreates();
+
+        $this->expectException(QueryException::class);
+
+        $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::offset(APP_LIMIT_COUNT), Query::limit(1)]);
+    }
+
     public function testOrderOnAnAttributeTheReadSelectsAwayStillOrdersStoredRows(): void
     {
         $transaction = $this->shop();

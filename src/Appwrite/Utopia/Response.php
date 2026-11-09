@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_DEVICE = 'device';
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
@@ -261,9 +262,15 @@ class Response extends SwooleResponse
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_MONITOR = 'monitor';
+    public const MODEL_MONITOR_LIST = 'monitorList';
+    public const MODEL_ALERT = 'alert';
+    public const MODEL_ALERT_LIST = 'alertList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
+    public const MODEL_TRANSFER = 'transfer';
+    public const MODEL_TRANSFER_LIST = 'transferList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -284,7 +291,9 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
     public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
     public const MODEL_POLICY_PASSKEY = 'policyPasskey';
+    public const MODEL_POLICY_ACCOUNT_DEVICES = 'policyAccountDevices';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -344,6 +353,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
+    public const MODEL_OAUTH2_VIPPS = 'oAuth2Vipps';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -361,6 +371,15 @@ class Response extends SwooleResponse
     public const MODEL_INSIGHT_CTA = 'insightCTA';
     public const MODEL_REPORT = 'report';
     public const MODEL_REPORT_LIST = 'reportList';
+
+    // Reviews
+    public const MODEL_REVIEW = 'review';
+    public const MODEL_REVIEW_LIST = 'reviewList';
+    public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_EVENT = 'reviewEvent';
+    public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
+    public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
+    public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -492,8 +511,11 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() clones the document itself, filters get their own copy as raw content
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: clone $document);
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:

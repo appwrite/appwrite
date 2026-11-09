@@ -1,27 +1,11 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearch, useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import {
-  ChevronDown,
-  ChevronUp,
-  Folder,
-  ExternalLink,
-  ArrowUpCircle,
-  ArrowLeftRight,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import type { Models } from '@appwrite.io/console'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { BillingStorageUsageProgress } from './_components/BillingStorageUsageProgress'
 import { getBillingStorageBreakdownFromResources } from '@/lib/billing/billing-storage-breakdown'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from '@/components/ui/tooltip'
-import { formatCurrency, formatDate } from './utils'
-import { cn } from '@/lib/utils'
 import { formatDecimalBytes, toByteCount } from '@/lib/utils/byte-display-unit'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import {
@@ -30,59 +14,61 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import {
-  useOrganizationById,
-  useOrganizationPlan,
-  useOrganizationCredits,
-  organizationBillingAggregationQueryOptions,
-} from '@/lib/react-query/hooks'
-import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
-import {
-  getPlanNameFromTier,
-  resolveOrganizationPlanDisplayLabel,
-} from '@/lib/utils/plan-filter'
-import { Link } from '@tanstack/react-router'
-import { Pagination } from '@/components/global/shared/Pagination'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import type { Models } from '@appwrite.io/console'
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip'
 import {
   buildDedicatedDbBillingSpecLookup,
-  buildOrganizationUsageCategoriesFromAggregation,
-  DEDICATED_DB_BILLING_METRIC_IDS,
-  formatDedicatedDbBillingUsageLabel,
   getBillingProjectResourceIdMap,
-  getDedicatedDbBillingUsageDescription,
+  getBillingPlanResourceLimit,
+  isBillingPlanResourceUnavailable,
+  resolveBillingProjectResourceMapping,
   groupBillingProjectResources,
   groupDedicatedDbBillingResources,
-  parseDedicatedDbBillingResourceId,
-  resolveBillingProjectResourceMapping,
-  type BillingProjectBreakdown,
-  type BillingProjectResourceCategoryGroup,
+  formatDedicatedDbBillingUsageLabel,
+  getDedicatedDbBillingUsageDescription,
+  type AggregationResourceLike,
   type BillingProjectResourceItem,
+  type BillingProjectResourceCategoryGroup,
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
 import {
-  getBillingAddonChargesFromResources,
-  getDedicatedDbComputeCreditFromResources,
-  resolveBillingAddonDisplayName,
-} from '@/lib/billing/billing-addon-charges'
-import { databaseSpecificationsQueryOptions, dedicatedDatabaseSourceFromEngine } from '@/lib/react-query/hooks'
+  databaseSpecificationsQueryOptions,
+  dedicatedDatabaseSourceFromEngine,
+} from '@/lib/react-query/hooks'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
+import {
+  ChevronDown,
+  ChevronUp,
+  ArrowUpCircle,
+  ArrowLeftRight,
+  Folder,
+  ExternalLink,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { formatCurrency, formatDate } from './utils'
+import { cn } from '@/lib/utils'
+import {
+  useOrganizationById,
+  useOrganizationPlan,
+  organizationInvoiceQueryOptions,
+  organizationBillingAggregationQueryOptions,
+  useOrganizationScopes,
+  canSeeOrganizationBilling,
+} from '@/lib/react-query/hooks'
+import {
+  getPlanNameFromTier,
+  isSelfServiceProPlan,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-
-/**
- * PlanSummary Component
- *
- * Displays the current plan information matching the old console format:
- * - Plan name and next payment date
- * - Billing cycle date range
- * - Expandable charges breakdown with:
- *   - Base plan cost
- *   - Additional members cost
- *   - Additional projects cost with count badge
- *   - Project breakdowns with detailed usage metrics, progress bars, and costs
- * - Total projected amount
- * - Change plan action
- */
 
 interface PlanSummaryProps {
   onChangePlan?: () => void
@@ -91,81 +77,37 @@ interface PlanSummaryProps {
 
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const t = useT()
-  const [expanded, setExpanded] = useState(true) // Default to expanded
+  const [expanded, setExpanded] = useState(true)
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   )
-
-  // Pagination: requestedPage from URL (user intent); displayedPage = what we show (no layout shift until new data is ready)
   const search = useSearch({ strict: false })
   const navigate = useNavigate()
-  const requestedPage = Number(search?.page) || 1
-  // Fixed at 10; page size selector is hidden so limit from URL is ignored
-  const pageLimit = DEFAULT_BILLING_PROJECTS_LIMIT
-  const [displayedPage, setDisplayedPage] = useState(requestedPage)
-
-  // Fetch organization data
-  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-
-  // Requested page query (drives fetch when user changes page)
-  const {
-    isFetching: requestedAggregationFetching,
-    isLoading: requestedAggregationLoading,
-  } = useQuery(
-    organizationBillingAggregationQueryOptions(
+  const pageLimit = 10
+  const displayedPage = Math.max(1, Number(search?.page) || 1)
+  const { organization } = useOrganizationById(orgId)
+  const { plan } = useOrganizationPlan(orgId)
+  const { access } = useOrganizationScopes(orgId, undefined, {
+    projectId: null,
+  })
+  const canReadInvoice = canSeeOrganizationBilling(access)
+  const { data: invoice, error } = useQuery({
+    ...organizationInvoiceQueryOptions(orgId, organization?.billingInvoiceId),
+    enabled: canReadInvoice && !!orgId && !!organization?.billingInvoiceId,
+  })
+  const { data: aggregation, error: usageError } = useQuery({
+    ...organizationBillingAggregationQueryOptions(
       orgId,
       organization?.billingAggregationId,
-      pageLimit,
-      (requestedPage - 1) * pageLimit,
     ),
-  )
-
-  // Displayed page query (what we show; stays on current page until requested page has loaded)
-  const { data: aggregation, isLoading: aggLoading } = useQuery(
-    organizationBillingAggregationQueryOptions(
-      orgId,
-      organization?.billingAggregationId,
-      pageLimit,
-      (displayedPage - 1) * pageLimit,
-    ),
-  )
-
-  // Keep showing current page until the requested page has finished loading (no layout shift)
-  useEffect(() => {
-    if (
-      requestedAggregationFetching ||
-      requestedAggregationLoading ||
-      requestedPage === displayedPage
-    ) {
-      return
-    }
-    setDisplayedPage(requestedPage)
-  }, [
-    requestedAggregationFetching,
-    requestedAggregationLoading,
-    requestedPage,
-    displayedPage,
-  ])
-
-  const { credits } = useOrganizationCredits(orgId, 0, 1)
-
-  const dedicatedDbSpecLookupProjectId = useMemo(() => {
-    const projects = aggregation?.breakdown
-    if (!Array.isArray(projects) || projects.length === 0) return null
-    const firstProjectId = projects[0]?.$id
-    return typeof firstProjectId === 'string' && firstProjectId.length > 0
-      ? firstProjectId
-      : null
-  }, [aggregation?.breakdown])
-
+    enabled: canReadInvoice && !!orgId && !!organization?.billingAggregationId,
+  })
   const { data: databaseSpecificationsData } = useQuery(
     databaseSpecificationsQueryOptions(
-      dedicatedDbSpecLookupProjectId,
+      aggregation?.breakdown[0]?.$id,
       dedicatedDatabaseSourceFromEngine('postgresql'),
     ),
   )
-
   const dedicatedDbBillingSpecLookup = useMemo(
     () =>
       buildDedicatedDbBillingSpecLookup(
@@ -173,447 +115,114 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       ),
     [databaseSpecificationsData?.specifications],
   )
-
-  // Calculate available credit
-  const availableCredit = useMemo(() => {
-    if (!credits || credits.length === 0) return 0
-    const now = new Date()
-    return credits.reduce((sum, credit) => {
-      if (credit.expiration && new Date(credit.expiration) > now) {
-        return sum + (credit.credits || 0)
-      }
-      return sum
-    }, 0)
-  }, [credits])
-
-  // Get plan name from plan object
-  const planName = useMemo(() => {
-    if (!organization) return 'Free'
-    const planMatchesOrg =
-      !plan?.$id ||
-      plan.$id === organization.billingPlan ||
-      getPlanNameFromTier(plan.$id) ===
-        getPlanNameFromTier(organization.billingPlan)
-    return resolveOrganizationPlanDisplayLabel({
-      billingPlan: organization.billingPlan,
-      planName: planMatchesOrg ? (plan?.name ?? null) : null,
-      planId: planMatchesOrg ? plan?.$id : organization.billingPlan,
-    })
-  }, [plan, organization])
-
-  // Get base plan price
-  const basePlanPrice = useMemo(() => {
-    if (!plan) return 0
-    return plan.price || 0
-  }, [plan])
-
-  // Get base amount (from aggregation if available, otherwise plan price)
-  const baseAmount = useMemo(() => {
-    if (
-      aggregation &&
-      aggregation.amount !== undefined &&
-      aggregation.amount !== null
-    ) {
-      return aggregation.amount
-    }
-    return basePlanPrice
-  }, [aggregation, basePlanPrice])
-
-  // Calculate credits applied
-  const creditsApplied = useMemo(() => {
-    return Math.min(baseAmount, availableCredit)
-  }, [baseAmount, availableCredit])
-
-  // Calculate total amount
-  const totalAmount = useMemo(() => {
-    return Math.max(baseAmount - creditsApplied, 0)
-  }, [baseAmount, creditsApplied])
-
-  // Get billing cycle dates from organization
-  const billingCycle = useMemo(() => {
-    if (!organization) return null
-
-    const cycleStart = organization.billingCurrentInvoiceDate
-    const cycleEnd = organization.billingNextInvoiceDate
-
-    if (cycleStart && cycleEnd) {
+  const lines = useMemo(() => invoice?.items ?? [], [invoice?.items])
+  const {
+    projectBreakdowns,
+    organizationLines,
+    organizationUsageCategories,
+    organizationItems,
+  } = useMemo(() => {
+    const projectIds = [
+      ...new Set([
+        ...(aggregation?.breakdown ?? []).map((project) => project.$id),
+        ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
+      ]),
+    ]
+    const projectBreakdowns = projectIds.map((projectId) => {
+      const project = aggregation?.breakdown.find(
+        (project) => project.$id === projectId,
+      )
+      const items = lines.filter((item) => item.projectId === projectId)
       return {
-        start: cycleStart,
-        end: cycleEnd,
-      }
-    }
-
-    return null
-  }, [organization])
-
-  // Free / non-usagePerProject plans: aggregation.breakdown is empty; org totals live in resources.
-  const usagePerProject = plan?.usagePerProject === true
-
-  // Get next payment date (same as billing cycle end)
-  const nextPaymentDate = useMemo(() => {
-    if (billingCycle) {
-      return billingCycle.end
-    }
-    return null
-  }, [billingCycle])
-
-  // Get billing cycle label
-  const billingCycleLabel = useMemo(() => {
-    if (!plan) return 'Monthly'
-    return (
-      (plan as Models.BillingPlan & { billingCycle?: string }).billingCycle ||
-      'Monthly'
-    )
-  }, [plan])
-
-  // Get additional members cost from aggregation
-  const additionalMembersCost = useMemo(() => {
-    if (!aggregation || !aggregation.additionalMemberAmount) return 0
-    return aggregation.additionalMemberAmount
-  }, [aggregation])
-
-  const additionalMembersCount = useMemo(() => {
-    if (!aggregation || !aggregation.additionalMembers) return 0
-    return aggregation.additionalMembers
-  }, [aggregation])
-
-  // Get projects resource from aggregation API (resourceId: "projects")
-  const projectsResource = useMemo(() => {
-    if (!aggregation?.resources) return null
-    return (
-      aggregation.resources.find((r) => r.resourceId === 'projects') ?? null
-    )
-  }, [aggregation])
-
-  // Additional projects count and cost from aggregation API when available
-  const additionalProjectsCount = useMemo(() => {
-    if (
-      projectsResource?.value !== undefined &&
-      projectsResource?.value !== null
-    ) {
-      return Number(projectsResource.value)
-    }
-    // Fallback: derive from breakdown count minus plan included
-    if (!plan || !aggregation) return 0
-    const includedProjects =
-      plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects = aggregation.breakdown || []
-    const totalProjects = Array.isArray(projects) ? projects.length : 0
-    return Math.max(0, totalProjects - includedProjects)
-  }, [plan, aggregation, projectsResource])
-
-  const additionalProjectsCost = useMemo(() => {
-    if (
-      projectsResource?.amount !== undefined &&
-      projectsResource?.amount !== null
-    ) {
-      return Number(projectsResource.amount)
-    }
-    // Fallback: derive from count * plan addon price
-    if (!plan || !aggregation) return 0
-    const includedProjects =
-      plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects = aggregation.breakdown || []
-    const totalProjects = Array.isArray(projects) ? projects.length : 0
-    if (totalProjects <= includedProjects) return 0
-    const additionalCount = totalProjects - includedProjects
-    const additionalProjectPrice = plan.addons?.projects?.price || 0
-    return additionalCount * additionalProjectPrice
-  }, [plan, aggregation, projectsResource])
-
-  // `amount` is already net of these, so they are rendered but never subtracted again.
-  const discountCharges = useMemo(
-    () =>
-      (aggregation?.resources ?? []).filter(
-        (resource) => resource.resourceId === 'billingDiscount',
-      ),
-    [aggregation?.resources],
-  )
-
-  // Toggle addons (BAA, Premium Geo DB, …) from aggregation resources
-  const billingAddonCharges = useMemo(
-    () => getBillingAddonChargesFromResources(aggregation?.resources),
-    [aggregation?.resources],
-  )
-
-  const dedicatedDbComputeCredit = useMemo(
-    () => getDedicatedDbComputeCreditFromResources(aggregation?.resources),
-    [aggregation?.resources],
-  )
-
-  // Toggle project expansion
-  const toggleProject = (projectId: string) => {
-    setExpandedProjects((prev) => {
-      const next = new Set(prev)
-      if (next.has(projectId)) {
-        next.delete(projectId)
-      } else {
-        next.add(projectId)
-      }
-      return next
-    })
-  }
-
-  // Process aggregation breakdown for display (usagePerProject / Pro+ plans)
-  const projectBreakdowns = useMemo((): BillingProjectBreakdown[] => {
-    if (!aggregation) return []
-
-    const projects = aggregation.breakdown || []
-    if (!Array.isArray(projects) || projects.length === 0) return []
-
-    return projects.map((project) => {
-      const resources: BillingProjectResourceItem[] = []
-      let projectTotal = 0
-
-      // Resources are in project.resources array with resourceId and value
-      const projectResources = Array.isArray(project.resources)
-        ? project.resources
-        : []
-
-      const resourceIdMap = getBillingProjectResourceIdMap(plan)
-      const hasSpecSpecificDedicatedDbResources = projectResources.some(
-        (resource) =>
-          typeof resource.resourceId === 'string' &&
-          parseDedicatedDbBillingResourceId(resource.resourceId) != null,
-      )
-
-      // Helper to get resource from aggregation by resourceId
-      const getResourceByResourceId = (resourceId: string) => {
-        return projectResources.find((r) => r.resourceId === resourceId)
-      }
-
-      // Get plan limits from the plan object
-      // Limits are directly on the plan object (e.g., plan.bandwidth, plan.storage)
-      // Some limits need unit conversion (bandwidth and storage are in GB)
-      const getPlanLimit = (planKey: string): number | null => {
-        if (!plan) return null
-
-        // Map our planKey to the plan object property name
-        const planPropertyMap: Record<string, string> = {
-          bandwidth: 'bandwidth',
-          storage: 'storage',
-          users: 'users',
-          executions: 'executions',
-          gbHours: 'GBHours', // Note: capital GB in plan object
-          databaseReads: 'databasesReads',
-          databaseWrites: 'databasesWrites',
-          imageTransformations: 'imageTransformations',
-          screenshotsGenerated: 'screenshotsGenerated',
-          authPhone: 'authPhone',
-          realtime: 'realtime',
-          realtimeMessages: 'realtimeMessages',
-          realtimeBandwidth: 'realtimeBandwidth',
-        }
-
-        const planProperty = planPropertyMap[planKey] || planKey
-
-        // Get the limit value directly from plan object
-        const limitValue = (plan as unknown)[planProperty]
-
-        if (limitValue === null || limitValue === undefined) {
-          return null
-        }
-
-        const numValue = Number(limitValue)
-        if (isNaN(numValue)) {
-          return null
-        }
-
-        // Convert bandwidth and storage from GB to bytes (multiply by 1 billion)
-        if (planKey === 'bandwidth' || planKey === 'storage') {
-          return numValue * 1000000000
-        }
-
-        return numValue
-      }
-
-      // Keep the API resource order first, then append known resources that are not present.
-      const apiOrderedResourceIds = projectResources
-        .map((resource) => resource.resourceId)
-        .filter(
-          (resourceId): resourceId is string =>
-            typeof resourceId === 'string' && resourceId.length > 0,
-        )
-      const fallbackResourceIds = Object.keys(resourceIdMap).filter(
-        (resourceId) => {
-          if (
-            hasSpecSpecificDedicatedDbResources &&
-            resourceId.startsWith('dedicatedDb')
-          ) {
-            return false
-          }
-          return true
-        },
-      )
-      const orderedResourceIds = Array.from(
-        new Set([...apiOrderedResourceIds, ...fallbackResourceIds]),
-      )
-
-      // Process each resource type from the aggregation
-      orderedResourceIds.forEach((resourceId) => {
-        if (
-          hasSpecSpecificDedicatedDbResources &&
-          (DEDICATED_DB_BILLING_METRIC_IDS as readonly string[]).includes(
-            resourceId,
-          )
-        ) {
-          return
-        }
-
-        const mappedResource = resolveBillingProjectResourceMapping(
-          resourceId,
+        projectId,
+        projectName: project?.name || projectId,
+        items,
+        categories: usageCategories(
+          project?.resources,
+          items,
           plan,
           dedicatedDbBillingSpecLookup,
-        )
-        if (!mappedResource) return
-
-        const {
-          name,
-          format,
-          planKey,
-          category,
-          showLimit = true,
-          showOnlyWhenUsed = false,
-        } = mappedResource
-        const resource = getResourceByResourceId(resourceId)
-
-        // Get usage from resource.value (aggregation format)
-        const usage = resource?.value !== undefined ? Number(resource.value) : 0
-
-        // Get limit from plan
-        const limit = getPlanLimit(planKey)
-        const requiresUpgrade = limit !== null && limit < 0
-
-        // Get cost from resource.amount if available
-        const cost =
-          resource?.amount !== undefined ? Number(resource.amount) : 0
-
-        const hasUsageOrCost = usage > 0 || cost > 0
-        const shouldShow = showOnlyWhenUsed
-          ? resource != null && hasUsageOrCost
-          : resource != null || limit !== null || requiresUpgrade
-
-        // Always show the resource if it exists in aggregation or if plan has a limit
-        // This matches the old UI which shows all resources
-        if (shouldShow) {
-          const item: BillingProjectResourceItem = {
-            resourceId,
-            name,
-            usage,
-            limit: requiresUpgrade ? null : limit,
-            cost,
-            formatType: format,
-            showLimit: requiresUpgrade ? false : showLimit,
-            requiresUpgrade,
-            category,
-          }
-          if (resourceId === 'storage') {
-            const storageBreakdown = getBillingStorageBreakdownFromResources(
-              projectResources,
-            )
-            if (storageBreakdown.length > 0) {
-              item.storageBreakdown = storageBreakdown
-            }
-          }
-          resources.push(item)
-          projectTotal += cost
-        }
-      })
-
-      // Project-scoped billing addons (e.g. Premium Geo DB)
-      projectResources
-        .filter(
-          (resource) =>
-            typeof resource.resourceId === 'string' &&
-            resource.resourceId.startsWith('addon_') &&
-            Number(resource.amount) > 0,
-        )
-        .forEach((addon) => {
-          const resourceId = addon.resourceId as string
-          const cost = Number(addon.amount) || 0
-          resources.push({
-            resourceId,
-            name: resolveBillingAddonDisplayName({
-              resourceId,
-              name: addon.name,
-            }),
-            usage: Number(addon.value) || 0,
-            limit: null,
-            cost,
-            formatType: 'number',
-            showLimit: false,
-            category: 'addons',
-          })
-          projectTotal += cost
-        })
-
-      return {
-        projectId: project.$id,
-        projectName: project.name || t('Unknown Project'),
-        categories: groupBillingProjectResources(resources),
-        // Prefer aggregation project amount so the row matches billed totals
-        // (recalculated resource sums can miss newer metric ids).
-        total: Number.isFinite(Number(project.amount))
-          ? Number(project.amount)
-          : projectTotal,
+        ),
+        total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
       }
     })
-  }, [aggregation, plan, dedicatedDbBillingSpecLookup, t])
-
-  // Org-scoped plan caps (Free / non-usagePerProject): aggregation.resources.
-  // Always show the full base resource list; disabled plan resources (-1) render
-  // an Upgrade link instead of usage. Bump listVersion when the list shape changes
-  // so Fast Refresh does not keep a stale memoized result.
-  const organizationUsageListVersion = 3
-  const organizationUsageCategories = useMemo(() => {
-    if (usagePerProject) return []
-    return buildOrganizationUsageCategoriesFromAggregation(
-      aggregation?.resources,
-      plan,
+    const organizationLines = lines.filter((item) => !item.projectId)
+    const organizationUsageCategories =
+      plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
+        ? []
+        : usageCategories(
+            aggregation?.resources,
+            organizationLines,
+            plan,
+            dedicatedDbBillingSpecLookup,
+          )
+    const organizationItems = organizationLines.filter(
+      (item) =>
+        !organizationUsageCategories.some((category) =>
+          category.resources.some(
+            (resource) => resource.resourceId === item.resourceId,
+          ),
+        ),
     )
-  }, [
-    usagePerProject,
-    aggregation?.resources,
-    plan,
-    organizationUsageListVersion,
-  ])
-
-  // Total projects: from API resources when available (paginated response), else current page length
-  const totalProjects = useMemo(() => {
-    if (
-      projectsResource?.value !== undefined &&
-      projectsResource?.value !== null
-    ) {
-      return Number(projectsResource.value)
+    return {
+      projectBreakdowns,
+      organizationLines,
+      organizationUsageCategories,
+      organizationItems,
     }
-    return projectBreakdowns.length
-  }, [projectsResource?.value, projectBreakdowns.length])
+  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup])
+  const totalProjects = projectBreakdowns.length
+  const displayedBreakdowns = projectBreakdowns.slice(
+    (displayedPage - 1) * pageLimit,
+    displayedPage * pageLimit,
+  )
+  const toggleProject = (id: string) =>
+    setExpandedProjects((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const planMatchesOrg =
+    !plan?.$id ||
+    plan.$id === organization?.billingPlan ||
+    getPlanNameFromTier(plan.$id) ===
+      getPlanNameFromTier(organization?.billingPlan)
+  const planName = resolveOrganizationPlanDisplayLabel({
+    billingPlan: organization?.billingPlan,
+    planName: planMatchesOrg ? plan?.name : null,
+    planId: planMatchesOrg ? plan?.$id : organization?.billingPlan,
+  })
+  const hasRecordedCharges =
+    !!invoice &&
+    (!!invoice.items?.length || !['pending', 'trial'].includes(invoice.status))
+  const basePlanPrice = plan?.price ?? 0
+  // Saved lines include pricing adjustments and tax. Account credits settle them separately.
+  const chargesInCents = invoice?.items?.length
+    ? invoice.items.reduce((total, item) => total + item.amount, 0)
+    : Math.round(
+        ((invoice?.grossAmount ?? 0) + (invoice?.creditsUsed ?? 0)) * 100,
+      )
+  const creditsInCents = Math.round((invoice?.creditsUsed ?? 0) * 100)
+  const charges = chargesInCents / 100
+  const creditsApplied = creditsInCents / 100
+  const totalAmount = Math.max(chargesInCents - creditsInCents, 0) / 100
+  const currency = invoice?.currency || 'USD'
+  const showEnterpriseNote = isSelfServiceProPlan(plan) && charges >= 50
+  const billingCycle =
+    organization?.billingCurrentInvoiceDate &&
+    organization?.billingNextInvoiceDate
+      ? {
+          start: organization.billingCurrentInvoiceDate,
+          end: organization.billingNextInvoiceDate,
+        }
+      : null
+  const nextPaymentDate = invoice?.dueAt ?? billingCycle?.end
+  const billingCycleLabel = t('Monthly')
 
-  // Aggregation API returns current page only
-  const displayedBreakdowns = projectBreakdowns
-
-  const isLoading =
-    (orgLoading && !organization) ||
-    (planLoading && !plan) ||
-    (aggLoading && !aggregation && !!organization?.billingAggregationId)
-
-  if (isLoading) {
-    return (
-      <div
-        id="current-cycle-usage"
-        className="rounded-xl border border-border bg-card/50 overflow-hidden scroll-mt-24"
-      >
-        <div className="px-6 py-4">
-          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Loading plan details...')}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (error) throw error
+  if (usageError) throw usageError
+  if (!canReadInvoice) return null
 
   return (
     <div
@@ -632,29 +241,30 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 {billingCycleLabel}
               </span>
             </div>
-            {totalAmount > 0 && nextPaymentDate && (
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Next payment of')}{' '}
-                <span className="font-medium text-foreground">
-                  {formatCurrency(totalAmount)}
-                </span>{' '}
-                {t('will occur on')}{' '}
-                <span className="font-medium text-foreground">
-                  {formatDate(nextPaymentDate, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-                .
-              </p>
-            )}
+            {hasRecordedCharges &&
+              ['pending', 'trial'].includes(invoice?.status ?? '') &&
+              totalAmount > 0 &&
+              nextPaymentDate && (
+                <p className="text-[12px] text-muted-foreground mt-1">
+                  {t('Next payment of')}{' '}
+                  <span className="font-medium text-foreground">
+                    {formatCurrency(totalAmount, currency)}
+                  </span>{' '}
+                  {t('will occur on')}{' '}
+                  <span className="font-medium text-foreground">
+                    {formatDate(nextPaymentDate, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  .
+                </p>
+              )}
           </div>
           <div className="text-end shrink-0 max-w-[240px] sm:max-w-xs">
             <p className="text-[12px] leading-snug text-muted-foreground">
-              {t(
-                'Usage-based estimate; updates may take up to 4 hours.',
-              )}
+              {t('Usage-based estimate; updates may take up to 4 hours.')}
             </p>
           </div>
         </div>
@@ -664,7 +274,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       {billingCycle && (
         <div className="border-t border-border px-6 py-3 bg-muted/30">
           <div className="flex items-center justify-between text-[12px]">
-            <span className="text-muted-foreground">{t('Current billing cycle')}</span>
+            <span className="text-muted-foreground">
+              {t('Current billing cycle')}
+            </span>
             <span className="font-medium text-foreground">
               (
               {formatDate(billingCycle.start, {
@@ -687,7 +299,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         >
           <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-start">
             <span>{t('View charges breakdown')}</span>
-            {aggregation?.$updatedAt ? (
+            {invoice?.$updatedAt ? (
               <>
                 <span className="text-border hidden sm:inline" aria-hidden>
                   ·
@@ -695,7 +307,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 <span className="text-[11px]">
                   {t('Last updated')}:{' '}
                   <DateTooltip
-                    date={aggregation.$updatedAt}
+                    date={invoice.$updatedAt}
                     live
                     className="text-muted-foreground"
                   />
@@ -719,101 +331,28 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
-            {/* Base Plan Row */}
-            <div className="flex items-center justify-between text-[13px]">
-              <span className="text-foreground">{planName} {t('plan (base)')}</span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(basePlanPrice)}
-              </span>
-            </div>
-
-            {/* Additional Members */}
-            {additionalMembersCost > 0 && (
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-foreground flex items-center gap-2">
-                  {t('Additional members')}
-                  {additionalMembersCount > 0 && (
-                    <Badge
-                      variant="info"
-                      className="h-4 px-1.5 text-[10px] font-medium shrink-0"
-                    >
-                      {additionalMembersCount}
-                    </Badge>
+            {invoice?.items?.length ? (
+              organizationItems.map((item, index) => (
+                <RecordedLine key={index} item={item} currency={currency} />
+              ))
+            ) : (
+              <div className="flex items-start justify-between gap-4 text-[13px]">
+                <span className="text-muted-foreground">
+                  {t(
+                    !invoice
+                      ? 'No invoice yet.'
+                      : hasRecordedCharges
+                        ? 'Recorded charges; detailed pricing unavailable.'
+                        : 'Invoice breakdown unavailable.',
                   )}
                 </span>
-                <span className="font-medium text-foreground">
-                  {formatCurrency(additionalMembersCost)}
-                </span>
+                {hasRecordedCharges && (
+                  <span className="font-medium text-foreground">
+                    {formatCurrency(charges, currency)}
+                  </span>
+                )}
               </div>
             )}
-
-            {/* Additional Projects */}
-            {additionalProjectsCount > 0 && (
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-foreground flex items-center gap-2">
-                  {t('Additional projects')}
-                  <Badge
-                    variant="info"
-                    className="h-4 px-1.5 text-[10px] font-medium shrink-0"
-                  >
-                    {additionalProjectsCount}
-                  </Badge>
-                </span>
-                <span className="font-medium text-foreground">
-                  {formatCurrency(additionalProjectsCost)}
-                </span>
-              </div>
-            )}
-
-            {/* Billing addons (BAA, Premium Geo DB, …) */}
-            {billingAddonCharges.map((addon) => (
-              <div
-                key={addon.resourceId}
-                className="flex items-center justify-between text-[13px]"
-              >
-                <span className="text-foreground">{t(addon.name)}</span>
-                <span className="font-medium text-foreground">
-                  {formatCurrency(addon.amount)}
-                </span>
-              </div>
-            ))}
-
-            {/* Dedicated DB included compute credit */}
-            {dedicatedDbComputeCredit ? (
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-foreground">
-                  {t(dedicatedDbComputeCredit.name)}
-                </span>
-                <span className="font-medium text-foreground">
-                  {formatCurrency(dedicatedDbComputeCredit.amount)}
-                </span>
-              </div>
-            ) : null}
-
-            {/* Operator-supplied text, so not run through t(). */}
-            {discountCharges.map((discount, index) => (
-              <div
-                key={`${discount.name}-${index}`}
-                className="flex items-center justify-between text-[13px]"
-              >
-                <span className="text-muted-foreground">{discount.name}</span>
-                <span className="font-medium text-foreground text-green-600 dark:text-green-400">
-                  {formatCurrency(discount.amount)}
-                </span>
-              </div>
-            ))}
-
-            {/* Credits Applied */}
-            {creditsApplied > 0 && (
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">{t('Credits applied')}</span>
-                <span className="font-medium text-foreground text-green-600 dark:text-green-400">
-                  -{formatCurrency(creditsApplied)}
-                </span>
-              </div>
-            )}
-
-            {/* Org-level usage vs plan limits (Free / non-usagePerProject) */}
             {organizationUsageCategories.length > 0 && (
               <div className="space-y-2">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -824,6 +363,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                     <BillingProjectResourceCategorySection
                       key={category.id}
                       category={category}
+                      items={organizationLines}
+                      currency={currency}
                       plan={plan}
                       dedicatedDbBillingSpecLookup={
                         dedicatedDbBillingSpecLookup
@@ -834,7 +375,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 </div>
               </div>
             )}
-
             {/* Project Breakdown Section */}
             {projectBreakdowns.length > 0 && (
               <div className="space-y-3 border-t border-border pt-6 mt-4">
@@ -861,7 +401,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                           </span>
                           <span className="flex items-center gap-2">
                             <span className="font-medium text-foreground">
-                              {formatCurrency(project.total)}
+                              {project.items.length
+                                ? formatCurrency(project.total, currency)
+                                : '-'}
                             </span>
                             {expandedProjects.has(project.projectId) ? (
                               <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
@@ -878,6 +420,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               <BillingProjectResourceCategorySection
                                 key={category.id}
                                 category={category}
+                                items={project.items}
+                                currency={currency}
                                 plan={plan}
                                 dedicatedDbBillingSpecLookup={
                                   dedicatedDbBillingSpecLookup
@@ -885,6 +429,23 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               />
                             ))}
                           </div>
+                          {project.items
+                            .filter(
+                              (item) =>
+                                !project.categories.some((category) =>
+                                  category.resources.some(
+                                    (resource) =>
+                                      resource.resourceId === item.resourceId,
+                                  ),
+                                ),
+                            )
+                            .map((item, index) => (
+                              <RecordedLine
+                                key={index}
+                                item={item}
+                                currency={currency}
+                              />
+                            ))}
                           {orgId && (
                             <Link
                               to="/projects/$projectId/usage"
@@ -930,13 +491,26 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </div>
             )}
 
-            {/* Total */}
-            <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
-              <span className="font-medium text-foreground">{t('Total')}</span>
-              <span className="font-semibold text-foreground">
-                {formatCurrency(totalAmount)}
-              </span>
-            </div>
+            {creditsApplied > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">
+                  {t('Credits applied')}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(-creditsApplied, currency)}
+                </span>
+              </div>
+            )}
+            {hasRecordedCharges && (
+              <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
+                <span className="font-medium text-foreground">
+                  {t('Total')}
+                </span>
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(totalAmount, currency)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -944,7 +518,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       {/* Footer */}
       {plan?.selfService !== false && (
         <div className="border-t border-border px-6 py-4 bg-muted/30">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {(basePlanPrice ?? 0) === 0 ? (
               <Button
                 size="sm"
@@ -967,6 +541,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 {t('Change plan')}
               </Button>
             )}
+            {showEnterpriseNote && (
+              <p className="ms-auto text-[12px] text-muted-foreground">
+                <EnterpriseBadge />
+                {t('Need a custom SLA or a private Slack channel?')}{' '}
+                <ContactSalesLink
+                  source="billing"
+                  orgId={orgId}
+                  className="font-medium text-foreground underline hover:no-underline"
+                >
+                  {t('Talk to sales')}
+                </ContactSalesLink>
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -979,7 +566,11 @@ function BillingProjectResourceCategorySection({
   plan,
   dedicatedDbBillingSpecLookup,
   onUpgrade,
+  items,
+  currency,
 }: {
+  items: readonly Models.InvoiceItem[]
+  currency: string
   category: BillingProjectResourceCategoryGroup
   plan: Models.BillingPlan | null | undefined
   dedicatedDbBillingSpecLookup: ReturnType<
@@ -1005,12 +596,16 @@ function BillingProjectResourceCategorySection({
             <BillingDedicatedDbSpecGroup
               key={group.key}
               group={group}
+              items={items}
+              currency={currency}
             />
           ))}
           {ungrouped.map((resource) => (
-            <BillingProjectResourceRow
+            <RecordedUsageRow
               key={resource.resourceId}
               resource={resource}
+              items={items}
+              currency={currency}
               onUpgrade={onUpgrade}
             />
           ))}
@@ -1026,9 +621,11 @@ function BillingProjectResourceCategorySection({
       </p>
       <div className="space-y-1">
         {category.resources.map((resource) => (
-          <BillingProjectResourceRow
+          <RecordedUsageRow
             key={resource.resourceId}
             resource={resource}
+            items={items}
+            currency={currency}
             onUpgrade={onUpgrade}
           />
         ))}
@@ -1039,7 +636,11 @@ function BillingProjectResourceCategorySection({
 
 function BillingDedicatedDbSpecGroup({
   group,
+  items,
+  currency,
 }: {
+  items: readonly Models.InvoiceItem[]
+  currency: string
   group: DedicatedDbBillingSpecGroup
 }) {
   const t = useT()
@@ -1054,7 +655,13 @@ function BillingDedicatedDbSpecGroup({
           {group.title}
         </span>
         <span className="text-[12px] font-semibold text-foreground shrink-0 tabular-nums">
-          {formatCurrency(group.totalCost)}
+          {items.some((line) =>
+            group.items.some(
+              (resource) => resource.resourceId === line.resourceId,
+            ),
+          )
+            ? formatCurrency(group.totalCost, currency)
+            : '-'}
         </span>
       </div>
       <div className="px-3 py-1.5 border-b border-border/50">
@@ -1069,7 +676,26 @@ function BillingDedicatedDbSpecGroup({
       </div>
       <div className="divide-y divide-border/50">
         {group.items.map((item) => (
-          <BillingDedicatedDbMetricRow key={item.resourceId} item={item} />
+          <div key={item.resourceId}>
+            <BillingDedicatedDbMetricRow
+              item={item}
+              currency={currency}
+              recorded={items.filter(
+                (line) => line.resourceId === item.resourceId,
+              )}
+            />
+            {items
+              .filter((line) => line.resourceId === item.resourceId)
+              .map((line, index) => (
+                <div
+                  key={index}
+                  className="px-3 pb-1 text-[11px] text-muted-foreground"
+                >
+                  {line.description}
+                  <LinePeriod item={line} />
+                </div>
+              ))}
+          </div>
         ))}
       </div>
     </div>
@@ -1078,7 +704,11 @@ function BillingDedicatedDbSpecGroup({
 
 function BillingDedicatedDbMetricRow({
   item,
+  currency,
+  recorded,
 }: {
+  recorded: readonly Models.InvoiceItem[]
+  currency: string
   item: DedicatedDbBillingSpecGroup['items'][number]
 }) {
   const usageLabel = formatDedicatedDbBillingUsageLabel(
@@ -1116,7 +746,12 @@ function BillingDedicatedDbMetricRow({
           </span>
         )}
         <span className="text-[11px] font-medium text-foreground tabular-nums min-w-[70px] text-end">
-          {formatCurrency(item.cost)}
+          {recorded.length
+            ? formatCurrency(
+                recorded.reduce((sum, line) => sum + line.amount, 0) / 100,
+                currency,
+              )
+            : '-'}
         </span>
       </div>
     </div>
@@ -1126,7 +761,9 @@ function BillingDedicatedDbMetricRow({
 function BillingProjectResourceRow({
   resource,
   onUpgrade,
+  currency,
 }: {
+  currency: string
   resource: BillingProjectResourceItem
   onUpgrade?: () => void
 }) {
@@ -1134,12 +771,9 @@ function BillingProjectResourceRow({
   const usage = toByteCount(resource.usage)
   const limit = resource.limit == null ? null : toByteCount(resource.limit)
   const usagePercentage =
-    limit && limit > 0
-      ? Math.min(100, (usage / limit) * 100)
-      : null
+    limit && limit > 0 ? Math.min(100, (usage / limit) * 100) : null
   const usageFormatted =
-    resource.usageLabel ??
-    formatResourceUsage(usage, resource.formatType)
+    resource.usageLabel ?? formatResourceUsage(usage, resource.formatType)
   const limitFormatted =
     limit !== null
       ? formatResourceLimit(limit, resource.formatType)
@@ -1235,16 +869,11 @@ function BillingProjectResourceRow({
         </span>
 
         <span className="text-[12px] font-medium text-foreground shrink-0 text-end min-w-[70px]">
-          {resource.cost > 0 ? formatCurrency(resource.cost) : null}
+          {resource.cost !== 0 ? formatCurrency(resource.cost, currency) : null}
         </span>
       </div>
     </div>
   )
-}
-
-// Helper functions
-function formatBytes(bytes: number | bigint): string {
-  return formatDecimalBytes(bytes)
 }
 
 function formatNumber(num: number): string {
@@ -1262,7 +891,7 @@ function formatResourceUsage(
   type: 'bytes' | 'number' | 'sms',
 ): string {
   if (type === 'bytes') {
-    return formatBytes(value)
+    return formatDecimalBytes(value)
   }
   if (type === 'sms') {
     return `${value.toLocaleString()} SMS messages`
@@ -1280,10 +909,158 @@ function formatResourceLimit(
     if (value >= 1000 * 1000 * 1000) {
       return `${(value / (1000 * 1000 * 1000)).toFixed(0)} GB`
     }
-    return formatBytes(value)
+    return formatDecimalBytes(value)
   }
   if (type === 'sms') {
     return `${value.toLocaleString()}`
   }
   return formatNumber(value)
+}
+
+function usageCategories(
+  resources: AggregationResourceLike[] | null | undefined,
+  items: readonly Models.InvoiceItem[],
+  plan: Models.BillingPlan | null | undefined,
+  specifications: ReturnType<typeof buildDedicatedDbBillingSpecLookup>,
+): BillingProjectResourceCategoryGroup[] {
+  const usage = resources ?? []
+  const ids = [
+    ...new Set([
+      ...(resources ? Object.keys(getBillingProjectResourceIdMap(plan)) : []),
+      ...usage.flatMap((resource) =>
+        resource.resourceId ? [resource.resourceId] : [],
+      ),
+      ...items.flatMap((item) => (item.resourceId ? [item.resourceId] : [])),
+    ]),
+  ]
+  const rows: BillingProjectResourceItem[] = []
+  for (const id of ids) {
+    const resource = usage.find((resource) => resource.resourceId === id)
+    const recorded = items.filter((item) => item.resourceId === id)
+    const mapping =
+      resolveBillingProjectResourceMapping(id, plan, specifications) ??
+      (id.startsWith('addon_')
+        ? {
+            name: recorded[0]?.description ?? resource?.name ?? id,
+            format: 'number' as const,
+            planKey: id,
+            category: 'addons' as const,
+            showLimit: false,
+          }
+        : null)
+    if (!mapping) continue
+    const value = Number(
+      resource?.value ??
+        recorded.find((item) => item.quantity != null)?.quantity ??
+        0,
+    )
+    if (mapping.showOnlyWhenUsed && value === 0 && recorded.length === 0)
+      continue
+    const unavailable = isBillingPlanResourceUnavailable(plan, mapping.planKey)
+    const limit = getBillingPlanResourceLimit(plan, mapping.planKey)
+    if (!resource && recorded.length === 0 && limit === null && !unavailable)
+      continue
+    rows.push({
+      resourceId: id,
+      name: mapping.name,
+      usage: value,
+      limit,
+      // Aggregation amounts and plan prices never enter the displayed charges.
+      cost: recorded.reduce((sum, item) => sum + item.amount, 0) / 100,
+      formatType: mapping.format,
+      category: mapping.category,
+      showLimit: !unavailable && mapping.showLimit !== false,
+      requiresUpgrade: unavailable,
+      ...(id === 'storage'
+        ? { storageBreakdown: getBillingStorageBreakdownFromResources(usage) }
+        : {}),
+    })
+  }
+  return groupBillingProjectResources(rows)
+}
+
+function LinePeriod({ item }: { item: Models.InvoiceItem }) {
+  if (!item.from && !item.to) return null
+  return (
+    <p className="text-[11px] text-muted-foreground py-1">
+      {item.from && <DateTooltip date={item.from} showFormattedDate />}
+      {item.from && item.to && ' - '}
+      {item.to && <DateTooltip date={item.to} showFormattedDate />}
+    </p>
+  )
+}
+
+function RecordedLine({
+  item,
+  currency,
+}: {
+  item: Models.InvoiceItem
+  currency: string
+}) {
+  return (
+    <div className="py-1.5 text-[13px]">
+      <div className="flex justify-between gap-4">
+        <span className="flex items-center gap-2">
+          {item.description}
+          {item.type === 'addon' &&
+            (item.resourceId === 'member' || item.resourceId === 'projects') &&
+            item.quantity != null && (
+              <Badge
+                variant="info"
+                className="h-4 px-1.5 text-[10px] font-medium shrink-0"
+              >
+                {item.quantity}
+              </Badge>
+            )}
+        </span>
+        <span
+          className={cn(
+            'font-medium',
+            item.amount < 0 && 'text-green-600 dark:text-green-400',
+          )}
+        >
+          {formatCurrency(item.amount / 100, currency)}
+        </span>
+      </div>
+      <LinePeriod item={item} />
+    </div>
+  )
+}
+
+function RecordedUsageRow({
+  resource,
+  items,
+  currency,
+  onUpgrade,
+}: {
+  resource: BillingProjectResourceItem
+  items: readonly Models.InvoiceItem[]
+  currency: string
+  onUpgrade?: () => void
+}) {
+  const recorded = items.filter(
+    (item) => item.resourceId === resource.resourceId,
+  )
+  if (recorded.length === 0)
+    return (
+      <BillingProjectResourceRow
+        resource={{ ...resource, cost: 0 }}
+        currency={currency}
+        onUpgrade={onUpgrade}
+      />
+    )
+  return recorded.map((item, index) => (
+    <div key={index}>
+      <BillingProjectResourceRow
+        resource={{
+          ...resource,
+          name: item.description,
+          cost: item.amount / 100,
+        }}
+        currency={currency}
+        onUpgrade={onUpgrade}
+      />
+      <LinePeriod item={item} />
+    </div>
+  ))
 }

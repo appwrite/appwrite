@@ -134,6 +134,28 @@ class EventTailRegistry
         }
     }
 
+    /**
+     * Re-authorize every tail of a project against the roles that may read it now, and
+     * keep those roles for later revalidation. Called when the project's own permissions
+     * change, such as on a transfer to another team, which the viewer's roles never show.
+     *
+     * @param array<int,string> $readRoles the project's current read roles
+     * @param callable(int): array<int,string> $connectionRoles the current roles of a connection
+     */
+    public function reauthorizeProject(string $projectId, array $readRoles, callable $connectionRoles): void
+    {
+        foreach (($this->projectIndex[$projectId] ?? []) as $connId => $subs) {
+            $authorized = !empty(\array_intersect($readRoles, $connectionRoles($connId)));
+            foreach (\array_keys($subs) as $subId) {
+                if ($authorized) {
+                    $this->entries[$connId][$subId][$projectId]['roles'] = $readRoles;
+                } else {
+                    $this->detachEntry($connId, (string) $subId, $projectId);
+                }
+            }
+        }
+    }
+
     private function detachEntry(int $connId, string $subId, string $projectId): void
     {
         unset($this->projectIndex[$projectId][$connId][$subId]);

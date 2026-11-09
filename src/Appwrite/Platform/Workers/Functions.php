@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Deployment\Deployments;
@@ -156,7 +157,7 @@ class Functions extends Action
 
         if (empty($jwt) && !$user->isEmpty()) {
             $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
             $jwt = $jwtObj->encode([
                 'projectId' => $project->getId(),
                 'userId' => $user->getId(),
@@ -253,7 +254,7 @@ class Functions extends Action
                             user: $user,
                             jwt: null,
                             event: $events[0],
-                            eventData: \json_encode($eventData) ?: null,
+                            eventData: $data !== '' ? $data : (\json_encode($eventData) ?: null),
                             executionId: null,
                         );
                         $handled[] = $function->getId();
@@ -614,7 +615,7 @@ class Functions extends Action
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
         $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
@@ -841,7 +842,7 @@ class Functions extends Action
                 ->setEvent('functions.[functionId].executions.[executionId].update')
                 ->setParam('functionId', $function->getId())
                 ->setParam('executionId', $execution->getId())
-                ->setPayload((new Execution())->payload($execution));
+                ->setPayload((new Execution())->payload($execution), sensitive: ['logs', 'errors']);
 
             /** Trigger Webhook */
             $queueForWebhooks

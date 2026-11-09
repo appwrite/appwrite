@@ -45,6 +45,13 @@ final readonly class Memory extends TimeLimit
         $this->store->counts[$key . '__' . $window] = $value;
     }
 
+    #[\Override]
+    protected function unhit(string $key, int $window): void
+    {
+        $this->store->calls++;
+        $this->store->counts[$key . '__' . $window] = \max(0, ($this->store->counts[$key . '__' . $window] ?? 0) - 1);
+    }
+
     /**
      * @return array<string, int>
      */

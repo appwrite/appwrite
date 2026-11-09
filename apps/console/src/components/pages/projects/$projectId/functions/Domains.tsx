@@ -1,12 +1,15 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useSearch, useNavigate } from '@tanstack/react-router'
 import {
+  AlertCircle,
   Loader2,
   FileText,
   RefreshCw,
   Trash2,
   ExternalLink,
-  Globe} from 'lucide-react'
+  Globe,
+  Mail,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -19,36 +22,44 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   useFunctionDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { domainUrl } from '@/lib/domains/url'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { SmtpDomainsSection } from './domains/SmtpDomainsSection'
+import { useVisitUrl } from '@/hooks/use-visit-url'
+import { isSmtpRule } from '@/lib/function-smtp-domain'
+import { VerifySmtpDomain } from './domains/VerifySmtpDomain'
 
 export function View() {
   const t = useT()
-  const { features } = useConsoleProfile()
+  const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
@@ -59,6 +70,7 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
@@ -79,7 +91,10 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching} = useFunctionDomains(
+    isFetching: domainsFetching,
+    error: domainsError,
+    refetch: refetchDomains,
+  } = useFunctionDomains(
     projectId,
     functionId,
     currentPage,
@@ -90,6 +105,14 @@ export function View() {
 
   const rulesFromApi = domainsData?.rules || []
   const total = domainsData?.total || 0
+
+  // Deleting the last domain on the last page leaves that page empty; step
+  // back to the last page that still has rows so the table stays reachable.
+  useEffect(() => {
+    if (!domainsData || currentPage === 0) return
+    const lastPage = Math.max(0, Math.ceil(domainsData.total / pageSize) - 1)
+    if (currentPage > lastPage) setCurrentPage(lastPage)
+  }, [domainsData, currentPage, pageSize])
 
   // Keep showing previous results while fetching new filter results (no empty state flash)
   const lastRulesRef = useRef<typeof rulesFromApi>([])
@@ -119,7 +142,11 @@ export function View() {
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
-      setVerifyOpen(true)
+      if (isSmtpRule(rule)) {
+        setSmtpVerifyOpen(true)
+      } else {
+        setVerifyOpen(true)
+      }
     })
   }
 
@@ -153,6 +180,28 @@ export function View() {
   }
 
   const hasFilters = filterMap.size > 0 || !!searchValue
+  const domainsErrorContent = (
+    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <EmptyState
+        icon={AlertCircle}
+        title={t('Failed to load domains')}
+        description={getErrorMessage(domainsError)}
+        variant="card"
+        iconSize="md"
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void refetchDomains()
+            }}
+          >
+            {t('Try again')}
+          </Button>
+        }
+      />
+    </div>
+  )
   const domainsContent =
     rules.length === 0 ? (
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
@@ -196,7 +245,8 @@ export function View() {
               </TableHeader>
               <TableBody>
                 {rules.map((rule) => {
-                  const statusConfig = getDomainStatusBadgeConfig(rule.status)
+                  const statusConfig = getRuleStatusBadgeConfig(rule)
+                  const isEmail = isSmtpRule(rule)
 
                   return (
                     <ProxyRuleContextMenu
@@ -211,18 +261,27 @@ export function View() {
                     >
                       <TableRow>
                         <TableCell className="px-4 py-3">
-                          <a
-                            href={domainUrl(rule.domain)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
-                          >
-                            {rule.domain}
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
+                          {isEmail ? (
+                            <span className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium">
+                              {rule.domain}
+                              <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </span>
+                          ) : (
+                            <a
+                              href={visitUrl(rule.domain)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
+                            >
+                              {rule.domain}
+                              <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </a>
+                          )}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px]">
-                          {rule.redirectUrl ? (
+                          {isEmail ? (
+                            <span>{t('Email')}</span>
+                          ) : rule.redirectUrl ? (
                             <span>
                               {t('Redirect to')} {rule.redirectUrl}
                             </span>
@@ -237,34 +296,19 @@ export function View() {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Badge
-                              variant={statusConfig.variant}
-                              className="text-[10px] shrink-0 gap-1.5"
-                              title={
-                                rule.status === 'verifying'
-                                  ? t(
-                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
-                                    )
-                                  : undefined
-                              }
-                            >
-                              {rule.status === 'verifying' && (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                            <RuleStatusBadge rule={rule} />
+                            {statusConfig.variant !== 'success' &&
+                              canViewRuleLogs(rule) && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-[13px]"
+                                  onClick={() => handleViewLogs(rule)}
+                                >
+                                  {t('View logs')}
+                                </Button>
                               )}
-                              {t(statusConfig.label)}
-                            </Badge>
-                            {rule.status !== 'verified' && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleViewLogs(rule)}
-                              >
-                                {t('View logs')}
-                              </Button>
-                            )}
-                            {(rule.status === 'created' ||
-                              rule.status === 'unverified') && (
+                            {canRetryRule(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -289,19 +333,22 @@ export function View() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {rule.status !== 'verified' && (
+                                {canViewRuleLogs(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
-                                    <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
+                                    <MenuItemContent icon={FileText}>
+                                      {t('Logs')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {(rule.status === 'created' ||
-                                  rule.status === 'unverified') && (
+                                {canRetryRule(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
-                                    <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
+                                    <MenuItemContent icon={RefreshCw}>
+                                      {t('Retry')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -317,7 +364,9 @@ export function View() {
                                         to: '/organizations/$orgId/domains/$domainId',
                                         params: {
                                           orgId: project.teamId,
-                                          domainId: orgDomainId}})
+                                          domainId: orgDomainId,
+                                        },
+                                      })
                                     }
                                   }}
                                   disabled={
@@ -330,12 +379,16 @@ export function View() {
                                     )
                                   }
                                 >
-                                  <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
+                                  <MenuItemContent icon={Globe}>
+                                    {t('Records')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(rule)}
                                 >
-                                  <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -368,25 +421,27 @@ export function View() {
 
   return (
     <>
-      {domainsContent}
-      {features.functionEmailDomains ? <SmtpDomainsSection /> : null}
+      {domainsError ? domainsErrorContent : domainsContent}
       {selectedRule && (
         <>
+          {isSmtpRule(selectedRule) ? (
+            <VerifySmtpDomain
+              open={smtpVerifyOpen}
+              onOpenChange={setSmtpVerifyOpen}
+              projectId={projectId ?? ''}
+              region={project?.region}
+              rule={selectedRule}
+              onVerifySuccess={() => setSelectedRule(null)}
+            />
+          ) : null}
           <VerifyDomain
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/functions/$functionId/domains/add',
-                params: { projectId: projectId!, functionId: functionId! }})
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
@@ -409,7 +464,9 @@ export function View() {
             setViewLogsOpen(open)
             if (!open) setViewLogsRule(null)
           }}
-          rule={viewLogsRule}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>
