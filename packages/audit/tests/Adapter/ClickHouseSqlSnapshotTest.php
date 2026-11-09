@@ -167,7 +167,7 @@ final class ClickHouseSqlSnapshotTest extends TestCase
             ->query;
 
         $this->assertSame(
-            'DELETE FROM `default`.`audits` WHERE `time` < {datetime:DateTime64(3)} SETTINGS lightweight_deletes_sync=0',
+            'DELETE FROM `default`.`audits` WHERE (`time` < {datetime:DateTime64(3)}) SETTINGS lightweight_deletes_sync=0',
             $sql,
         );
     }
@@ -181,7 +181,7 @@ final class ClickHouseSqlSnapshotTest extends TestCase
             ->query;
 
         $this->assertSame(
-            'DELETE FROM `default`.`audits` WHERE `time` < {datetime:DateTime64(3)}',
+            'DELETE FROM `default`.`audits` WHERE (`time` < {datetime:DateTime64(3)})',
             $sql,
         );
     }
@@ -313,7 +313,7 @@ final class ClickHouseSqlSnapshotTest extends TestCase
 
         $expectedSql = 'SELECT `id`, `event`, `time` FROM `default`.`audits` '
             . 'WHERE `actorId` IN ({param0:String}) '
-            . 'AND ' . $cursorClause . ' '
+            . 'AND (' . $cursorClause . ') '
             . 'ORDER BY `time` DESC, `id` DESC '
             . 'LIMIT {param1:Int64}';
 
