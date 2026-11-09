@@ -517,9 +517,8 @@ abstract class Base extends VideosAction
     /**
      * Give audio renditions that share a label distinct NAME values.
      *
-     * HLS requires NAME, and players present it as the track title. One
-     * undetermined track keeps a missing name. A second track with the same
-     * label would otherwise be indistinguishable.
+     * HLS requires NAME, and players present it as the track title. Unnamed
+     * tracks get `Audio {id}`; duplicate labels are disambiguated the same way.
      *
      * @param list<array{name: ?string, language: ?string, track: string, uri: string}> $audios
      */
@@ -534,10 +533,14 @@ abstract class Base extends VideosAction
 
         foreach ($audios as $index => $audio) {
             $label = \is_string($audio['name']) && $audio['name'] !== '' ? $audio['name'] : '';
+            $track = $audio['track'] !== '' ? $audio['track'] : (string) $index;
 
-            if (($counts[$label] ?? 0) > 1) {
-                $track = $audio['track'] !== '' ? $audio['track'] : (string) $index;
-                $audios[$index]['name'] = $label !== '' ? $label . ' ' . $track : 'Audio ' . $track;
+            // HLS requires NAME on EXT-X-MEDIA. A single unnamed track used to
+            // omit it and players (hls.js, Safari) refuse the master.
+            if ($label === '') {
+                $audios[$index]['name'] = 'Audio ' . $track;
+            } elseif (($counts[$label] ?? 0) > 1) {
+                $audios[$index]['name'] = $label . ' ' . $track;
             }
 
             unset($audios[$index]['track']);

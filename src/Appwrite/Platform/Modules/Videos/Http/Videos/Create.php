@@ -126,7 +126,9 @@ class Create extends Base
 
         if (\is_null($permissions)) {
             $permissions = [];
-            if (!empty($user->getId()) && !$isPrivilegedUser) {
+            // Privileged console creates still need a document ACL — playback URLs
+            // authorize against `$permissions`, not admin mode.
+            if (!empty($user->getId())) {
                 foreach ($allowedPermissions as $permission) {
                     $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                 }
