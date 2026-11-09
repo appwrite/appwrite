@@ -137,7 +137,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     #[\Override]
     public function hint(string $hint): static
     {
-        if (!\preg_match('/^[A-Za-z0-9_=., ]+$/', $hint)) {
+        if (!\preg_match('/^[A-Za-z0-9_=., ]+$/D', $hint)) {
             throw new ValidationException('Invalid hint: ' . $hint);
         }
 
@@ -207,7 +207,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      */
     public function insertFormat(string $format, array $columns = []): static
     {
-        if (!\preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $format)) {
+        if (!\preg_match('/^[A-Za-z][A-Za-z0-9_]*$/D', $format)) {
             throw new ValidationException('Invalid ClickHouse INSERT format: ' . $format);
         }
 
@@ -255,13 +255,13 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     public function settings(array $settings): static
     {
         foreach ($settings as $key => $value) {
-            if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)) {
+            if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $key)) {
                 throw new ValidationException('Invalid ClickHouse setting key: ' . $key);
             }
 
             $value = (string) $value;
 
-            if (!\preg_match('/^[a-zA-Z0-9_.]+$/', $value)) {
+            if (!\preg_match('/^[a-zA-Z0-9_.]+$/D', $value)) {
                 throw new ValidationException('Invalid ClickHouse setting value: ' . $value);
             }
 
@@ -439,7 +439,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      */
     public function withParamType(string $column, string $type): static
     {
-        if (! \preg_match('/^[A-Za-z][A-Za-z0-9_]*(?:\((?:[^()]*|\([^()]*\))*\))?$/', $type)) {
+        if (! \preg_match('/^[A-Za-z][A-Za-z0-9_]*(?:\((?:[^()]*|\([^()]*\))*\))?$/D', $type)) {
             throw new ValidationException('Invalid ClickHouse type: ' . $type);
         }
 

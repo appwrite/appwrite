@@ -12,8 +12,8 @@ const orgSetupPreviewSearchSchema = z.object({
     .enum(['submitting', 'confirming-payment', 'activating', 'complete'])
     .optional(),
   mode: z.enum(['create', 'upgrade']).optional(),
-  payment: z.boolean().optional(),
-  activation: z.boolean().optional(),
+  payment: z.stringbool().optional(),
+  activation: z.stringbool().optional(),
 })
 
 export type OrgSetupPreviewPhase = NonNullable<

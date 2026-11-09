@@ -162,7 +162,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'REDIS_HOST',
@@ -179,6 +179,14 @@ return [
                 'placeholder' => 'efNNehiACfcZiwsTAjcK6xiwPyu6Dpdq',
                 'required' => true,
                 'type' => 'password'
+            ],
+            [
+                'name' => 'REDIS_PORT',
+                'description' => 'The port of your Redis database. <a class="u-bold" target="_blank" href="https://redis.io/docs/latest/operate/rc/rc-quickstart/">Learn more</a>.',
+                'value' => '14714',
+                'placeholder' => '13258',
+                'required' => true,
+                'type' => 'text'
             ]
         ],
         'scopes' => []
@@ -555,7 +563,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'DISCORD_PUBLIC_KEY',
