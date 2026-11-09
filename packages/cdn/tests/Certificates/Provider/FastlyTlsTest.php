@@ -376,6 +376,21 @@ final class FastlyTlsTest extends TestCase
         }
     }
 
+    public function testCaaConflictAsksForTheCaaRecordOnly(): void
+    {
+        $warning = 'Found conflicting CAA record(s). Expected certainly.com.';
+        $client = new TestClient([$this->json($this->subscription(state: 'failed', warnings: [['type' => 'caa', 'instructions' => $warning]]))]);
+
+        try {
+            new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null);
+            $this->fail('A CAA conflict has to be reported.');
+        } catch (Certificate $exception) {
+            $this->assertSame(Status::FAILED, $exception->getStatus());
+            $this->assertSame('Fastly stopped trying to issue a certificate for example.com. ' . $warning . ' Update the CAA record, then retry.', $exception->getMessage());
+            $this->assertCount(1, $exception->getChallenges());
+        }
+    }
+
     public function testPendingAuthorizationIsStillWaitedOn(): void
     {
         $client = new TestClient([$this->json($this->subscription(authorizationState: 'pending'))]);
