@@ -162,7 +162,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'REDIS_HOST',
@@ -555,7 +555,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'DISCORD_PUBLIC_KEY',
