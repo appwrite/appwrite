@@ -157,7 +157,9 @@ final class JobsTest extends TestCase
         $options = Jobs::resolveReapOptions(\Utopia\System\System::getEnv(...));
 
         $this->assertIsInt($options['reapAfter']);
-        $this->assertGreaterThanOrEqual(1, $options['reapAfter']);
+        $this->assertSame(300, $options['reapAfter']);
+        $this->assertNull($options['reapMaxAttempts']);
+        $this->assertNull($options['reapMaxAge']);
     }
 
     /**
