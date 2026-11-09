@@ -1,0 +1,91 @@
+---
+layout: integration
+title: node-postgres with managed PostgreSQL
+description: Query an Appwrite native PostgreSQL database from Node.js with the node-postgres (pg) driver
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-node-postgres/cover.avif
+category: databases
+product:
+    vendor: node-postgres
+    description: 'node-postgres, published as the pg package, is a widely used open-source PostgreSQL client for Node.js with built-in connection pooling.'
+platform:
+    - 'Cloud'
+---
+
+[node-postgres](https://node-postgres.com/), published on npm as `pg`, is an open-source PostgreSQL client for Node.js. It supports parameterized queries, transactions, and a built-in connection `Pool`, and many ORMs and auth libraries use it underneath.
+
+# How does the integration work?
+
+An Appwrite native PostgreSQL database is a standard PostgreSQL engine that Appwrite provisions in your project's region, with its own hostname, credentials, and TLS. node-postgres connects to it like any other PostgreSQL server, so you get a connection pool you control and a thin data layer with no Appwrite-specific adapter.
+
+Long-running servers can connect to the engine directly on port `5432`. Serverless functions should connect through the database's connection pooler on port `6432`, which absorbs the connection fan-out of many short-lived instances.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To query an Appwrite native PostgreSQL database with node-postgres, there are several steps you must complete:
+
+## Step 1: Create a native PostgreSQL database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+Open the database and click **Credentials**. The **Details** tab shows the host, port, user, password, and database name. The primary user is `admin`. Keep the password in an environment variable and never commit it.
+
+## Step 2: Create a pool
+
+Install the driver with `npm install pg`, then create one `Pool` at startup and reuse it for every request:
+
+```js
+import { Pool } from 'pg';
+
+const pool = new Pool({
+    host: 'db-<hash>.<region>.appwrite.center',
+    port: 5432,
+    user: 'admin',
+    password: process.env.DB_PASSWORD,
+    database: '<database>',
+    ssl: { rejectUnauthorized: true },
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
+});
+```
+
+`ssl: { rejectUnauthorized: true }` verifies the server certificate against Node's built-in CA store. The certificate is signed by a public CA, so you don't need to download a custom bundle. Never ship `rejectUnauthorized: false` to production.
+
+Every connection in `max`, across every running instance, counts against your specification's connection cap. Size `max` to that cap divided by your replica count.
+
+## Step 3: Use the pooler from serverless runtimes
+
+On Lambda, Cloud Run, Vercel, and similar platforms, set `port: 6432` to connect through the pooler, keep `max` at `1` or `2`, and create the pool at module scope so warm invocations reuse it.
+
+The pooler defaults to transaction mode, which does not support server-side prepared statements. node-postgres only prepares a statement when you pass a `name` in the query config, so leave `name` out of queries sent through port `6432`. For named prepared statements, advisory locks, `LISTEN`/`NOTIFY`, or temporary tables, use port `5432` or switch the pooler to session mode. Run migrations on port `5432`.
+
+On edge runtimes that can't open TCP sockets, such as Cloudflare Workers, use the database's [SQL API](/docs/products/databases/postgresql/quick-start#first-queries) over HTTPS instead.
+
+## Step 4: Test the connection
+
+Run a parameterized query to confirm the pool can reach the database:
+
+```js
+const { rows } = await pool.query('SELECT now() AS time, $1::text AS greeting', ['hello']);
+console.log(rows[0]);
+```
+
+If the connection times out, check whether an IP allowlist on the database blocks your egress IP, and raise `connectionTimeoutMillis` to absorb cold starts on smaller specifications.
+
+# Read more about node-postgres and Appwrite Databases
+
+If you would like to learn more about node-postgres and Appwrite Databases, we have some resources that you should visit:
+
+- [Node.js drivers for native PostgreSQL databases](/docs/products/databases/postgresql/integrations/drivers)
+- [Connect to a native PostgreSQL database](/docs/products/databases/postgresql/connections)
+- [PostgreSQL connection pooling](/docs/products/databases/postgresql/connection-pooling)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [node-postgres documentation](https://node-postgres.com/)

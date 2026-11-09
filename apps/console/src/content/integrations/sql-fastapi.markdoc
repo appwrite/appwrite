@@ -1,0 +1,134 @@
+---
+layout: integration
+title: FastAPI with managed PostgreSQL and MySQL
+description: Build FastAPI apps with SQLAlchemy and Alembic on an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-fastapi/cover.avif
+category: databases
+product:
+    vendor: FastAPI
+    description: 'FastAPI is an open-source Python web framework for building APIs with type hints, async support, and automatic OpenAPI docs.'
+platform:
+    - 'Cloud'
+---
+
+[FastAPI](https://fastapi.tiangolo.com/) is a Python web framework for building APIs with standard type hints. Paired with [SQLAlchemy](https://docs.sqlalchemy.org/) 2.x and an async driver, it gives you async database sessions per request, and Alembic manages the schema.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. FastAPI apps reach them through SQLAlchemy's async dialects, asyncpg for PostgreSQL and asyncmy for MySQL, so the ORM, FastAPI's dependency system, and Alembic work as they would against any other server.
+
+A long-running `uvicorn` server holds a sized pool on the direct engine port. Serverless deployments, such as an [Appwrite Function](/docs/products/functions), route through the database's connection pooler instead.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect FastAPI to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Install dependencies and set the URL
+
+Install FastAPI, SQLAlchemy, Alembic, and the async driver, then rewrite the scheme of Appwrite's connection string for SQLAlchemy:
+
+{% tabs %}
+{% tabsitem #url-postgresql title="PostgreSQL" %}
+```bash
+pip install "fastapi[standard]" "sqlalchemy[asyncio]" asyncpg alembic
+```
+
+```env
+DATABASE_URL="postgresql+asyncpg://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+```
+
+Drop the `?sslmode=require` suffix, because asyncpg doesn't read `sslmode` from the URL. You configure TLS in the engine instead.
+{% /tabsitem %}
+
+{% tabsitem #url-mysql title="MySQL" %}
+```bash
+pip install "fastapi[standard]" "sqlalchemy[asyncio]" asyncmy alembic
+```
+
+```env
+DATABASE_URL="mysql+asyncmy://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?charset=utf8mb4"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Create the async engine
+
+Pass TLS settings through `connect_args` and create the engine once at module scope:
+
+{% tabs %}
+{% tabsitem #engine-postgresql title="PostgreSQL" %}
+```python
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"ssl": "require"},  # or "verify-full"
+    pool_size=10,
+    max_overflow=5,
+    pool_pre_ping=True,
+)
+
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+```
+{% /tabsitem %}
+
+{% tabsitem #engine-mysql title="MySQL" %}
+```python
+import ssl
+
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"ssl": ssl.create_default_context()},
+    pool_size=10,
+    max_overflow=5,
+    pool_pre_ping=True,
+)
+
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+```
+{% /tabsitem %}
+{% /tabs %}
+
+The server certificate is signed by a public CA, so full verification works against the system trust store. Inject a session per request with a dependency that yields `SessionLocal()`, and keep `pool_size` times your process count under the specification's connection limit.
+
+## Step 4: Run Alembic migrations
+
+Scaffold Alembic's async template, point `target_metadata` at your `Base.metadata` in `migrations/env.py`, then autogenerate and apply against the direct port (`5432` or `3306`):
+
+```bash
+alembic init -t async migrations
+alembic revision --autogenerate -m "init"
+alembic upgrade head
+```
+
+## Step 5: Use the pooler from serverless runtimes
+
+When each invocation is a fresh instance, connect through the pooler and use `NullPool` so SQLAlchemy doesn't keep its own pool on top of it. On PostgreSQL, use port `6432`, and turn off both statement caches with `?prepared_statement_cache_size=0` in the URL and `"statement_cache_size": 0` in `connect_args`, because the pooler's transaction mode does not support prepared statements. On MySQL, use port `6033`.
+
+To test migrations in CI, run `alembic upgrade head` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, then delete it when the job finishes.
+
+# Read more about FastAPI and Appwrite Databases
+
+If you would like to learn more about FastAPI and Appwrite Databases, we have some resources that you should visit:
+
+- [Use FastAPI with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/fastapi)
+- [Use FastAPI with a native MySQL database](/docs/products/databases/mysql/integrations/fastapi)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [FastAPI documentation](https://fastapi.tiangolo.com/)

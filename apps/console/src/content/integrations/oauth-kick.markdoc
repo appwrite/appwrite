@@ -1,0 +1,77 @@
+---
+layout: integration
+title: OAuth with Kick
+description: Authenticate users with an existing Kick account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-kick/cover.avif
+category: auth
+product:
+    vendor: Kick
+    description: 'Kick is a live streaming platform where creators broadcast and chat with their communities.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Kick](https://kick.com/) is a live streaming platform where creators broadcast gaming, music, and talk streams and chat with their communities. Its public API and OAuth flow let developers build tools for streamers and their viewers.
+
+# How does the integration work?
+
+You can use the Kick OAuth adapter in Appwrite Auth to let users sign in with their Kick account. This fits creator tools, stream overlays, chat bots, and community apps whose users already stream or watch on Kick. The session stores Kick's access token as `providerAccessToken`, so your server can call the Kick API on the user's behalf.
+
+Appwrite requests the `user:read` scope and handles the PKCE exchange that Kick uses. It stores the user's name, email, and profile picture. Kick doesn't report whether the email is verified, so Appwrite stores it as unverified. If another user in your project already has that email, Appwrite redirects to your failure URL instead of signing the user in. To connect Kick to that account, have the user sign in first and then start the OAuth flow from the browser, which links Kick as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Kick OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an app on Kick
+
+Kick requires two-factor authentication before you can use its developer tools, so enable it in your Kick account settings first. Then open the [Developer](https://kick.com/settings/developer) tab of your account settings and create an app.
+
+Kick asks for the redirect URL when you create the app. Temporarily enter `https://temporary-endpoint.com/`. You'll replace it with the URI from Appwrite in the next step. If the form asks which scopes the app uses, select `user:read`.
+
+Kick generates a client ID and client secret for the app. Save both values for later use.
+
+## Step 2: Add Kick OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Kick** under the **OAuth2 Providers** section.
+
+Paste the app's credentials into the **Client ID** and **Client Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/kick/<PROJECT_ID>`, but always copy the exact value from the Console. Edit your app in Kick's **Developer** settings and replace the temporary redirect URL with it.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Kick` value. Pass extra Kick scopes in `scopes` if your app calls other Kick APIs, such as `channel:read`. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Kick,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Kick and Appwrite Auth
+
+If you would like to learn more about Kick and Appwrite Auth, we have some resources that you should visit:
+
+- [Kick app setup](https://docs.kick.com/getting-started/kick-apps-setup)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Read the OAuth 2 profile and provider token](/docs/products/auth/oauth2#profile)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

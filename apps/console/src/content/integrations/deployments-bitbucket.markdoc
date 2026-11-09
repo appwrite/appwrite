@@ -1,0 +1,101 @@
+---
+layout: integration
+title: Deployments with Bitbucket
+description: Deploy Appwrite Sites and Functions on every push to a Bitbucket repository
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/deployments-bitbucket/cover.avif
+category: deployments
+product:
+    vendor: Bitbucket
+    description: "Bitbucket is Atlassian's Git hosting service, with pull requests, branch permissions, and Jira integration for teams."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Bitbucket](https://bitbucket.org) is Atlassian's Git hosting service. Teams organize repositories into workspaces, review changes in pull requests, and link their work to Jira, which makes Bitbucket a common home for code at companies that already run on Atlassian tools.
+
+# How does the integration work?
+
+Bitbucket is one of Appwrite's Git providers for [Appwrite Sites](/docs/products/sites) and [Appwrite Functions](/docs/products/functions). You connect Bitbucket to your Appwrite project once, through Bitbucket's OAuth consent screen. Every workspace your account can reach appears as a selectable owner in the repository picker, next to owners from any other Git provider you have connected.
+
+Each push to a connected repository can create a deployment:
+
+- **Production branch:** the deployment builds and activates.
+- **Any other branch:** the deployment builds but stays inactive. Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open.
+- **Every build:** Appwrite reports a commit status on Bitbucket and comments on the pull request with the deployment status, build logs, preview URL, and a QR code.
+
+Commit, branch, and pull request links on each deployment resolve to Bitbucket's own URL shapes.
+
+{% info title="Self-hosted Appwrite" %}
+Self-hosted Appwrite 2.0 and later can deploy from Bitbucket once you give the server a Bitbucket OAuth consumer. Appwrite connects to Bitbucket Cloud at `bitbucket.org`. See [Configure Bitbucket on self-hosted Appwrite](#configure-bitbucket-on-self-hosted-appwrite).
+{% /info %}
+
+# How to implement
+
+To deploy from Bitbucket to Appwrite, there are several steps you must complete:
+
+## Step 1: Connect Bitbucket to your Appwrite project
+
+For this step, you need to [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) with Bitbucket configured.
+
+In the Appwrite Console, open your project, go to **Project settings** > **Git configuration**, and click **Connect Bitbucket**. Approve Bitbucket's OAuth consent screen, and the connection is saved to the project. Its repositories are available immediately.
+
+You can also connect from an existing site or function under **Settings** > **Version control (Git)**, or from the empty state of the site and function creation wizards when the project has no Git connection yet.
+
+## Step 2: Create a Site or Function from a Bitbucket repository
+
+To deploy a site, go to **Sites** and click **Create site**. Under **Connect Git repository**, pick your Bitbucket workspace, select the repository, and confirm the framework, install command, build command, and output directory. Add any environment variables, then deploy.
+
+To deploy a function, go to **Functions** and click **Create function**. Under **Connect Git repository**, select your Bitbucket repository, set the root directory and entrypoint, and create the function.
+
+## Step 3: Push to deploy
+
+Push to your production branch, usually `main`, to build and activate a new deployment. Push to any other branch to get a deployment that builds without activating, along with a preview link that Appwrite posts on the pull request.
+
+[Build triggers](/docs/products/sites/deploy-from-git#build-triggers) limit which pushes deploy. Branch filters match branch names, and path filters match changed files:
+
+```txt
+main
+staging
+preview/**
+```
+
+A project can hold Bitbucket and GitHub or GitLab connections at the same time, so different Sites and Functions in one project can deploy from different providers.
+
+# Configure Bitbucket on self-hosted Appwrite
+
+Self-hosted Appwrite needs its own Bitbucket OAuth consumer before it can connect to Bitbucket. To add one:
+
+1. In Bitbucket, open your workspace, select the **Settings** cog, then **Workspace settings**. Under **Apps and features**, select **OAuth consumers** and click **Add consumer**.
+2. Set the **Callback URL** to `https://<APPWRITE_DOMAIN>/v1/vcs/bitbucket/callback`, where `<APPWRITE_DOMAIN>` is your `_APP_CONSOLE_DOMAIN`, or `_APP_DOMAIN` when that is not set. Use `http://` only if `_APP_OPTIONS_FORCE_HTTPS` is `disabled`.
+3. Grant the permissions behind the scopes Appwrite requests: `account`, `repository:write`, `pullrequest:write`, and `webhook`. Save the consumer and copy its **Key** and **Secret**.
+4. Add the credentials to your Appwrite `.env` file:
+
+```env
+_APP_VCS_BITBUCKET_CLIENT_ID=<KEY>
+_APP_VCS_BITBUCKET_CLIENT_SECRET=<SECRET>
+_APP_VCS_BITBUCKET_WEBHOOK_SECRET=<RANDOM_STRING>
+```
+
+The webhook secret can be any random string: Appwrite uses it when it registers a webhook on each repository you connect, and to validate the events Bitbucket sends to `/v1/vcs/bitbucket/events`. Bitbucket must be able to reach your Appwrite domain. If your public address differs from `_APP_DOMAIN`, set `_APP_VCS_WEBHOOK_URL` to the base URL Bitbucket should call.
+
+Recreate the containers and check that the variables are applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+# Read more about Bitbucket and Appwrite
+
+If you would like to learn more about Bitbucket and Appwrite, we have some resources that you should visit:
+
+- [Announcing Bitbucket support for Sites and Functions](/blog/post/announcing-bitbucket-support)
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git)
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git)
+- [Preview deployments](/docs/products/sites/previews)
+- [Use OAuth on Bitbucket Cloud](https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/)

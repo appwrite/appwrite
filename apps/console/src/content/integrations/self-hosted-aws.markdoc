@@ -1,0 +1,68 @@
+---
+layout: integration
+title: Self-host Appwrite on AWS
+description: Run self-hosted Appwrite on Amazon EC2 from the AWS Marketplace, or on Amazon EKS with the Helm chart
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/self-hosted-aws/cover.avif
+category: self-hosting
+product:
+    vendor: AWS
+    description: "Amazon Web Services (AWS) is Amazon's cloud computing platform, with services such as EC2, EKS, RDS, and S3."
+platform:
+    - 'Self-hosted'
+---
+
+[Amazon Web Services (AWS)](https://aws.amazon.com) is Amazon's cloud computing platform. It offers virtual servers on Amazon EC2, managed Kubernetes on Amazon EKS, and managed services such as Amazon RDS, Amazon ElastiCache, and Amazon S3.
+
+# How does the integration work?
+
+Appwrite publishes a one-click app on AWS Marketplace that launches an EC2 instance with Appwrite installed. The listing itself is free, and you pay AWS for the instance and any other resources it uses.
+
+For more control, install Appwrite yourself on an EC2 instance with the Docker installer, or run it on Amazon EKS with the official Appwrite Helm chart, whose AWS example connects Appwrite to Amazon RDS, ElastiCache, S3, SES, and EFS.
+
+{% info title="Check the Appwrite version" %}
+The Marketplace image installs a fixed Appwrite version, which can lag behind the latest release. Check the version on the listing, and [upgrade your instance](/docs/advanced/self-hosting/production/updates) after launch if you need a newer one.
+{% /info %}
+
+# How to implement
+
+To self-host Appwrite on AWS with the Marketplace app, there are several steps you must complete:
+
+## Step 1: Subscribe on AWS Marketplace
+
+Open the [Appwrite listing on AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6) and click **Continue to Subscribe**. Review and accept the terms, then click **Continue to Configuration**. Choose your region and software version, and click **Continue to Launch**.
+
+## Step 2: Launch the EC2 instance
+
+Choose **Launch through EC2** and configure the instance:
+
+- **Instance type:** `t3.medium` (2 vCPU, 4 GB RAM) at minimum, and `t3.large` or larger for production.
+- **Security group:** allow HTTP (80) and HTTPS (443) from anywhere, and SSH (22) from your IP address only.
+- **Key pair:** select an EC2 key pair so you can connect to the instance over SSH.
+
+Click **Launch**.
+
+## Step 3: Complete the setup
+
+Wait for the instance to launch and pass its status checks. Then open the instance's public IP address in your browser and complete the Appwrite setup wizard.
+
+## Step 4: Prepare for production
+
+Before real users depend on the instance, work through the [production guide](/docs/advanced/self-hosting/production), and keep the instance on a current release with the [update guide](/docs/advanced/self-hosting/production/updates). To keep uploaded files off the instance's disk, store them in an S3 bucket with the [Amazon S3 storage adapter](/integrations/storage-s3).
+
+# Other ways to run Appwrite on AWS
+
+- **Any EC2 instance:** follow the [installation guide](/docs/advanced/self-hosting/installation) to run the Docker installer on a Linux instance with at least 2 CPU cores and 4 GB of RAM. Open port 20080 in the security group while the setup wizard runs, and close it afterwards.
+- **Amazon EKS:** install the [Appwrite Helm chart](/docs/advanced/self-hosting/platforms/kubernetes). Its [`aws.yaml` example](https://github.com/appwrite/helm-chart/blob/main/examples/aws.yaml) connects Appwrite to Amazon RDS, ElastiCache, S3, SES, and EFS.
+
+# Read more about AWS and self-hosted Appwrite
+
+If you would like to learn more about running Appwrite on AWS, we have some resources that you should visit:
+
+- [AWS deployment guide](/docs/advanced/self-hosting/platforms/aws)
+- [Self-hosting installation guide](/docs/advanced/self-hosting/installation)
+- [Self-host Appwrite on Kubernetes](/docs/advanced/self-hosting/platforms/kubernetes)
+- [Amazon EC2 documentation](https://docs.aws.amazon.com/ec2/)

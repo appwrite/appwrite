@@ -1,0 +1,57 @@
+---
+layout: integration
+title: Self-host Appwrite on Google Cloud
+description: Run self-hosted Appwrite on Compute Engine, or on Google Kubernetes Engine with the Helm chart
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/self-hosted-google-cloud/cover.avif
+category: self-hosting
+product:
+    vendor: Google Cloud
+    description: "Google Cloud is Google's cloud computing platform, with services such as Compute Engine and Google Kubernetes Engine."
+platform:
+    - 'Self-hosted'
+---
+
+[Google Cloud](https://cloud.google.com) is Google's cloud computing platform. It offers virtual machines on Compute Engine, managed Kubernetes on Google Kubernetes Engine (GKE), and managed services such as Cloud SQL, Memorystore, and Cloud Storage.
+
+# How does the integration work?
+
+Appwrite runs on any Linux server that supports Docker, so a Compute Engine virtual machine is the simplest way to self-host it on Google Cloud. You create the VM, open the ports Appwrite needs, and run the Appwrite Docker installer, which walks you through a web-based setup wizard.
+
+If you already run Kubernetes on Google Cloud, install Appwrite on GKE with the official Appwrite Helm chart instead. Its Google Cloud example connects Appwrite to Cloud SQL, Memorystore, Cloud Storage, and Filestore.
+
+# How to implement
+
+To self-host Appwrite on Compute Engine, there are several steps you must complete:
+
+## Step 1: Create a VM instance
+
+In the Google Cloud console, create a Compute Engine VM instance running Linux with at least 2 vCPUs and 4 GB of memory, the minimum Appwrite needs. Appwrite also expects 2 GB of swap memory.
+
+## Step 2: Open the required ports
+
+Add firewall rules that allow inbound HTTP (80) and HTTPS (443) traffic to the instance. Allow port 20080 while the setup wizard runs, and remove that rule after installation.
+
+## Step 3: Install Docker and run the Appwrite installer
+
+Connect to the instance over SSH and [install Docker Engine](https://docs.docker.com/engine/install/) with Docker Compose version 2. Then run the macOS and Linux [installation command](/docs/advanced/self-hosting/installation#installation-commands) from the installation guide, which always installs the latest release.
+
+## Step 4: Complete the setup wizard
+
+Open `http://<EXTERNAL_IP>:20080` in your browser. Set the hostname your instance will use, choose a database (PostgreSQL is the default), save the generated secret key somewhere safe, create your account, and click **Install**. When the installation finishes, open your hostname to reach the Appwrite Console.
+
+# Run Appwrite on Google Kubernetes Engine
+
+To run Appwrite on GKE, install the [Appwrite Helm chart](/docs/advanced/self-hosting/platforms/kubernetes) and start from its [`gcp.yaml` example](https://github.com/appwrite/helm-chart/blob/main/examples/gcp.yaml), which connects Appwrite to Cloud SQL, Memorystore, Cloud Storage, and Filestore.
+
+# Read more about Google Cloud and self-hosted Appwrite
+
+If you would like to learn more about running Appwrite on Google Cloud, we have some resources that you should visit:
+
+- [Google Cloud deployment guide](/docs/advanced/self-hosting/platforms/google-cloud)
+- [Self-hosting installation guide](/docs/advanced/self-hosting/installation)
+- [Production guide](/docs/advanced/self-hosting/production)
+- [Compute Engine documentation](https://cloud.google.com/compute/docs)

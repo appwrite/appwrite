@@ -1,0 +1,81 @@
+---
+layout: integration
+title: Slash commands with Slack
+description: Handle Slack slash commands in an Appwrite Function that verifies every request from Slack
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/slash-commands-slack/cover.avif
+category: messaging
+product:
+    vendor: Slack
+    description: "Slack is a messaging platform for teams that organizes conversations into channels and supports custom apps."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Slack](https://slack.com/) is a messaging platform where teams work in channels. Custom Slack apps can add slash commands: when someone runs a command such as `/hello`, Slack sends the request to a URL you choose and shows the response in the conversation.
+
+# How does the integration work?
+
+The **Slack Command Bot** recipe is an Appwrite Function from the [Appwrite templates repository](https://github.com/appwrite/templates/tree/1.2.0/node/slack-command-bot) that serves as the request URL for a slash command. For every request, it checks the `x-slack-signature` header against your app's signing secret and rejects requests older than five minutes, then replies with `Hello World!`. Invalid requests get a `400` response.
+
+Use it as a verified starting point and replace the reply with your own logic.
+
+{% info title="Not in the template picker" %}
+This recipe isn't listed under **Functions** > **Templates** in the Appwrite Console. You deploy it yourself from the templates repository, as described below.
+{% /info %}
+
+# Prerequisites
+
+- A Slack workspace where you can install apps.
+- Git and `tar` on your machine.
+
+# How to implement
+
+To implement the Slack integration, there are several steps you must complete:
+
+## Step 1: Create a Slack app
+
+Go to [Slack apps](https://api.slack.com/apps), click **Create New App**, choose **From scratch**, and pick your workspace. On the app's **Basic Information** page, copy the **Signing Secret** under **App Credentials**.
+
+## Step 2: Deploy the recipe
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Download the released recipe and package it as a `.tar.gz` archive:
+
+```bash
+git clone --depth 1 --branch 1.2.0 https://github.com/appwrite/templates.git
+cd templates/node/slack-command-bot
+tar --exclude code.tar.gz -czf code.tar.gz .
+```
+
+In the Appwrite Console, go to **Functions**, click **Create function**, and choose **create a function manually**. Pick a Node.js runtime, upload `code.tar.gz`, set the entrypoint to `src/main.js` and the build command to `npm install`, and allow anyone to execute the function so Slack can call its domain. Then click **Create and deploy**.
+
+You can also deploy the folder with the [Appwrite CLI](/docs/tooling/command-line/functions), or copy it into your own repository and [deploy it from Git](/docs/products/functions/deploy-from-git).
+
+## Step 3: Add the signing secret
+
+Open the function's **Settings** tab, go to **Environment variables**, and add `SLACK_SIGNING_SECRET` with the signing secret from step 1. Mark it as a [secret variable](/docs/products/functions/environment-variables#secret-variables), then redeploy the function so the variable takes effect.
+
+## Step 4: Create the slash command
+
+Copy the function's domain from the **Domains** tab. In your Slack app settings, open **Slash Commands** and click **Create New Command**. Enter a command such as `/hello`, paste the function's domain as the **Request URL**, add a short description, and save.
+
+Then open **Install App** and install the app to your workspace.
+
+## Step 5: Test the command
+
+Run `/hello` in any channel of your workspace. Slack shows the `Hello World!` reply, visible only to you because the function responds with plain text. Each request appears in the function's **Executions** tab, and the logs show whether the signature check passed.
+
+# Read more about Slack and Appwrite Functions
+
+If you would like to learn more about Slack and Appwrite Functions, we have some resources that you should visit:
+
+- [Implementing slash commands in Slack](https://docs.slack.dev/interactivity/implementing-slash-commands/)
+- [Verifying requests from Slack](https://docs.slack.dev/authentication/verifying-requests-from-slack/)
+- [Deploy Appwrite Functions manually](/docs/products/functions/deploy-manually)
+- [Slack Command Bot recipe source](https://github.com/appwrite/templates/tree/1.2.0/node/slack-command-bot)
