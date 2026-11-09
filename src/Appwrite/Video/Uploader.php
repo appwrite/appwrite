@@ -35,6 +35,12 @@ final class Uploader
 
     private int $bytes = 0;
 
+    /** Segments successfully written to the device. */
+    private int $chunks = 0;
+
+    /** Wall time spent inside device write() calls. */
+    private float $uploadSeconds = 0.0;
+
     private ?int $coroutine = null;
 
     /**
@@ -61,12 +67,15 @@ final class Uploader
                     continue;
                 }
                 try {
+                    $started = \microtime(true);
                     $this->device->write(
                         $this->path . $written->file,
                         $this->local->read($written->path),
                         \mime_content_type($written->path) ?: 'application/octet-stream'
                     );
+                    $this->uploadSeconds += \microtime(true) - $started;
                     $this->bytes += $written->size;
+                    $this->chunks++;
                     if (!@\unlink($written->path)) {
                         Console::warning('Videos uploader: failed to remove shipped segment ' . $written->path);
                     }
@@ -133,6 +142,26 @@ final class Uploader
         }
 
         return $this->bytes;
+    }
+
+    /**
+     * Segments successfully written to the device.
+     */
+    public function chunks(): int
+    {
+        return $this->chunks;
+    }
+
+    /**
+     * Average upload throughput in MB/s over active write time.
+     */
+    public function speed(): float
+    {
+        if ($this->uploadSeconds <= 0.0 || $this->bytes === 0) {
+            return 0.0;
+        }
+
+        return \round(($this->bytes / $this->uploadSeconds) / 1_000_000, 2);
     }
 
     /**

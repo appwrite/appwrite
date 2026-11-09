@@ -61,6 +61,8 @@ final class UploaderTest extends TestCase
             $bytes = $uploader->finish();
 
             $this->assertSame(600, $bytes);
+            $this->assertSame(3, $uploader->chunks());
+            $this->assertGreaterThan(0.0, $uploader->speed());
             $this->assertSame(
                 [$this->path . 'segment_1.ts', $this->path . 'segment_2.ts', $this->path . 'segment_3.ts'],
                 $store->writes
@@ -95,6 +97,9 @@ final class UploaderTest extends TestCase
 
             $uploader->close();
             $this->assertSame(20 * 100 * 21 / 2, $uploader->finish());
+            $this->assertSame(20, $uploader->chunks());
+            // Store delays 50ms per write; ~21 KB over ~1s ≈ 0.02 MB/s.
+            $this->assertLessThan(1.0, $uploader->speed());
             $this->assertCount(20, $store->writes);
             $this->assertSame([], $this->left(), 'segments stayed in the workspace');
             $this->assertSame(0, $uploader->pending());

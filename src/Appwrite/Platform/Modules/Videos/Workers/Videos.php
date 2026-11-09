@@ -1097,6 +1097,8 @@ class Videos extends Action
             $storageBytes = $uploader->finish();
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
+            Span::add('upload.chunks', $uploader->chunks());
+            Span::add('upload.speed', $uploader->speed());
 
             $stage = 'finalize';
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
