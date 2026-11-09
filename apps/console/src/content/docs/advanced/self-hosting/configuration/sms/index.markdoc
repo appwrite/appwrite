@@ -61,7 +61,7 @@ Ensure the values you insert in the `_APP_SMS_PROVIDER` placeholders are [URL en
 | Twilio   | `sms://<ACCOUNT SID>:<AUTH TOKEN>@twilio`         | `<TWILIO PHONE NUMBER>` |
 | Textmagic| `sms://<USERNAME>:<API KEY>@textmagic`           | `<PHONE NUMBER OR SENDER ID>` |
 | TeleSign | `sms://<CUSTOMER ID>:<API KEY>@telesign`         | `<TELESIGN PHONE NUMBER>` |
-| MSG91    | `sms://<SENDER ID>:<AUTH KEY>@msg91`             | `<FLOW ID>`            |
+| MSG91    | `sms://<SENDER ID>:<AUTH KEY>@msg91`             | `<TEMPLATE ID>`        |
 | Vonage   | `sms://<API KEY>:<API SECRET>@vonage`            | `<PHONE NUMBER OR BRAND NAME>` |
 
 {% partial file="update-variables.md" /%}
