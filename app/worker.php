@@ -97,9 +97,14 @@ $createConsumer = static function (): Redis {
         System::getEnv('_APP_REDIS_PASS', ''),
     ];
 
+    $reapOptions = Jobs::resolveReapOptions(System::getEnv(...));
+
     return new Redis(
         receive: new Connection(...$connection),
         commands: new Locking(new Connection(...$connection)),
+        reapAfter: $reapOptions['reapAfter'],
+        reapMaxAttempts: $reapOptions['reapMaxAttempts'],
+        reapMaxAge: $reapOptions['reapMaxAge'],
     );
 };
 

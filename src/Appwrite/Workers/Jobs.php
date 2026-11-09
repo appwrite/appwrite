@@ -56,4 +56,32 @@ final class Jobs
 
         return $jobs;
     }
+
+    /**
+     * Resolves Redis queue recovery reap limits from environment.
+     *
+     * @param callable(string, mixed=): mixed $env Compatible with {@see \Utopia\System\System::getEnv}
+     * @return array{reapAfter: int, reapMaxAttempts: int|null, reapMaxAge: int|null}
+     */
+    public static function resolveReapOptions(callable $env): array
+    {
+        $reapAfter = (int) $env('_APP_QUEUE_REAP_AFTER', 300);
+        $reapAfter = max(1, $reapAfter);
+
+        $maxAttempts = $env('_APP_QUEUE_REAP_MAX_ATTEMPTS');
+        $reapMaxAttempts = is_numeric($maxAttempts) && (int) $maxAttempts >= 1
+            ? (int) $maxAttempts
+            : null;
+
+        $maxAge = $env('_APP_QUEUE_REAP_MAX_AGE');
+        $reapMaxAge = is_numeric($maxAge) && (int) $maxAge > $reapAfter
+            ? (int) $maxAge
+            : null;
+
+        return [
+            'reapAfter' => $reapAfter,
+            'reapMaxAttempts' => $reapMaxAttempts,
+            'reapMaxAge' => $reapMaxAge,
+        ];
+    }
 }
