@@ -170,6 +170,11 @@ class FastlyTls implements Provider
             '/tls/subscriptions/' . $subscriptionId . '?force=true',
         );
 
+        // Already gone, for example removed by another worker at the same time
+        if ($result['statusCode'] === 404) {
+            return;
+        }
+
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
             throw new \RuntimeException($this->formatError('Failed to delete Fastly TLS subscription', $result));
         }

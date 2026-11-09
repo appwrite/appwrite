@@ -268,6 +268,18 @@ final class FastlyTlsTest extends TestCase
         $this->assertSame('https://api.fastly.com/tls/subscriptions', $client->calls[2]['url']);
     }
 
+    public function testAbandonedOrderAlreadyDeletedIsStillReplaced(): void
+    {
+        $client = new TestClient([
+            $this->json($this->abandoned()),
+            new Response(404),
+            $this->json('{"data":{"id":"sub_456","attributes":{"state":"pending"}}}', 201),
+        ]);
+
+        $this->assertNull(new FastlyTls('token', 'config', 'certainly', $client)->issueCertificate('cert', 'example.com', null));
+        $this->assertSame(['GET', 'DELETE', 'POST'], array_column($client->calls, 'method'));
+    }
+
     /**
      * @param array<string, mixed> $attributes Attributes to set on the subscription, null to remove one
      * @param list<array{type:string,id:string}> $certificates
