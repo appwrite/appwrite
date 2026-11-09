@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
@@ -17,12 +18,17 @@ use Utopia\Storage\Device\S3;
  * Captures the outgoing PSR-7 request so header assertions can be made against
  * what S3::call() actually sends, without hitting the network.
  */
-final class CapturingClient implements ClientInterface, StreamingClientInterface
+final class CapturingClient implements ClientInterface, StreamingClientInterface, ResponseStreamingClientInterface
 {
     public ?RequestInterface $lastRequest = null;
 
     public function __construct(private readonly ResponseInterface $response)
     {
+    }
+
+    public function supportsResponseStreaming(): bool
+    {
+        return true;
     }
 
     public function sendRequest(RequestInterface $request): ResponseInterface
@@ -33,9 +39,13 @@ final class CapturingClient implements ClientInterface, StreamingClientInterface
     }
 
     #[\Override]
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
         $this->lastRequest = $request;
+        if ($onResponse !== null) {
+            $onResponse($this->response);
+        }
+        $sink((string) $this->response->getBody());
 
         return $this->response;
     }
@@ -95,5 +105,24 @@ final class ContentLengthTest extends TestCase
         $this->assertSame('test-upload-id', $metadata['uploadId'] ?? null);
         $this->assertInstanceOf(RequestInterface::class, $client->lastRequest);
         $this->assertSame('0', $client->lastRequest->getHeaderLine('content-length'));
+    }
+
+    /** Streaming must send accept-encoding: identity without signing it, preventing SigV4 mismatch on GCS (#14854). */
+    public function testStreamSendsAcceptEncodingWithoutSigningIt(): void
+    {
+        [$device, $client] = $this->device(new Response(200, body: new Stream('file-content')));
+
+        $body = '';
+        $device->stream('file.txt', static function (string $chunk) use (&$body): void {
+            $body .= $chunk;
+        });
+
+        $this->assertSame('file-content', $body);
+        $this->assertInstanceOf(RequestInterface::class, $client->lastRequest);
+        $this->assertSame('identity', $client->lastRequest->getHeaderLine('accept-encoding'));
+
+        $auth = $client->lastRequest->getHeaderLine('authorization');
+        $this->assertNotEmpty($auth);
+        $this->assertStringNotContainsString('accept-encoding', $auth, 'accept-encoding must not be in SignedHeaders');
     }
 }
