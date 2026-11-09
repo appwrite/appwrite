@@ -1064,6 +1064,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No identified users in this range':
     'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
+  'Models and tools': 'מודלים וכלים',
+  'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
+  'No calls in this range': 'אין קריאות בטווח הזה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',
@@ -2406,8 +2409,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
   'Are you sure you want to disconnect this git installation?':

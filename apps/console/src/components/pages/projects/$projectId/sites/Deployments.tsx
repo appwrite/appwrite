@@ -468,11 +468,13 @@ export function View() {
   const activeDeploymentIdForDomains =
     activeDeploymentResolved?.$id ?? site?.deploymentId
 
-  // Filter to rules that point to the active deployment (same data source as Domains tab)
+  // Verified rules that point to the active deployment (same data source as Domains tab)
   const activeDomains = useMemo(() => {
     const filtered =
-      siteDomainsRules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeploymentIdForDomains),
+      siteDomainsRules?.filter(
+        (rule) =>
+          rule.status === 'verified' &&
+          proxyRuleServesActiveDeployment(rule, activeDeploymentIdForDomains),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -481,8 +483,10 @@ export function View() {
 
   const totalActiveDomains = useMemo(
     () =>
-      siteDomainsRules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeploymentIdForDomains),
+      siteDomainsRules?.filter(
+        (rule) =>
+          rule.status === 'verified' &&
+          proxyRuleServesActiveDeployment(rule, activeDeploymentIdForDomains),
       ).length ?? 0,
     [siteDomainsRules, activeDeploymentIdForDomains],
   )

@@ -467,8 +467,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Enabling this option will send an email to the users when a new session is created.':
     'הפעלת אפשרות זו תשלח אימייל למשתמשים כאשר נוצר סשן חדש.',
   'Encrypt files stored in this bucket': 'הצפנת קבצים המאוחסנים בבאקט זה',
-  "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.":
-    'הצפינו קבצים המאוחסנים בבאקט זה. עבור קבצים בגודל מעל 20MB ההצפנה מדולגת גם אם היא מופעלת. שינוי זה יחול רק על קבצים חדשים שיועלו לאחר העדכון.',
+  'Encrypt files stored in this bucket. This change will only apply to new files uploaded after the update.':
+    'הצפינו קבצים המאוחסנים בבאקט זה. שינוי זה יחול רק על קבצים חדשים שיועלו לאחר העדכון.',
   Encryption: 'הצפנה',
   'Encryption setting has been updated': 'הגדרת ההצפנה עודכנה',
   "Enhance the user's account security by requiring a second sign-in method.":

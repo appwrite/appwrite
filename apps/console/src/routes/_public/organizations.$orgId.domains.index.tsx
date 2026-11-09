@@ -16,7 +16,8 @@ const DEFAULT_PAGE = 1
 export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
   head: () => ({ meta: [{ title: pageTitle('Domains', 'Organization') }] }),
   validateSearch: listSearchSchema,
-  loader: async ({ params, context, search: routeSearch }) => {
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, context, deps: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { orgId } = params

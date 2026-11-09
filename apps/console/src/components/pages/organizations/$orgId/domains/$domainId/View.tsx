@@ -4,7 +4,6 @@ import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
 import {
   Globe,
-  CheckCircle2,
   AlertCircle,
   RefreshCw,
   Download,
@@ -137,9 +136,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
+// The loaders leave both undefined when the domain is not found
 export type DomainDetailInitialData = {
-  domain: Models.Domain
-  records: { dnsRecords: Models.DnsRecord[]; total: number }
+  domain?: Models.Domain
+  records?: { dnsRecords: Models.DnsRecord[]; total: number }
 }
 
 type ViewProps = {
@@ -262,9 +262,10 @@ export function View({ initialData }: ViewProps = {}) {
     initialData?.records &&
     !hasRecordFilters &&
     !recordsFromHook?.length
-  const rawRecords = canUseInitialRecords
-    ? initialData!.records.dnsRecords
-    : (recordsFromHook ?? [])
+  const rawRecords =
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.dnsRecords
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (rawRecords.length === 0) return rawRecords
 
@@ -299,8 +300,6 @@ export function View({ initialData }: ViewProps = {}) {
     const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
     return {
       isVerified,
-      icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Appwrite DNS' : 'External DNS',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',
@@ -607,13 +606,19 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
   const recordsSearchWithSort =
     (queryParam: string | undefined, sortParam: string | undefined) =>
-    (prev: Record<string, unknown>) => ({
-      ...(typeof prev === 'object' && prev !== null ? prev : {}),
-      ...buildListSearchParams({
-        query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+    (prev: Record<string, unknown>) => {
+      const next: Record<string, unknown> = {
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        ...buildListSearchParams({
+          query: queryParam ?? undefined,
+          sort: sortParam ?? undefined,
+        }),
+      }
+      // Drop the old query and sort so clearing them removes them from the URL.
+      if (!queryParam) delete next.query
+      if (!sortParam) delete next.sort
+      return next
+    }
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
@@ -971,47 +976,22 @@ export function View({ initialData }: ViewProps = {}) {
               {domain && (
                 <div className="mb-4 rounded-lg border border-border bg-card/50">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-6">
-                    {/* Status */}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        {t('Status')}
-                      </p>
-                      <div className="min-h-[1.25rem] flex items-center gap-1.5">
-                        {transferInProgress && transferStatusBadge ? (
+                    {/* Status: only while something is in progress */}
+                    {transferInProgress && transferStatusBadge && (
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+                          {t('Status')}
+                        </p>
+                        <div className="min-h-[1.25rem] flex items-center gap-1.5">
                           <Badge
                             variant={transferStatusBadge.variant}
                             className="text-[10px] shrink-0"
                           >
                             {t(transferStatusBadge.label)}
                           </Badge>
-                        ) : (
-                          verificationStatus && (
-                            <>
-                              <code
-                                className={cn(
-                                  'text-[12px] font-mono font-medium truncate',
-                                  verificationStatus.isVerified
-                                    ? 'text-green-600 dark:text-green-500'
-                                    : 'text-yellow-600 dark:text-yellow-500',
-                                )}
-                              >
-                                {t(verificationStatus.label)}
-                              </code>
-                              {!verificationStatus.isVerified && (
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  onClick={() => setRetryDialogOpen(true)}
-                                  className={metadataActionClassName}
-                                >
-                                  {t('Verify')}
-                                </Button>
-                              )}
-                            </>
-                          )
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Registrar */}
                     <div className="min-w-0">
@@ -1032,8 +1012,14 @@ export function View({ initialData }: ViewProps = {}) {
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         {t('Nameservers')}
                       </p>
+                      {/* The banner above offers Retry Verification */}
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
-                        <code className="text-[12px] font-mono text-foreground truncate">
+                        <code
+                          className={cn(
+                            'text-[12px] font-mono font-medium truncate',
+                            verificationStatus?.className,
+                          )}
+                        >
                           {domain.nameservers || t('3rd party')}
                         </code>
                       </div>

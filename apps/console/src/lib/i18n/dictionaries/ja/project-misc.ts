@@ -705,6 +705,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
   'No identified users in this range': 'この期間に識別されたユーザーはいません',
   'Event properties': 'イベントの属性',
+  'Models and tools': 'モデルとツール',
+  'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
+  'No calls in this range': 'この期間の呼び出しはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -1903,8 +1906,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'すべてのプロジェクトプロトコルが有効になります。',
   'All protocols for': 'すべてのプロトコル:',
   'All services for': 'すべてのサービス:',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'このドメインを削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'すべてのプロトコルを無効にしてもよろしいですか? 再有効化されるまで、これらのプロトコル経由のクライアントアクセスが無効になります。',
   'Are you sure you want to disconnect this git installation?':

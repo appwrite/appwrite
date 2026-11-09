@@ -2,6 +2,7 @@ import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { fetchDomain, fetchOrganizations } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 import { canAccessOrganizationDomains } from '@/lib/console-rbac-loader'
 
 const STALE_TIME = 30 * 1000
@@ -34,11 +35,18 @@ export const Route = createFileRoute(
     }
 
     await Promise.all([
-      queryClient.fetchQuery({
-        queryKey: ['domain', domainId],
-        queryFn: () => fetchDomain(domainId),
-        staleTime: STALE_TIME,
-      }),
+      queryClient
+        .fetchQuery({
+          queryKey: ['domain', domainId],
+          queryFn: () => fetchDomain(domainId),
+          staleTime: STALE_TIME,
+        })
+        // A missing domain renders the page's own "Domain not found" state.
+        .catch((error: unknown) => {
+          if (getAppwriteErrorInfo(error).type === 'domain_not_found')
+            return undefined
+          throw error
+        }),
       queryClient.fetchQuery({
         queryKey: ['organizations', 'console'],
         queryFn: fetchOrganizations,

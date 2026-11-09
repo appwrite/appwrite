@@ -4,8 +4,10 @@ import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import {
   getApexDomain,
   getRecordName,
+  getVerificationMethods,
   isCloud as isCloudEndpoint,
   isDomainClaimError,
+  type VerificationMethod,
 } from '@/lib/utils/proxy-domains'
 import {
   getAppwriteErrorInfo,
@@ -30,6 +32,13 @@ import { useT } from '@/lib/i18n/translate'
 
 export const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
+
+const TAB_LABELS: Record<VerificationMethod, string> = {
+  cname: 'CNAME',
+  nameservers: 'Nameservers',
+  a: 'A',
+  aaaa: 'AAAA',
+}
 
 export type DomainVerificationError = {
   title: string
@@ -297,20 +306,22 @@ export function VerifyDomainContent({
     return rawCname
   }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
-  const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
-  const hasA = !isCloud && !!a
-  const hasAaaa = !isCloud && !!aaaa
-  const hasCaa = !!caa
+  // Older servers send `0 issue ""` for an unset CAA target, a record that
+  // would block every CA.
+  const hasCaa = !!caa && caa !== '0 issue ""'
 
-  const tabOptions = [
-    ...(hasCname ? [{ id: 'cname' as const, label: 'CNAME' }] : []),
-    ...(hasNameservers
-      ? [{ id: 'nameservers' as const, label: 'Nameservers' }]
-      : []),
-    ...(hasA ? [{ id: 'a' as const, label: 'A' }] : []),
-    ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
-  ]
+  // On the edge network the CNAME targets appwrite.network, while A and AAAA
+  // name the region's address, so only the CNAME and nameservers are offered.
+  const edge = edgeNetworkEnabled && resourceType !== 'api'
+  const tabOptions = getVerificationMethods({
+    domain: rule.domain,
+    cloud: isCloud,
+    cname,
+    a: edge ? undefined : a,
+    aaaa: edge ? undefined : aaaa,
+    nameservers,
+  }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)

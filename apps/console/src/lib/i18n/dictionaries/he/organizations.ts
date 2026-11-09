@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': 'פירוט החשבונית אינו זמין.',
+  'Recorded charges; detailed pricing unavailable.':
+    'חיובים שנרשמו; פירוט המחירים אינו זמין.',
+  'No invoice yet.': 'עדיין אין חשבונית.',
+
   'A valid transfer price is required to continue.':
     'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
   "We couldn't load a transfer price. Try again to continue.":
@@ -719,7 +724,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
   'Appwrite nameservers': 'שרתי השמות של Appwrite',
   'External nameservers': 'שרתי שמות חיצוניים',
-  'External DNS': 'DNS חיצוני',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
