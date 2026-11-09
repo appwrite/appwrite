@@ -226,7 +226,7 @@ final class SwooleRequestTest extends TestCase
         $file = $request->getFiles('file');
 
         $this->assertNotSame($this->target, $file['tmp_name']);
-        $this->assertNotContains($this->target, $swoole->tmpfiles);
+        $this->assertNotContains($this->target, (array) $swoole->tmpfiles);
 
         unset($request, $swoole);
 
@@ -244,8 +244,8 @@ final class SwooleRequestTest extends TestCase
         $file = $request->getFiles('file');
 
         $this->assertNotSame($this->target, $this->at($file, 'tmp_name', 0, 'part'));
-        $this->assertNotContains($this->target, $swoole->tmpfiles);
-        $this->assertContains($this->at($file, 'tmp_name', 0, 'other'), $swoole->tmpfiles, 'the genuine sibling stays an upload');
+        $this->assertNotContains($this->target, (array) $swoole->tmpfiles);
+        $this->assertContains($this->at($file, 'tmp_name', 0, 'other'), (array) $swoole->tmpfiles, 'the genuine sibling stays an upload');
         $this->assertSame(\UPLOAD_ERR_NO_FILE, $request->getFiles('empty')['error'], 'a failed upload keeps its own error');
 
         unset($request, $swoole);
