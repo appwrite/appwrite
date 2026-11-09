@@ -128,6 +128,10 @@ export const EVENT_SERVICES: EventService[] = [
     actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
+    name: 'rules',
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
+  },
+  {
     name: 'monitors',
     resources: [
       {
