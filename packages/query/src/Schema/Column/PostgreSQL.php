@@ -56,7 +56,7 @@ class PostgreSQL extends Column
      */
     public function userType(string $name): static
     {
-        if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name)) {
+        if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $name)) {
             throw new ValidationException('Invalid user-defined type name: ' . $name);
         }
 

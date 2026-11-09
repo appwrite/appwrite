@@ -18,6 +18,7 @@ import {
   domainVerificationError,
 } from './VerifySmtpDomainContent'
 import type { DomainVerificationError } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateSmtpDomainRule,
   useProjectFunction,
@@ -27,6 +28,7 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
+  isDomainClaimError,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import {
@@ -36,7 +38,10 @@ import {
 import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isCloudProfile } from '@/lib/console-profiles'
 
@@ -58,6 +63,8 @@ export function AddSmtpDomainWizard() {
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [rule, setRule] = useState<SmtpProxyRule | null>(null)
+  const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimRequired, setClaimRequired] = useState(false)
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
@@ -93,6 +100,20 @@ export function AddSmtpDomainWizard() {
     return null
   }
 
+  const createRule = async (d: string) => {
+    const created = await createMutation.mutateAsync({
+      domain: d,
+      functionId: functionId!,
+    })
+    setClaimDomain(null)
+    if (created.status === 'verified') {
+      toast.success(t('Email domain verified'))
+      leave()
+    } else {
+      setRule(created)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
@@ -126,18 +147,26 @@ export function AddSmtpDomainWizard() {
     }
 
     try {
-      const created = await createMutation.mutateAsync({
-        domain: d,
-        functionId: functionId!,
-      })
-      if (created.status === 'verified') {
-        toast.success(t('Email domain verified'))
-        leave()
-      } else {
-        setRule(created)
-      }
+      await createRule(d)
     } catch (err) {
+      if (isDomainClaimError(err)) {
+        setClaimRequired(
+          getAppwriteErrorInfo(err).type === 'rule_claim_required',
+        )
+        setClaimDomain(d)
+        return
+      }
       toast.error(getErrorMessage(err, t('Failed to add email domain')))
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!claimDomain) return
+    setVerificationError(null)
+    try {
+      await createRule(claimDomain)
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -197,6 +226,42 @@ export function AddSmtpDomainWizard() {
         <VerifySmtpDomainContent
           rule={rule}
           region={project?.region}
+          verificationError={verificationError}
+        />
+      </WizardLayout>
+    )
+  }
+
+  if (claimDomain) {
+    return (
+      <WizardLayout
+        title={t('Verify domain ownership')}
+        fallbackPath={fallbackPath}
+        fullscreen
+        useSidebar={false}
+        maxWidth="max-w-4xl"
+        footer={
+          <div className="flex gap-2 justify-end w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setClaimDomain(null)
+                setVerificationError(null)
+              }}
+              disabled={isPending}
+            >
+              {t('Back')}
+            </Button>
+            <Button onClick={handleClaim} disabled={isPending}>
+              {t('Verify')}
+            </Button>
+          </div>
+        }
+      >
+        <ClaimDomainContent
+          domain={claimDomain}
+          claimRequired={claimRequired}
+          projectId={projectId!}
           verificationError={verificationError}
         />
       </WizardLayout>

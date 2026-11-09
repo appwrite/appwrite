@@ -46,7 +46,8 @@ export function DeleteDomainDialog({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Delete domain')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Are you sure you want to delete this domain? This action cannot be undone.')}
+            {t('Are you sure you want to delete')}{' '}
+            <strong>{rule.domain}</strong>? {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
 

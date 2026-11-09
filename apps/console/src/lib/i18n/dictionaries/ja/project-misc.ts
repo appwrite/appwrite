@@ -1906,8 +1906,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'すべてのプロジェクトプロトコルが有効になります。',
   'All protocols for': 'すべてのプロトコル:',
   'All services for': 'すべてのサービス:',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'このドメインを削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'すべてのプロトコルを無効にしてもよろしいですか? 再有効化されるまで、これらのプロトコル経由のクライアントアクセスが無効になります。',
   'Are you sure you want to disconnect this git installation?':
