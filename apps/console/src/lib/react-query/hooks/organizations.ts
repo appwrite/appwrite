@@ -288,6 +288,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
 export async function fetchOrganizations(): Promise<OrganizationListResponse> {
   // One page holds 25 organizations by default, and a member of more would miss
   // the rest: a project in one of them showed another organization's name.
+  const billing = isBillingEnabled()
   const teams: OrganizationListResponse['teams'] = []
   for (;;) {
     const last = teams.at(-1)
@@ -296,14 +297,19 @@ export async function fetchOrganizations(): Promise<OrganizationListResponse> {
       ...(last ? [Query.cursorAfter(last.$id)] : []),
     ]
     const response = (
-      isBillingEnabled()
+      billing
         ? await sdk.forConsole.organizations.list({
             queries: [Query.equal('platform', 'appwrite'), ...page],
           })
         : await sdk.forConsole.teams.list({ queries: page, total: true })
     ) as OrganizationListResponse
     teams.push(...response.teams)
-    if (response.teams.length < ORGANIZATIONS_PAGE_SIZE) {
+    // Organizations hides draft organizations after reading a page, so a short
+    // page there can still have more after it: only an empty one is the end.
+    const end = billing
+      ? response.teams.length === 0
+      : response.teams.length < ORGANIZATIONS_PAGE_SIZE
+    if (end) {
       return { ...response, teams }
     }
   }
