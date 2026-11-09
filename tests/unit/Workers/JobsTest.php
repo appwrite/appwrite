@@ -152,13 +152,21 @@ final class JobsTest extends TestCase
         $this->assertNull($optionsBelow['reapMaxAge']);
     }
 
+    public function testResolveReapOptionsWithRealSystemGetEnvCallable(): void
+    {
+        $options = Jobs::resolveReapOptions(\Utopia\System\System::getEnv(...));
+
+        $this->assertIsInt($options['reapAfter']);
+        $this->assertGreaterThanOrEqual(1, $options['reapAfter']);
+    }
+
     /**
      * @param array<string, string> $values
-     * @return callable(string, mixed=): mixed
+     * @return callable(string, ?string=): ?string
      */
     private function env(array $values): callable
     {
-        return static function (string $key, mixed $default = null) use ($values): mixed {
+        return static function (string $key, ?string $default = null) use ($values): ?string {
             if (\array_key_exists($key, $values)) {
                 return $values[$key];
             }
