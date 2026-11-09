@@ -210,7 +210,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -1323,14 +1323,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email OTP",
     "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/email-policies",
@@ -1386,7 +1386,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/multi-tenancy",
@@ -1677,7 +1677,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/avatars",

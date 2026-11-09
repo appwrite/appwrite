@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-otp-token-email-header",
+    "href": "/blog/post/announcing-otp-token-email-header",
+    "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",
+    "description": "Appwrite Auth now adds an OTP-Token header to every email code, so mail clients and password managers can autofill the code on your app's origin only.",
+    "date": "2026-11-11",
+    "lastUpdated": "2026-11-11",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-otp-token-email-header/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-push-notifications-to-your-android-app",
     "href": "/blog/post/add-push-notifications-to-your-android-app",
     "title": "Add push notifications to your Android app without Firebase",

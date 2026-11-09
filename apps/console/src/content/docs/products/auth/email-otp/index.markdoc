@@ -188,6 +188,33 @@ mutation {
 
 After the secret is verified, a session will be created.
 
+# Code autofill {% #code-autofill %}
+
+Email OTP emails carry an `OTP-Token` header that binds the code to the website that asked for it:
+
+```text
+OTP-Token: "123456"; origin="https://app.example.com"
+```
+
+The header is defined by the [`OTP-Token` Internet-Draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/). A mail client, browser, or password manager that reads it can offer the code for autofill on the bound origin and nowhere else, so a code your app requested isn't offered on a lookalike site. Support for the header in mail clients and password managers is still early, and the draft may change before it becomes a standard. Appwrite adds the header for you, so there is nothing to configure.
+
+Appwrite takes the origin from the `Origin` header of the request that sends the code, which Appwrite has already checked against the web platforms registered in your project. The email includes the header only when that origin is:
+
+- **Potentially trustworthy.** It uses `https`, or `http` on `localhost`, a `*.localhost` subdomain, `127.0.0.0/8`, or `[::1]`.
+- **A bare origin.** It has no path, query string, or credentials, and its hostname is ASCII.
+
+When the request has no usable origin, Appwrite sends the same email without the header. This covers calls from server SDKs and server-side rendered apps, which send no `Origin`, and native apps, whose origins use a custom scheme.
+
+The header is also added to [email verification codes](/docs/products/auth/verify-user#verify-with-code), [password recovery codes](/docs/products/auth/email-password#recover-with-code), and [MFA email challenges](/docs/products/auth/mfa), with the same rules. Appwrite adds it whether the email goes through the default SMTP server or your [custom SMTP server](/docs/products/auth/message-templates#smtp). Some email providers rewrite or encode custom headers when they relay a message, so if you use one, check the headers of a received email to confirm `OTP-Token` arrives intact.
+
+{% info title="Mark your code input" %}
+Set `autocomplete="one-time-code"` on the input where users type the code. It tells browsers and password managers where a one-time code belongs, so they can fill it there.
+
+```html
+<input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+```
+{% /info %}
+
 # Security phrase {% #security-phrase %}
 
 A security phrase is a randomly generated phrase provided on the login page, as well as inside Email OTP login email. Users must match the phrase on the login page with the phrase provided inside the email. Security phrases offer protection for various types of phishing and man-in-the-middle attacks.
