@@ -69,7 +69,7 @@ class Stripe extends OAuth2
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://connect.stripe.com/oauth/token',
-                [],
+                ['Authorization: Bearer ' . $this->appSecret],
                 \http_build_query([
                     'grant_type' => $this->grantType['authorize'],
                     'code' => $code
@@ -92,7 +92,7 @@ class Stripe extends OAuth2
         $this->tokens = \json_decode($this->request(
             'POST',
             'https://connect.stripe.com/oauth/token',
-            [],
+            ['Authorization: Bearer ' . $this->appSecret],
             \http_build_query([
                 'grant_type' => $this->grantType['refresh'],
                 'refresh_token' => $refreshToken,
