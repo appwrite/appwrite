@@ -32,7 +32,9 @@ class Box extends OAuth2
     /**
      * @var array
      */
-    protected array $scopes = [];
+    protected array $scopes = [
+        'manage_app_users',
+    ];
 
     /**
      * @return string
@@ -47,19 +49,16 @@ class Box extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $query = [
-            'response_type' => 'code',
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'state' => \json_encode($this->state),
-        ];
+        $url = $this->endpoint . 'authorize?' .
+            \http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'scope' => \implode(',', $this->getScopes()),
+                'redirect_uri' => $this->callback,
+                'state' => \json_encode($this->state),
+            ]);
 
-        // Without a scope, Box grants the scopes configured on the app
-        if (!empty($this->getScopes())) {
-            $query['scope'] = \implode(' ', $this->getScopes());
-        }
-
-        return $this->endpoint . 'authorize?' . \http_build_query($query);
+        return $url;
     }
 
     /**
@@ -80,6 +79,7 @@ class Box extends OAuth2
                     "client_secret" => $this->appSecret,
                     "code" => $code,
                     "grant_type" => "authorization_code",
+                    "scope" => \implode(',', $this->getScopes()),
                     "redirect_uri" => $this->callback
                 ])
             ), true);
