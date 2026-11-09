@@ -265,6 +265,8 @@ Most builder clauses have a `Query` factory equivalent, so a whole statement can
 Query::raw('score > ? AND score < ?', [10, 100]);
 ```
 
+The SQL builders compile it in parentheses, `(score > ? AND score < ?)`, so an `OR` inside a raw condition cannot escape the conditions it is ANDed with.
+
 ### Serialization
 
 Queries serialize to JSON and can be parsed back:
@@ -398,8 +400,10 @@ $result = (new Builder())
     ->whereRaw('LENGTH(`bio`) > ?', [100])
     ->build();
 
-// SELECT * FROM `users` WHERE LENGTH(`bio`) > ?
+// SELECT * FROM `users` WHERE (LENGTH(`bio`) > ?)
 ```
+
+The fragment is enclosed in parentheses, as are `havingRaw()` and a join's `whereRaw()` and `onRaw()`, so an `OR` inside it cannot escape the other conditions, including the ones filter hooks add.
 
 **`whereColumn()`** — typed column-to-column predicate with quoting. The operator is validated against `['=', '!=', '<>', '<', '>', '<=', '>=']`:
 
@@ -965,7 +969,7 @@ $result = (new Builder())
 
 ### Debugging
 
-`toRawSql()` inlines bindings for inspection (not for execution):
+`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted for the dialect: MySQL, MariaDB and ClickHouse escape `\` as well as `'`; PostgreSQL and SQLite, which read `\` literally, double `'` only.
 
 ```php
 $sql = (new Builder())
@@ -1057,6 +1061,8 @@ class SoftDeleteHook implements Filter
     }
 }
 ```
+
+A hook's condition is ANDed with the statement's other conditions exactly as returned, so a hook that returns an `OR` encloses it: `new Condition('(deleted_at IS NULL OR restored = 1)')`.
 
 **Join filter hooks** inject per-join conditions with placement control (ON vs WHERE):
 
@@ -1390,6 +1396,8 @@ $result = (new Builder())
     ->deleteUsing('old_users', '"users"."id" = "old_users"."id"')
     ->delete();
 ```
+
+Both conditions are enclosed in parentheses and ANDed after the WHERE clause, like `whereRaw()`.
 
 **Sequences** — native sequence support via `nextVal()` / `currVal()` (see [Sequences](#sequences)).
 
@@ -1986,6 +1994,8 @@ use Utopia\Query\Schema\MySQL as Schema;
 use Utopia\Query\Schema\Table;
 // or: PostgreSQL, ClickHouse, SQLite, MongoDB
 ```
+
+> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined with `\` and `'` escaped, as are the AST serializer's. MySQL reads `\` as an escape, so this relies on a connection charset in which byte `0x5C` cannot occur inside a multibyte character, such as `utf8mb4` or `latin1`. Under GBK, BIG5, SJIS/CP932 or GB18030 it can: a character ending in `0x5C` absorbs the escaping backslash and the value closes its literal. Do not pass untrusted text into these literals over such a connection.
 
 ### Creating Tables
 
@@ -2780,6 +2790,8 @@ $ast = $builder->toAst();               // AST\Statement\Select
 $rebuilt = Builder::fromAst($ast);      // static
 $rebuilt->build()->query;               // SELECT `id`, `name` FROM `users` WHERE `status` IN (?)
 ```
+
+The AST holds the query as written. Filter and join-filter hooks are applied when a builder compiles, so they are not in it: `Builder::fromAst()` returns a builder without them, and an AST serialized directly is unscoped. Add the hooks to the rebuilt builder, or AND the scope in with `FilterInjector`.
 
 ## Wire Protocol Classifiers
 

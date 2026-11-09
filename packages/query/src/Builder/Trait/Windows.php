@@ -12,7 +12,7 @@ trait Windows
     #[\Override]
     public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?WindowFrame $frame = null): static
     {
-        if (!\preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(\s*[A-Za-z0-9_,.\s*"`]*\s*\)$/', \trim($function))) {
+        if (!\preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(\s*[A-Za-z0-9_,.\s*"`]*\s*\)$/D', \trim($function))) {
             throw new ValidationException('Invalid window function: ' . $function);
         }
 
