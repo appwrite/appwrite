@@ -761,11 +761,30 @@ class Deletes extends Action
                             Query::lessThanEqual('$updatedAt', $date),
                         ]
                     );
-                    if ($updated === 0) {
-                        return;
-                    }
-                    $aborted++;
                     $videoId = (string) $rendition->getAttribute('videoId', '');
+                    if ($updated === 0) {
+                        // A concurrent sweep may have parked the row without
+                        // finishing scratch cleanup; still remove this
+                        // rendition's folder when the row is already aborted.
+                        $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                        if (
+                            $current->isEmpty()
+                            || $current->getAttribute('status') !== VideosBase::STATUS_ABORTED
+                        ) {
+                            return;
+                        }
+                        $videoId = (string) ($current->getAttribute('videoId') ?: $videoId);
+                    } else {
+                        $aborted++;
+                        $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
+                        Console::info(
+                            'Aborted stale rendition ' . $rendition->getId()
+                            . ' for project ' . $project->getId()
+                            . ' status=' . $rendition->getAttribute('status', '')
+                            . ' progress=' . $rendition->getAttribute('progress', '0')
+                            . ' age=' . $age . 's'
+                        );
+                    }
                     if ($videoId !== '') {
                         $this->deleteVideoTmpJobs(
                             $project->getId(),
@@ -773,14 +792,6 @@ class Deletes extends Action
                             VideosBase::JOB_RENDITION . '-' . $rendition->getId()
                         );
                     }
-                    $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
-                    Console::info(
-                        'Aborted stale rendition ' . $rendition->getId()
-                        . ' for project ' . $project->getId()
-                        . ' status=' . $rendition->getAttribute('status', '')
-                        . ' progress=' . $rendition->getAttribute('progress', '0')
-                        . ' age=' . $age . 's'
-                    );
                 } catch (Throwable $th) {
                     $failed++;
                     Console::error("Failed to abort stale rendition {$rendition->getId()} for project {$project->getId()}: " . $th->getMessage());

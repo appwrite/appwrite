@@ -1472,14 +1472,11 @@ final class VideosCustomServerTest extends Scope
         $readyBody = $this->waitForRenditionTerminalState($videoId, $readyId);
         $this->assertEquals('ready', $readyBody['status']);
 
-        // Seed after encode finishes so a racing worker cannot clobber the park.
-        $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
-        $this->timeTravelRendition($projectId, $freshId, status: 'started');
-        $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
-
-        // Plant leftovers the worker would leave if killed mid-run. Compose
-        // shares videos-tmp with the deletes worker; maintenance must remove
-        // only the aborted rendition folder.
+        // Plant leftovers the worker would leave if killed mid-run before the
+        // rows become abortable. Compose shares videos-tmp with the deletes
+        // worker; maintenance must remove only the aborted rendition folder.
+        // Planting first closes the race where a scheduled sweep parks the row
+        // between timeTravel and mkdir and then skips cleanup (updated === 0).
         $jobsRoot = $this->tmpJobsRoot();
         if (!\is_dir($jobsRoot)) {
             $this->assertTrue(\mkdir($jobsRoot, 0755, true), 'Failed creating videos-tmp/jobs');
@@ -1488,6 +1485,11 @@ final class VideosCustomServerTest extends Scope
         $freshJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $freshId;
         $this->assertTrue(\mkdir($staleJob . '/out', 0755, true), 'Failed creating stale scratch folder');
         $this->assertTrue(\mkdir($freshJob . '/out', 0755, true), 'Failed creating fresh scratch folder');
+
+        // Seed after encode finishes so a racing worker cannot clobber the park.
+        $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+        $this->timeTravelRendition($projectId, $freshId, status: 'started');
+        $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
         $stdout = '';
         $stderr = '';
