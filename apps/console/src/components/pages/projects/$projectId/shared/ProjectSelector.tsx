@@ -324,11 +324,13 @@ export function ProjectSelector({
 
   // Find initial team from current project
   const initialTeam = useMemo(() => {
-    if (currentProject && teams.length > 0) {
-      return teams.find((t) => t.$id === currentProject.teamId) || teams[0]
+    // With a project open, never fall back to another organization
+    if (projectId) {
+      if (!currentProject) return null
+      return teams.find((t) => t.$id === currentProject.teamId) ?? null
     }
     return teams[0] || null
-  }, [currentProject, teams])
+  }, [currentProject, teams, projectId])
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
