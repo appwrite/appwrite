@@ -901,6 +901,11 @@ class Appwrite extends Destination
                     return false;
                 })(),
                 SchemaAction::Overwrite => (function () use ($resource, $existing, $database, $updatedAt): bool {
+                    // Kept in the two forms the row wants -- see the create path below for why
+                    // they differ. Without the split this write is refused outright: the library
+                    // does not allow a row permission that names a column.
+                    $permissions = array_values(Permission::aggregate($resource->getPermissions()) ?? []);
+
                     $this->dbForProject->updateDocument(
                         $this->databaseCollectionId($database),
                         $existing->getId(),
@@ -909,7 +914,8 @@ class Appwrite extends Destination
                             'description' => $resource->getDescription(),
                             'search' => implode(' ', [$resource->getId(), $resource->getTableName(), $resource->getDescription()]),
                             'enabled' => $resource->getEnabled(),
-                            '$permissions' => Permission::aggregate($resource->getPermissions()),
+                            '$permissions' => Permission::withoutColumns($permissions),
+                            'columnPermissions' => Permission::hasColumns($permissions) ? $permissions : [],
                             'documentSecurity' => $resource->getRowSecurity(),
                             '$updatedAt' => $updatedAt,
                         ] + $this->entityTypeMetadata($resource))
@@ -924,11 +930,21 @@ class Appwrite extends Destination
             }
         }
 
+        // A permission may name one of the table's columns, and the two stores want it in
+        // different forms. The row's own permissions decide who may see the table in a listing,
+        // which is a question about the role alone: the read gate matches the stored string, so
+        // a column left in there would hide the table from the role it was granted to -- and the
+        // library refuses a row permission naming a column outright. The verbatim list is kept
+        // beside it as the one to report and to replay onto the table.
+        $permissions = array_values(Permission::aggregate($resource->getPermissions()) ?? []);
+        $columnPermissions = Permission::hasColumns($permissions) ? $permissions : [];
+
         $table = $this->dbForProject->createDocument($this->databaseCollectionId($database), new UtopiaDocument([
             '$id' => $resource->getId(),
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $resource->getDatabase()->getId(),
-            '$permissions' => Permission::aggregate($resource->getPermissions()),
+            '$permissions' => Permission::withoutColumns($permissions),
+            'columnPermissions' => $columnPermissions,
             'documentSecurity' => $resource->getRowSecurity(),
             'enabled' => $resource->getEnabled(),
             'name' => $resource->getTableName(),
@@ -940,11 +956,18 @@ class Appwrite extends Destination
 
         $resource->setSequence($table->getSequence());
 
-        $dbForDatabases->createCollection(UtopiaCollection::create(
+        $create = fn () => $dbForDatabases->createCollection(UtopiaCollection::create(
             id: $this->tableCollectionId($database, $table),
-            permissions: $resource->getPermissions(),
+            permissions: $permissions,
             documentSecurity: $resource->getRowSecurity(),
         ));
+
+        // Scoped only when one of them names a column. The collection is where a column that
+        // does not exist is refused, so a source that never used the feature keeps the library's
+        // refusal as its backstop.
+        $columnPermissions === []
+            ? $create()
+            : $dbForDatabases->withColumnPermissions($create);
 
         return true;
     }
@@ -1924,9 +1947,13 @@ class Appwrite extends Destination
             return false;
         }
 
-        $sourcePerms = Permission::aggregate($resource->getPermissions());
+        $sourcePerms = array_values(Permission::aggregate($resource->getPermissions()) ?? []);
+        // The verbatim list, not $permissions: the row holds the grants with every column
+        // dropped, so comparing against that reads as equal whenever the only difference is a
+        // column grant -- and skips a table that does need rewriting. Falls back to the row for
+        // a destination written before the column existed.
         /** @var list<string> $destPerms */
-        $destPerms = $existing->getAttribute('$permissions', []);
+        $destPerms = $existing->getAttribute('columnPermissions') ?: $existing->getAttribute('$permissions', []);
         \sort($sourcePerms);
         \sort($destPerms);
         return $sourcePerms === $destPerms;
