@@ -1018,16 +1018,16 @@ trait ProxyBase
 
         $this->cleanupFunction($functionId);
 
-        // 3. Wrong A record fails to verify
+        // 3. Wrong A record fails to verify, and says so rather than asking for a CNAME
         $rule = $this->createAPIRule("{$fixture}.wrong-a-webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
-        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
+        $this->assertStringContainsString("has incorrect A value '203.0.0.5'", $rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $rule = $this->updateRuleStatus($ruleId);
         $this->assertEquals(400, $rule['headers']['status-code']);
-        $this->assertStringContainsString('is missing CNAME record', $rule['body']['message']);
+        $this->assertStringContainsString("has incorrect A value '203.0.0.5'", $rule['body']['message']);
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
