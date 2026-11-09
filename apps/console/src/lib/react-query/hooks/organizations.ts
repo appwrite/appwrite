@@ -65,6 +65,8 @@ import {
 } from '@/lib/screenshot-mode'
 
 type OrganizationListResponse = Models.TeamList
+
+const ORGANIZATIONS_PAGE_SIZE = 100
 type OrganizationRecord = Models.Organization
 type OrganizationPlan = Models.BillingPlan
 
@@ -283,18 +285,29 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
  *
  * @returns Organizations list response from the API
  */
-export async function fetchOrganizations() {
-  if (isBillingEnabled()) {
-    const response = await sdk.forConsole.organizations.list({
-      queries: [Query.equal('platform', 'appwrite')],
-    })
-    return response as OrganizationListResponse
+export async function fetchOrganizations(): Promise<OrganizationListResponse> {
+  // One page holds 25 organizations by default, and a member of more would miss
+  // the rest: a project in one of them showed another organization's name.
+  // The total can count drafts the list leaves out, so an empty page also ends it.
+  const teams: OrganizationListResponse['teams'] = []
+  for (;;) {
+    const last = teams.at(-1)
+    const page = [
+      Query.limit(ORGANIZATIONS_PAGE_SIZE),
+      ...(last ? [Query.cursorAfter(last.$id)] : []),
+    ]
+    const response = (
+      isBillingEnabled()
+        ? await sdk.forConsole.organizations.list({
+            queries: [Query.equal('platform', 'appwrite'), ...page],
+          })
+        : await sdk.forConsole.teams.list({ queries: page, total: true })
+    ) as OrganizationListResponse
+    teams.push(...response.teams)
+    if (response.teams.length === 0 || teams.length >= response.total) {
+      return { ...response, teams }
+    }
   }
-
-  const response = await sdk.forConsole.teams.list({
-    total: true,
-  })
-  return response as OrganizationListResponse
 }
 
 /**
