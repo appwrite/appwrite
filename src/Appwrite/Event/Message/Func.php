@@ -40,17 +40,25 @@ final class Func extends Base
         array $platform = [],
         ?Document $database = null,
     ): static {
+        // Queue decoders turn nested JSON objects into associative arrays.
+        // Keep the original body only when that conversion changes its shape.
+        $body = \json_encode($payload) ?: '';
+        $decoded = \json_decode($body, true);
+        $preserveBody = $body !== \json_encode($decoded);
+
         return new self(
             project: $project,
             user: $user,
             userId: $userId,
             payload: $payload,
+            body: $preserveBody ? $body : '',
             events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
             eventId: Id::unique(),
         );
     }
 
+    #[\Override]
     public function toArray(): array
     {
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
@@ -75,6 +83,7 @@ final class Func extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

@@ -84,7 +84,9 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+            // The lane runs one paratest process per CPU, each starting builds, so an SSR build
+            // that takes seconds alone takes over two minutes there; builds time out at 900s.
+        }, 300000, 500);
     }
 
     protected function waitDeploymentActivated(string $siteId, string $deploymentId): void

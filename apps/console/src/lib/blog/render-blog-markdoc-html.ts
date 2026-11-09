@@ -72,7 +72,7 @@ function resolveHref(href: string): {
     resolved.startsWith('mailto:') ||
     resolved.startsWith('tel:')
 
-  if (resolved.startsWith('/') && !resolved.startsWith('/docs') && !resolved.startsWith('/blog') && !resolved.startsWith('/changelog') && !resolved.startsWith('/home') && !resolved.startsWith('/pricing') && !resolved.startsWith('/company') && !resolved.startsWith('/community') && !resolved.startsWith('/startups') && !resolved.startsWith('/education') && !resolved.startsWith('/partners') && !resolved.startsWith('/integrations') && !resolved.startsWith('/threads') && !resolved.startsWith('/terms') && !resolved.startsWith('/privacy') && !resolved.startsWith('/cookies') && !resolved.startsWith('/assets')) {
+  if (resolved.startsWith('/') && !resolved.startsWith('/docs') && !resolved.startsWith('/blog') && !resolved.startsWith('/changelog') && !resolved.startsWith('/home') && !resolved.startsWith('/pricing') && !resolved.startsWith('/company') && !resolved.startsWith('/community') && !resolved.startsWith('/startups') && !resolved.startsWith('/agencies') && !resolved.startsWith('/innovation-teams') && !resolved.startsWith('/education') && !resolved.startsWith('/partners') && !resolved.startsWith('/integrations') && !resolved.startsWith('/threads') && !resolved.startsWith('/terms') && !resolved.startsWith('/privacy') && !resolved.startsWith('/cookies') && !resolved.startsWith('/assets')) {
     return {
       href: `${MARKETING_SITE_ORIGIN}${resolved}`,
       external: true,

@@ -8,8 +8,9 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -88,6 +89,7 @@ class Messaging extends Action
             ->inject('telemetry')
             ->inject('pools')
             ->inject('adapterForSMS')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -98,8 +100,9 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
-     * @param SMSAdapter|null $adapterForSMS
      * @param Group $pools
+     * @param SMSAdapter|null $adapterForSMS
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws \Exception
      */
@@ -111,11 +114,12 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
         Group $pools,
-        ?SMSAdapter $adapterForSMS
+        ?SMSAdapter $adapterForSMS,
+        PublicHostname $publicHostname
     ): void {
         $this->telemetry = $telemetry;
         $this->pools = $pools;
-        $this->provider = new Provider($telemetry);
+        $this->provider = new Provider($telemetry, $publicHostname);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -134,6 +138,12 @@ class Messaging extends Action
                 $this->sendInternalSMSMessage($message, $project, $recipients, $adapterForSMS);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
+                // The project was deleted after the job was queued; dbForProject would be the platform database.
+                if ($project->isEmpty()) {
+                    Span::add('message.skipped', 'deleted');
+                    break;
+                }
+
                 $messageId = $payload['messageId'];
                 $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -305,12 +315,22 @@ class Messaging extends Action
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
                 $resolvedProviderType = $provider->getAttribute('type');
 
-                $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
-                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
-                    default => throw new \Exception('Provider with the requested ID is of the incorrect type')
-                };
+                try {
+                    $adapter = match ($resolvedProviderType) {
+                        MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                        MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
+                        MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
+                        default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+                    };
+                } catch (\InvalidArgumentException $error) {
+                    // An SMTP host that is refused or does not resolve fails this provider's recipients, not the whole message.
+                    $hasRecipients = true;
+                    $used[$provider->getId()] = $provider;
+                    $failedTotal += \count($identifiers);
+                    $this->recordError($deliveryErrors, 'Failed sending to targets with error: ' . $error->getMessage());
+
+                    continue;
+                }
 
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
@@ -1459,23 +1479,18 @@ class Messaging extends Action
                 continue;
             }
 
+            $encryption = new Encryption($file);
+            if ($encryption->isSegmented()) {
+                $encryption->copy($deviceForFiles, $this->getLocalDevice($project), $target, $contentType);
+                $prepared[] = new Attachment($file->getAttribute('name'), $target, $contentType);
+                continue;
+            }
+
             $source = (string) $deviceForFiles->read($path);
 
             if (!empty($cipher)) {
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $cipher,
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
-
-                // A rotated or missing key leaves ciphertext no one can read, which must fail the send rather
-                // than reach a recipient.
-                if ($source === false) {
-                    throw new \Exception('Failed to decrypt attachment ' . $file->getId());
-                }
+                // A rotated or missing key throws, failing the send rather than reaching a recipient.
+                $source = $encryption->decrypt($source);
             }
 
             $decompressed = match ($algorithm) {

@@ -50,10 +50,10 @@ You can skip optional steps.
 {% /section %}
 
 {% section #step-3 step=3 title="Add the Appwrite SDK" %}
-To add the Appwrite SDK for Android as a dependency, add the following to your app-level **build.gradle** file inside the **dependencies** block.
+The SDK requires Android 7.0 (API level 24) or later, so set `minSdk` to 24 or higher. To add the Appwrite SDK for Android as a dependency, add the following to your app-level **build.gradle** file inside the **dependencies** block.
 
 ```groovy
-implementation "io.appwrite:sdk-for-android:29.2.0"
+implementation "io.appwrite:sdk-for-android:31.0.1"
 ```
 
 In order to allow creating OAuth sessions, the following activity needs to be added inside the `<application>` tag, along side the existing `<activity>` tags in your [AndroidManifest.xml](https://github.com/appwrite/playground-for-android/blob/master/app/src/main/AndroidManifest.xml).
@@ -101,6 +101,7 @@ import java.util.Map;
 import io.appwrite.Client;
 import io.appwrite.ID;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
 import io.appwrite.models.Session;
 import io.appwrite.models.User;
 import io.appwrite.services.Account;
@@ -127,49 +128,61 @@ public class AppwriteHelper {
 
     public interface AuthCallback<T> {
         void onSuccess(T result);
-        void onError(Exception error);
+        void onError(Throwable error);
     }
 
     public void login(String email, String password, final AuthCallback<Session> callback) {
-        account.createEmailPasswordSession(
-            email,
-            password,
-            new CoroutineCallback<>((result, error) -> {
-                if (error != null) {
-                    callback.onError(error);
-                    return;
-                }
-                callback.onSuccess(result);
-            })
-        );
+        try {
+            account.createEmailPasswordSession(
+                email,
+                password,
+                new CoroutineCallback<>((result, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callback.onSuccess(result);
+                })
+            );
+        } catch (AppwriteException e) {
+            callback.onError(e);
+        }
     }
 
     public void register(String email, String password, final AuthCallback<User<Map<String, Object>>> callback) {
-        account.create(
-            ID.unique(),
-            email,
-            password,
-            new CoroutineCallback<>((result, error) -> {
-                if (error != null) {
-                    callback.onError(error);
-                    return;
-                }
-                callback.onSuccess(result);
-            })
-        );
+        try {
+            account.create(
+                ID.Companion.unique(7),
+                email,
+                password,
+                new CoroutineCallback<>((result, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callback.onSuccess(result);
+                })
+            );
+        } catch (AppwriteException e) {
+            callback.onError(e);
+        }
     }
 
     public void logout(final AuthCallback<Object> callback) {
-        account.deleteSession(
-            "current",
-            new CoroutineCallback<>((result, error) -> {
-                if (error != null) {
-                    callback.onError(error);
-                    return;
-                }
-                callback.onSuccess(result);
-            })
-        );
+        try {
+            account.deleteSession(
+                "current",
+                new CoroutineCallback<>((result, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callback.onSuccess(result);
+                })
+            );
+        } catch (AppwriteException e) {
+            callback.onError(e);
+        }
     }
 }
 ```
@@ -322,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(Exception error) {
+            public void onError(Throwable error) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Login failed", error);
                     Toast.makeText(MainActivity.this, "Login failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
@@ -349,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(Exception error) {
+            public void onError(Throwable error) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Registration failed", error);
                     Toast.makeText(MainActivity.this, "Registration failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
@@ -369,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(Exception error) {
+            public void onError(Throwable error) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Logout failed", error);
                     Toast.makeText(MainActivity.this, "Logout failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();

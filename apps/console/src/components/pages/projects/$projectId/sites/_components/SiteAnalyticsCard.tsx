@@ -398,11 +398,12 @@ export function SiteAnalyticsCard({
   const resolving = propertiesLoading || domainsLoading
   const statsLoaded = stats !== undefined
   const hasTraffic =
-    !!stats && (stats.events > 0 || stats.visitors > 0 || stats.pageviews > 0)
+    !!stats &&
+    (stats.events > 0 || stats.visitors > 0 || (stats.pageviews ?? 0) > 0)
   const comparable =
     !!previousStats &&
-    (previousStats.visitors > 0 || previousStats.pageviews > 0)
-  const change = (current?: number, previous?: number) =>
+    (previousStats.visitors > 0 || (previousStats.pageviews ?? 0) > 0)
+  const change = (current?: number | null, previous?: number | null) =>
     comparable ? analyticsChangePercent(current, previous) : undefined
   const topSources = sources
     .filter((row) => isKnownBreakdownValue(row.value))

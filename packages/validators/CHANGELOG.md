@@ -7,6 +7,7 @@ All notable changes to `utopia-php/validators` are documented in this file.
 ### Added
 
 - New `Port` validator for a published port as Docker accepts it: a port from 1 to 65535 (`8080`), or one bound to a single host interface (`127.0.0.1:8080`, `[::1]:8080`). Integers are accepted; leading zeros, hostnames and unbracketed IPv6 are rejected.
+- New `Label` validator for a single DNS label: 1 to 63 lowercase letters, digits and hyphens, not starting or ending with a hyphen. Dots are rejected, so the value can sit between fixed parts of a hostname.
 
 ### Fixed
 

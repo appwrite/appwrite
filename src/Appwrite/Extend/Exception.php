@@ -49,6 +49,7 @@ class Exception extends \Exception
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
+    public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -92,6 +93,8 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
+    public const string USER_DEVICE_NOT_FOUND = 'user_device_not_found';
+    public const string USER_DEVICE_SESSION_NOT_FOUND = 'user_device_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
     public const string USER_UNAUTHORIZED = 'user_unauthorized';
     public const string USER_AUTH_METHOD_UNSUPPORTED = 'user_auth_method_unsupported';
@@ -327,6 +330,11 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string TRANSFER_NOT_FOUND = 'transfer_not_found';
+    public const string TRANSFER_INVALID_SECRET = 'transfer_invalid_secret';
+    public const string TRANSFER_EXPIRED = 'transfer_expired';
+    public const string TRANSFER_RECIPIENT_MISMATCH = 'transfer_recipient_mismatch';
+    public const string TRANSFER_ALREADY_OWNED = 'transfer_already_owned';
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
@@ -339,6 +347,16 @@ class Exception extends \Exception
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
     public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
+
+    /** Monitors */
+    public const string MONITOR_NOT_FOUND = 'monitor_not_found';
+    public const string MONITOR_ALREADY_EXISTS = 'monitor_already_exists';
+    public const string MONITOR_RULES_INVALID = 'monitor_rules_invalid';
+    public const string MONITOR_TYPE_MISMATCH = 'monitor_type_mismatch';
+    public const string MONITOR_RESOURCE_NOT_FOUND = 'monitor_resource_not_found';
+
+    /** Alerts */
+    public const string ALERT_NOT_FOUND = 'alert_not_found';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -443,6 +461,12 @@ class Exception extends \Exception
     /** Reports */
     public const string REPORT_NOT_FOUND = 'report_not_found';
     public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
+
+    /** Reviews */
+    public const string REVIEW_NOT_FOUND = 'review_not_found';
+    public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
+    public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
 
     protected string $type = '';
     protected array $errors = [];

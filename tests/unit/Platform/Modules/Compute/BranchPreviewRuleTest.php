@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Modules\Compute;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Modules\Compute\Base;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 
 final class BranchPreviewRuleTest extends TestCase
 {
@@ -64,6 +68,124 @@ final class BranchPreviewRuleTest extends TestCase
             });
 
         $this->activate($dbForPlatform, 'appwrite.network/path', $bus);
+    }
+
+    public function testDuplicateRuleOfThisBranchFollowsTheNewDeployment(): void
+    {
+        $dbForPlatform = $this->duplicateRule(['projectInternalId' => '1', 'deploymentResourceType' => 'site', 'deploymentResourceInternalId' => '2', 'deploymentVcsProviderBranch' => 'feature/login']);
+        $dbForPlatform->expects($this->once())
+            ->method('updateDocument')
+            ->with('rules', $this->anything(), $this->callback(function (Document $update): bool {
+                $this->assertSame('deployment1', $update->getAttribute('deploymentId'));
+                return true;
+            }))
+            ->willReturnCallback(fn (string $collection, string $id, Document $update) => new Document(['$id' => $id, ...$update->getArrayCopy()]));
+
+        $this->activate($dbForPlatform, 'appwrite.network');
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, string>}>
+     */
+    public static function foreignRules(): \Iterator
+    {
+        yield 'another project' => [['projectInternalId' => '9', 'deploymentResourceType' => 'site', 'deploymentResourceInternalId' => '2', 'deploymentVcsProviderBranch' => 'feature/login']];
+        yield 'another site' => [['projectInternalId' => '1', 'deploymentResourceType' => 'site', 'deploymentResourceInternalId' => '9', 'deploymentVcsProviderBranch' => 'feature/login']];
+        yield 'another branch' => [['projectInternalId' => '1', 'deploymentResourceType' => 'site', 'deploymentResourceInternalId' => '2', 'deploymentVcsProviderBranch' => 'feature-login']];
+        yield 'a function' => [['projectInternalId' => '1', 'deploymentResourceType' => 'function', 'deploymentResourceInternalId' => '2', 'deploymentVcsProviderBranch' => 'feature/login']];
+    }
+
+    /**
+     * @param array<string, string> $owner
+     */
+    #[DataProvider('foreignRules')]
+    public function testDuplicateRuleOfAnotherResourceIsLeftAlone(array $owner): void
+    {
+        $dbForPlatform = $this->duplicateRule($owner);
+        $dbForPlatform->expects($this->never())->method('updateDocument');
+
+        $this->activate($dbForPlatform, 'appwrite.network');
+    }
+
+    public function testBranchPreviewedBeforeTheWiderHashKeepsItsDomain(): void
+    {
+        $legacy = (new BranchDomainFilter())->apply([
+            'branch' => 'feature/login',
+            'resourceId' => 'site123',
+            'projectId' => 'proj456',
+            'sitesDomain' => 'appwrite.network',
+            'legacy' => true,
+        ]);
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('getDocument')->willReturnCallback(fn (string $collection, string $id) => $id === md5($legacy)
+            ? new Document(['$id' => $id, 'projectInternalId' => '1', 'deploymentResourceType' => 'site', 'deploymentResourceInternalId' => '2', 'deploymentVcsProviderBranch' => 'feature/login'])
+            : new Document());
+        $dbForPlatform->expects($this->once())
+            ->method('createDocument')
+            ->with('rules', $this->callback(function (Document $rule) use ($legacy): bool {
+                $this->assertSame($legacy, $rule->getAttribute('domain'));
+                return true;
+            }))
+            ->willThrowException(new Duplicate());
+        $dbForPlatform->expects($this->once())
+            ->method('updateDocument')
+            ->with('rules', md5($legacy))
+            ->willReturnCallback(fn (string $collection, string $id, Document $update) => new Document(['$id' => $id, ...$update->getArrayCopy()]));
+
+        $this->activate($dbForPlatform, 'appwrite.network');
+    }
+
+    public function testNewBranchGetsTheWiderHash(): void
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('getDocument')->willReturn(new Document());
+        $dbForPlatform->expects($this->once())
+            ->method('createDocument')
+            ->with('rules', $this->callback(fn (Document $rule) => \str_ends_with($rule->getAttribute('domain'), '-9cff6d18ba9545bf.appwrite.network')))
+            ->willReturnArgument(1);
+
+        $this->activate($dbForPlatform, 'appwrite.network');
+    }
+
+    public function testCommitDomainIsUniquePerProjectAndResource(): void
+    {
+        $projectA = new Document(['$id' => 'projectA']);
+        $projectB = new Document(['$id' => 'projectB']);
+        $siteOne = new Document(['$id' => 'siteOne']);
+        $siteTwo = new Document(['$id' => 'siteTwo']);
+        $commit = 'abcdef1234567890deadbeef';
+        $sitesDomain = 'appwrite.network';
+
+        $domain = Base::commitDomain($projectA, $siteOne, $commit, $sitesDomain);
+
+        // A lowercased commit host carrying the project-and-resource hash.
+        $this->assertStringStartsWith('commit-abcdef1234567890-', $domain);
+        $this->assertStringEndsWith('.appwrite.network', $domain);
+
+        // Same project, resource and commit always resolve to the same host.
+        $this->assertSame($domain, Base::commitDomain($projectA, $siteOne, $commit, $sitesDomain));
+
+        // A different project building the same commit must not collide on the host —
+        // the collision is what let one project's build be served under another's commit URL.
+        $this->assertNotSame($domain, Base::commitDomain($projectB, $siteOne, $commit, $sitesDomain));
+
+        // Two sites in one project building the same commit are distinct too.
+        $this->assertNotSame($domain, Base::commitDomain($projectA, $siteTwo, $commit, $sitesDomain));
+    }
+
+    /**
+     * @param array<string, string> $owner
+     */
+    private function duplicateRule(array $owner): Database&MockObject
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('createDocument')->willThrowException(new Duplicate());
+        $dbForPlatform->method('getDocument')->willReturnCallback(
+            fn (string $collection, string $id) => new Document(['$id' => $id, ...$owner])
+        );
+
+        return $dbForPlatform;
     }
 
     private function activate(Database $dbForPlatform, string $sitesDomain, ?Bus $bus = null): void

@@ -132,10 +132,10 @@ final class ConsumerResilienceTest extends TestCase
         \Swoole\Coroutine\run(function () use ($adapter, $queue): void {
             $adapter->drain(
                 $queue,
-                fn () => throw new \RuntimeException('the database is gone'),
+                fn (): never => throw new \RuntimeException('the database is gone'),
                 // The reporting hook needs the same resources the handler did,
                 // so the outage that failed the message fails its report too.
-                fn () => throw new \RuntimeException('reporting needs the database too'),
+                fn (): never => throw new \RuntimeException('reporting needs the database too'),
             );
         });
 

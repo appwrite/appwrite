@@ -400,6 +400,96 @@ final class ProjectsConsoleClientTest extends Scope
     }
 
     #[Group('projectsCRUD')]
+    public function testTransferProjectTeamRequiresOwnership(): void
+    {
+        $sourceTeamId = Id::unique();
+        $projectId = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Transfer Source Project',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $sourceTeamId);
+
+        $foreignTeam = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Foreign Team',
+        ]);
+        $this->assertSame(200, $foreignTeam['headers']['status-code']);
+        $foreignTeamId = $foreignTeam['body']['$id'];
+
+        $email = 'transfer-' . Id::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $sourceTeamId,
+            'email' => $email,
+            'name' => 'Transfer User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']],
+        ];
+
+        $ownTeam = $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Own Team',
+        ]);
+        $this->assertSame(200, $ownTeam['headers']['status-code']);
+        $ownTeamId = $ownTeam['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $foreignTeamId,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        foreach ([['developer'], ['project-' . $projectId . '-developer'], ['project-' . $projectId . '-owner']] as $roles) {
+            $this->updateMembershipRole($sourceTeamId, $membershipId, $roles);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+                'teamId' => $ownTeamId,
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Roles: ' . \implode(',', $roles));
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame($sourceTeamId, $project['body']['teamId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->updateMembershipRole($sourceTeamId, $membershipId, ['owner']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $ownTeamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($ownTeamId, $response['body']['teamId']);
+    }
+
+    #[Group('projectsCRUD')]
     public function testListProject(): void
     {
         $data = $this->setupProjectData();
@@ -1231,10 +1321,9 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertCount(2, $response['body']['webhooks'][0]['events']);
         $this->assertTrue($response['body']['webhooks'][0]['tls']);
         $this->assertEquals('username', $response['body']['webhooks'][0]['authUsername']);
-        $this->assertEquals('password', $response['body']['webhooks'][0]['authPassword']);
+        $this->assertSame('', $response['body']['webhooks'][0]['authPassword']); // Write only
         $this->assertTrue($response['body']['webhooks'][0]['enabled']);
-        $this->assertIsString($response['body']['webhooks'][0]['secret']);
-        $this->assertNotEmpty($response['body']['webhooks'][0]['secret']);
+        $this->assertSame('', $response['body']['webhooks'][0]['secret']); // Only on create and rotation
         $this->assertIsString($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotEmpty($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotFalse(\strtotime($response['body']['webhooks'][0]['$createdAt']));
@@ -5855,6 +5944,49 @@ final class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * An import file waits in the imports directory until its migration runs,
+     * so a project deleted in that window must take the file with it.
+     */
+    public function testDeleteProjectRemovesPendingImports(): void
+    {
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Imports Team',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => Id::unique(),
+            'name' => 'Imports Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        $directory = APP_STORAGE_IMPORTS . '/app-' . $projectId;
+        $this->assertTrue(\mkdir($directory, 0755, true));
+        $this->assertNotFalse(\file_put_contents($directory . '/' . Id::unique() . '_' . Id::unique() . '.csv', "\$id,name\nrow,pending\n"));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($directory) {
+            \clearstatcache();
+            $this->assertDirectoryDoesNotExist($directory);
+        }, 30_000, 500);
+    }
+
     public function testDeleteSharedProject(): void
     {
         $team = $this->createTeamFixture(array_merge([
@@ -6621,6 +6753,191 @@ final class ProjectsConsoleClientTest extends Scope
         }
     }
 
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsPrefixCollision(): void
+    {
+        // Two projects whose IDs are prefix siblings: 'A' is a string prefix of 'B'. A
+        // project-scoped role for B ("project-{B}-owner") must grant access to B only. The
+        // admin-role match keys off an exact 'project-{projectId}-' boundary; a prefix-only
+        // check (str_starts_with 'project-' . $projectIdA) would have leaked B's grant onto A.
+        $teamId = Id::unique();
+        $base = 'pfx' . \substr(\bin2hex(\random_bytes(5)), 0, 8);
+        $projectIdA = $base;
+        $projectIdB = $base . '2';
+
+        $this->setupProject(['projectId' => $projectIdA, 'name' => 'Prefix A'], $teamId);
+        $this->setupProject(['projectId' => $projectIdB, 'name' => 'Prefix B'], $teamId, false);
+
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
+        [ 'membershipId' => $membershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => 'Prefix User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Grant a role on project B only. The member must see B and never the prefix sibling A.
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdB-owner"]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+        $this->assertContains($projectIdB, $returnedProjectIds);
+        $this->assertNotContains($projectIdA, $returnedProjectIds);
+
+        // The member can read project B directly, but not the prefix-sibling A.
+        $getB = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdB, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertEquals(200, $getB['headers']['status-code']);
+
+        $getA = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdA, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertNotEquals(200, $getA['headers']['status-code']);
+    }
+
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsForOrganizationProjects(): void
+    {
+        $teamId = Id::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Organization Project A',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Organization Project B',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId, false);
+
+        $email = 'test-' . Id::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $email,
+            'name' => 'Project Member',
+            'roles' => ['owner'],
+        ]);
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdA-developer"]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $consoleHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ];
+        $adminHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => $projectIdA,
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectIdA . '/keys', $headers, [
+                'keyId' => Id::unique(),
+                'name' => 'Project A Key',
+                'scopes' => ['users.read'],
+            ]);
+            $this->assertSame(201, $key['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdA, $headers);
+            $this->assertSame(200, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdA, $headers, [
+                'name' => 'Organization Project A',
+            ]);
+            $this->assertSame(200, $project['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectIdB . '/keys', $headers, [
+                'keyId' => Id::unique(),
+                'name' => 'Project B Key',
+                'scopes' => ['users.read'],
+            ]);
+            $this->assertSame(401, $key['headers']['status-code']);
+
+            $keys = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB . '/keys', $headers);
+            $this->assertSame(401, $keys['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertContains($project['headers']['status-code'], [401, 404]);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdB, $headers, [
+                'name' => 'Renamed',
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_DELETE, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_POST, '/organization/projects', $headers, [
+                'projectId' => Id::unique(),
+                'name' => 'New Project',
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $projects = $this->client->call(Client::METHOD_GET, '/organization/projects', $headers);
+            $this->assertSame(200, $projects['headers']['status-code']);
+            $projectIds = \array_column($projects['body']['projects'], '$id');
+            $this->assertContains($projectIdA, $projectIds);
+            $this->assertNotContains($projectIdB, $projectIds);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame('Organization Project B', $project['body']['name']);
+    }
+
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForUpdateProject(): void
     {
@@ -6931,14 +7248,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userEmail = $this->getUser()['email'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // With search params, with mobile backlink
         $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
@@ -6963,14 +7280,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params
         $url = 'http://localhost/auth/signin';
@@ -7002,7 +7319,7 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params, with mobile backlink
         $url = 'appwriteio://signin';
@@ -7034,9 +7351,9 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
-        // With injection (allowed, meant to be protected client-side)
+        // Markup in the URL is escaped in the email
         $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
 
         $response = $this->client->call(
@@ -7059,19 +7376,16 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
-            $this->assertStringContainsString('INJECTED', (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString('INJECTED&lt;/h1&gt;', (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $this->assertStringContainsString('INJECTED', (string) $lastEmail['html']);
-        $this->assertStringContainsString('<h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('">', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</a>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('signin\\">', (string) $lastEmail['html']);
 
-        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $expectedUrl = $url . '?userId=' . $userId . '&secret=';
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
     }
 }

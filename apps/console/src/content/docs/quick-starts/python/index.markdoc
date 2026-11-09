@@ -47,6 +47,8 @@ Other scopes are optional.
 
 {% /section %}
 {% section #step-2 step=2 title="Create Python project" %}
+Use Python 3.10 or later with SDK 27.0.0. Check `python --version` and select a supported interpreter before creating the virtual environment.
+
 Create a directory for the project.
 
 ```sh
@@ -60,7 +62,7 @@ After that, create a virtual environment in this directory and activate it.
 # Create a venv
 python -m venv .venv
 
-# Active the venv in Unix shell
+# Activate the venv in Unix shell
 source .venv/bin/activate
 
 # Or in Powershell
@@ -75,14 +77,18 @@ Finally, create a file `my_app.py`.
 Install the Python Appwrite SDK.
 
 ```sh
-pip install appwrite
+python -m pip install "appwrite==27.0.0"
 ```
 
 Or with `uv`:
 
 ```sh
-uv add appwrite
+uv add "appwrite==27.0.0"
 ```
+
+{% info title="Upgrading from SDK 26.0.0" %}
+Python 3.9 is no longer supported. Use a Python 3.10+ environment and run `python -m pip install --upgrade "appwrite==27.0.0"`. Update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. Service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0.
+{% /info %}
 
 {% /section %}
 {% section #step-4 step=4 title="Import Appwrite" %}

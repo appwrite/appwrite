@@ -41,6 +41,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the function.',
+                'default' => '',
+                'example' => 'Sends a welcome email to newly registered users.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Function enabled.',

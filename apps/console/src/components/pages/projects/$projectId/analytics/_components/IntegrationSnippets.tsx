@@ -15,6 +15,8 @@ import {
 interface IntegrationSnippetsProps {
   projectId: string
   property: Models.AnalyticsProperty
+  /** Tabs to offer; defaults to every platform. */
+  platforms?: readonly AnalyticsPlatform[]
   /** Controlled platform. Omit to let the component own the tab state. */
   platform?: AnalyticsPlatform
   onPlatformChange?: (platform: AnalyticsPlatform) => void
@@ -28,12 +30,15 @@ interface IntegrationSnippetsProps {
 export function IntegrationSnippets({
   projectId,
   property,
+  platforms = ANALYTICS_PLATFORMS,
   platform,
   onPlatformChange,
   className,
 }: IntegrationSnippetsProps) {
   const t = useT()
-  const [localPlatform, setLocalPlatform] = useState<AnalyticsPlatform>('web')
+  const [localPlatform, setLocalPlatform] = useState<AnalyticsPlatform>(
+    platforms[0],
+  )
   const active = platform ?? localPlatform
 
   const setActive = (next: AnalyticsPlatform) => {
@@ -46,9 +51,7 @@ export function IntegrationSnippets({
     const guide = buildAnalyticsInstallGuide(active, {
       endpoint: getProjectApiEndpoint(projectId),
       projectId,
-      // The ingestion endpoint takes either ID; the snippet ID is the one
-      // meant to be embedded in client-side code.
-      trackingId: property.snippetId || property.$id,
+      trackingId: property.$id,
       domain: property.domain,
     })
     return [
@@ -69,7 +72,7 @@ export function IntegrationSnippets({
         onValueChange={(v) => setActive(v as AnalyticsPlatform)}
       >
         <TabsList>
-          {ANALYTICS_PLATFORMS.map((id) => (
+          {platforms.map((id) => (
             <TabsTrigger key={id} value={id}>
               {t(ANALYTICS_PLATFORM_META[id].label)}
             </TabsTrigger>

@@ -30,7 +30,7 @@ class Get extends Action
             ->setHttpPath('/v1/users/:userId/mfa/recovery-codes')
             ->desc('Get MFA recovery codes')
             ->groups(['api', 'users'])
-            ->label('scope', 'users.read')
+            ->label('scope', 'users.write')
             ->label('usage.metric', 'users.{scope}.requests.read')
             ->label('sdk', [
                 new Method(

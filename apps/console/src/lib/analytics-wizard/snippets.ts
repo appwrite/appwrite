@@ -89,10 +89,7 @@ export type SnippetBlock = {
 type SnippetInput = {
   endpoint: string
   projectId: string
-  /**
-   * The ingestion endpoint accepts either the property ID or the snippet ID,
-   * so prefer the snippet ID in client-side code when the property has one.
-   */
+  /** The property `$id`, which the ingestion endpoint is keyed on. */
   trackingId: string
   domain: string
   /**

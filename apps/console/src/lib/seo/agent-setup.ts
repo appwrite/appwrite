@@ -28,6 +28,7 @@ const AI_AGENT_DOC_SLUGS = [
   'zed',
   'opencode',
   'grok-build',
+  'pi',
 ] as const
 const AI_AGENTS_DOCS = `${AGENT_SETUP_ORIGIN}${AI_AGENTS_DOCS_PATH}/<agent>.md, where \`<agent>\` is one of ${AI_AGENT_DOC_SLUGS.map((slug) => `\`${slug}\``).join(', ')}`
 const CLI_INSTALL_SH = `${AGENT_SETUP_ORIGIN}/cli/install.sh`
@@ -66,6 +67,11 @@ const ZED_JSON = JSON.stringify(
   2,
 )
 const OPENCODE_JSON = JSON.stringify(MCP_OPENCODE_CONFIG_SNIPPET, null, 2)
+const PI_JSON = JSON.stringify(
+  { mcpServers: { [MCP_SERVER_NAME]: { url: MCP_SERVER_URL, auth: 'oauth' } } },
+  null,
+  2,
+)
 
 /** Non-interactive global install of every Appwrite skill for one agent. */
 function skillsInstall(agent: string): string {
@@ -110,7 +116,7 @@ You usually know which product you are running in. Use the matching section in s
 - You are a \`codex\` CLI session, the Codex IDE extension, or Codex in the ChatGPT desktop app: **Codex**.
 - You are Cursor's agent or the \`cursor-agent\` CLI: **Cursor**. You are GitHub Copilot or another agent inside VS Code: **VS Code**.
 - You are Cascade or Devin Local in Devin Desktop (formerly Windsurf): **Devin Desktop and Windsurf**.
-- Antigravity, Zed, OpenCode, and Grok Build have their own sections. Anything else: **Other agents**.
+- Antigravity, Zed, OpenCode, Grok Build, and Pi have their own sections. Anything else: **Other agents**.
 
 If you still cannot tell, ask the user one question: which app are they using?
 
@@ -283,6 +289,23 @@ ${skillsInstall('grok')}
 \`\`\`
 
 For the user's list: start a new Grok session, run \`/mcps\`, select **appwrite**, and press \`i\` to sign in.
+
+### Pi
+
+Pi connects to MCP servers through the \`pi-mcp-adapter\` extension. Install it and the skills:
+
+\`\`\`sh
+pi install npm:pi-mcp-adapter
+${skillsInstall('pi')}
+\`\`\`
+
+Then merge this into \`~/.pi/agent/mcp-adapter.json\`:
+
+\`\`\`json
+${PI_JSON}
+\`\`\`
+
+For the user's list: restart Pi, run \`/mcp-auth ${MCP_SERVER_NAME}\`, and approve the sign-in in the browser.
 
 ### Other agents
 

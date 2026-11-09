@@ -346,6 +346,43 @@ return [
         'scopes' => []
     ],
     [
+        'icon' => 'icon-database',
+        'id' => 'postgres-with-drizzle',
+        'name' => 'Postgres with Drizzle',
+        'score' => 6,
+        'tagline' => 'Serve a todo API from Appwrite Postgres using Drizzle ORM.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::DATABASES],
+        'runtimes' => [
+            ...getRuntimes(
+                $templateRuntimes['NODE'],
+                'npm install && npm run build',
+                'dist/main.js',
+                'node-typescript/postgres-with-drizzle',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle">file</a>. The function doesn\'t create tables, so apply the migrations from your machine with <code>DATABASE_URL="postgresql://..." npm run db:migrate</code> before the first request.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.0',
+        'variables' => [
+            [
+                'name' => 'DATABASE_URL',
+                'description' => 'Connection string of your Appwrite Postgres database. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/postgresql/connections">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'postgresql://admin:d1efb...aec35@db-8f2c61a4d7e0.fra.appwrite.center:5432/db-8f2c61a4d7e0',
+                'required' => true,
+                'type' => 'password'
+            ]
+        ],
+        'scopes' => []
+    ],
+    [
         'icon' => 'icon-open-ai',
         'id' => 'prompt-chatgpt',
         'name' => 'Prompt ChatGPT',
@@ -1623,7 +1660,7 @@ return [
         'providerVersion' => '1.2.0',
         'variables' => [
             [
-                'name' => 'REPLICATE_API_KEY',
+                'name' => 'REPLICATE_API_TOKEN',
                 'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
@@ -1721,43 +1758,6 @@ return [
         'scopes' => []
     ],
     [
-        'icon' => 'icon-chip',
-        'id' => 'generate-with-replicate',
-        'name' => 'Generate with Replicate',
-        'score' => 5,
-        'tagline' => "Generate text, audio and images using Replicate's API.",
-        'permissions' => ['any'],
-        'events' => [],
-        'cron' => '',
-        'timeout' => 300,
-        'useCases' => [FunctionUseCases::AI],
-        'runtimes' => [
-            ...getRuntimes(
-                $templateRuntimes['NODE'],
-                'npm install',
-                'src/main.js',
-                'node/generate-with-replicate',
-                $allowList
-            )
-        ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-replicate">file</a>.',
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
-        'variables' => [
-            [
-                'name' => 'REPLICATE_API_KEY',
-                'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ]
-        ],
-        'scopes' => []
-    ],
-    [
         'icon' => 'icon-document-search',
         'id' => 'sync-with-pinecone',
         'name' => 'Sync with Pinecone',
@@ -1799,7 +1799,7 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
@@ -1864,7 +1864,7 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
@@ -2123,8 +2123,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy',
@@ -2180,8 +2181,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy',
@@ -2240,6 +2242,146 @@ return [
             ]
         ],
         'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+    ],
+    [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'subscriptions-with-dodo-payments',
+        'name' => 'Subscriptions with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive recurring payments and grant subscribers extra permissions.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/subscriptions-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/subscriptions-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the subscription product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/subscription-integration-guide">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['users.read', 'users.write']
+    ],
+    [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'payments-with-dodo-payments',
+        'name' => 'Payments with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive one-time payments and store paid orders.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/payments-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/payments-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the one-time product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/features/products">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_DATABASE_ID',
+                'description' => 'The ID of the database to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/databases">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_TABLE_ID',
+                'description' => 'The ID of the table to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/tables">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['databases.write', 'tables.read', 'tables.write', 'rows.write']
     ],
     [
         'icon' => 'icon-apple',

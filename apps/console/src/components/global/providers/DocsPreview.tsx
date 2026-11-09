@@ -36,6 +36,7 @@ import {
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
+import { isAnalyticsDocsSlug } from '@/lib/docs/analytics-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsSlug,
@@ -70,6 +71,7 @@ export function DocsPreviewContent() {
   const domainsDocsEnabled = isDomainsDocsEnabled()
   const firewallDocsEnabled = isFirewallDocsEnabled()
   const agentDocsEnabled = features.agent
+  const analyticsDocsEnabled = features.analytics
 
   const showMenu =
     slug !== null &&
@@ -79,7 +81,8 @@ export function DocsPreviewContent() {
     (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
     (!isDomainsDocsSlug(slug) || domainsDocsEnabled) &&
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
-    (!isAgentDocsSlug(slug) || agentDocsEnabled)
+    (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
+    (!isAnalyticsDocsSlug(slug) || analyticsDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -93,6 +96,7 @@ export function DocsPreviewContent() {
       (!isDomainsDocsSlug(slug!) || domainsDocsEnabled) &&
       (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
+      (!isAnalyticsDocsSlug(slug!) || analyticsDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -120,12 +124,17 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isAnalyticsDocsSlug(nextSlug) && !analyticsDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
       if (nextSlug === slug && resolvedView === view) return
       openDocsPreview(nextSlug, { view: nextView })
     },
     [
       agentDocsEnabled,
+      analyticsDocsEnabled,
       domainsDocsEnabled,
       firewallDocsEnabled,
       openDocsPreview,
@@ -151,9 +160,14 @@ export function DocsPreviewContent() {
     }
     if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
+      return
+    }
+    if (!analyticsDocsEnabled && isAnalyticsDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
     }
   }, [
     agentDocsEnabled,
+    analyticsDocsEnabled,
     domainsDocsEnabled,
     firewallDocsEnabled,
     isOpen,
@@ -225,6 +239,10 @@ export function DocsPreviewContent() {
   }
 
   if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
+    return null
+  }
+
+  if (!analyticsDocsEnabled && isAnalyticsDocsSlug(slug)) {
     return null
   }
 

@@ -263,6 +263,24 @@ class UsersPage extends AsyncStatelessComponent {
 
 {% /tabs %}
 
+# Visitor IP address and location {% #visitor-ip-address %}
+
+Requests reach a server-side rendered site through Appwrite's network, so the connection your server sees comes from Appwrite, not from the visitor. Appwrite sends the visitor's IP address and location on these headers of every SSR request and replaces any value the visitor sent, so you can use them for rate limiting, audit logs, or localization.
+
+| Header                      | Value                                                                                         |
+|-----------------------------|-----------------------------------------------------------------------------------------------|
+| `x-appwrite-client-ip`      | The visitor's IP address.                                                                     |
+| `x-appwrite-country-code`   | Two-letter country code, such as `DE`. Not sent when Appwrite can't locate the IP address.    |
+| `x-appwrite-continent-code` | Two-letter continent code, such as `EU`. Not sent when Appwrite can't locate the IP address.  |
+| `x-appwrite-continent-eu`   | `true` when the visitor's country is in the European Union, otherwise `false`.                |
+
+```ts
+const ip = request.headers.get('x-appwrite-client-ip');
+const country = request.headers.get('x-appwrite-country-code');
+```
+
+Don't read the visitor's IP from headers such as `CF-Connecting-IP` or `True-Client-IP`. Appwrite forwards them exactly as the visitor sent them, so anyone can forge them.
+
 # Project dependencies
 
 To install your dependencies before your site is built, you should add the relevant install command to your site’s build settings. Here are the steps to add the install command:

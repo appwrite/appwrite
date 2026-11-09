@@ -261,6 +261,21 @@ function getExpandedFooterGroups(
         external: isMarketingPageExternal(marketing),
       },
       {
+        label: footerCopy.expanded.programs.agencies,
+        href: getMarketingPageUrl('/agencies', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: footerCopy.expanded.programs.innovationTeams,
+        href: getMarketingPageUrl('/innovation-teams', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
+        label: footerCopy.expanded.programs.enterprise,
+        href: getMarketingPageUrl('/enterprise', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
+      {
         label: footerCopy.expanded.programs.education,
         href: getMarketingPageUrl('/education', marketing),
         external: isMarketingPageExternal(marketing),
@@ -268,11 +283,6 @@ function getExpandedFooterGroups(
       {
         label: footerCopy.expanded.programs.partners,
         href: getMarketingPageUrl('/partners', marketing),
-        external: isMarketingPageExternal(marketing),
-      },
-      {
-        label: footerCopy.expanded.programs.enterprise,
-        href: getMarketingPageUrl('/enterprise', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {

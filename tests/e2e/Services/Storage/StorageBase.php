@@ -320,7 +320,23 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // should validate that the file is not encrypted
+        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // describes the original bytes, not the encrypted ones
+        $this->assertTrue($largeFile['body']['encryption']);
+
+        // Encrypted above 20 MB: the full file and a range across the first chunk boundary come back as uploaded.
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame(\md5_file($source), \md5($download['body']));
+
+        $boundary = $chunkSize - 10;
+        $range = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $boundary . '-' . ($boundary + 19),
+        ], $this->getHeaders()));
+        $this->assertSame(206, $range['headers']['status-code']);
+        $this->assertSame(\substr(\file_get_contents($source), $boundary, 20), $range['body']);
 
         /**
          * Failure
@@ -762,7 +778,7 @@ trait StorageBase
         $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
         $size = \filesize($source);
 
-        // Both are skipped above the buffer, so every chunk reports none/false.
+        // Compression is skipped above the buffer. Encryption is not, and is reported once the last chunk is in.
         $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
         $chunkSize = 5 * 1024 * 1024;
         $handle = @\fopen($source, 'rb');
@@ -786,12 +802,12 @@ trait StorageBase
             ]);
             $this->assertNotEmpty($chunked['body']['$id']);
             $this->assertSame('none', $chunked['body']['compression']);
-            $this->assertFalse($chunked['body']['encryption']);
             $id = $chunked['body']['$id'];
             $counter++;
         }
         \fclose($handle);
         $this->assertEquals(201, $chunked['headers']['status-code']);
+        $this->assertTrue($chunked['body']['encryption']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'content-type' => 'application/json',
@@ -1046,7 +1062,7 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file5['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file5['headers']['content-disposition']);
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
 
@@ -1061,7 +1077,7 @@ trait StorageBase
         $originalChunk = \file_get_contents($path, false, null, 0, 100);
 
         $this->assertEquals(206, $file51['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file51['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file51['headers']['content-disposition']);
         $this->assertEquals('image/png', $file51['headers']['content-type']);
         $this->assertNotEmpty($file51['body']);
         $this->assertEquals($originalChunk, $file51['body']);
@@ -1216,7 +1232,7 @@ trait StorageBase
         ], $this->getHeaders()));
         $fileData = $file7['body'];
         $this->assertEquals(200, $file7['headers']['status-code']);
-        $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="large-file.mp4"; filename*=UTF-8\'\'large-file.mp4', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
         $this->assertNotEmpty($fileData);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
@@ -1266,6 +1282,45 @@ trait StorageBase
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
     }
 
+    public function testFilePreviewOnePixelSideWithGravity(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+
+        // kitten-2.jpg is landscape, so a 1px width derives a height below one pixel.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-2.jpg'), 'image/jpeg', 'kitten-2.jpg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 1,
+            'height' => 0,
+            'gravity' => 'top-left',
+            'output' => 'png',
+        ]);
+
+        $this->assertSame(200, $preview['headers']['status-code']);
+        $this->assertSame('image/png', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame(1, $image->getImageWidth());
+        $this->assertSame(1, $image->getImageHeight());
+    }
+
     public function testFileViewSvgIsNotExecutable(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -1309,6 +1364,136 @@ trait StorageBase
         $this->assertStringStartsWith('attachment;', $view['headers']['content-disposition']);
         $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy']);
         $this->assertEquals('nosniff', $view['headers']['x-content-type-options']);
+    }
+
+    public function testFileViewContentDispositionFilename(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'View Filename',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $name = 'café;"name.svg';
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'quoted.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => $name,
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame($name, $file['body']['name']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $disposition = (string) $view['headers']['content-disposition'];
+        $this->assertStringStartsWith('attachment;', $disposition);
+        $this->assertStringContainsString('filename="caf_name.svg"', $disposition);
+        $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($name), $disposition);
+    }
+
+    public function testFileDownloadContentDisposition(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'Download Filename',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/page.html'), 'text/html', 'page.html'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $name = 'café "report"\\;.html';
+        $renamed = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => $name,
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame($name, $renamed['body']['name']);
+
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('attachment; filename="caf_ report.html"; filename*=UTF-8\'\'' . \rawurlencode($name), $download['headers']['content-disposition']);
+        $this->assertSame('nosniff', $download['headers']['x-content-type-options']);
+        $this->assertSame("sandbox; script-src 'none';", $download['headers']['content-security-policy']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (["page\n.html", "page\r\n.html", "page\0.html"] as $invalid) {
+            $rejected = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'name' => $invalid,
+            ]);
+            $this->assertSame(400, $rejected['headers']['status-code'], \json_encode($invalid));
+        }
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $file['headers']['status-code']);
+        $this->assertSame($name, $file['body']['name']);
     }
 
     public function testFilePreviewCache(): void

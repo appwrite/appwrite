@@ -18,6 +18,7 @@ use Utopia\Query\Schema\IndexType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends IndexCreate
@@ -66,6 +67,7 @@ class Create extends IndexCreate
             ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getMaxUidLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the index.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

@@ -27,6 +27,21 @@ final class FastlyTest extends TestCase
         $this->assertSame('1', $client->headers['fastly-soft-purge'] ?? null);
     }
 
+    public function testPathPurgeRefusesDotSegmentsBeforeSending(): void
+    {
+        $client = new TestClient([]);
+        $cdn = new Fastly('token', 'domain-', 'service-id', false, $client);
+
+        try {
+            $cdn->purgePaths('example.com', ['/../../service/service-id/purge_all']);
+            $this->fail('A path with dot segments must be refused');
+        } catch (\InvalidArgumentException) {
+            // Refused before any request carried the API token
+        }
+
+        $this->assertSame([], $client->calls);
+    }
+
     public function testDomainPurgeTargetsOnlyThatDomainsKey(): void
     {
         $client = new TestClient([new Response(200, body: new Stream('{"status":"ok"}'))]);

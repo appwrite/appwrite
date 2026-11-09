@@ -23,9 +23,11 @@ final class Audit extends Base
         public readonly string $hostname = '',
         public readonly string $sdk = '',
         public readonly string $sdkVersion = '',
+        public readonly string $reason = '',
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -40,9 +42,11 @@ final class Audit extends Base
             'hostname' => $this->hostname,
             'sdk' => $this->sdk,
             'sdkVersion' => $this->sdkVersion,
+            'reason' => $this->reason,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(
@@ -58,6 +62,7 @@ final class Audit extends Base
             hostname: $data['hostname'] ?? '',
             sdk: $data['sdk'] ?? '',
             sdkVersion: $data['sdkVersion'] ?? '',
+            reason: $data['reason'] ?? '',
         );
     }
 
@@ -76,6 +81,7 @@ final class Audit extends Base
             hostname: $context->hostname,
             sdk: $context->sdk,
             sdkVersion: $context->sdkVersion,
+            reason: $context->reason,
         );
     }
 }

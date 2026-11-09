@@ -1,12 +1,22 @@
 import { useState, useMemo } from 'react'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  getApexDomain,
+  getRecordName,
+  getVerificationMethods,
+  isCloud as isCloudEndpoint,
+  isDomainClaimError,
+  type VerificationMethod,
+} from '@/lib/utils/proxy-domains'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
-import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -17,12 +27,18 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
-const DNS_PROVIDERS_LINK =
+export const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
+
+const TAB_LABELS: Record<VerificationMethod, string> = {
+  cname: 'CNAME',
+  nameservers: 'Nameservers',
+  a: 'A',
+  aaaa: 'AAAA',
+}
 
 export type DomainVerificationError = {
   title: string
@@ -44,6 +60,28 @@ export function dnsPendingVerificationError(
   }
 }
 
+/**
+ * Alert for a failed verify call. A failed DNS check or a refused ownership
+ * claim keeps the amber pending style and leads with the API's reason;
+ * anything else is a hard failure.
+ */
+export function domainVerificationError(
+  t: (text: string) => string,
+  error: unknown,
+): DomainVerificationError {
+  const pending = dnsPendingVerificationError(t)
+  if (isDomainClaimError(error)) {
+    const { message } = getAppwriteErrorInfo(error)
+    return message
+      ? { ...pending, message: `${message} ${pending.message}` }
+      : pending
+  }
+  return {
+    title: t('Verification failed'),
+    message: getErrorMessage(error, t('Failed to verify domain')),
+  }
+}
+
 interface VerifyDomainContentProps {
   rule: Models.ProxyRule
   region?: string
@@ -56,37 +94,34 @@ interface VerifyDomainContentProps {
    * - 'api' → use `_APP_DOMAIN_TARGET_CNAME` from console variables (project endpoint host).
    * - 'function' / 'site' → when the active profile has `edgeNetwork` enabled,
    *   use the edge network CNAME (`appwrite.network`) instead of the project
-   *   endpoint host. When edge network is off (self-hosted), use
-   *   `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES`.
+   *   endpoint host. When edge network is off (self-hosted), functions use
+   *   `_APP_DOMAIN_TARGET_CNAME` like API domains and sites use `_APP_DOMAIN_SITES`,
+   *   matching the targets the server verifies against.
    * Defaults to 'api' for backward compatibility.
    */
   resourceType?: 'api' | 'function' | 'site'
-  onChange?: () => void
-  onVerify?: () => void
-  isVerifying?: boolean
-  isChanging?: boolean
   /** Inline verification error (string or structured alert) */
   verificationError?: DomainVerificationError | string | null
 }
 
-type DnsRecord = {
+export type DnsRecord = {
   type: string
   name: string
   value: string
   ttl: number | null
+  /** MX preference, shown when the table has a Priority column. */
+  priority?: number
   badge?: string
 }
 
-function DnsRecordsTable({
+export function DnsRecordsTable({
   records,
-  onCopy,
-  copiedField,
   showTtl,
+  showPriority = false,
 }: {
   records: DnsRecord[]
-  onCopy: (text: string, field: string) => void
-  copiedField: string | null
   showTtl: boolean
+  showPriority?: boolean
 }) {
   const t = useT()
   return (
@@ -102,12 +137,16 @@ function DnsRecordsTable({
           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
             {t('Value')}
           </TableHead>
+          {showPriority && (
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
+              {t('Priority')}
+            </TableHead>
+          )}
           {showTtl && (
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
               TTL
             </TableHead>
           )}
-          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -127,40 +166,98 @@ function DnsRecordsTable({
               </span>
             </TableCell>
             <TableCell
-              className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]"
-              title={r.name || '-'}
+              className="px-4 py-3 font-mono text-[12px]"
+              title={r.name || undefined}
             >
-              {r.name || '-'}
+              {r.name ? (
+                <CopyableId
+                  id={r.name}
+                  variant="inline"
+                  size="md"
+                  maxWidth={180}
+                  showCopyOnHover={false}
+                  className="-my-1.5 -ms-2.5"
+                />
+              ) : (
+                '-'
+              )}
             </TableCell>
-            <TableCell
-              className="px-4 py-3 font-mono text-[12px] truncate max-w-[200px]"
-              title={r.value}
-            >
-              {r.value}
+            <TableCell className="px-4 py-3" title={r.value}>
+              <CopyableId
+                id={r.value}
+                variant="inline"
+                size="md"
+                maxWidth={200}
+                showCopyOnHover={false}
+                className="-my-1.5 -ms-2.5"
+              />
             </TableCell>
+            {showPriority && (
+              <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
+                {r.priority ?? '-'}
+              </TableCell>
+            )}
             {showTtl && (
               <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
                 {r.ttl ?? '-'}
               </TableCell>
             )}
-            <TableCell className="px-4 py-3 text-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => onCopy(r.value, `${r.type}-${i}`)}
-              >
-                {copiedField === `${r.type}-${i}` ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
+  )
+}
+
+/** Amber "not verified yet" or red failure alert above the DNS records. */
+export function DomainVerificationAlert({
+  error,
+}: {
+  error?: DomainVerificationError | string | null
+}) {
+  const t = useT()
+  const structuredError = error && typeof error !== 'string' ? error : null
+  const plainError = typeof error === 'string' ? error : null
+  const errorPending = structuredError?.pending ?? false
+  const errorTitle =
+    structuredError?.title ?? (plainError ? t('Verification failed') : null)
+  const errorMessage = structuredError?.message ?? plainError
+
+  if (!errorMessage || !errorTitle) return null
+
+  return (
+    <Alert
+      variant="default"
+      className={
+        errorPending
+          ? 'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400'
+          : 'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400'
+      }
+    >
+      {errorPending ? (
+        <Info className="h-4 w-4" />
+      ) : (
+        <AlertCircle className="h-4 w-4" />
+      )}
+      <AlertTitle
+        className={
+          errorPending
+            ? 'text-[13px] font-medium text-amber-700 dark:text-amber-400'
+            : 'text-[13px] font-medium text-red-600 dark:text-red-400'
+        }
+      >
+        {errorTitle}
+      </AlertTitle>
+      <AlertDescription
+        className={
+          errorPending
+            ? 'text-[13px] text-amber-700/90 dark:text-amber-400/90'
+            : 'text-[13px] text-red-600 dark:text-red-400'
+        }
+      >
+        {errorMessage}
+      </AlertDescription>
+    </Alert>
   )
 }
 
@@ -170,14 +267,9 @@ export function VerifyDomainContent({
   compact,
   noCard,
   resourceType = 'api',
-  onChange,
-  onVerify,
-  isVerifying,
-  isChanging,
   verificationError,
 }: VerifyDomainContentProps) {
   const t = useT()
-  const [copiedField, setCopiedField] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
   const {
     cname: rawCname,
@@ -185,19 +277,12 @@ export function VerifyDomainContent({
     aaaa,
     caa,
     nameservers,
-    functionsDomain,
     sitesDomain,
     isLoading,
     error,
   } = useConsoleVariables(region)
 
-  const isCloud = useMemo(() => {
-    try {
-      return getBaseEndpoint().includes('cloud.appwrite.io')
-    } catch {
-      return false
-    }
-  }, [])
+  const isCloud = useMemo(() => isCloudEndpoint(), [])
 
   const { features } = useConsoleProfile()
   const edgeNetworkEnabled = features.edgeNetwork
@@ -207,46 +292,36 @@ export function VerifyDomainContent({
   // (`appwrite.network`) - not the project endpoint host returned by
   // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
   // For region-pinned routing users can use `<region>.appwrite.run`.
-  // Self-hosted uses `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES` instead.
+  // Self-hosted verifies function domains against `_APP_DOMAIN_TARGET_CNAME`
+  // (same as API domains) and site domains against `_APP_DOMAIN_SITES`.
   const cname = useMemo(() => {
     if (resourceType === 'function' || resourceType === 'site') {
       if (edgeNetworkEnabled) {
         return 'appwrite.network'
       }
-      const serviceDomain =
-        resourceType === 'function' ? functionsDomain : sitesDomain
-      return serviceDomain || rawCname
+      if (resourceType === 'site') {
+        return sitesDomain || rawCname
+      }
     }
     return rawCname
-  }, [
-    edgeNetworkEnabled,
-    resourceType,
-    rawCname,
-    functionsDomain,
-    sitesDomain,
-  ])
+  }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    toast.success(t('Copied'))
-    setTimeout(() => setCopiedField(null), 2000)
-  }
-
-  const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
-  const hasA = !isCloud && !!a
-  const hasAaaa = !isCloud && !!aaaa
-  const hasCaa = !!caa
+  // Older servers send `0 issue ""` for an unset CAA target, a record that
+  // would block every CA.
+  const hasCaa = !!caa && caa !== '0 issue ""'
 
-  const tabOptions = [
-    ...(hasCname ? [{ id: 'cname' as const, label: 'CNAME' }] : []),
-    ...(hasNameservers
-      ? [{ id: 'nameservers' as const, label: 'Nameservers' }]
-      : []),
-    ...(hasA ? [{ id: 'a' as const, label: 'A' }] : []),
-    ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
-  ]
+  // On the edge network the CNAME targets appwrite.network, while A and AAAA
+  // name the region's address, so only the CNAME and nameservers are offered.
+  const edge = edgeNetworkEnabled && resourceType !== 'api'
+  const tabOptions = getVerificationMethods({
+    domain: rule.domain,
+    cloud: isCloud,
+    cname,
+    a: edge ? undefined : a,
+    aaaa: edge ? undefined : aaaa,
+    nameservers,
+  }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)
@@ -324,16 +399,11 @@ export function VerifyDomainContent({
     </Alert>
   )
 
-  const getCnameRecordName = (domain: string): string => {
-    const parts = domain.split('.')
-    return parts.length > 2 ? parts[0] : '@'
-  }
-
   const getCnameRecords = (): DnsRecord[] => {
     const rows: DnsRecord[] = [
       {
         type: 'CNAME',
-        name: getCnameRecordName(rule.domain),
+        name: getRecordName(rule.domain),
         value: cname!,
         ttl: 3600,
       },
@@ -383,8 +453,6 @@ export function VerifyDomainContent({
               <div className="space-y-3">
                 <DnsRecordsTable
                   records={getCnameRecords()}
-                  onCopy={handleCopy}
-                  copiedField={copiedField}
                   showTtl={true}
                 />
                 {isApex && apexCnameNote}
@@ -393,28 +461,32 @@ export function VerifyDomainContent({
             {tabOptions[0].id === 'nameservers' && (
               <DnsRecordsTable
                 records={getNameserverRecords()}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={false}
               />
             )}
             {tabOptions[0].id === 'a' && (
               <DnsRecordsTable
                 records={[
-                  { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                  {
+                    type: 'A',
+                    name: getRecordName(rule.domain),
+                    value: a!,
+                    ttl: 3600,
+                  },
                 ]}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={true}
               />
             )}
             {tabOptions[0].id === 'aaaa' && (
               <DnsRecordsTable
                 records={[
-                  { type: 'AAAA', name: rule.domain, value: aaaa!, ttl: 3600 },
+                  {
+                    type: 'AAAA',
+                    name: getRecordName(rule.domain),
+                    value: aaaa!,
+                    ttl: 3600,
+                  },
                 ]}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={true}
               />
             )}
@@ -444,8 +516,6 @@ export function VerifyDomainContent({
                     <div className="space-y-3">
                       <DnsRecordsTable
                         records={getCnameRecords()}
-                        onCopy={handleCopy}
-                        copiedField={copiedField}
                         showTtl={true}
                       />
                       {isApex && apexCnameNote}
@@ -454,18 +524,19 @@ export function VerifyDomainContent({
                   {tab.id === 'nameservers' && (
                     <DnsRecordsTable
                       records={getNameserverRecords()}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={false}
                     />
                   )}
                   {tab.id === 'a' && (
                     <DnsRecordsTable
                       records={[
-                        { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                        {
+                          type: 'A',
+                          name: getRecordName(rule.domain),
+                          value: a!,
+                          ttl: 3600,
+                        },
                       ]}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={true}
                     />
                   )}
@@ -474,13 +545,11 @@ export function VerifyDomainContent({
                       records={[
                         {
                           type: 'AAAA',
-                          name: rule.domain,
+                          name: getRecordName(rule.domain),
                           value: aaaa!,
                           ttl: 3600,
                         },
                       ]}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={true}
                     />
                   )}
@@ -504,59 +573,14 @@ export function VerifyDomainContent({
     </>
   )
 
-  const structuredError =
-    verificationError && typeof verificationError !== 'string'
-      ? verificationError
-      : null
-  const plainError =
-    typeof verificationError === 'string' ? verificationError : null
-  const errorPending = structuredError?.pending ?? false
-  const errorTitle =
-    structuredError?.title ??
-    (plainError ? t('Verification failed') : null)
-  const errorMessage = structuredError?.message ?? plainError
-
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
-      {errorMessage && errorTitle && (
-        <Alert
-          variant="default"
-          className={
-            errorPending
-              ? 'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400'
-              : 'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400'
-          }
-        >
-          {errorPending ? (
-            <Info className="h-4 w-4" />
-          ) : (
-            <AlertCircle className="h-4 w-4" />
-          )}
-          <AlertTitle
-            className={
-              errorPending
-                ? 'text-[13px] font-medium text-amber-700 dark:text-amber-400'
-                : 'text-[13px] font-medium text-red-600 dark:text-red-400'
-            }
-          >
-            {errorTitle}
-          </AlertTitle>
-          <AlertDescription
-            className={
-              errorPending
-                ? 'text-[13px] text-amber-700/90 dark:text-amber-400/90'
-                : 'text-[13px] text-red-600 dark:text-red-400'
-            }
-          >
-            {errorMessage}
-          </AlertDescription>
-        </Alert>
-      )}
+      <DomainVerificationAlert error={verificationError} />
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">
             {t(
-              'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.',
+              "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.",
             )}
           </AlertDescription>
         </Alert>
@@ -565,27 +589,6 @@ export function VerifyDomainContent({
         <div className="space-y-4">{innerContent}</div>
       ) : (
         <div className={cardClassName}>{innerContent}</div>
-      )}
-      {onVerify && (
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          {onChange && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onChange}
-              disabled={isVerifying || isChanging}
-            >
-              {t('Change')}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            onClick={onVerify}
-            disabled={isVerifying || isChanging}
-          >
-            {t('Verify')}
-          </Button>
-        </div>
       )}
     </div>
   )

@@ -94,6 +94,56 @@ final class AccountTest extends Scope
         return $session['body']['data']['accountCreateMagicURLToken'];
     }
 
+    public function testCreateEmailTokenKeepsCallerIdentity(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = 'recipient' . \uniqid() . '@test.com';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $recipient = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Recipient',
+        ]);
+        $this->assertSame(201, $recipient['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+            'query' => 'mutation issueThenUpdate($userId: String!, $email: String!) {
+                accountCreateEmailToken(userId: $userId, email: $email) {
+                    userId
+                }
+                accountUpdateName(name: "Renamed") {
+                    _id
+                }
+            }',
+            'variables' => [
+                'userId' => Id::unique(),
+                'email' => $email,
+            ],
+        ]);
+
+        $this->assertSame($recipient['body']['$id'], $response['body']['data']['accountCreateEmailToken']['userId']);
+        $this->assertNull($response['body']['data']['accountUpdateName']);
+        $this->assertArrayHasKey('errors', $response['body']);
+        $this->assertSame(['accountUpdateName'], $response['body']['errors'][0]['path']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertSame('Recipient', $account['body']['name']);
+    }
+
     public function testCreateEmailVerification(): array
     {
         $projectId = $this->getProject()['$id'];

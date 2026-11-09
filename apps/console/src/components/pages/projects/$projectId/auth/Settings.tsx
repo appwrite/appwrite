@@ -34,6 +34,7 @@ import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MockPhoneNumbersCard, useAuthSecuritySnapshot } from './Security'
 import { EnablePasskeys } from './EnablePasskeys'
+import { ForceSignOutCard } from './_components/ForceSignOutCard'
 
 interface AuthSettingsProps {
   projectId: string
@@ -298,6 +299,8 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         projectId={projectId}
         currentNumbers={mockNumbers}
       />
+
+      <ForceSignOutCard projectId={projectId} />
 
       <EnablePasskeys
         projectId={projectId}

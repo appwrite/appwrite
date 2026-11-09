@@ -266,7 +266,6 @@ function isMinimalDebugMenuBadge(
 const DEBUG_MENU_THEME_BADGES: Record<string, string> = {
   light: 'Light',
   dark: 'Dark',
-  system: 'System',
   crazy: 'Crazy',
   stealth: 'Stealth',
   premium: 'Premium',
@@ -1251,7 +1250,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const themeSource: Array<{ label: string; themeValue: string }> = [
       { label: '☀️ Light', themeValue: 'light' },
       { label: '🌙 Dark', themeValue: 'dark' },
-      { label: '💻 System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
       { label: '✨ Premium', themeValue: 'premium' },
@@ -1619,7 +1617,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           statusAlertMenuItem,
           {
             label: 'Theme',
-            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'system'],
+            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'dark'],
             icon: <Palette className="h-3 w-3" />,
             submenu: themeOptions,
           },
@@ -1757,6 +1755,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Usage alerts',
+                'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
+                'alerts',
+                profileId,
+                features.alerts,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
+                'Review',
+                'Show the Review product (AI code review of GitHub pull requests) in projects where the server has reviews enabled.',
+                'reviews',
+                profileId,
+                features.reviews,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Analytics humans/bots filter',
                 'Clicking Humans or Bots in analytics filters the page (via an empty vs non-empty bot category).',
                 'analyticsTrafficFilter',
@@ -1770,22 +1784,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'appwritePush',
                 profileId,
                 features.appwritePush,
-                { category: 'Products' },
-              ),
-              createProfileFeatureFlagItem(
-                'Function email trigger',
-                'Show the Email card in function Executions settings to enable inbound email (SMTP) triggers.',
-                'functionEmail',
-                profileId,
-                features.functionEmail,
-                { category: 'Products' },
-              ),
-              createProfileFeatureFlagItem(
-                'Function email domains',
-                'Show Email domains on the function Domains tab to add custom inbound email (SMTP) domains.',
-                'functionEmailDomains',
-                profileId,
-                features.functionEmailDomains,
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
@@ -1890,21 +1888,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
                 undefined,
                 'Usage & analytics',
-              ),
-              createDebugFeatureFlagItem(
-                'Project environments',
-                'Show the mock environment switcher (Production, Staging, Development, Preview) in the project sidebar.',
-                'showProjectEnvironments',
-                overrides.showProjectEnvironments,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showProjectEnvironments: checked,
-                  }))
-                  setDebugOverride('showProjectEnvironments', checked)
-                },
-                undefined,
-                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Show native app bar',
@@ -2139,10 +2122,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     profileId,
     features.videos,
     features.analytics,
+    features.alerts,
+    features.reviews,
     features.analyticsTrafficFilter,
     features.appwritePush,
-    features.functionEmail,
-    features.functionEmailDomains,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,

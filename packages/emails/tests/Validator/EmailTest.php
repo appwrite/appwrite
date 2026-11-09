@@ -46,6 +46,22 @@ class EmailTest extends TestCase
         $this->assertSame(true, $validator->isValid('user!@example.com'));
     }
 
+    public function test_value_the_parser_would_trim(): void
+    {
+        $validator = new Email();
+
+        // Each of these parses as dev@example.com, so accepting it would store a lookalike of that address.
+        $this->assertSame(false, $validator->isValid('dev@example.com '));
+        $this->assertSame(false, $validator->isValid('dev@example.com  '));
+        $this->assertSame(false, $validator->isValid(' dev@example.com'));
+        $this->assertSame(false, $validator->isValid("\tdev@example.com"));
+        $this->assertSame(false, $validator->isValid("dev@example.com\r"));
+        $this->assertSame(false, $validator->isValid("dev@example.com\n"));
+        $this->assertSame(false, $validator->isValid("dev@example.com\0"));
+        $this->assertSame(false, $validator->isValid("dev@exa\x7Fmple.com"));
+        $this->assertSame(true, $validator->isValid('dev@example.com'));
+    }
+
     public function test_non_string_input(): void
     {
         $validator = new Email();

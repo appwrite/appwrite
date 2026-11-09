@@ -142,6 +142,34 @@ trait ErrorMessages
         $this->assertSame(($this->isTablesAPI() ? 'Column' : 'Attribute') . ' "label" is not a number', $commit['body']['message']);
     }
 
+    public function testIndexLengthPastTheFieldSizeNamesBothSizes(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        [$databaseId, $collectionId] = $this->createErrorMessagesCollection('indexLengthPastSize');
+        $headers = $this->getErrorMessagesHeaders();
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $headers, [
+            'key' => 'title',
+            'size' => 64,
+            'required' => false,
+        ]);
+        $this->assertSame(202, $attribute['headers']['status-code'], $attribute['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'title');
+
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $headers, [
+            'key' => 'byTitle',
+            'type' => 'key',
+            $this->getIndexAttributesParam() => ['title'],
+            'lengths' => [65],
+        ]);
+
+        $this->assertSame(400, $index['headers']['status-code'], \json_encode($index['body']) ?: '');
+        $this->assertStringEndsWith('Index length 65 is larger than the size for title: 64', $index['body']['message']);
+    }
+
     public function testBulkCreateOfAnExistingIdNamesTheId(): void
     {
         [$databaseId, $collectionId] = $this->createErrorMessagesCollection('bulkCreateExisting');
@@ -152,6 +180,26 @@ trait ErrorMessages
                 ['$id' => Id::unique(), 'count' => 2],
                 ['$id' => $existingId, 'count' => 3],
             ],
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code'], \json_encode($response['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::ROW_ALREADY_EXISTS : Exception::DOCUMENT_ALREADY_EXISTS, $response['body']['type']);
+        $this->assertStringStartsWith($this->getRecordNoun() . " with the requested ID '{$existingId}' already exists.", $response['body']['message']);
+    }
+
+    public function testBulkCreatePastTheQueryValuesLimitNamesTheExistingId(): void
+    {
+        [$databaseId, $collectionId] = $this->createErrorMessagesCollection('bulkCreateLargeExisting');
+        $existingId = $this->createErrorMessagesRecord($databaseId, $collectionId, ['count' => 1]);
+
+        $records = [];
+        for ($i = 0; $i < APP_DATABASE_QUERY_MAX_VALUES; $i++) {
+            $records[] = ['$id' => Id::unique(), 'count' => $i];
+        }
+        $records[] = ['$id' => $existingId, 'count' => 0];
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getErrorMessagesHeaders(), [
+            $this->getRecordResource() => $records,
         ]);
 
         $this->assertSame(409, $response['headers']['status-code'], \json_encode($response['body']) ?: '');

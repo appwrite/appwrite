@@ -20,6 +20,7 @@ use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -72,6 +73,7 @@ class Update extends Action
             ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '1000000')
             ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when attribute is required.', example: '0')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -80,7 +82,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
@@ -95,7 +97,8 @@ class Update extends Action
             required: $required,
             min: $min,
             max: $max,
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);

@@ -107,7 +107,10 @@ class Http
 
     protected int $compressionMinSize = Http::COMPRESSION_MIN_SIZE_DEFAULT;
 
-    protected mixed $compressionSupported = [];
+    /**
+     * @var array<mixed>
+     */
+    protected array $compressionSupported = [];
 
     private Histogram $requestDuration;
 
@@ -172,8 +175,10 @@ class Http
 
     /**
      * Set supported compression algorithms
+     *
+     * @param  array<mixed>  $compressionSupported
      */
-    public function setCompressionSupported(mixed $compressionSupported): void
+    public function setCompressionSupported(array $compressionSupported): void
     {
         $this->compressionSupported = $compressionSupported;
     }
@@ -745,7 +750,8 @@ class Http
             $paramExists = $existsInRequest || $existsInValues;
 
             $arg = $existsInRequest ? $requestParams[$requestKey] : $param['default'];
-            if (\is_callable($arg) && !\is_string($arg)) {
+            // Only a default registered by the route is resolved; request values are always data.
+            if (!$existsInRequest && \is_callable($arg) && !\is_string($arg)) {
                 $context = $this->adapter->context();
                 $arg = \call_user_func_array($arg, array_map($context->get(...), $param['injections']));
             }

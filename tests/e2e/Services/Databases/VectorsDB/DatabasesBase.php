@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Databases\VectorsDB;
 
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
-use Utopia\Database\Database;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -1117,4 +1116,196 @@ trait DatabasesBase
         }
     }
 
+    public function testUpdateDatabaseDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Embeddings',
+            'description' => 'Product embeddings',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertSame('Product embeddings', $database['body']['description']);
+
+        $databaseId = $database['body']['$id'];
+
+        $database = $this->client->call(Client::METHOD_PUT, '/vectorsdb/' . $databaseId, $headers, [
+            'name' => 'Embeddings',
+            'description' => 'Search embeddings',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Search embeddings', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_PUT, '/vectorsdb/' . $databaseId, $headers, [
+            'name' => 'Embeddings',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Search embeddings', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId, $headers);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Search embeddings', $database['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $database['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $database['body']['type']);
+    }
+
+    public function testUpdateCollectionDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Described collections',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $collection = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Products',
+            'dimension' => 3,
+            'description' => 'One vector per product',
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertSame('One vector per product', $collection['body']['description']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}", $headers);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertSame('One vector per product', $collection['body']['description']);
+
+        $collection = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}", $headers, [
+            'name' => 'Products',
+            'description' => 'One vector per listing',
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertSame('One vector per listing', $collection['body']['description']);
+
+        $collection = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}", $headers, [
+            'name' => 'Products',
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertSame('One vector per listing', $collection['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $collection = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}", $headers, [
+            'name' => 'Products',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $collection['body']['type']);
+    }
+
+    public function testCreateIndexDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Described indexes',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Products',
+            'dimension' => 3,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $index = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", $headers, [
+            'key' => 'embeddingCosine',
+            'type' => IndexType::HnswCosine->value,
+            'attributes' => ['embeddings'],
+            'description' => 'Nearest products by cosine',
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertSame('Nearest products by cosine', $index['body']['description']);
+
+        $index = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embeddingCosine", $headers);
+
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertSame('Nearest products by cosine', $index['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $index = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", $headers, [
+            'key' => 'embeddingDot',
+            'type' => IndexType::HnswDot->value,
+            'attributes' => ['embeddings'],
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $index['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $index['body']['type']);
+    }
 }

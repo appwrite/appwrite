@@ -95,8 +95,50 @@ class Database extends SQL
                 attributes: $attributes,
                 indexes: $indexes,
             ));
+
+            return;
         } catch (DuplicateException) {
-            // Collection already exists
+            // Created by an earlier setup(); bring it up to date below.
+        }
+
+        $this->addMissing($attributes, $indexes);
+    }
+
+    /**
+     * Bring a collection created by an earlier schema up to date. Attributes
+     * come first, since a new index may cover a new attribute.
+     *
+     * @param list<Attribute> $attributes
+     * @param list<Index> $indexes
+     */
+    private function addMissing(array $attributes, array $indexes): void
+    {
+        $collection = $this->db->getCollection($this->collection);
+
+        $existing = \array_map(static fn (Attribute $attribute): string => $attribute->key, $collection->attributes());
+        foreach ($attributes as $attribute) {
+            if (\in_array($attribute->key, $existing, true)) {
+                continue;
+            }
+
+            try {
+                $this->db->createAttribute($this->collection, $attribute);
+            } catch (DuplicateException) {
+                // A concurrent setup() added it first.
+            }
+        }
+
+        $existing = \array_map(static fn (Index $index): string => $index->key, $collection->indexes());
+        foreach ($indexes as $index) {
+            if (\in_array($index->key, $existing, true)) {
+                continue;
+            }
+
+            try {
+                $this->db->createIndex($this->collection, $index);
+            } catch (DuplicateException) {
+                // A concurrent setup() added it first.
+            }
         }
     }
 

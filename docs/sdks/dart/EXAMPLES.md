@@ -1,57 +1,86 @@
 # Examples
 
-Init your Appwrite client:
+Initialize the client:
 
 ```dart
-Client client = Client();
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/models.dart' as models;
 
-client
-  .setProject('<YOUR_PROJECT_ID>')
-  .setKey('<YOUR_API_KEY>');
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
 ```
 
-Create a new user:
+Create a user:
 
 ```dart
 Users users = Users(client);
 
-User result = await users.create(
+models.User user = await users.create(
   userId: ID.unique(),
-  email: "email@example.com",
-  phone: "+123456789",
-  password: "password",
-  name: "Walter O'Brien"
+  email: 'email@example.com',
+  password: 'password',
+  name: "Walter O'Brien",
 );
 ```
 
-Get user:
+Create a row:
 
 ```dart
-Users users = Users(client);
+TablesDB tablesDB = TablesDB(client);
 
-User user = await users.get(
-  userId: '[USER_ID]',
-);
-```
-
-Upload File:
-
-```dart
-Storage storage = Storage(client);
-
-InputFile input = InputFile.fromPath(
-  path: './path-to-file/image.jpg',
-  filename: 'image.jpg',
-);
-
-File file = await storage.createFile(
-  bucketId: '<YOUR_BUCKET_ID>',
-  fileId: ID.unique(),
-  file: input,
+models.Row row = await tablesDB.createRow(
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: ID.unique(),
+  data: {
+    'title': 'Hello, world',
+    'published': true,
+  },
   permissions: [
     Permission.read(Role.any()),
   ],
 );
 ```
 
-All examples and API features are available at the [official Appwrite docs](https://appwrite.io/docs)
+List rows:
+
+```dart
+models.RowList rows = await tablesDB.listRows(
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.equal('published', true),
+    Query.orderDesc('\$createdAt'),
+    Query.limit(10),
+  ],
+);
+```
+
+Upload a file:
+
+```dart
+Storage storage = Storage(client);
+
+models.File file = await storage.createFile(
+  bucketId: '<BUCKET_ID>',
+  fileId: ID.unique(),
+  file: InputFile.fromPath(path: './path-to-file/image.jpg'),
+  permissions: [
+    Permission.read(Role.any()),
+  ],
+);
+```
+
+Handle errors:
+
+```dart
+try {
+  models.User user = await users.get(userId: '<USER_ID>');
+} on AppwriteException catch (e) {
+  print('${e.code} ${e.type}: ${e.message}');
+}
+```
+
+All examples and API features are available in the [official Appwrite docs](https://appwrite.io/docs).

@@ -37,8 +37,19 @@ export function persistGuestConsoleBannerDismiss(bannerId: string): void {
   writeGuestDismissedBannerIds([...current, bannerId])
 }
 
+/** Device marker for one account (`<bannerId>:<accountId>`). */
+export function getAccountScopedConsoleBannerId(
+  bannerId: string,
+  accountId: string,
+): string {
+  return `${bannerId}:${accountId}`
+}
+
+/** Clears the banner's marker and every account-scoped marker for it. */
 export function clearGuestConsoleBannerDismiss(bannerId: string): void {
   writeGuestDismissedBannerIds(
-    readGuestDismissedBannerIds().filter((id) => id !== bannerId),
+    readGuestDismissedBannerIds().filter(
+      (id) => id !== bannerId && !id.startsWith(`${bannerId}:`),
+    ),
   )
 }

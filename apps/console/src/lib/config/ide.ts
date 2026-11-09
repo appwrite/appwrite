@@ -119,6 +119,13 @@ export const IDE_CONFIGS: IDEConfig[] = [
     supportsAIChat: false,
     mcpDocsUrl: '/docs/tooling/ai/agents/opencode',
   },
+  {
+    id: 'pi',
+    name: 'Pi',
+    iconPath: '/icons/pi.svg',
+    supportsAIChat: false,
+    mcpDocsUrl: '/docs/tooling/ai/agents/pi',
+  },
 ]
 
 /**

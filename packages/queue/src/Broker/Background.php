@@ -294,6 +294,11 @@ class Background implements Synchronous, Asynchronous
         return $this->publisher->getQueueSize($queue, $failedJobs);
     }
 
+    public function getQueueAge(Queue $queue): int
+    {
+        return $this->publisher->getQueueAge($queue);
+    }
+
     public function getFailedCount(Queue $queue): int
     {
         return $this->publisher->getFailedCount($queue);

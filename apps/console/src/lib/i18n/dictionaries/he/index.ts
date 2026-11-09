@@ -10,8 +10,10 @@ import { heMarketingDictionary } from './marketing'
 import { heProductPagesDictionary } from './product-pages'
 import { hePricingDictionary } from './pricing'
 import { heVideosDictionary } from './videos'
+import { heReviewsDictionary } from './reviews'
 import { heAlternativesDictionary } from './alternatives'
 import { heEnterpriseDictionary } from './enterprise'
+import { heSolutionsDictionary } from './solutions'
 import { heCampaignsDictionary } from './campaigns'
 
 /**
@@ -21,6 +23,7 @@ import { heCampaignsDictionary } from './campaigns'
 export const heDictionary: Record<string, string> = {
   ...heCampaignsDictionary,
   ...heEnterpriseDictionary,
+  ...heSolutionsDictionary,
   ...heAlternativesDictionary,
   ...heMarketingDictionary,
   ...heProductPagesDictionary,
@@ -34,4 +37,5 @@ export const heDictionary: Record<string, string> = {
   ...heSitesDictionary,
   ...heDatabasesDictionary,
   ...heVideosDictionary,
+  ...heReviewsDictionary,
 }

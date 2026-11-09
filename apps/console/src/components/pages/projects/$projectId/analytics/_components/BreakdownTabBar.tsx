@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n/translate'
+import { useT, type Translator } from '@/lib/i18n/translate'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
@@ -10,6 +10,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { BreakdownTab } from './BreakdownPanel'
+
+/** A prop tab labelled with the site's own key is never translated. */
+export function breakdownTabLabel(
+  t: Translator,
+  tab: BreakdownTab,
+): string {
+  return tab.propKey === tab.label ? tab.label : t(tab.label)
+}
 
 /** Same look as `TabsTrigger`, for the group tab that opens a menu. */
 const GROUP_TRIGGER_CLASS =
@@ -58,7 +66,7 @@ export function BreakdownTabBar({
         {items.map((item) =>
           item.kind === 'tab' ? (
             <TabsTrigger key={item.tab.id} value={item.tab.id}>
-              {t(item.tab.label)}
+              {breakdownTabLabel(t, item.tab)}
             </TabsTrigger>
           ) : (
             <GroupTab
@@ -98,7 +106,7 @@ function GroupTab({
           className={GROUP_TRIGGER_CLASS}
         >
           {/* Shows the picked parameter once one is active. */}
-          {t(selected?.label ?? label)}
+          {selected ? breakdownTabLabel(t, selected) : t(label)}
           <ChevronDown className="h-3.5 w-3.5 opacity-70" />
         </button>
       </DropdownMenuTrigger>
@@ -109,7 +117,7 @@ function GroupTab({
             onSelect={() => onValueChange(tab.id)}
             className="justify-between text-[13px]"
           >
-            {t(tab.label)}
+            {breakdownTabLabel(t, tab)}
             <Check
               className={cn(
                 'h-3.5 w-3.5',

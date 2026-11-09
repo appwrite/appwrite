@@ -13,12 +13,13 @@ use Utopia\SMTP\Exception\ConnectionException;
  * per-host message. What it adds is whether trying the list again can go any
  * differently: only when every host refused for good, such as a 535 for the
  * credentials or a 554 in place of the greeting. One host that timed out or
- * answered 4xx may well answer next time.
+ * answered 4xx may well answer next time. Its code is the first reply code a
+ * host refused with, or 0 when none replied.
  */
 class NoHostAnswered extends ConnectionException
 {
-    public function __construct(string $message, public readonly bool $permanent)
+    public function __construct(string $message, public readonly bool $permanent, int $code = 0)
     {
-        parent::__construct($message);
+        parent::__construct($message, $code);
     }
 }

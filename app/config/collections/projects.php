@@ -375,9 +375,11 @@ return [
             Attribute::string(key: 'status', size: 16, default: 'pending'),
             Attribute::integer(key: 'operations', required: true, default: 0, signed: false),
             Attribute::datetime(key: 'expiresAt', required: true),
+            Attribute::string(key: 'type', size: 32, default: DATABASE_TYPE_LEGACY),
         ],
         'indexes' => [
             Index::key(key: '_key_expiresAt', attributes: ['expiresAt'], orders: [OrderDirection::Desc]),
+            Index::key(key: '_key_type', attributes: ['type'], orders: [OrderDirection::Asc]),
         ],
     ],
 
@@ -402,6 +404,342 @@ return [
         ],
         'indexes' => [
             Index::key(key: '_key_transaction', attributes: ['transactionInternalId']),
+        ],
+    ],
+
+    'videos' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videos'),
+        'name' => 'Videos',
+        'attributes' => [
+            Attribute::string(key: 'bucketId'),
+            Attribute::string(key: 'bucketInternalId'),
+            Attribute::string(key: 'fileId'),
+            Attribute::string(key: 'fileInternalId'),
+            Attribute::string(key: 'name', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false),
+            Attribute::boolean(key: 'captionsExtracted', default: false),
+            // Timeline job state: pending, started, ready, skipped (no video
+            // track) or error, with the user-facing reason on error.
+            Attribute::string(key: 'timelineStatus'),
+            Attribute::string(key: 'timelineError', size: 2048),
+            Attribute::string(key: 'format'),
+            Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::string(key: 'aspectRatio'),
+            Attribute::string(key: 'videoCodec'),
+            Attribute::string(key: 'videoFormat'),
+            Attribute::string(key: 'videoFormatProfile'),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::string(key: 'videoFrameRateMode'),
+            Attribute::string(key: 'videoFrameRate'),
+            Attribute::string(key: 'audioCodec'),
+            Attribute::string(key: 'audioFormat'),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::string(key: 'audioSampleRate'),
+            Attribute::string(key: 'search', size: 16384),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_bucket_file', attributes: ['bucketId', 'fileId']),
+            Index::fulltext(key: '_key_search', attributes: ['search']),
+        ],
+    ],
+
+    'videosTimelines' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosTimelines'),
+        'name' => 'Videos Timelines',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'name'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_video_name', attributes: ['videoId', 'name']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+        ],
+    ],
+
+    'videosRenditions' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosRenditions'),
+        'name' => 'Videos Renditions',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'profileId'),
+            Attribute::string(key: 'profileInternalId'),
+            Attribute::string(key: 'name'),
+            Attribute::datetime(key: 'startedAt'),
+            Attribute::datetime(key: 'endedAt'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::string(key: 'targetDuration'),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            // Holds the parsed HLS stream list or the full DASH MPD, so this needs
+            // room well beyond the 4096 the original schema allowed.
+            Attribute::string(key: 'metadata', size: 65535, filters: [Filter::Json]),
+            Attribute::string(key: 'status'),
+            // User-facing reason when status is error or aborted; internal
+            // detail stays on the worker span.
+            Attribute::string(key: 'error', size: 2048),
+            Attribute::string(key: 'progress'),
+            Attribute::string(key: 'output', required: true),
+            // Snapshot of the profile codec at create time so playback does
+            // not follow a later profile edit.
+            Attribute::string(key: 'codec'),
+            // Bytes of this rendition on the videos device. StatsResources
+            // sums it into the videos.storage gauge.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_video_output_profile', attributes: ['videoId', 'output', 'profileId']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+            Index::key(key: '_key_status_updatedAt', attributes: ['status', '$updatedAt']),
+        ],
+    ],
+
+    'videosRenditionsSegments' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosRenditionsSegments'),
+        'name' => 'Videos Renditions Segments',
+        'attributes' => [
+            Attribute::string(key: 'renditionId', required: true),
+            Attribute::string(key: 'renditionInternalId', required: true),
+            Attribute::string(key: 'fileName', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::string(key: 'duration'),
+            Attribute::integer(key: 'streamId', signed: false, default: 0),
+            Attribute::integer(key: 'isInit', signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_renditionId', attributes: ['renditionId']),
+            Index::key(key: '_key_renditionInternalId_stream', attributes: ['renditionInternalId', 'streamId']),
+        ],
+    ],
+
+    'videosProfiles' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosProfiles'),
+        'name' => 'Videos Profiles',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::string(key: 'codec'),
+            Attribute::string(key: 'search', size: 16384),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_profile', attributes: ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec']),
+            Index::fulltext(key: '_key_search', attributes: ['search']),
+        ],
+    ],
+
+    'videosCaptions' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosCaptions'),
+        'name' => 'Videos Captions',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'bucketId'),
+            Attribute::string(key: 'bucketInternalId'),
+            Attribute::string(key: 'fileId'),
+            Attribute::string(key: 'fileInternalId'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::string(key: 'name', size: 128),
+            Attribute::string(key: 'code'),
+            Attribute::boolean(key: 'default', default: false),
+            Attribute::string(key: 'targetDuration'),
+            Attribute::string(key: 'status'),
+            Attribute::string(key: 'error', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_videoId', attributes: ['videoId']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+            Index::key(key: '_key_status_updatedAt', attributes: ['status', '$updatedAt']),
+        ],
+    ],
+
+    'videosCaptionsSegments' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosCaptionsSegments'),
+        'name' => 'Videos Captions Segments',
+        'attributes' => [
+            Attribute::string(key: 'captionId', required: true),
+            Attribute::string(key: 'captionInternalId', required: true),
+            Attribute::string(key: 'fileName', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::string(key: 'duration'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_captionId', attributes: ['captionId']),
+            Index::key(key: '_key_captionInternalId', attributes: ['captionInternalId']),
+        ],
+    ],
+
+    // Code reviews of a repository's pull requests. Appwrite queues them; the review service
+    // (appwrite/hansi) runs them and reports progress and results back.
+    'reviews' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviews'),
+        'name' => 'Reviews',
+        'attributes' => [
+            // The `repositories` row (platform database) that turned reviews on.
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerRepositoryId', required: true),
+            Attribute::string(key: 'providerRepositoryOwner'),
+            Attribute::string(key: 'providerRepositoryName'),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            // The head the review was queued for, replaced by the head it actually reviews. Empty
+            // for a mention until it starts: it reviews whatever the head is then.
+            Attribute::string(key: 'providerCommitHash', size: 64),
+            Attribute::string(key: 'providerBaseCommitHash', size: 64),
+            // opened, synchronize, retry or mention.
+            Attribute::string(key: 'trigger', size: 32, required: true),
+            Attribute::string(key: 'providerCommentId'),
+            // queued, processing, completed, skipped, failed or superseded (a newer review of the
+            // pull request was queued before this one started).
+            Attribute::string(key: 'status', size: 16, required: true),
+            Attribute::string(key: 'verdict', size: 32),
+            Attribute::string(key: 'tier', size: 8),
+            Attribute::string(key: 'tierReason', size: 2048),
+            Attribute::text(key: 'summary', size: 65535),
+            // What each changed file does, as [{path, change}].
+            Attribute::string(key: 'walkthrough', size: 65535, default: [], filters: [Filter::Json]),
+            // Why a review was skipped or failed, shown to the project's users.
+            Attribute::string(key: 'reason', size: 2048),
+            Attribute::string(key: 'providerReviewId'),
+            Attribute::datetime(key: 'startedAt'),
+            Attribute::datetime(key: 'completedAt'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repository_pullRequest_status', attributes: ['repositoryInternalId', 'providerPullRequestId', 'status']),
+            // Public filters go by the repository's public id, not its internal one.
+            Index::key(key: '_key_repositoryId_pullRequest', attributes: ['repositoryId', 'providerPullRequestId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+        ],
+    ],
+
+    'reviewFindings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewFindings'),
+        'name' => 'Review Findings',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::integer(key: 'startLine', signed: false, required: true),
+            Attribute::integer(key: 'endLine', signed: false, required: true),
+            Attribute::string(key: 'severity', size: 16, required: true),
+            Attribute::string(key: 'category', size: 64, required: true),
+            Attribute::string(key: 'title', size: 1024, required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // A replacement for the lines, offered as a GitHub suggestion.
+            Attribute::text(key: 'suggestion', size: 65535),
+            // posted (open on the pull request), dropped (never posted), resolved (fixed by a later
+            // commit) or dismissed (settled in its thread or by a maintainer).
+            Attribute::string(key: 'status', size: 16, default: 'posted'),
+            // Why it was dropped, resolved or dismissed.
+            Attribute::string(key: 'dropReason', size: 2048),
+            // The comment the finding was posted as, the root of its thread. Empty when it was
+            // listed in the review body instead.
+            Attribute::string(key: 'providerCommentId'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // Team preferences the reviewer was asked to remember in a conversation, per repository.
+    'reviewLearnings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewLearnings'),
+        'name' => 'Review Learnings',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // GitHub login of who asked, and the comment they asked in.
+            Attribute::string(key: 'author', required: true),
+            Attribute::string(key: 'sourceUrl', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId', attributes: ['repositoryInternalId']),
+        ],
+    ],
+
+    // The agent's trace, step by step, for following a review live.
+    'reviewEvents' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewEvents'),
+        'name' => 'Review Events',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'type', size: 64, required: true),
+            Attribute::datetime(key: 'time', required: true),
+            Attribute::string(key: 'data', size: 65535, default: new stdClass(), filters: [Filter::Json]),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // Comments the review service was asked to answer, one row per GitHub comment: the row's
+    // $id is chat-<commentId>, so a redelivered webhook cannot queue a second answer.
+    'reviewChats' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewChats'),
+        'name' => 'Review Chats',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            Attribute::string(key: 'providerCommentId', required: true),
+            // issue (the pull request conversation) or review (a review thread).
+            Attribute::string(key: 'kind', size: 16, required: true),
+            Attribute::string(key: 'author', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId_pullRequest', attributes: ['repositoryInternalId', 'providerPullRequestId']),
+        ],
+    ],
+
+    // One row per model call, for metering what a review or a chat answer cost.
+    'reviewUsage' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewUsage'),
+        'name' => 'Review Usage',
+        'attributes' => [
+            // reviews or reviewChats.
+            Attribute::string(key: 'resourceType', size: 32, required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
+            // review, verify, subagent, chat, ...
+            Attribute::string(key: 'role', size: 32, required: true),
+            Attribute::string(key: 'provider', size: 64, required: true),
+            Attribute::string(key: 'model', size: 128, required: true),
+            Attribute::integer(key: 'inputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'outputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'cachedInputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'reasoningTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            // Milliseconds.
+            Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
         ],
     ],
 ];

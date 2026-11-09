@@ -9,11 +9,11 @@ import {
   analyticsStatsQueryOptions,
   getDefaultAnalyticsRange,
   getPreviousAnalyticsRange,
+  resolveAnalyticsChartInterval,
   toAnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { getConsoleAccountFromCache } from '@/lib/react-query/hooks/auth'
 import { resolveAnalyticsChartSelection } from '@/lib/analytics/chart-prefs'
-import { isUsageChartIntervalValidForRange } from '@/lib/usage/chart-interval'
 import type { UserPrefs } from '@/lib/user-prefs-keys'
 
 /**
@@ -51,11 +51,10 @@ export const Route = createFileRoute(
     }
     const defaultRange =
       toAnalyticsRange(selection.dateRange) ?? getDefaultAnalyticsRange()
-    const interval =
-      selection.interval === '1h' &&
-      !isUsageChartIntervalValidForRange('1h', selection.dateRange)
-        ? '1d'
-        : selection.interval
+    const interval = resolveAnalyticsChartInterval(
+      selection.interval,
+      selection.dateRange,
+    )
     const previousRange = getPreviousAnalyticsRange(defaultRange)
 
     // Property is required for the first paint; the metric payloads are

@@ -15,6 +15,7 @@ use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends EmailUpdate
 {
@@ -61,6 +62,7 @@ class Update extends EmailUpdate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Email()), 'Default value for column when not provided. Cannot be set when column is required.', example: 'email@example.com')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

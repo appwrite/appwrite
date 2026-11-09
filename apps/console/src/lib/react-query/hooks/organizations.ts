@@ -22,12 +22,16 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  type BudgetUpdate,
+  updateBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
 import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 import {
   isStartPlanEligibleCountry,
   START_PLAN_ID,
 } from '@/lib/pricing/start-plan'
-import { confirmPayment } from '@/lib/utils/stripe'
+import { confirmPayment, confirmSetup } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
@@ -46,6 +50,8 @@ import {
 
 const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
+// One identity while the list is pending or failed: callers pass it to effects.
+const EMPTY_PROJECTS: Models.Project[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolveOrganizationCanonicalPlan } from '@/lib/utils/plan-filter'
 import {
@@ -99,6 +105,7 @@ export function isBudgetLimitReached(
 export {
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
 } from '@/lib/billing/billing-limits'
 
 /**
@@ -259,6 +266,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
     functionsIntervalMinimum: 0,
+    functionsAllowCron: true,
     databasesAllowEncrypt: true,
     group: 'starter' as Models.BillingPlan['group'],
   }
@@ -529,40 +537,81 @@ export function useOrganizationBillingInvoicePresence(
   })
 }
 
-/**
- * Query function to fetch billing aggregation for an organization
- *
- * @param organizationId - The organization ID to fetch aggregation for
- * @param aggregationId - The billing aggregation ID from the organization
- * @param limit - Limit for project pagination (default: 10)
- * @param offset - Offset for project pagination (default: 0)
- * @returns Billing aggregation data or null if not found (404 handled gracefully)
- */
-export async function fetchOrganizationBillingAggregation(
-  organizationId: string,
-  aggregationId?: string | null,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
+/** Recorded charges for the current cycle; a new organization may have no draft yet. */
+export function organizationInvoiceQueryOptions(
+  organizationId: string | null | undefined,
+  invoiceId: string | null | undefined,
 ) {
-  if (!organizationId || !aggregationId) {
-    return null
-  }
+  return queryOptions({
+    queryKey: ['invoices', 'organization', organizationId, 'detail', invoiceId],
+    queryFn: async () => {
+      try {
+        return await sdk.forConsole.organizations.getInvoice({
+          organizationId: organizationId!,
+          invoiceId: invoiceId!,
+        })
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 404) {
+          return null
+        }
+        throw error
+      }
+    },
+    enabled: !!organizationId && !!invoiceId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  })
+}
 
-  try {
-    const response = await sdk.forConsole.organizations.getAggregation({
+/** Aggregation supplies usage and project names, never invoice prices. */
+export function organizationBillingAggregationQueryOptions(
+  organizationId: string | null | undefined,
+  aggregationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'billing-aggregation',
+      'organization',
       organizationId,
       aggregationId,
-      limit,
-      offset,
-    })
-    return response
-  } catch (error: unknown) {
-    // Handle 404 gracefully - new organizations might not have aggregation yet
-    if (error?.code === 404 || error?.response?.code === 404) {
-      return null
-    }
-    throw error
-  }
+    ],
+    queryFn: async () => {
+      if (!organizationId || !aggregationId) return null
+      try {
+        const first = await sdk.forConsole.organizations.getAggregation({
+          organizationId,
+          aggregationId,
+          limit: 10,
+          offset: 0,
+        })
+        const breakdown = [...first.breakdown]
+        let page = first
+        while (page.breakdown.length === 10) {
+          page = await sdk.forConsole.organizations.getAggregation({
+            organizationId,
+            aggregationId,
+            limit: 10,
+            offset: breakdown.length,
+          })
+          breakdown.push(...page.breakdown)
+        }
+        return { ...first, breakdown }
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 404)
+          return null
+        throw error
+      }
+    },
+    enabled: !!organizationId && !!aggregationId,
+    // Slow usage context must never keep the fullscreen initial loader up.
+    meta: { skipInitialLoader: true },
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  })
 }
 
 /**
@@ -972,12 +1021,16 @@ export async function deleteOrganization(organizationId: string) {
  * @param params - Budget update parameters
  * @returns Updated organization
  */
-export async function updateOrganizationBudget(params: {
-  organizationId: string
-  budget?: number
-  alerts?: number[]
-}) {
-  return await sdk.forConsole.organizations.updateBudget(params)
+export async function updateOrganizationBudget(params: BudgetUpdate) {
+  const { notify, ...budget } = params
+  // Only a change of recipients sends `notify`: editions without them reject it.
+  if (notify !== undefined) {
+    return await updateBudgetRecipients(sdk.forConsole.client, {
+      ...budget,
+      notify,
+    })
+  }
+  return await sdk.forConsole.organizations.updateBudget(budget)
 }
 
 /**
@@ -1344,6 +1397,28 @@ export async function setPaymentMethodProvider(params: {
     name: params.name,
     state: params.state,
   })
+}
+
+/**
+ * Mutation function to set up a mandate on a saved Indian card
+ *
+ * Starts a mandate setup for the card, runs the bank's OTP, then saves the
+ * card again so the backend records the new mandate.
+ */
+export async function setupPaymentMethodMandate(params: {
+  paymentMethodId: string
+  providerMethodId: string
+  name: string
+  state?: string
+}) {
+  const method = await sdk.forConsole.account.updatePaymentMethodMandateOptions(
+    { paymentMethodId: params.paymentMethodId },
+  )
+  await confirmSetup({
+    clientSecret: method.clientSecret,
+    paymentMethod: params.providerMethodId,
+  })
+  return await setPaymentMethodProvider(params)
 }
 
 /**
@@ -2038,49 +2113,6 @@ export function organizationInvoicesQueryOptions(
 }
 
 /**
- * Query options for fetching billing aggregation for an organization
- *
- * This can be used in both route loaders and hooks to ensure consistent query configuration.
- */
-export function organizationBillingAggregationQueryOptions(
-  organizationId: string | null | undefined,
-  aggregationId?: string | null | undefined,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
-) {
-  return queryOptions({
-    queryKey: [
-      'billing-aggregation',
-      'organization',
-      organizationId,
-      aggregationId ?? null, // Normalize undefined to null for consistent query keys
-      limit,
-      offset,
-    ],
-    queryFn: () =>
-      fetchOrganizationBillingAggregation(
-        organizationId!,
-        aggregationId,
-        limit,
-        offset,
-      ),
-    enabled: !!organizationId && !!aggregationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Aggregation updates as usage accrues and when addons are enabled.
-    refetchOnMount: true,
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
-    gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
-    meta: {
-      // Slow usage aggregation must never keep the fullscreen initial loader up.
-      skipInitialLoader: true,
-    },
-  })
-}
-
-/**
  * Query options for fetching credits for an organization
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -2272,38 +2304,6 @@ export function useOrganizationInvoices(
 }
 
 /**
- * Hook to fetch billing aggregation for an organization
- *
- * @param organizationId - The organization ID to fetch aggregation for
- * @param aggregationId - The billing aggregation ID from the organization
- * @param limit - Limit for project pagination (default: 10)
- * @param offset - Offset for project pagination (default: 0)
- * @returns Billing aggregation data with loading state
- */
-export function useOrganizationBillingAggregation(
-  organizationId: string | null | undefined,
-  aggregationId?: string | null | undefined,
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
-) {
-  const { data, isLoading, error, refetch } = useQuery(
-    organizationBillingAggregationQueryOptions(
-      organizationId,
-      aggregationId,
-      limit,
-      offset,
-    ),
-  )
-
-  return {
-    aggregation: data,
-    isLoading,
-    error,
-    refetch,
-  }
-}
-
-/**
  * Hook to fetch credits for an organization
  *
  * @param organizationId - The organization ID to fetch credits for
@@ -2445,6 +2445,9 @@ export function useUpdateOrganizationBudget() {
       // Refetch so billingLimits (and budget curtain) update immediately
       await queryClient.refetchQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['invoices', 'organization', variables.organizationId],
       })
       await queryClient.refetchQueries({
         queryKey: [
@@ -2712,6 +2715,27 @@ export function useSetPaymentMethodProvider() {
 }
 
 /**
+ * Hook to set up a mandate on a saved Indian card
+ *
+ * @returns Mutation object with mutate function
+ */
+export function useSetupPaymentMethodMandate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setupPaymentMethodMandate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method'],
+      })
+    },
+  })
+}
+
+/**
  * Hook to set organization default payment method
  *
  * @returns Mutation object with mutate function
@@ -2959,7 +2983,7 @@ export function useOrganizationProjects(
   )
 
   return {
-    projects: data?.projects || [],
+    projects: data?.projects || EMPTY_PROJECTS,
     total: data?.total || 0,
     isLoading,
     error,

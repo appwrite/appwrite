@@ -29,6 +29,9 @@ export const AuthEmailPolicyId = {
   DenyCorporateEmail: 'deny-corporate-email',
 } as const
 
+/** Account switching (devices) policy ID (not yet on ProjectPolicyId in all SDK builds). */
+export const AuthAccountDevicesPolicyId = 'account-devices'
+
 export type PasswordPwnedPolicy = {
   /** Check passwords against known breaches and record the result on the user. */
   enabled: boolean
@@ -37,6 +40,11 @@ export type PasswordPwnedPolicy = {
   /** Reject a breached password on sign-up or password change. */
   users: boolean
 }
+
+export type PasswordRotationPolicy = Pick<
+  Models.PolicyPasswordRotation,
+  'enabled' | 'maxAge'
+>
 
 export type ProjectAuthSecuritySnapshot = {
   authLimit: number
@@ -48,12 +56,17 @@ export type ProjectAuthSecuritySnapshot = {
   authPersonalDataCheck: boolean
   /** Null when the server does not report a password-pwned policy. */
   authPasswordPwned: PasswordPwnedPolicy | null
+  /** Null when the server does not report a password-rotation policy. */
+  authPasswordRotation: PasswordRotationPolicy | null
   authSessionAlerts: boolean
   authInvalidateSessions: boolean
   authDenyFreeEmail: boolean
   authDenyAliasedEmail: boolean
   authDenyDisposableEmail: boolean
   authDenyCorporateEmail: boolean
+  authDenyRealtimeGuests: boolean
+  /** Account switching: a browser may hold several sessions and switch between them. */
+  authAccountDevices: boolean
   authPasskey: PasskeyPolicy
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
@@ -81,12 +94,15 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authPasswordDictionary: false,
   authPersonalDataCheck: false,
   authPasswordPwned: null,
+  authPasswordRotation: null,
   authSessionAlerts: false,
   authInvalidateSessions: false,
   authDenyFreeEmail: false,
   authDenyAliasedEmail: false,
   authDenyDisposableEmail: false,
   authDenyCorporateEmail: false,
+  authDenyRealtimeGuests: false,
+  authAccountDevices: true,
   authPasskey: DEFAULT_PASSKEY_POLICY,
   authMockNumbers: [],
   membershipsPrivacy: {
@@ -103,7 +119,8 @@ function policyById(
   policies: ProjectPolicy[] | undefined,
   id:
     | ProjectPolicyId
-    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
+    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId]
+    | typeof AuthAccountDevicesPolicyId,
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
@@ -164,6 +181,10 @@ export function parseProjectAuthSecurity(
     ProjectPolicyId.Passwordpersonaldata,
   )
   const passwordPwned = policyById(policies, ProjectPolicyId.Passwordpwned)
+  const passwordRotation = policyById(
+    policies,
+    ProjectPolicyId.Passwordrotation,
+  )
   const sessionAlert = policyById(policies, ProjectPolicyId.Sessionalert)
   const sessionInvalidation = policyById(
     policies,
@@ -187,6 +208,11 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyCorporateEmail,
   )
+  const denyRealtimeGuests = policyById(
+    policies,
+    ProjectPolicyId.Denyrealtimeguests,
+  )
+  const accountDevices = policyById(policies, AuthAccountDevicesPolicyId)
   const passkey = policyById(policies, ProjectPolicyId.Passkey) as
     | Models.PolicyPasskey
     | undefined
@@ -217,6 +243,13 @@ export function parseProjectAuthSecurity(
             users: passwordPwned.users ?? false,
           }
         : null,
+    authPasswordRotation:
+      passwordRotation && 'maxAge' in passwordRotation
+        ? {
+            enabled: passwordRotation.enabled,
+            maxAge: passwordRotation.maxAge,
+          }
+        : null,
     authSessionAlerts:
       sessionAlert && 'enabled' in sessionAlert
         ? (sessionAlert.enabled ?? false)
@@ -229,6 +262,8 @@ export function parseProjectAuthSecurity(
     authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
+    authDenyRealtimeGuests: parsePolicyEnabled(denyRealtimeGuests, false),
+    authAccountDevices: parsePolicyEnabled(accountDevices, true),
     authPasskey: parsePasskeyPolicy(passkey),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,

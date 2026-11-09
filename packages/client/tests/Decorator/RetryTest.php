@@ -22,12 +22,41 @@ use Utopia\Psr7\Response;
 
 final class RetryTest extends TestCase
 {
+    public function testUnsupportedResponseStreamingDoesNotSpendRetryBudget(): void
+    {
+        $inner = new QueueAdapter([]);
+        $strategy = new class () implements \Utopia\Client\Decorator\Retry\Strategy {
+            public int $calls = 0;
+
+            public function delay(RequestInterface $request, int $attempt, ?ResponseInterface $response, ?\Psr\Http\Client\ClientExceptionInterface $error): ?float
+            {
+                $this->calls++;
+                return $attempt < 3 ? 0.01 : null;
+            }
+        };
+        $delays = [];
+        $retry = new Retry($inner, $strategy, static function (float $seconds) use (&$delays): void {
+            $delays[] = $seconds;
+        });
+        try {
+            $retry->stream($this->request(Method::GET), static function (string $chunk): void {
+            }, static function (ResponseInterface $response): void {
+            });
+            $this->fail('Expected unsupported response streaming to be refused');
+        } catch (\Utopia\Client\Exception\AdapterPreconditionException) {
+        }
+
+        $this->assertSame(0, $inner->calls);
+        $this->assertSame(0, $strategy->calls);
+        $this->assertSame([], $delays);
+    }
+
     public function testItRetriesTransientFailuresUntilSuccess(): void
     {
         $request = $this->request(Method::GET);
         $inner = new QueueAdapter([
-            fn () => throw new NetworkException($request, 'reset'),
-            fn () => throw new NetworkException($request, 'reset'),
+            fn (): never => throw new NetworkException($request, 'reset'),
+            fn (): never => throw new NetworkException($request, 'reset'),
             fn (): \Utopia\Psr7\Response => new Response(200),
         ]);
         $delays = [];
@@ -42,7 +71,7 @@ final class RetryTest extends TestCase
     public function testItStopsAndRethrowsAfterExhaustingAttempts(): void
     {
         $request = $this->request(Method::GET);
-        $inner = new QueueAdapter(array_fill(0, 3, fn () => throw new NetworkException($request, 'reset')));
+        $inner = new QueueAdapter(array_fill(0, 3, fn (): never => throw new NetworkException($request, 'reset')));
         $delays = [];
 
         try {
@@ -57,7 +86,7 @@ final class RetryTest extends TestCase
     public function testItDoesNotRetryRequestExceptions(): void
     {
         $request = $this->request(Method::GET);
-        $inner = new QueueAdapter([fn () => throw new InvalidUriException($request, 'bad')]);
+        $inner = new QueueAdapter([fn (): never => throw new InvalidUriException($request, 'bad')]);
         $delays = [];
 
         $this->expectException(InvalidUriException::class);
@@ -73,7 +102,7 @@ final class RetryTest extends TestCase
     public function testItDoesNotRetryNonIdempotentMethods(): void
     {
         $request = $this->request(Method::POST);
-        $inner = new QueueAdapter([fn () => throw new NetworkException($request, 'reset')]);
+        $inner = new QueueAdapter([fn (): never => throw new NetworkException($request, 'reset')]);
         $delays = [];
 
         $this->expectException(NetworkException::class);

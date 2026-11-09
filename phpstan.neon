@@ -22,8 +22,17 @@ parameters:
     -
       identifier: function.disallowedCurl
       path: tests/*
+    -
+      identifier: function.disallowedShell
+      path: tests/*
+rules:
+  - Utopia\Console\PHPStan\DisallowShellStringRule
 services:
   -
     class: Utopia\Client\PHPStan\DisallowRawCurlExtension
+    tags:
+      - phpstan.restrictedFunctionUsageExtension
+  -
+    class: Utopia\Console\PHPStan\DisallowRawShellExtension
     tags:
       - phpstan.restrictedFunctionUsageExtension

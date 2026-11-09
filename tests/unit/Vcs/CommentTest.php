@@ -69,6 +69,22 @@ final class CommentTest extends TestCase
         $this->assertEquals($originalTip, $regeneratedTip);
     }
 
+    public function testBuildWithoutDeploymentLinksNoLogs(): void
+    {
+        // A pull request can open on a commit nothing deployed yet
+        $comment = new Comment(['consoleUrl' => 'https://cloud.appwrite.io/console', 'consoleHostname' => 'cloud.appwrite.io']);
+        $project = new Document(['$id' => 'project1', 'name' => 'Test Project', 'region' => 'default']);
+        $comment->addBuild($project, new Document(['$id' => 'landing', 'name' => 'Landing']), 'site', 'waiting', '', ['type' => 'logs'], '');
+        $comment->addBuild($project, new Document(['$id' => 'billing', 'name' => 'Billing']), 'function', 'waiting', '', ['type' => 'logs'], '');
+        $comment->addBuild($project, new Document(['$id' => 'hello', 'name' => 'Hello']), 'function', 'ready', 'dep1', ['type' => 'logs'], '');
+
+        $text = $comment->generateComment();
+
+        $this->assertStringNotContainsString('/deployments/)', $text);
+        $this->assertSame(1, \substr_count($text, '[View Logs]'));
+        $this->assertStringContainsString('[View Logs](https://cloud.appwrite.io/console/projects/project1/functions/hello/deployments/dep1)', $text);
+    }
+
     public function testBackwardCompatibilityWithOldStateFormat(): void
     {
         $oldBuilds = [
@@ -166,6 +182,22 @@ final class CommentTest extends TestCase
                 $this->assertFileExists(__DIR__ . '/../../../public/images/vcs/' . $path);
             }
         }
+    }
+
+    public function testEveryDetailsBlockClosesOnce(): void
+    {
+        $comment = new Comment(['consoleHostname' => 'localhost']);
+        foreach (['production' => 'Production', 'staging' => 'Staging'] as $projectId => $projectName) {
+            $project = new Document(['$id' => $projectId, 'name' => $projectName, 'region' => 'default']);
+            $comment->addBuild($project, new Document(['$id' => 'landing', 'name' => 'Landing']), 'site', 'ready', 'dep-' . $projectId, ['type' => 'logs'], 'https://landing.appwrite.network');
+            $comment->addBuild($project, new Document(['$id' => 'billing', 'name' => 'Billing']), 'function', 'processing', 'dep-fn-' . $projectId, ['type' => 'logs'], '');
+        }
+
+        $generated = $comment->generateComment();
+
+        // Sites and Functions of both projects, each opened and closed once
+        $this->assertSame(4, \substr_count($generated, '<details'));
+        $this->assertSame(4, \substr_count($generated, '</details>'));
     }
 
     private function extractTip(string $comment): ?string

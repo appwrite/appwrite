@@ -15,6 +15,16 @@ const PENDING_REGISTRATION_KEY = 'console.openaiAds.pendingRegistrationUserId'
 const COMPLETED_REGISTRATION_PREFIX = 'console.openaiAds.registrationCompleted.'
 const PENDING_SUBSCRIPTION_KEY = 'console.openaiAds.pendingSubscriptionOrgId'
 const COMPLETED_SUBSCRIPTION_PREFIX = 'console.openaiAds.subscriptionCreated.'
+const COMPLETED_LEAD_PREFIX = 'console.openaiAds.leadCreated.'
+const PENDING_CHECKOUT_KEY = 'console.openaiAds.pendingCheckout'
+const COMPLETED_CHECKOUT_PREFIX = 'console.openaiAds.checkoutStarted.'
+
+/** `lead_created` only counts what an account builds in its first week. */
+const LEAD_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+/** Product areas a new account must touch to count as an activated builder. */
+const LEAD_MIN_AREAS = 3
+/** Navigation re-checks the lead signal at most this often. */
+const LEAD_CHECK_INTERVAL_MS = 2 * 60 * 1000
 
 type OpenAiAdsQueue = ((...args: unknown[]) => void) & {
   q: unknown[][]
@@ -30,8 +40,11 @@ let openaiAdsPixelLoaded = false
 let pixelReady: Promise<void> | null = null
 let attachedUserKey: string | null = null
 let hintedIdentity: OpenAiAdsIdentity | undefined
+let leadCheckedAt = 0
 const registrationInFlight = new Set<string>()
 const subscriptionInFlight = new Set<string>()
+const leadInFlight = new Set<string>()
+const checkoutInFlight = new Set<string>()
 
 type OpenAiAdsIdentity = {
   externalId: string
@@ -214,7 +227,7 @@ export function syncOpenAiAdsUser(
         $id?: string
         email?: string | null
         phone?: string | null
-        impersonatorUserId?: string
+        impersonatorUserId?: string | null
       }
     | null
     | undefined,
@@ -291,6 +304,8 @@ function flushPendingOpenAiAdsConversions() {
   if (userId) measureOpenAiAdsRegistrationCompleted(userId)
   const organizationId = readStorage(sessionStorage, PENDING_SUBSCRIPTION_KEY)
   if (organizationId) measureOpenAiAdsSubscriptionCreated(organizationId)
+  const checkout = readPendingCheckout()
+  if (checkout) measureOpenAiAdsCheckoutStarted(checkout.userId, checkout.plan)
 }
 
 function hasMeasuredSubscription(organizationId: string): boolean {
@@ -349,6 +364,247 @@ async function deliverOpenAiAdsSubscription(organizationId: string) {
   }
 }
 
+type OpenAiAdsOnboardingStage = {
+  status?: string
+  at?: string
+  actorType?: string
+}
+
+/**
+ * Product area an onboarding stage counts toward. Installing the CLI or the
+ * MCP server is an area of its own, and dedicated databases count as
+ * databases: accounts that reach them go Pro as often as the other areas.
+ */
+function getOpenAiAdsLeadArea(stage: string): string | undefined {
+  if (stage === 'cli.install') return 'cli'
+  if (stage === 'mcp.install') return 'mcp'
+  if (stage.startsWith('project.create') && stage.endsWith('Platform')) {
+    return 'platform'
+  }
+  if (
+    stage === 'project.createKey' ||
+    stage === 'organization.createProjectKey'
+  ) {
+    return 'key'
+  }
+  if (
+    stage.startsWith('tablesDB.') ||
+    stage.startsWith('documentsDB.') ||
+    stage.startsWith('databases.') ||
+    stage === 'mysql.create' ||
+    stage === 'postgresql.create' ||
+    stage === 'mongo.create'
+  ) {
+    return 'database'
+  }
+  if (
+    stage === 'users.create' ||
+    stage === 'account.create' ||
+    stage === 'account.createAnonymousSession' ||
+    stage === 'teams.create'
+  ) {
+    return 'auth'
+  }
+  for (const area of ['storage', 'functions', 'sites', 'messaging']) {
+    if (stage.startsWith(`${area}.`)) return area
+  }
+  return undefined
+}
+
+/**
+ * When a stage was completed, in milliseconds. The server stamps stages in UTC
+ * without a zone (`2026-11-01 12:00:00.000`), which `Date.parse` would read as
+ * local time and shift by the browser's offset.
+ */
+function parseOpenAiAdsStageTime(at: string | undefined): number {
+  if (!at) return Number.NaN
+  return Date.parse(at.includes('T') ? at : `${at.replace(' ', 'T')}Z`)
+}
+
+/**
+ * True when the projects completed stages in three or more product areas since
+ * the account registered. Stages from before registration (a project shared
+ * with an invited member) and backfilled stages (`hidden` actor) don't count.
+ */
+export function isOpenAiAdsLead(
+  projects: ReadonlyArray<{ onboarding?: object }>,
+  registration: string,
+): boolean {
+  const since = Date.parse(registration)
+  if (Number.isNaN(since)) return false
+
+  const areas = new Set<string>()
+  for (const project of projects) {
+    const stages = (project.onboarding ?? {}) as Record<
+      string,
+      OpenAiAdsOnboardingStage | undefined
+    >
+    for (const [stage, progress] of Object.entries(stages)) {
+      if (progress?.status !== 'completed') continue
+      if (progress.actorType === 'hidden') continue
+      if (!(parseOpenAiAdsStageTime(progress.at) >= since)) continue
+      const area = getOpenAiAdsLeadArea(stage)
+      if (area) areas.add(area)
+    }
+  }
+  return areas.size >= LEAD_MIN_AREAS
+}
+
+/**
+ * Whether to look for the `lead_created` signal now: the pixel is loaded, the
+ * account is in its first week and has not converted on this device, and the
+ * last look was long enough ago. A true result starts a new interval.
+ */
+export function shouldCheckOpenAiAdsLead(
+  account:
+    | { $id: string; registration: string; impersonatorUserId?: string | null }
+    | null
+    | undefined,
+): boolean {
+  if (!account?.$id) return false
+  if (!canUseOpenAiAds() || !window.oaiq) return false
+  if (isConsoleImpersonationActive(account)) return false
+  if (
+    readStorage(localStorage, COMPLETED_LEAD_PREFIX + account.$id) === '1' ||
+    leadInFlight.has(account.$id)
+  ) {
+    return false
+  }
+  const now = Date.now()
+  if (!(now - Date.parse(account.registration) <= LEAD_WINDOW_MS)) return false
+  if (now - leadCheckedAt < LEAD_CHECK_INTERVAL_MS) return false
+  leadCheckedAt = now
+  return true
+}
+
+/**
+ * Conversion for an activated builder: a new account that used three or more
+ * product areas in its first week. Those accounts go Pro about 5x as often as
+ * an average sign-up, so this is the event ads campaigns optimize for.
+ */
+export function measureOpenAiAdsLeadCreated(userId: string) {
+  if (!userId) return
+  if (!canUseOpenAiAds() || !window.oaiq) return
+  if (
+    readStorage(localStorage, COMPLETED_LEAD_PREFIX + userId) === '1' ||
+    leadInFlight.has(userId)
+  ) {
+    return
+  }
+
+  leadInFlight.add(userId)
+  void deliverOpenAiAdsLead(userId)
+}
+
+async function deliverOpenAiAdsLead(userId: string) {
+  try {
+    if (pixelReady) await pixelReady
+    if (!window.oaiq || !canUseOpenAiAds()) return
+    await attachOpenAiAdsUser(hintedIdentity)
+    window.oaiq(
+      'measure',
+      'lead_created',
+      { type: 'customer_action' },
+      { event_id: `lead_${userId}` },
+    )
+    writeStorage(localStorage, COMPLETED_LEAD_PREFIX + userId, '1')
+  } finally {
+    leadInFlight.delete(userId)
+  }
+}
+
+export type OpenAiAdsCheckoutPlan = {
+  /** Billing plan id, such as `tier-1`. */
+  id: string
+  /** Monthly plan price in USD. */
+  price?: number
+}
+
+/**
+ * Conversion for starting a paid checkout: adding a card or submitting a paid
+ * plan in the change-plan wizard. Fires once per account. Queues until the
+ * pixel loads if the visitor has not granted optional cookies yet.
+ */
+export function measureOpenAiAdsCheckoutStarted(
+  userId: string,
+  plan: OpenAiAdsCheckoutPlan,
+) {
+  if (!userId) return
+  if (!canUseOpenAiAds()) return
+  if (isConsoleImpersonationActive()) return
+  if (
+    readStorage(localStorage, COMPLETED_CHECKOUT_PREFIX + userId) === '1' ||
+    checkoutInFlight.has(userId)
+  ) {
+    return
+  }
+
+  if (!window.oaiq) {
+    writePendingCheckout(userId, plan)
+    return
+  }
+
+  checkoutInFlight.add(userId)
+  void deliverOpenAiAdsCheckout(userId, plan)
+}
+
+async function deliverOpenAiAdsCheckout(
+  userId: string,
+  plan: OpenAiAdsCheckoutPlan,
+) {
+  try {
+    if (pixelReady) await pixelReady
+    if (!window.oaiq || !canUseOpenAiAds()) {
+      writePendingCheckout(userId, plan)
+      return
+    }
+    await attachOpenAiAdsUser(hintedIdentity)
+    const amount = plan.price ? Math.round(plan.price * 100) : 0
+    window.oaiq(
+      'measure',
+      'checkout_started',
+      {
+        type: 'contents',
+        ...(amount > 0 ? { amount, currency: 'USD' } : {}),
+        contents: [{ id: plan.id, content_type: 'plan', quantity: 1 }],
+      },
+      { event_id: `checkout_${userId}` },
+    )
+    writeStorage(localStorage, COMPLETED_CHECKOUT_PREFIX + userId, '1')
+    removeStorage(sessionStorage, PENDING_CHECKOUT_KEY)
+  } finally {
+    checkoutInFlight.delete(userId)
+  }
+}
+
+function writePendingCheckout(userId: string, plan: OpenAiAdsCheckoutPlan) {
+  writeStorage(
+    sessionStorage,
+    PENDING_CHECKOUT_KEY,
+    JSON.stringify({ userId, plan }),
+  )
+}
+
+function readPendingCheckout():
+  | { userId: string; plan: OpenAiAdsCheckoutPlan }
+  | undefined {
+  const value = readStorage(sessionStorage, PENDING_CHECKOUT_KEY)
+  if (!value) return undefined
+  try {
+    const pending = JSON.parse(value) as {
+      userId?: unknown
+      plan?: { id?: unknown; price?: unknown }
+    }
+    if (typeof pending.userId !== 'string') return undefined
+    if (typeof pending.plan?.id !== 'string') return undefined
+    const price =
+      typeof pending.plan.price === 'number' ? pending.plan.price : undefined
+    return { userId: pending.userId, plan: { id: pending.plan.id, price } }
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * OAuth sign-up returns to the console with a verified email. Fire only when
  * this tab started on the sign-up page and verification is already satisfied.
@@ -360,7 +616,7 @@ export function maybeMeasureOpenAiAdsRegistrationAfterAuth(
         email?: string | null
         phone?: string | null
         emailVerification: boolean
-        impersonatorUserId?: string
+        impersonatorUserId?: string | null
       }
     | null
     | undefined,

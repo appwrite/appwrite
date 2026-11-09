@@ -2,25 +2,22 @@
 
 namespace Utopia\Agents\DiffCheck;
 
-use Utopia\Agents\Adapter;
 use Utopia\Agents\Agent;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
+use Utopia\Agents\Model;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 
 class DiffCheck
 {
     /**
-     * @param  Agent|Adapter  $runner  Agent (preconfigured) or Adapter (wrapped into a new Agent)
+     * @param  Agent|Model  $runner  Agent (preconfigured) or Model (wrapped into a new Agent)
      * @param  Repository|string  $base  Local path or remote URL
      * @param  Repository|string  $target  Local path or remote URL
      * @param  string  $prompt  User prompt. Supports placeholders: {{diff}}, {{base}}, {{target}}, {{diff_stats}}
-     * @return array{hasChanges: bool, response: string}
+     * @return array{hasChanges: bool, response: string, output: mixed}
      */
     public function run(
-        Agent|Adapter $runner,
+        Agent|Model $runner,
         Repository|string $base,
         Repository|string $target,
         string $prompt,
@@ -46,6 +43,7 @@ class DiffCheck
                 return [
                     'hasChanges' => false,
                     'response' => '',
+                    'output' => null,
                 ];
             }
 
@@ -57,16 +55,12 @@ class DiffCheck
                 stats: $diffResult['stats']
             );
 
-            $agent = $this->resolveAgent($runner, $options);
-            $conversation = new Conversation($agent);
-            $response = $conversation
-                ->message(new User($options->getUserId()), new Message($finalPrompt))
-                ->send()
-                ->getContent();
+            $result = $this->resolveAgent($runner, $options)->generate($finalPrompt);
 
             return [
                 'hasChanges' => true,
-                'response' => $options->getTrimResponse() ? trim($response) : $response,
+                'response' => $options->getTrimResponse() ? trim($result->text) : $result->text,
+                'output' => $result->output,
             ];
         } finally {
             if ($basePath !== null) {
@@ -78,27 +72,11 @@ class DiffCheck
         }
     }
 
-    protected function resolveAgent(Agent|Adapter $runner, Options $options): Agent
+    protected function resolveAgent(Agent|Model $runner, Options $options): Agent
     {
-        if ($runner instanceof Agent) {
-            if ($options->getDescription() !== '') {
-                $runner->setDescription($options->getDescription());
-            }
-            if ($options->getInstructions() !== []) {
-                $runner->setInstructions($options->getInstructions());
-            }
-            if ($options->getSchema() !== null) {
-                $runner->setSchema($options->getSchema());
-            }
+        $agent = $runner instanceof Agent ? $runner : new Agent($runner);
 
-            return $runner;
-        }
-
-        $agent = new Agent($runner);
-        if ($options->getDescription() !== '') {
-            $agent->setDescription($options->getDescription());
-        }
-        if ($options->getInstructions() !== []) {
+        if ($options->getInstructions() !== '') {
             $agent->setInstructions($options->getInstructions());
         }
         if ($options->getSchema() !== null) {

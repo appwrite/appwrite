@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Push;
 
-use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Storage\Encryption;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
@@ -20,7 +20,6 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Get extends Action
@@ -71,10 +70,8 @@ class Get extends Action
         Authorization $authorization,
         User $user
     ) {
-        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
         try {
-            $decoded = $decoder->decode($jwt);
+            $decoded = EncryptionKey::decode($jwt);
         } catch (JWTException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -88,7 +85,9 @@ class Get extends Action
         }
 
         $isInternal = $decoded['internal'] ?? false;
-        $disposition = $decoded['disposition'] ?? 'inline';
+        $disposition = ($decoded['disposition'] ?? '') === Response::DISPOSITION_ATTACHMENT
+            ? Response::DISPOSITION_ATTACHMENT
+            : Response::DISPOSITION_INLINE;
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -100,7 +99,8 @@ class Get extends Action
         }
 
         $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -116,6 +116,10 @@ class Get extends Action
 
         if (\in_array($file->getAttribute('mimeType'), $mimes)) {
             $contentType = $file->getAttribute('mimeType');
+        }
+
+        if ($contentType === 'image/svg+xml') {
+            $disposition = Response::DISPOSITION_ATTACHMENT;
         }
 
         $size = $file->getAttribute('sizeOriginal', 0);
@@ -146,23 +150,45 @@ class Get extends Action
 
         $response
             ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
+            ->setContentDisposition($disposition, (string) $file->getAttribute('name', ''))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage());
 
+        $encryption = new Encryption($file);
+        // Segmented files are read by range and streamed, never held whole.
+        if ($encryption->isSegmented()) {
+            if (!empty($rangeHeader)) {
+                $response->send($encryption->range($deviceForFiles, $start, $end));
+                return;
+            }
+
+            if ($size > APP_STORAGE_READ_BUFFER) {
+                $started = false;
+                try {
+                    $encryption->stream($deviceForFiles, static function (string $chunk) use ($response, &$started): void {
+                        $started = true;
+                        $response->chunk($chunk, false);
+                    });
+                    $response->chunk('', true);
+                } catch (\Throwable $error) {
+                    if ($started) {
+                        $response->abort();
+                    }
+                    throw $error;
+                }
+                return;
+            }
+
+            // Sent from here even when empty, so a zero-byte file never falls through to the stored bytes.
+            $response->send($encryption->decrypt((string) $deviceForFiles->read($path)));
+            return;
+        }
+
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = (string) $deviceForFiles->read($path);
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
+            $source = $encryption->decrypt((string) $deviceForFiles->read($path));
         }
 
         switch ($file->getAttribute('algorithm', Compression::NONE)) {

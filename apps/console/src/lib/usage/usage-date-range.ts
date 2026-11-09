@@ -12,10 +12,108 @@ export function isStartOfLocalDay(date: Date): boolean {
   return date.getTime() === startOfDay(date).getTime()
 }
 
+/** Wall clock on a local calendar day, including seconds from presets. */
+export type DayClock = {
+  hour: number
+  minute: number
+  second: number
+  millisecond: number
+}
+
+const FULL_DAY_START: DayClock = {
+  hour: 0,
+  minute: 0,
+  second: 0,
+  millisecond: 0,
+}
+
+const FULL_DAY_END: DayClock = {
+  hour: 23,
+  minute: 59,
+  second: 59,
+  millisecond: 999,
+}
+
+export function readDayClock(date: Date): DayClock {
+  return {
+    hour: date.getHours(),
+    minute: date.getMinutes(),
+    second: date.getSeconds(),
+    millisecond: date.getMilliseconds(),
+  }
+}
+
+export function applyDayClock(day: Date, clock: DayClock): Date {
+  const next = new Date(day)
+  next.setHours(clock.hour, clock.minute, clock.second, clock.millisecond)
+  return next
+}
+
+export type DateRangeClocks = {
+  start: DayClock | null
+  end: DayClock | null
+}
+
+/**
+ * DayPicker reports local midnights. Put the clocks the user already chose
+ * back onto the new days. A missing end clock means the inclusive end of
+ * that day, which is what a date-only selection already means.
+ */
+export function mergeCalendarRangeWithClocks(
+  next: DateRange | undefined,
+  clocks: DateRangeClocks,
+): DateRange | undefined {
+  if (!next?.from) return next
+
+  const from = applyDayClock(next.from, clocks.start ?? FULL_DAY_START)
+  if (!next.to) return { from }
+
+  return {
+    from,
+    to: applyDayClock(next.to, clocks.end ?? FULL_DAY_END),
+  }
+}
+
+/** Keep an end clock when the user is still picking the end day. */
+export function rememberDateRangeClocks(
+  clocks: DateRangeClocks,
+  range: DateRange | undefined,
+): DateRangeClocks {
+  if (!range?.from) return { start: null, end: null }
+  return {
+    start: readDayClock(range.from),
+    end: range.to ? readDayClock(range.to) : clocks.end,
+  }
+}
+
+/**
+ * Commit a picker selection. With `preserveTime`, explicit clocks stay,
+ * including 00:00. Without it, a DayPicker midnight span expands to
+ * inclusive calendar days.
+ */
+export function finalizeDateRangeSelection(
+  dateRange: DateRange | undefined,
+  preserveTime: boolean,
+): DateRange | undefined {
+  if (!dateRange?.from) return dateRange
+
+  let from = dateRange.from
+  let to = dateRange.to ?? (preserveTime ? endOfDay(from) : from)
+  if (to.getTime() < from.getTime()) {
+    const earlier = to
+    to = from
+    from = earlier
+  }
+
+  if (!preserveTime) {
+    return normalizeUsageDateRangeSelection({ from, to })
+  }
+
+  return { from, to }
+}
+
 export function isFullCalendarDayRange(from: Date, to: Date): boolean {
-  return (
-    isStartOfLocalDay(from) && to.getTime() === endOfDay(to).getTime()
-  )
+  return isStartOfLocalDay(from) && to.getTime() === endOfDay(to).getTime()
 }
 
 /**
@@ -132,8 +230,7 @@ export type SerializedUsageChartDateRange = {
 export function serializeUsageChartDateRange(
   dateRange: DateRange,
 ): SerializedUsageChartDateRange {
-  const normalized =
-    normalizeUsageDateRangeSelection(dateRange) ?? dateRange
+  const normalized = normalizeUsageDateRangeSelection(dateRange) ?? dateRange
   const matchedPreset = findMatchingUsageDateRangePreset(normalized)
   if (matchedPreset) {
     return { preset: matchedPreset.value }

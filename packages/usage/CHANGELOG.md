@@ -20,6 +20,10 @@
 
 ### Fixed
 
+- The Database adapter's `setup()` (and so `migrate()`) adds the attributes
+  and indexes an existing `usage` collection lacks. It used to stop at the
+  existing collection, so a column added to the schema never reached a
+  collection created before it.
 - `migrate()` (and so `setup()`) converges dimension columns that predate
   their current type or codec, such as a `protocol` column created as
   `Nullable(String)` before it became `LowCardinality(Nullable(String))`, or
