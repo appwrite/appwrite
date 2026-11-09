@@ -44,7 +44,7 @@ class Etsy extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://www.etsy.com/oauth/connect/oauth/authorize?' . \http_build_query([
+        return 'https://www.etsy.com/oauth/connect?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
