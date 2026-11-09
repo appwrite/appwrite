@@ -1063,14 +1063,14 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
     case "empty":
         return context.res.empty()
     case "json":
-        return context.res.text(["type": "This is a JSON response"])
+        return try context.res.json(["type": "This is a JSON response"])
     case "binary":
-        let fileContents = FileManager.default.contents(atPath: "file.png")
+        let fileContents = FileManager.default.contents(atPath: "file.png") ?? Data()
         return context.res.binary(fileContents)
     case "redirect":
-        return context.res.redirect("https://appwrite.io", 301)
+        return context.res.redirect("https://appwrite.io", statusCode: 301)
     case "html":
-        return context.res.text("<h1>This is an HTML response</h1>", 200, [
+        return context.res.text("<h1>This is an HTML response</h1>", statusCode: 200, headers: [
             "content-type": "text/html"
             ])
     default:
