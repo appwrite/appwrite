@@ -220,7 +220,7 @@ class Action extends PlatformAction
         $validators = [];
         $mainValidator = null; // Validator to use for error description
         $checks = []; // Every record check, to explain the one the domain actually has
-        $checkA = null; // First A check, to explain an apex
+        $checkApex = null; // First A, else AAAA check, to explain an apex
 
         if (\count($targetCNAMEs) > 0) {
             $cnameValidators = [];
@@ -244,7 +244,7 @@ class Action extends PlatformAction
                 $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
                 $validators[] = $validator;
                 $checks[] = $validator;
-                $checkA ??= $validator;
+                $checkApex ??= $validator;
 
                 if (\is_null($mainValidator)) {
                     $mainValidator = $validator;
@@ -257,6 +257,7 @@ class Action extends PlatformAction
             $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
             $validators[] = $validator;
             $checks[] = $validator;
+            $checkApex ??= $validator;
 
             if (\is_null($mainValidator)) {
                 $mainValidator = $validator;
@@ -275,8 +276,8 @@ class Action extends PlatformAction
             Span::add('dns.domain', $domain->get());
 
             // Explain the record the domain has, such as an A record with the wrong address, rather than
-            // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A.
-            $explained = $domain->get() === $domain->getApex() ? ($checkA ?? $mainValidator) : $mainValidator;
+            // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+            $explained = $domain->get() === $domain->getApex() ? ($checkApex ?? $mainValidator) : $mainValidator;
             foreach ($checks as $check) {
                 if ($check->count > 0 || $check->reason !== '') {
                     $explained = $check;
