@@ -136,9 +136,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
+// The loaders leave both undefined when the domain is not found
 export type DomainDetailInitialData = {
-  domain: Models.Domain
-  records: { dnsRecords: Models.DnsRecord[]; total: number }
+  domain?: Models.Domain
+  records?: { dnsRecords: Models.DnsRecord[]; total: number }
 }
 
 type ViewProps = {
@@ -261,9 +262,10 @@ export function View({ initialData }: ViewProps = {}) {
     initialData?.records &&
     !hasRecordFilters &&
     !recordsFromHook?.length
-  const rawRecords = canUseInitialRecords
-    ? initialData!.records.dnsRecords
-    : (recordsFromHook ?? [])
+  const rawRecords =
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.dnsRecords
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (rawRecords.length === 0) return rawRecords
 
@@ -604,13 +606,19 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
   const recordsSearchWithSort =
     (queryParam: string | undefined, sortParam: string | undefined) =>
-    (prev: Record<string, unknown>) => ({
-      ...(typeof prev === 'object' && prev !== null ? prev : {}),
-      ...buildListSearchParams({
-        query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+    (prev: Record<string, unknown>) => {
+      const next: Record<string, unknown> = {
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        ...buildListSearchParams({
+          query: queryParam ?? undefined,
+          sort: sortParam ?? undefined,
+        }),
+      }
+      // Drop the old query and sort so clearing them removes them from the URL.
+      if (!queryParam) delete next.query
+      if (!sortParam) delete next.sort
+      return next
+    }
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
