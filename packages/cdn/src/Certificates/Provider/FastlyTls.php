@@ -407,6 +407,11 @@ class FastlyTls implements Provider
             $message .= ' ' . rtrim($warning, '.') . '.';
         }
 
+        // No ownership record helps while a CAA record refuses the certificate authority
+        if (array_any($warnings, static fn (string $warning): bool => str_contains($warning, 'CAA'))) {
+            return $message . ' Update the CAA record, then retry.';
+        }
+
         if (\count($challenges) === 1) {
             $message .= " Create a {$challenges[0]->recordType} record for {$challenges[0]->recordName} pointing to " . implode(' or ', $challenges[0]->values) . '.';
         } elseif ($challenges !== []) {
