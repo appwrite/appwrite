@@ -1350,6 +1350,11 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Just launched': 'הושק עכשיו',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'MCP1 מבית Appwrite: כתובת URL אחת לכל שרתי ה-MCP',
+  'MCP1 by Appwrite is live': 'MCP1 מבית Appwrite הושק',
+  'Try MCP1': 'נסו את MCP1',
   'Created by': 'נוצר על ידי',
   'Authorized resources': 'משאבים מורשים',
   'No scopes granted': 'לא הוענקו הרשאות גישה',
