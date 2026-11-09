@@ -29,6 +29,13 @@ class FastlyTls implements Provider
      */
     private const int RENEWAL_DEADLINE = 7 * 24 * 60 * 60;
 
+    /**
+     * Seconds a subscription has to stay processing without an order before it
+     * counts as abandoned, so the moment between an order completing and
+     * Fastly reporting it issued is never mistaken for one.
+     */
+    private const int ABANDONED_AFTER = 60 * 60;
+
     private readonly ClientInterface $client;
 
     public function __construct(
@@ -46,6 +53,10 @@ class FastlyTls implements Provider
         $subscription = $this->findSubscription($domain);
 
         if ($subscription === null) {
+            $subscription = $this->createSubscription($domain);
+        } elseif ($this->isAbandoned($subscription)) {
+            // Fastly refuses to retry a processing subscription, so start a new one
+            $this->deleteSubscription($subscription['resource']['id']);
             $subscription = $this->createSubscription($domain);
         } elseif ($this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED) {
             $subscription = $this->retrySubscription($subscription['resource']['id']);
@@ -75,7 +86,9 @@ class FastlyTls implements Provider
             return Status::UNKNOWN;
         }
 
-        $status = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
+        $status = $this->isAbandoned($subscription)
+            ? Status::FAILED
+            : $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
         if ($status === Status::ISSUED && !$this->ensureActivated($subscription, $domain)) {
             return Status::PROCESSING;
@@ -135,7 +148,8 @@ class FastlyTls implements Provider
             return true;
         }
 
-        return $this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED;
+        return $this->isAbandoned($subscription)
+            || $this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED;
     }
 
     public function deleteCertificate(string $domain, ?string $domainType = null): void
@@ -146,14 +160,51 @@ class FastlyTls implements Provider
             return;
         }
 
+        $this->deleteSubscription($subscription['resource']['id']);
+    }
+
+    private function deleteSubscription(string $subscriptionId): void
+    {
         $result = $this->request(
             'DELETE',
-            '/tls/subscriptions/' . $subscription['resource']['id'] . '?force=true',
+            '/tls/subscriptions/' . $subscriptionId . '?force=true',
         );
 
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
             throw new \RuntimeException($this->formatError('Failed to delete Fastly TLS subscription', $result));
         }
+    }
+
+    /**
+     * Whether Fastly's order for a subscription that never issued a
+     * certificate has ended. Fastly then keeps it processing for good.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     */
+    private function isAbandoned(array $subscription): bool
+    {
+        $attributes = $subscription['resource']['attributes'] ?? null;
+        if (!\is_array($attributes)) {
+            return false;
+        }
+
+        $state = $attributes['state'] ?? null;
+        if (!\is_string($state) || strtolower($state) !== 'processing') {
+            return false;
+        }
+
+        if (($attributes['has_active_order'] ?? null) !== false) {
+            return false;
+        }
+
+        if ($this->references($subscription['resource'], 'tls_certificates') !== []) {
+            return false;
+        }
+
+        $updatedAt = $attributes['updated_at'] ?? null;
+        $updated = \is_string($updatedAt) ? strtotime($updatedAt) : false;
+
+        return $updated !== false && time() - $updated >= self::ABANDONED_AFTER;
     }
 
     /**
