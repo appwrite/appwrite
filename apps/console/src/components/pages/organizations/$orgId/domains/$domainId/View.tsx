@@ -1354,7 +1354,8 @@ export function View({ initialData }: ViewProps = {}) {
                           const isAppwriteManaged =
                             value === 'a.a.a.a' ||
                             value === 'b:b::b:b:b' ||
-                            (value?.startsWith('0 issue "') &&
+                            (!!record.lock &&
+                              value?.startsWith('0 issue "') &&
                               value?.includes('"'))
                           const showPriority =
                             record.type === 'MX' || record.type === 'SRV'
