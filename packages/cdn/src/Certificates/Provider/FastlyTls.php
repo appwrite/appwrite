@@ -58,7 +58,7 @@ class FastlyTls implements Provider
             // Fastly refuses to retry a processing subscription, so start a new one
             $this->deleteSubscription($subscription);
             $subscription = $this->createSubscription($domain);
-        } elseif ($this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED) {
+        } elseif ($this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED || $this->isLapsed($subscription)) {
             $subscription = $this->retrySubscription($subscription['resource']['id']);
         }
 
@@ -86,7 +86,8 @@ class FastlyTls implements Provider
             return Status::UNKNOWN;
         }
 
-        $status = $this->isAbandoned($subscription)
+        // An expired certificate Fastly stopped renewing is not issued, whatever its state says
+        $status = $this->isAbandoned($subscription) || $this->isLapsed($subscription)
             ? Status::FAILED
             : $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
@@ -149,6 +150,7 @@ class FastlyTls implements Provider
         }
 
         return $this->isAbandoned($subscription)
+            || $this->isLapsed($subscription)
             || $this->mapStatus($subscription['resource']['attributes']['state'] ?? '') === Status::FAILED;
     }
 
@@ -181,6 +183,24 @@ class FastlyTls implements Provider
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
             throw new \RuntimeException($this->formatError('Failed to delete Fastly TLS subscription', $result));
         }
+    }
+
+    /**
+     * Whether the newest certificate has expired with no order left to renew it.
+     * Fastly then still reports the subscription issued, holding the old certificate.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     */
+    private function isLapsed(array $subscription): bool
+    {
+        $attributes = $subscription['resource']['attributes'] ?? null;
+        if (!\is_array($attributes) || ($attributes['has_active_order'] ?? null) !== false) {
+            return false;
+        }
+
+        $certificate = $this->newestCertificate($subscription);
+
+        return $certificate !== null && $certificate['expiry'] <= time();
     }
 
     /**
