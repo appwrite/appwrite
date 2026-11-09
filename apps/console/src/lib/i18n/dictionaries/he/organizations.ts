@@ -1628,4 +1628,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
   'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Check nameservers': 'בדיקת שרתי שמות',
+  'Nameservers changed': 'שרתי השמות השתנו',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
 }

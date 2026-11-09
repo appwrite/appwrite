@@ -135,12 +135,10 @@ export function DomainContextMenu({
             <ContextMenuIcon icon={Settings} />
             {t('Settings')}
           </ContextMenuItem>
-          {!isVerified && (
-            <ContextMenuItem onSelect={handleRetryVerificationClick}>
-              <ContextMenuIcon icon={RefreshCw} />
-              {t('Retry verification')}
-            </ContextMenuItem>
-          )}
+          <ContextMenuItem onSelect={handleRetryVerificationClick}>
+            <ContextMenuIcon icon={RefreshCw} />
+            {isVerified ? t('Check nameservers') : t('Retry verification')}
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
