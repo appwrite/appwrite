@@ -604,13 +604,19 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
   const recordsSearchWithSort =
     (queryParam: string | undefined, sortParam: string | undefined) =>
-    (prev: Record<string, unknown>) => ({
-      ...(typeof prev === 'object' && prev !== null ? prev : {}),
-      ...buildListSearchParams({
-        query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+    (prev: Record<string, unknown>) => {
+      const next: Record<string, unknown> = {
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        ...buildListSearchParams({
+          query: queryParam ?? undefined,
+          sort: sortParam ?? undefined,
+        }),
+      }
+      // Drop the old query and sort so clearing them removes them from the URL.
+      if (!queryParam) delete next.query
+      if (!sortParam) delete next.sort
+      return next
+    }
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())

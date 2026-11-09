@@ -266,6 +266,7 @@ const RESOURCE_NOT_FOUND_TITLES: Record<string, string> = {
   provider_not_found: 'Provider not found',
   topic_not_found: 'Topic not found',
   subscriber_not_found: 'Subscriber not found',
+  domain_not_found: 'Domain not found',
 }
 
 /**
