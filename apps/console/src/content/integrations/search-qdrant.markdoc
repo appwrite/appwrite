@@ -6,8 +6,8 @@ date: 2026-11-06
 featured: false
 isPartner: true
 isNew: true
-cover: /images/integrations/ai-qdrant-vector-search/cover.avif
-category: ai
+cover: /images/integrations/search-qdrant/cover.avif
+category: search
 product:
     vendor: Qdrant
     description: "Qdrant is an open-source vector database and similarity search engine, available self-hosted or as Qdrant Cloud."
