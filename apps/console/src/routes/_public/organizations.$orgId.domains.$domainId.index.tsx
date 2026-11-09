@@ -22,7 +22,8 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context, search: routeSearch }) => {
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, context, deps: routeSearch }) => {
     if (typeof window === 'undefined') return undefined
 
     const { domainId } = params
