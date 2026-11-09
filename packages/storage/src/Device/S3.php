@@ -1101,7 +1101,14 @@ class S3 extends Device
 
         // CanonicalHeaders
         foreach ($headers as $k => $v) {
-            $combinedHeaders[strtolower($k)] = trim($v);
+            $name = strtolower($k);
+            // Volatile headers like accept-encoding may be stripped or modified by
+            // proxies and S3-compatible providers (such as GCS), breaking SigV4 if signed.
+            if ($name === 'accept-encoding') {
+                continue;
+            }
+
+            $combinedHeaders[$name] = trim($v);
         }
 
         foreach ($amzHeaders as $k => $v) {
