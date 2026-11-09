@@ -1,0 +1,90 @@
+---
+layout: integration
+title: RAG with LangChain
+description: Answer questions about your Appwrite data with LangChain, OpenAI, and a Pinecone vector index
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/ai-langchain-rag/cover.avif
+category: ai
+product:
+    vendor: LangChain
+    description: "LangChain is an open-source framework for building applications on large language models, from prompts and chains to retrieval."
+platform:
+    - 'Cloud'
+---
+
+[LangChain](https://www.langchain.com/) is an open-source framework for building applications on top of large language models. It provides building blocks for prompts, model calls, and retrieval, and connects them to vector stores such as Pinecone.
+
+# How does the integration work?
+
+The **RAG with LangChain** function template implements retrieval-augmented generation (RAG) over an Appwrite Databases table. Instead of asking a model to answer from its training data alone, the function first finds the rows most relevant to the question and passes them to the model as context.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves a demo form for asking questions |
+| `POST /` | Indexes the table: each row's fields, apart from `$`-prefixed system fields, become a document that LangChain embeds with OpenAI and stores in Pinecone |
+| `POST /prompt` | Retrieves the documents closest to the `prompt` in the JSON body, sends them with the question to an OpenAI chat model, and returns `{"ok": true, "completion": "..."}` |
+
+# Prerequisites
+
+- An Appwrite database with a table that holds the data you want to ask about.
+- A [Pinecone account](https://app.pinecone.io/).
+- An [OpenAI API key](https://platform.openai.com/api-keys). OpenAI bills each embeddings and chat request.
+
+# How to implement
+
+To implement the LangChain integration, there are several steps you must complete:
+
+## Step 1: Create a Pinecone index
+
+In the Pinecone console, create an index with **1536** dimensions, the size of the OpenAI embeddings the template creates. Save the index name, then copy an API key from the **API keys** page.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **RAG with LangChain**, and click **Create from template**. Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+| `PINECONE_API_KEY` | Your Pinecone API key |
+| `PINECONE_INDEX_ID` | The name of your Pinecone index |
+| `APPWRITE_DATABASE_ID` | The ID of the database that holds your table |
+| `APPWRITE_COLLECTION_ID` | The ID of the table to index. The template reads it through the legacy Databases API, which calls tables collections. |
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+The function reads your table with an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) limited to the read scopes the template asks for, so you don't need to create an Appwrite API key.
+
+## Step 3: Index the table and ask a question
+
+Copy the function's domain from the **Domains** tab and send a `POST` request to index the table:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN>
+```
+
+The function responds with `Index finished.` when the documents are in Pinecone. LangChain gives each vector a new ID, so indexing the same table again adds duplicates. Clear the index in Pinecone before you re-index.
+
+Then ask a question about your data from the demo page, or from your own code:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN>/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Which of our products ship internationally?"}'
+```
+
+Requests to a function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions), which stop after 30 seconds. To index a large table, raise the function's timeout under **Settings** > **Timeout** and start the indexing as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
+
+The template allows anyone to execute the function, so anyone who finds its domain can ask questions about your table, get answers built from its rows, and spend your OpenAI credits. Unless the table's data is public, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, before you index it, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about LangChain and Appwrite Functions
+
+If you would like to learn more about LangChain and Appwrite Functions, we have some resources that you should visit:
+
+- [LangChain's Pinecone vector store for JavaScript](https://docs.langchain.com/oss/javascript/integrations/vectorstores/pinecone)
+- [Integrate LangChain into an Appwrite Function step by step](/docs/products/ai/integrations/langchain)
+- [Vector search with Pinecone](/integrations/ai-pinecone-vector-search)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [RAG with LangChain template source](https://github.com/appwrite/templates/tree/1.2.0/node/rag-with-langchain)

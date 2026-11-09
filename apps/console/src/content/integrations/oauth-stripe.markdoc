@@ -1,0 +1,65 @@
+---
+layout: integration
+title: OAuth with Stripe
+description: Authenticate users with their Stripe account through Stripe Connect
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-stripe/cover.avif
+category: auth
+product:
+    vendor: Stripe
+    description: "Stripe is a payments platform, and Stripe Connect lets software platforms and marketplaces work with their users' Stripe accounts."
+platform:
+    - 'Cloud'
+---
+
+Stripe is a payments platform for online and in-person businesses. [Stripe Connect](https://docs.stripe.com/connect/oauth-standard-accounts) lets software platforms and marketplaces work with their users' Stripe accounts, and it includes an OAuth flow that connects an existing Stripe account to your platform.
+
+# How does the integration work?
+
+You can use the Stripe OAuth adapter in Appwrite Auth to sign users in with their Stripe account. It fits platforms built around a user's own Stripe account, such as revenue dashboards, invoicing tools, and analytics apps for Stripe merchants.
+
+Sign in with Stripe uses Stripe Connect OAuth. Appwrite requests the `read_write` scope, so when a user signs in, they also connect their Stripe account to your Connect platform with read and write access. Appwrite identifies the user by their Stripe account ID and reads the account's email address. Stripe doesn't report whether that email is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account.
+
+{% info title="Stripe's guidance on Connect OAuth" %}
+Stripe doesn't recommend OAuth for new Connect platforms and suggests Connect Onboarding for Standard accounts instead. Since June 2021, platforms that use OAuth with the `read_write` scope can't connect Standard accounts that are controlled by another platform. Read [Using OAuth with Standard accounts](https://docs.stripe.com/connect/oauth-standard-accounts) before you choose this provider.
+{% /info %}
+
+# How to implement
+
+To implement the Stripe OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Enable OAuth in Stripe Connect
+
+First, sign in to the Stripe Dashboard and open your [Connect OAuth settings](https://dashboard.stripe.com/settings/connect/onboarding-options/oauth). Enable onboarding accounts with OAuth and save your platform's client ID, which starts with `ca_`. You will add the redirect URI on the same page in the next step.
+
+You also need your platform's secret API key, which starts with `sk_`, from the API keys page of the Dashboard. Stripe provides separate test and live client IDs and keys. Use the test values while you build, since a test client ID connects test accounts.
+
+## Step 2: Add the Stripe OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Stripe** under the **OAuth2 Providers** section.
+
+Enter your Connect client ID in **Client ID** and your secret key in **API Secret Key**. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/stripe/<PROJECT_ID>
+```
+
+Always copy the exact value from the Console. Back in your Connect OAuth settings, add this URI as a redirect URI and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Stripe` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Stripe and Appwrite Auth
+
+If you would like to learn more about Stripe and Appwrite Auth, we have some resources that you should visit:
+
+- [Using OAuth with Standard accounts](https://docs.stripe.com/connect/oauth-standard-accounts)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

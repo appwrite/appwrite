@@ -1,0 +1,94 @@
+---
+layout: integration
+title: Vector search with Pinecone
+description: Sync an Appwrite Databases table to Pinecone and search it by meaning with OpenAI embeddings
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/ai-pinecone-vector-search/cover.avif
+category: ai
+product:
+    vendor: Pinecone
+    description: "Pinecone is a managed vector database for storing embeddings and running similarity search at scale."
+platform:
+    - 'Cloud'
+---
+
+[Pinecone](https://www.pinecone.io/) is a managed vector database. It stores embeddings, the numeric representations AI models produce for text and other data, and finds the entries closest in meaning to a query. Developers use it for semantic search, recommendations, and retrieval-augmented generation.
+
+# How does the integration work?
+
+The **Sync with Pinecone** function template turns the rows of an Appwrite Databases table into vectors you can search by meaning. When you send a `POST` request to the function, it reads the table, creates an embedding for each row with OpenAI's `text-embedding-ada-002` model, and upserts the embeddings into your Pinecone index with the row ID as the vector ID and the row as metadata.
+
+The function exposes three routes:
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves a demo page where you can search the index |
+| `POST /` | Syncs the table to Pinecone |
+| `POST /search` | Embeds the `prompt` in the JSON body and returns the 5 closest matches |
+
+# Prerequisites
+
+- An Appwrite database with a table that holds the data you want to search.
+- A [Pinecone account](https://app.pinecone.io/).
+- An [OpenAI API key](https://platform.openai.com/api-keys). OpenAI bills each embeddings request.
+
+# How to implement
+
+To implement the Pinecone integration, there are several steps you must complete:
+
+## Step 1: Create a Pinecone index
+
+In the Pinecone console, create an index with **1536** dimensions, the size of the embeddings `text-embedding-ada-002` returns. Cosine is the usual metric for OpenAI embeddings. Save the index name, then copy an API key from the **API keys** page.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Sync with Pinecone**, and click **Create from template**. Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+| `PINECONE_API_KEY` | Your Pinecone API key |
+| `PINECONE_INDEX_ID` | The name of your Pinecone index |
+| `APPWRITE_DATABASE_ID` | The ID of the database that holds your table |
+| `APPWRITE_COLLECTION_ID` | The ID of the table to sync. The template reads it through the legacy Databases API, which calls tables collections. |
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+The function reads your table with an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) limited to the read scopes the template asks for, so you don't need to create an Appwrite API key.
+
+## Step 3: Sync and search
+
+Copy the function's domain from the **Domains** tab and send a `POST` request to start the sync:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN>
+```
+
+The function responds with `Sync finished.` once every row is in the index. Open the domain in your browser to search from the demo page, or query the index from your own code:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN>/search \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Books about space travel"}'
+```
+
+The response lists Pinecone's 5 closest matches, each with the row ID and a similarity score, so you can fetch the full rows from Appwrite.
+
+Requests to a function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions), which stop after 30 seconds, and the function creates one embedding per row. To sync a large table, raise the function's timeout under **Settings** > **Timeout** and start the sync as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
+
+The function stores each full row as Pinecone metadata, and Pinecone only accepts flat metadata of strings, numbers, booleans, and lists of strings, up to 40 KB per record. Rows with empty (`null`) values or nested data, such as relationships, need their metadata trimmed in the function code before they sync.
+
+The template allows anyone to execute the function, so anyone who finds its domain can start syncs and run searches, and each one spends your OpenAI credits. Before you use it in a public app, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about Pinecone and Appwrite Functions
+
+If you would like to learn more about Pinecone and Appwrite Functions, we have some resources that you should visit:
+
+- [Pinecone quickstart](https://docs.pinecone.io/guides/get-started/quickstart)
+- [Integrate Pinecone into an Appwrite Function step by step](/docs/products/ai/integrations/pinecone)
+- [Answer questions about your data with RAG with LangChain](/integrations/ai-langchain-rag)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Sync with Pinecone template source](https://github.com/appwrite/templates/tree/1.2.0/node/sync-with-pinecone)
