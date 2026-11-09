@@ -5,6 +5,7 @@
  */
 
 import {
+  keepPreviousData,
   queryOptions,
   useMutation,
   useQuery,
@@ -13,7 +14,7 @@ import {
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_STALE_TIME, DOMAINS_DEFAULT_PAGE_SIZE } from './constants'
 import { getActiveProfileId } from '@/lib/console-profiles'
 
 type VerifyDomainInput =
@@ -32,12 +33,16 @@ type VerifyDomainInput =
  *
  * @param projectId - The project ID
  * @param region - The project region
+ * @param page - Zero-based page index
+ * @param limit - Rules per page
  * @param search - Optional search query
  * @returns Proxy rules list response from the API
  */
 export async function fetchProjectDomains(
   projectId: string,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
   if (!projectId) {
@@ -45,16 +50,28 @@ export async function fetchProjectDomains(
   }
 
   const projectSdk = sdk.forProject(projectId, region)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const queries = [
     Query.equal('type', 'api'),
     Query.equal('trigger', 'manual'),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries })
 
   return {
     rules: response.rules || [],
@@ -75,11 +92,21 @@ export async function fetchProjectDomains(
 export function projectDomainsQueryOptions(
   projectId: string | null | undefined,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
   return queryOptions({
-    queryKey: ['proxy-rules', 'project', projectId, region, search],
-    queryFn: () => fetchProjectDomains(projectId!, region, search),
+    queryKey: [
+      'proxy-rules',
+      'project',
+      projectId,
+      region,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () => fetchProjectDomains(projectId!, region, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -87,6 +114,7 @@ export function projectDomainsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -99,23 +127,27 @@ export function projectDomainsQueryOptions(
  *
  * @param projectId - The project ID
  * @param region - The project region
+ * @param page - Zero-based page index
+ * @param limit - Rules per page
  * @param search - Optional search query
  * @returns Proxy rules list with loading state
  */
 export function useProjectDomains(
   projectId: string | null | undefined,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
-    projectDomainsQueryOptions(projectId, region, search),
-  )
+  const { data, isLoading, isFetching, isPlaceholderData, error, refetch } =
+    useQuery(projectDomainsQueryOptions(projectId, region, page, limit, search))
 
   return {
     rules: data?.rules || [],
     total: data?.total || 0,
     isLoading,
     isFetching,
+    isPlaceholderData,
     error,
     refetch,
   }
@@ -180,8 +212,11 @@ export function useCreateDomain(
         domain: domain.toLowerCase().trim(),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
         queryKey: ['proxy-rules', 'project', projectId],
       })
       queryClient.invalidateQueries({

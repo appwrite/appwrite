@@ -8,6 +8,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Exception\ConnectionException;
 use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Pools\Pool as Connections;
 
@@ -34,9 +35,7 @@ final readonly class Pool implements ClientInterface, StreamingClientInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        return $this->connections->use(
-            fn (ClientInterface $client): ResponseInterface => $client->sendRequest($request),
-        );
+        return $this->lease($request, fn (ClientInterface $client): ResponseInterface => $client->sendRequest($request));
     }
 
     /**
@@ -46,8 +45,25 @@ final readonly class Pool implements ClientInterface, StreamingClientInterface
      */
     public function stream(RequestInterface $request, callable $sink): ResponseInterface
     {
-        return $this->connections->use(
-            fn (StreamingClientInterface $client): ResponseInterface => $client->stream($request, $sink),
-        );
+        return $this->lease($request, fn (StreamingClientInterface $client): ResponseInterface => $client->stream($request, $sink));
+    }
+
+    /**
+     * @param callable(T): ResponseInterface $callback
+     *
+     * @throws ClientExceptionInterface
+     */
+    private function lease(RequestInterface $request, callable $callback): ResponseInterface
+    {
+        try {
+            return $this->connections->use($callback);
+        } catch (\Exception $exception) {
+            // The pool reports having no free connection as a plain Exception, which callers can't tell from a request failure.
+            if ($exception::class !== \Exception::class) {
+                throw $exception;
+            }
+
+            throw new ConnectionException($request, $exception->getMessage(), 0, $exception);
+        }
     }
 }

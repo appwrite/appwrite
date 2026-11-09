@@ -245,9 +245,6 @@
   "src/components/pages/organizations/$orgId/billing/PaymentMethodForm.tsx": {
     "TS2305: Module '\"@stripe/stripe-js\"' has no exported member 'PaymentElement'.": 1
   },
-  "src/components/pages/organizations/$orgId/billing/PlanSummary.tsx": {
-    "TS2571: Object is of type 'unknown'.": 1
-  },
   "src/components/pages/organizations/$orgId/billing/change-plan/PlanSummaryCard.tsx": {
     "TS18046: 'charge' is of type 'unknown'.": 4,
     "TS18046: 'item' is of type 'unknown'.": 3,
@@ -798,7 +795,6 @@
     "TS6133: 'ArrowLeft' is declared but its value is never read.": 1
   },
   "src/components/pages/projects/$projectId/overview/Overview.tsx": {
-    "TS2304: Cannot find name 'AddAppKind'.": 2,
     "TS2322: Type '{ className: string; isPanelVisible: boolean; dateRange: DateRange; chartInterval: UsageChartInterval; chartData: OverviewStorageChartPoint[]; isLoading: boolean; isRefreshing: boolean; isError: boolean; onRetry: (() => undefined) | undefined; upgradeOrgId: string | undefined; errorTitle: string; errorMessage: Element; }' is not assignable to type 'IntrinsicAttributes & OverviewStorageChartProps'.": 1,
     "TS2322: Type 'null | undefined | { keys?: unknown[] | undefined; }' is not assignable to type 'KeyList | null | undefined'.": 1
   },
@@ -1188,9 +1184,6 @@
     "TS2323: Cannot redeclare exported variable 'isPostgresPromoBannerVisible'.": 2,
     "TS2484: Export declaration conflicts with exported declaration of 'isPostgresPromoBannerVisible'.": 1
   },
-  "src/lib/react-query/hooks/addons.ts": {
-    "TS2305: Module '\"@appwrite.io/console\"' has no exported member 'Addon'.": 1
-  },
   "src/lib/react-query/hooks/assistant.ts": {
     "TS6133: 'params' is declared but its value is never read.": 1
   },
@@ -1221,8 +1214,6 @@
     "TS6133: 'MysqlListTablesOptions' is declared but its value is never read.": 1
   },
   "src/lib/react-query/hooks/organizations.ts": {
-    "TS2339: Property 'code' does not exist on type '{}'.": 1,
-    "TS2339: Property 'response' does not exist on type '{}'.": 1,
     "TS2454: Variable 'result' is used before being assigned.": 1,
     "TS2571: Object is of type 'unknown'.": 6
   },
@@ -1232,9 +1223,6 @@
     "TS2345: Argument of type 'DedicatedDatabaseOperation' is not assignable to parameter of type 'DedicatedDatabase'.": 1,
     "TS2345: Argument of type 'DedicatedDatabaseOperation' is not assignable to parameter of type 'Updater<DedicatedDatabase | null | undefined, DedicatedDatabase | null | undefined>'.": 1,
     "TS6133: 'PostgresListTablesOptions' is declared but its value is never read.": 1
-  },
-  "src/lib/react-query/hooks/project-domains.ts": {
-    "TS2769: No overload matches this call.": 1
   },
   "src/lib/react-query/hooks/sites.ts": {
     "TS2322: Type 'string | undefined' is not assignable to type 'string'.": 1,
@@ -1249,7 +1237,6 @@
     "TS2769: No overload matches this call.": 1
   },
   "src/lib/react-query/hooks/usage-events.ts": {
-    "TS2552: Cannot find name 'StorageUsageChartOverview'. Did you mean 'DatabaseUsageChartOverview'?": 1,
     "TS6133: 'dateRangePresetId' is declared but its value is never read.": 5,
     "TS6133: 'keepPreviousUsageChartDataForResource' is declared but its value is never read.": 1,
     "TS6133: 'logRetentionHours' is declared but its value is never read.": 5,

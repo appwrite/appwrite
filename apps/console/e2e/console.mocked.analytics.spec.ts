@@ -1,5 +1,5 @@
 import type { Page, Request, Route } from '@playwright/test'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
@@ -66,7 +66,7 @@ const PROJECT = {
   authMethods: [] as Models.Project['authMethods'],
 } satisfies Partial<Models.Project>
 
-function property(identifyUsers: boolean) {
+function property(identifyUsers: boolean, type?: AnalyticsPropertyType) {
   return {
     $id: PROPERTY_ID,
     $createdAt: NOW,
@@ -76,6 +76,7 @@ function property(identifyUsers: boolean) {
     enabled: true,
     allowedOrigins: ['*'],
     identifyUsers,
+    ...(type ? { type } : {}),
     accessedAt: NOW,
     firstAccessedAt: NOW,
   } satisfies Partial<Models.AnalyticsProperty>
@@ -100,6 +101,9 @@ type MockOptions = {
   identifyUsers?: boolean
   /** User IDs present in the data (sent by a server with an API key). */
   hasUsers?: boolean
+  type?: AnalyticsPropertyType
+  /** Prop keys an agent sends with its model_called and tool_called events. */
+  agentProps?: boolean
 }
 
 type Mock = { metrics: URL[]; patches: Request[] }
@@ -150,6 +154,16 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
     const propKey = url.searchParams.get('propKey')
     if (propKey === 'plan') return [row('pro', 40), row('team', 12)]
     if (propKey === 'source') return [row('ads', 9)]
+    // Ranked by visitors, as the API does; events disagree with that order.
+    if (propKey === 'model')
+      return options.agentProps
+        ? [
+            row('gpt-5', 2, { events: 40 }),
+            row('claude-sonnet-5-5', 1, { events: 900 }),
+          ]
+        : []
+    if (propKey === 'tool') return []
+    if (options.agentProps) return [row('model', 3), row('plan', 2)]
     return [row('plan', 52), row('source', 9)]
   }
   if (dimension === 'userId') {
@@ -196,10 +210,13 @@ async function mockAppwriteApi(
         mock.patches.push(request)
         identifyUsers = request.postDataJSON().identifyUsers ?? identifyUsers
       }
-      return json(200, property(identifyUsers))
+      return json(200, property(identifyUsers, options.type))
     }
     if (apiPath === '/analytics/properties')
-      return json(200, { total: 1, properties: [property(identifyUsers)] })
+      return json(200, {
+        total: 1,
+        properties: [property(identifyUsers, options.type)],
+      })
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -272,6 +289,13 @@ function card(page: Page, title: string) {
   return page
     .locator('div.rounded-lg')
     .filter({ has: cardHeading(page, title) })
+}
+
+/** Overview metric tabs; the interval toggle is pressable too, without an info hint. */
+function overviewMetrics(page: Page) {
+  return page
+    .locator('[role="button"][aria-pressed]')
+    .filter({ has: page.getByRole('button', { name: 'More info' }) })
 }
 
 async function attachScreenshot(page: Page, name: string) {
@@ -373,6 +397,65 @@ test.describe('analytics property (mocked API)', () => {
     await expect(card(page, 'Users').getByText('user-a')).toBeVisible({
       timeout: 30_000,
     })
+  })
+
+  test('leaves bounce rate off a mobile property', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const metrics = overviewMetrics(page)
+    await expect(metrics.first()).toContainText('Unique visitors', {
+      timeout: 30_000,
+    })
+    await expect(metrics).toHaveText([
+      /^Unique visitors/,
+      /^Visits/,
+      /^Pageviews/,
+      /^Events/,
+      /^Views per visit/,
+      /^Visit duration/,
+      /^Engagement time/,
+    ])
+  })
+
+  test('leads with events on an agent property', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
+    await openProperty(page)
+
+    const metrics = overviewMetrics(page)
+    await expect(metrics.first()).toContainText('Events', { timeout: 30_000 })
+    await expect(metrics.first()).toHaveAttribute('aria-pressed', 'true')
+    await expect(metrics).toHaveText([/^Events/, /^Visits/, /^Visit duration/])
+    await attachScreenshot(page, 'property-agent-metrics')
+  })
+
+  test('ranks agent models by calls', async ({ page }) => {
+    await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Agent,
+      agentProps: true,
+    })
+    await openProperty(page)
+
+    const models = card(page, 'Models and tools')
+    await expect(models).toBeVisible({ timeout: 30_000 })
+    // Only keys that arrived get a tab, and a single tab shows no tab bar.
+    await expect(models.getByRole('tab')).toHaveCount(0)
+    await expect(models.getByText(/^(gpt-5|claude-sonnet-5-5)$/)).toHaveText([
+      'claude-sonnet-5-5',
+      'gpt-5',
+    ])
+    await expect(models).toContainText('900')
+    await attachScreenshot(page, 'property-agent-models')
+  })
+
+  test('hides models and tools without agent props', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
+    await openProperty(page)
+
+    await expect(card(page, 'Event properties')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(cardHeading(page, 'Models and tools')).toHaveCount(0)
   })
 
   test('turns user identification on', async ({ page }) => {

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Reviews\Http\Reviews\Usage;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -45,6 +46,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('authorization')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -57,6 +59,7 @@ class Create extends Base
         Database $dbForPlatform,
         callable $getProjectDB,
         Authorization $authorization,
+        UsagePublisher $publisherForUsage,
     ): void {
         $this->authenticate($request);
 
@@ -68,6 +71,7 @@ class Create extends Base
 
         if (!empty($documents)) {
             $authorization->skip(fn () => $dbForProject->createDocuments('reviewUsage', $documents));
+            $this->publishTokens($project, $review, $documents, $publisherForUsage);
         }
 
         $response->noContent();

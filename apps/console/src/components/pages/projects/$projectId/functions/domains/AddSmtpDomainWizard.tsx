@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -45,7 +44,6 @@ export function AddSmtpDomainWizard() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
   // Inbound email is Cloud-only.
@@ -114,7 +112,9 @@ export function AddSmtpDomainWizard() {
 
     setRegistering(true)
     try {
-      await ensureApexDomainInOrganization(project?.teamId ?? '', d)
+      await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
+        region: project?.region,
+      })
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
@@ -131,9 +131,6 @@ export function AddSmtpDomainWizard() {
         functionId: functionId!,
       })
       if (created.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Email domain verified'))
         leave()
       } else {

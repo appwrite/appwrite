@@ -71,6 +71,12 @@ export function View() {
   )
 
   const searchValue = search?.search ?? ''
+  // Go back to the first page in the same render the filters change.
+  const [pageQuery, setPageQuery] = useState(search?.query)
+  if (pageQuery !== search?.query) {
+    setPageQuery(search?.query)
+    setCurrentPage(0)
+  }
   const filterMap = useMemo(
     () => queryParamToMap(search?.query ?? null),
     [search?.query],

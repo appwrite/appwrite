@@ -114,7 +114,7 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals([], $webhook['data']['prefs']);
     }
 
     public function testDeleteAccount(): void
@@ -183,7 +183,7 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(false, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals([], $webhook['data']['prefs']);
     }
 
     public function testCreateAccountSession(): void
@@ -512,7 +512,7 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals([], $webhook['data']['prefs']);
     }
 
     public function testUpdateAccountPassword(): void
@@ -573,7 +573,7 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals([], $webhook['data']['prefs']);
     }
 
     public function testUpdateAccountEmail(): void
@@ -635,7 +635,7 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $newEmail);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals([], $webhook['data']['prefs']);
     }
 
     public function testUpdateAccountPrefs(): void
@@ -697,10 +697,13 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals(false, $webhook['data']['emailVerification']);
-        $this->assertEquals($webhook['data']['prefs'], [
-            'prefKey1' => 'prefValue1',
-            'prefKey2' => 'prefValue2',
-        ]);
+        $this->assertEquals(
+            [
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
+            ],
+            $webhook['data']['prefs']
+        );
     }
 
     public function testCreateAccountVerification(): void

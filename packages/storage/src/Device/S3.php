@@ -21,6 +21,7 @@ use Utopia\Storage\Acl;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
@@ -400,8 +401,12 @@ class S3 extends Device
      *
      * @throws StorageException
      */
-    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
     {
+        if ($etag !== null && $modifiedSince instanceof \DateTimeInterface) {
+            throw new \InvalidArgumentException('A read cannot be conditional on both an ETag and a time');
+        }
+
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         if ($length === 0) {
@@ -420,12 +425,16 @@ class S3 extends Device
             $headers['if-match'] = $this->quote($etag);
         }
 
+        if ($modifiedSince instanceof \DateTimeInterface) {
+            $headers['if-modified-since'] = gmdate('D, d M Y H:i:s \G\M\T', $modifiedSince->getTimestamp());
+        }
+
         $handle = fopen('php://temp', 'r+b');
         if ($handle === false) {
             throw new StorageException('Failed to allocate read buffer');
         }
 
-        $this->call(Method::GET, $uri, headers: $headers, decode: false, sink: static function (string $chunk) use ($handle): void {
+        $response = $this->call(Method::GET, $uri, headers: $headers, decode: false, sink: static function (string $chunk) use ($handle): void {
             $written = 0;
             $total = \strlen($chunk);
             while ($written < $total) {
@@ -436,6 +445,13 @@ class S3 extends Device
                 $written += $bytes;
             }
         });
+
+        if ($response->code === 304) {
+            fclose($handle);
+
+            throw new NotModifiedException('File ' . $path . ' has not been modified');
+        }
+
         rewind($handle);
 
         return Stream::fromResource($handle);

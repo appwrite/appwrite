@@ -35,7 +35,6 @@ const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
-const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
@@ -452,6 +451,15 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.totalDuration';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
+const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_FAILED = 'reviews.failed';
+const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
+const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
+const METRIC_REVIEWS_TOKENS_OUTPUT = 'reviews.tokens.output';
+const METRIC_REVIEWS_TOKENS_CACHED_INPUT = 'reviews.tokens.cachedInput';
+const METRIC_REVIEWS_TOKENS_REASONING = 'reviews.tokens.reasoning';
+const METRIC_REVIEWS_MODEL_TOKENS_INPUT = 'reviews.tokens.{model}.input';
+const METRIC_REVIEWS_MODEL_TOKENS_OUTPUT = 'reviews.tokens.{model}.output';
 
 const METRIC_BUCKETS = 'buckets';
 const METRIC_STORAGE = 'storage';
@@ -521,6 +529,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // forward and never recomputed, so a delta arriving after its bucket was
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
+
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
+const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
+
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

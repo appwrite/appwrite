@@ -878,6 +878,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -3408,6 +3419,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -5112,6 +5128,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -7560,6 +7590,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -9142,6 +9177,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }
