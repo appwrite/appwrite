@@ -98,7 +98,10 @@ class Get extends Action
         // authenticates Entire, and the state the Appwrite Console session
         // that started the flow -- without it anyone could attach an
         // installation to an arbitrary projectId.
-        $receiptState = \is_string($receiptClaims['state'] ?? null) ? $receiptClaims['state'] : '';
+        $receiptState = $receiptClaims['state'] ?? '';
+        if (!\is_string($receiptState)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
         if (!empty($receiptState) && !empty($state) && !\hash_equals($receiptState, $state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
         }
@@ -118,30 +121,6 @@ class Get extends Action
         if ($user->isEmpty() || $user->getId() !== $state->userId) {
             $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
             return;
-        }
-
-        // Each state completes one installation; ids are capped at 36 characters
-        try {
-            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
-            ])));
-        } catch (Duplicate) {
-            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
-            return;
-        }
-
-        // Receipts are single-use too: one replayed within its five-minute
-        // life must not attach the installation again
-        $receiptId = \strval($receiptClaims['jti'] ?? '');
-        if (!empty($receiptId)) {
-            try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                    // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
-                    '$id' => 'entire-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
-                ])));
-            } catch (Duplicate) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
-            }
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -168,6 +147,30 @@ class Get extends Action
             $organization = $adapter->getOwnerName($providerInstallationId) ?: $organization;
         } catch (\Throwable $e) {
             Console::warning('Failed to resolve Entire installation owner: ' . $e->getMessage());
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Receipts are single-use too: one replayed within its five-minute
+        // life must not attach the installation again
+        $receiptId = \strval($receiptClaims['jti'] ?? '');
+        if (!empty($receiptId)) {
+            try {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                    // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+                    '$id' => 'entire-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
+                ])));
+            } catch (Duplicate) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
+            }
         }
 
         $projectInternalId = $project->getSequence();

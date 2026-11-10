@@ -90,7 +90,10 @@ class Get extends Action
         // Cursor echoes the state given to the install URL as a receipt claim,
         // so the claim is the authoritative one; a query parameter may only
         // carry the same value, never a different one.
-        $receiptState = \is_string($receiptClaims['state'] ?? null) ? $receiptClaims['state'] : '';
+        $receiptState = $receiptClaims['state'] ?? '';
+        if (!\is_string($receiptState)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
         if (!empty($receiptState) && !empty($state) && !\hash_equals($receiptState, $state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
         }
@@ -124,16 +127,6 @@ class Get extends Action
             return;
         }
 
-        // Each state completes one installation; ids are capped at 36 characters
-        try {
-            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
-            ])));
-        } catch (Duplicate) {
-            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
-            return;
-        }
-
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -157,6 +150,16 @@ class Get extends Action
             $organization = $adapter->getOwnerName($providerInstallationId);
         } catch (\Throwable $e) {
             Console::warning('Failed to resolve Origin installation owner: ' . $e->getMessage());
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
         }
 
         $projectInternalId = $project->getSequence();
