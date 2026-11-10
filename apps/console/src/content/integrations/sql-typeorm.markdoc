@@ -1,0 +1,102 @@
+---
+layout: integration
+title: TypeORM with managed PostgreSQL and MySQL
+description: Use TypeORM entities, repositories, and migrations with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-typeorm/cover.avif
+category: databases
+product:
+    vendor: TypeORM
+    description: 'TypeORM is an open-source ORM for TypeScript and JavaScript with decorator-based entities, repositories, and migrations.'
+platform:
+    - 'Cloud'
+---
+
+[TypeORM](https://typeorm.io/) is an ORM for TypeScript and JavaScript. You define entities with decorators, query them through repositories or the query builder, and evolve the schema with generated migrations.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. TypeORM connects to them through its regular `postgres` and `mysql` data source types, backed by the `pg` and `mysql2` drivers, so entities and migrations work with no Appwrite-specific configuration.
+
+You create two data sources: a runtime one that goes through the database's connection pooler, and a migrations one that the TypeORM CLI uses over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans. The MySQL guide uses TypeORM 1.x, which requires Node.js 20 or later and supports MySQL through `mysql2` only.
+{% /info %}
+
+# How to implement
+
+To use TypeORM with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Install TypeORM and create the data sources
+
+Install `typeorm` and `reflect-metadata` with `pg` or `mysql2`, and enable `emitDecoratorMetadata` and `experimentalDecorators` in `tsconfig.json`. Then create the runtime data source:
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export const AppDataSource = new DataSource({
+    type: 'postgres', // or 'mysql'
+    url: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: true },
+    synchronize: false,
+    entities: [User],
+    migrations: ['src/migrations/**/*.ts']
+});
+```
+
+Create a second data source, for example `src/data-source.migrations.ts`, with the same options but `url: process.env.DIRECT_URL`, and export it as the default. Keep `synchronize: false` outside local prototypes. On serverless, cap the runtime pool size so each instance opens only a few connections through the pooler.
+
+## Step 4: Run migrations
+
+Point the TypeORM CLI at the migrations data source, because DDL needs a session-level connection on the direct port:
+
+```bash
+npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
+npx typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts
+```
+
+Never call `AppDataSource.runMigrations()` while `DATABASE_URL` points at the transaction-mode pooler. Run migrations as the primary user, `admin` or `admin.<hash>`.
+
+## Step 5: Test the integration
+
+Initialize the runtime data source once at module scope, save a record through `AppDataSource.getRepository(User)`, and read it back with `find`. Advisory locks, `LISTEN`/`NOTIFY`, user variables, temporary tables, and `SET LOCAL` need the direct port or a session-mode pooler. To test migrations in CI, run them against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, then delete the branch.
+
+# Read more about TypeORM and Appwrite Databases
+
+If you would like to learn more about TypeORM and Appwrite Databases, we have some resources that you should visit:
+
+- [Use TypeORM with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/typeorm)
+- [Use TypeORM with a native MySQL database](/docs/products/databases/mysql/integrations/typeorm)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [TypeORM documentation](https://typeorm.io/)

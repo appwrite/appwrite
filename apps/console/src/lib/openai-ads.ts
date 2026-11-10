@@ -22,7 +22,7 @@ const COMPLETED_CHECKOUT_PREFIX = 'console.openaiAds.checkoutStarted.'
 /** `lead_created` only counts what an account builds in its first week. */
 const LEAD_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 /** Product areas a new account must touch to count as an activated builder. */
-const LEAD_MIN_AREAS = 4
+const LEAD_MIN_AREAS = 3
 /** Navigation re-checks the lead signal at most this often. */
 const LEAD_CHECK_INTERVAL_MS = 2 * 60 * 1000
 
@@ -371,11 +371,13 @@ type OpenAiAdsOnboardingStage = {
 }
 
 /**
- * Product area an onboarding stage counts toward. Matches the free-to-Pro
- * study behind `lead_created`, so CLI, MCP and dedicated database stages
- * do not count.
+ * Product area an onboarding stage counts toward. Installing the CLI or the
+ * MCP server is an area of its own, and dedicated databases count as
+ * databases: accounts that reach them go Pro as often as the other areas.
  */
 function getOpenAiAdsLeadArea(stage: string): string | undefined {
+  if (stage === 'cli.install') return 'cli'
+  if (stage === 'mcp.install') return 'mcp'
   if (stage.startsWith('project.create') && stage.endsWith('Platform')) {
     return 'platform'
   }
@@ -388,7 +390,10 @@ function getOpenAiAdsLeadArea(stage: string): string | undefined {
   if (
     stage.startsWith('tablesDB.') ||
     stage.startsWith('documentsDB.') ||
-    stage.startsWith('databases.')
+    stage.startsWith('databases.') ||
+    stage === 'mysql.create' ||
+    stage === 'postgresql.create' ||
+    stage === 'mongo.create'
   ) {
     return 'database'
   }
@@ -407,7 +412,17 @@ function getOpenAiAdsLeadArea(stage: string): string | undefined {
 }
 
 /**
- * True when the projects completed stages in four or more product areas since
+ * When a stage was completed, in milliseconds. The server stamps stages in UTC
+ * without a zone (`2026-11-01 12:00:00.000`), which `Date.parse` would read as
+ * local time and shift by the browser's offset.
+ */
+function parseOpenAiAdsStageTime(at: string | undefined): number {
+  if (!at) return Number.NaN
+  return Date.parse(at.includes('T') ? at : `${at.replace(' ', 'T')}Z`)
+}
+
+/**
+ * True when the projects completed stages in three or more product areas since
  * the account registered. Stages from before registration (a project shared
  * with an invited member) and backfilled stages (`hidden` actor) don't count.
  */
@@ -427,7 +442,7 @@ export function isOpenAiAdsLead(
     for (const [stage, progress] of Object.entries(stages)) {
       if (progress?.status !== 'completed') continue
       if (progress.actorType === 'hidden') continue
-      if (!(Date.parse(progress.at ?? '') >= since)) continue
+      if (!(parseOpenAiAdsStageTime(progress.at) >= since)) continue
       const area = getOpenAiAdsLeadArea(stage)
       if (area) areas.add(area)
     }
@@ -463,8 +478,8 @@ export function shouldCheckOpenAiAdsLead(
 }
 
 /**
- * Conversion for an activated builder: a new account that used four or more
- * product areas in its first week. Those accounts go Pro about 9x as often as
+ * Conversion for an activated builder: a new account that used three or more
+ * product areas in its first week. Those accounts go Pro about 5x as often as
  * an average sign-up, so this is the event ads campaigns optimize for.
  */
 export function measureOpenAiAdsLeadCreated(userId: string) {

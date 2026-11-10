@@ -3,11 +3,13 @@
 namespace Appwrite\Platform\Modules\Account;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
@@ -37,7 +39,7 @@ abstract class Base extends Action
     protected const OAUTH_DEFAULT_SUCCESS = '/auth/oauth2/success';
     protected const OAUTH_DEFAULT_FAILURE = '/auth/oauth2/failure';
 
-    protected function createSession(string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): void
+    protected function createSession(string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, ?Document $authDevice, DeletePublisher $publisherForDeletes): void
     {
         // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
         $oauthProvider = null;
@@ -123,6 +125,9 @@ abstract class Base extends Action
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => $provider,
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -263,11 +268,19 @@ abstract class Base extends Action
             ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
+        // The session joins the account switching device and becomes its active one, before the
+        // response goes out so the device reads consistently on the client's next request
+        if ($authDevice !== null) {
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+        }
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('expire', $expire)
             ->setAttribute('secret', $encoded)
         ;

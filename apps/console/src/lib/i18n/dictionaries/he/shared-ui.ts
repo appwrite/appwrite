@@ -859,7 +859,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   Theme: 'ערכת נושא',
   'Light theme': 'ערכת נושא בהירה',
   'Dark theme': 'ערכת נושא כהה',
-  'System theme': 'ערכת נושא לפי המערכת',
 
   // Refresh toasts (default label)
   'data refreshed successfully': 'הנתונים רועננו בהצלחה',
@@ -878,7 +877,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
-  'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
 
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'פתיחה או סגירה של הטרמינל',
@@ -1352,6 +1350,11 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Just launched': 'הושק עכשיו',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'MCP1 מבית Appwrite: כתובת URL אחת לכל שרתי ה-MCP',
+  'MCP1 by Appwrite is live': 'MCP1 מבית Appwrite הושק',
+  'Try MCP1': 'נסו את MCP1',
   'Created by': 'נוצר על ידי',
   'Authorized resources': 'משאבים מורשים',
   'No scopes granted': 'לא הוענקו הרשאות גישה',

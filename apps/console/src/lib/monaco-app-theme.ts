@@ -222,13 +222,13 @@ export function getEffectiveConsoleTheme(
   resolvedTheme: string | undefined,
 ): string {
   if (resolvedTheme && resolvedTheme !== 'system') return resolvedTheme
-  if (typeof document === 'undefined') return 'light'
+  if (typeof document === 'undefined') return 'dark'
 
   const html = document.documentElement
   for (const themeClass of CONSOLE_THEME_CLASSES) {
     if (html.classList.contains(themeClass)) return themeClass
   }
-  return 'light'
+  return 'dark'
 }
 
 export function monacoAppThemeId(

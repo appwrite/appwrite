@@ -3754,6 +3754,13 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertNotSame($deploymentMd5, $buildMd5);
 
+        $unscoped = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['users.read']),
+        ], ['type' => 'source']);
+        $this->assertSame(401, $unscoped['headers']['status-code']);
+
         // Range bounds are inclusive and an end past the last byte is clamped to it.
         $size = \strlen($response['body']);
 

@@ -1,6 +1,6 @@
 import type { Flag } from '@appwrite.io/console'
 import { useQueryClient } from '@tanstack/react-query'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -56,6 +56,8 @@ interface CreateProjectDialogProps {
   teamId: string | null | undefined
   organizationPlan?: Models.BillingPlan | null
   currentProjectsCount?: number
+  /** The organization has no projects yet: welcome copy and a default name. */
+  firstProject?: boolean
 }
 
 export function CreateProjectDialog({
@@ -64,6 +66,7 @@ export function CreateProjectDialog({
   teamId,
   organizationPlan: organizationPlanProp,
   currentProjectsCount = 0,
+  firstProject = false,
 }: CreateProjectDialogProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -185,6 +188,19 @@ export function CreateProjectDialog({
     }
   }, [open])
 
+  // Prefill once per opening so clearing the field sticks.
+  const namePrefilledRef = useRef(false)
+  useEffect(() => {
+    if (!open) {
+      namePrefilledRef.current = false
+      return
+    }
+    if (firstProject && !namePrefilledRef.current) {
+      namePrefilledRef.current = true
+      setName(t('My first project'))
+    }
+  }, [open, firstProject, t])
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
 
@@ -277,9 +293,17 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>{t('Create project')}</DialogTitle>
+          <DialogTitle>
+            {firstProject
+              ? t('Create your first project')
+              : t('Create project')}
+          </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Create a new project in your organization.')}
+            {firstProject
+              ? t(
+                  'A project is the backend for one app: its users, data, files, and code, hosted in the region you choose.',
+                )
+              : t('Create a new project in your organization.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

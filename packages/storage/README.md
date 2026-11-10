@@ -282,6 +282,7 @@ $device->move('source/path.jpg', 'target/path.jpg');
 Every file carries an ETag, reported by `getFileInfo()` and returned by every write, conditional or not. Naming it makes an operation apply to that version of the file and no other, which is what coordinating several processes through one file takes: a lock, a lease, or a dataset that must never be read half old and half new.
 
 ```php
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 
 // Write only where nothing is yet; exactly one of several racing callers succeeds
@@ -296,6 +297,13 @@ $etag = $device->replace('locks/refresh', new Stream($token), $etag, 'text/plain
 
 // Read only while the file still is the version you know
 $chunk = $device->read('dataset.bin', $offset, $length, $etag);
+
+// Read only if the file changed after a time: one request, and no body if it did not
+try {
+    $body = $device->read('report.pdf', modifiedSince: new DateTimeImmutable('-1 hour'));
+} catch (NotModifiedException) {
+    // Unchanged in the last hour
+}
 ```
 
 On S3 the check and the operation are one request (`If-None-Match`, `If-Match`), so nothing can slip in between. On the local disk the ETag is the file's MD5 hash. `create()` opens the file exclusively and has no window at all; `replace()` checks the hash before writing, so a replacement landing between the two goes unnoticed and the last writer wins. Local writes land by renaming a finished temporary file over the path, so a reader never sees two versions mixed and a write that fails part way leaves the previous one in place. A conditional read on `Local` pins the file open and hashes it, one full pass before the first byte comes back.

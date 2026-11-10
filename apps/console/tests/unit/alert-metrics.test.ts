@@ -381,8 +381,11 @@ describe('alerts feed', () => {
 })
 
 describe('alert history pages', () => {
+  // Copy the real module now: the namespace import is live and points at the mock once it is set.
+  const realSdk = { ...actualSdk }
+
   afterAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+    mock.module('@/lib/appwrite/sdk', () => realSdk)
   })
 
   test('loads the alerts past the first page after the last one', async () => {

@@ -15,6 +15,7 @@ import { useT } from '@/lib/i18n/translate'
 import {
   VerifySmtpDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
 } from './VerifySmtpDomainContent'
 
 interface VerifySmtpDomainProps {
@@ -62,8 +63,8 @@ export function VerifySmtpDomain({
         setCurrent(updated)
         setVerificationError(dnsPendingVerificationError(t))
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 

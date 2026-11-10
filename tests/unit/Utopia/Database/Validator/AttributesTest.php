@@ -339,8 +339,8 @@ final class AttributesTest extends TestCase
         $public = ['encrypt'];
 
         $this->assertEqualsCanonicalizing(
-            \array_values(\array_diff($matches[1], $public)),
             Attributes::INTERNAL_FILTERS,
+            \array_values(\array_diff($matches[1], $public)),
             'A filter Appwrite registers for its metadata must not be settable on an inline attribute.',
         );
     }

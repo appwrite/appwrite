@@ -645,6 +645,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_REALTIME_BOOT_TIMEOUT',
+                'description' => 'Seconds a realtime server waits at boot for the cleanup of presences left by stopped realtime servers. Presence updates wait for the cleanup until this passes, then go ahead, and the cleanup carries on in the background. Set it to 0 to never wait; a user who reconnects during the cleanup may then keep showing as online until the next cleanup. Applies to self-hosted only. Default value is: 30.',
+                'introduction' => '2.7.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DB_HOST',
                 'description' => 'Database server host name address. Default value is: \'postgresql\'.',
                 'introduction' => '',
@@ -1331,6 +1340,22 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_CONNECTIONS_STORAGE_CACHE',
+                'description' => 'DSN of the storage device for cached API responses, such as s3://key:secret@host/bucket?region=us-east-1. Empty keeps them on the local filesystem. Takes effect with _APP_STORAGE_CACHE_PERCENT.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_CACHE_PERCENT',
+                'description' => 'Percentage of cached API responses, from 0 to 100, stored on the _APP_CONNECTIONS_STORAGE_CACHE device. The rest stay on the local filesystem.',
+                'introduction' => '2.8.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
@@ -1678,7 +1703,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_STREAMING',
-                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
+                'description' => 'Allows a function or site served on its domain to send its response in chunks as the runtime produces it, so a progressively rendered page or an event stream reaches the client before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
                 'introduction' => '2.7.0',
                 'default' => 'enabled',
                 'required' => false,

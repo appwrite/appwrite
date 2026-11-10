@@ -1382,6 +1382,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Error Shown`
 - `Wizard Opened`
 - `Wizard Option Selected`
+- `Overview Quick Start Clicked`, `Overview Resource Create Clicked`, `Overview Resource Opened`, `Overview Resource View All Clicked`: project dashboard cards. Props: `resource` (service id), `placement` (`header`, `filler`, `empty-card`), `action`, `option` (quick start id such as `postgres`, `git-import`, `node`)
 
 If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 

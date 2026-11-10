@@ -5,7 +5,7 @@
  * Pre-fills configuration from URL parameters.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -118,6 +118,8 @@ export function QuickDeployView({
     envKeysList.map((key) => ({ key, value: '', secret: false })),
   )
   const [domain, setDomain] = useState('')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(false)
   const [domainValid, setDomainValid] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -147,7 +149,7 @@ export function QuickDeployView({
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -540,6 +542,9 @@ export function QuickDeployView({
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

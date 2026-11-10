@@ -537,15 +537,7 @@ export function DeploymentDetailView({
     useState<'light' | 'dark' | null>(null)
 
   const defaultScreenshotTheme = useMemo((): 'light' | 'dark' => {
-    if (typeof window === 'undefined') return 'dark'
-    if (resolvedTheme === 'dark') return 'dark'
-    if (resolvedTheme === 'light') return 'light'
-    if (
-      resolvedTheme === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    )
-      return 'dark'
-    return 'light'
+    return resolvedTheme === 'light' ? 'light' : 'dark'
   }, [resolvedTheme])
 
   const sidebarScreenshotTheme =
