@@ -16,7 +16,7 @@ Appwrite Sites uses a zero-config approach to make deployments as frictionless a
 
 This means you can focus on building your application while Appwrite handles the deployment complexities.
 
-Detection reads the files in your site's root directory. If your app is part of a monorepo, select the framework and set the build settings yourself, as described in [Monorepos](/docs/products/sites/deploy-from-git#monorepos).
+Framework detection only looks at the files in your site's root directory, so an app inside a monorepo needs its framework and build settings set by hand. The [Monorepos](/docs/products/sites/deploy-from-git#monorepos) section lists the settings to use.
 
 # Supported frameworks
 

@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-monorepo-support-for-sites",
     "href": "/blog/post/announcing-monorepo-support-for-sites",
     "title": "Announcing monorepo support in Appwrite Sites",
-    "description": "Deploy server-rendered apps straight from an npm, pnpm, or Bun workspace. Appwrite Sites ships your app with the workspace packages it uses and leaves your other apps out.",
+    "description": "Appwrite Sites now deploys server-rendered apps straight from npm, pnpm, and Bun workspaces, with the shared packages they import and without the rest of the repo.",
     "date": "2026-11-10",
     "lastUpdated": "2026-11-10",
     "timeToRead": 4,
