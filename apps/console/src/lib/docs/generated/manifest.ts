@@ -3014,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 11
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3364,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Sites",
     "description": "Master site development with Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/domains",
@@ -3931,7 +3931,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/arena",
