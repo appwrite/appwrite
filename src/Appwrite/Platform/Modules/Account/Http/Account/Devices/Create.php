@@ -153,8 +153,8 @@ class Create extends Action
         // A session still pointing at a device that no longer exists (expired and swept) is
         // free to be adopted too. Skipped in admin mode: there the current session belongs to
         // the console user in the platform database, not the target project database this
-        // device is written to.
-        if ($mode !== APP_MODE_ADMIN && $current instanceof Document && $this->isAdoptable($dbForProject, $authorization, $current)) {
+        // device is written to. Skipped for JWT requests too: a JWT cannot become a session.
+        if ($mode !== APP_MODE_ADMIN && empty($request->getHeaderLine('x-appwrite-jwt', '')) && $current instanceof Document && $this->isAdoptable($dbForProject, $authorization, $current)) {
             $current = $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
                 'deviceId' => $device->getId(),
                 'deviceInternalId' => $device->getSequence(),

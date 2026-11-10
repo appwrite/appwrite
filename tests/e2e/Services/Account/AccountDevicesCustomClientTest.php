@@ -291,6 +291,36 @@ final class AccountDevicesCustomClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('user_device_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS - a device created with a JWT starts empty
+         */
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $emailOne,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', $headers + [
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/devices', $headers + [
+            'x-appwrite-jwt' => $response['body']['jwt'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['activeSessionId']);
+        $this->assertSame([], $response['body']['sessions']);
     }
 
     public function testDeviceHoldsOneSessionPerUser(): void
