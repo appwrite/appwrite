@@ -12,7 +12,7 @@ Appwrite Sites can now deploy server-rendered apps straight from a monorepo. Sit
 - It works with every JavaScript SSR framework: Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog.
 - Next.js standalone output works inside a monorepo too.
 
-Several apps from the same repository can each get a site of their own, and path filters keep each site from rebuilding when only another app changes.
+Monorepo support is available on Appwrite Cloud today.
 
 {% arrow_link href="/blog/post/announcing-monorepo-support-for-sites" %}
 Read the announcement
