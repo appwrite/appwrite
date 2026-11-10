@@ -474,6 +474,7 @@
         "PATCH /v1/reviews/:reviewId/status",
         "PATCH /v1/reviews/:reviewId/tier",
         "PATCH /v1/reviews/repositories/:repositoryId/pulls/:pullNumber/findings/status",
+        "PATCH /v1/reviews/repositories/:repositoryId/strength",
         "PATCH /v1/sites/:siteId/deployment",
         "PATCH /v1/sites/:siteId/deployments/:deploymentId/status",
         "PATCH /v1/tablesdb/:databaseId/tables/:tableId/columns/bigint/:key",
