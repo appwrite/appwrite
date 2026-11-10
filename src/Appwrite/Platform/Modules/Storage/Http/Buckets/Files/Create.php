@@ -501,8 +501,6 @@ class Create extends Action
                 $mimeType = $cipher === null ? ($info->mimeType ?? $deviceForFiles->getFileMimeType($path)) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
 
-                // A name with an allowed extension can hide any content. When the extension has a
-                // signature, the content must be one of the formats the bucket allows.
                 $allowed = $bucket->getAttribute('allowedFileExtensions', []);
                 $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
                 $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));

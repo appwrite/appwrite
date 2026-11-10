@@ -25,9 +25,7 @@ return [
         'war' => 'application/java-archive',
         'xpi' => 'application/x-xpinstall',
     ],
-    // Formats with a fixed signature. A file with one of these extensions must sniff as one of
-    // its types, unless sniffing is ambiguous. Text and container formats sniff unreliably, so
-    // they are left out and only their name is checked.
+    // Text and container formats sniff unreliably, so they are not listed.
     'signatures' => [
         'avif' => ['image/avif'],
         'bmp' => ['image/bmp', 'image/x-ms-bmp'],
