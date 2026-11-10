@@ -67,6 +67,9 @@ export function StrengthSelect({
     ? mutation.variables.strength
     : (repository.strength ?? 'normal')
 
+  // A strength this bundle doesn't know yet shows as its value.
+  const current = STRENGTHS.find((strength) => strength.value === value)
+
   return (
     <Select
       value={value}
@@ -96,7 +99,7 @@ export function StrengthSelect({
       >
         {/* The items carry a description; the trigger shows the name only. */}
         <SelectValue>
-          {t(STRENGTHS.find((strength) => strength.value === value)!.label)}
+          {current ? t(current.label) : value}
         </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
