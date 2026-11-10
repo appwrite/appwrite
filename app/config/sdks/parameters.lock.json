@@ -3624,6 +3624,9 @@
             "installationId",
             "providerRepositoryId"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3636,6 +3639,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
@@ -7765,6 +7772,9 @@
             "installationId",
             "providerRepositoryId"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -7777,6 +7787,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
