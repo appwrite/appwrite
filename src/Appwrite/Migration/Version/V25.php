@@ -583,7 +583,17 @@ class V25 extends Migration
                         $this->dbForProject->setTenant(null);
                     }
                     try {
+                        // An install already on 2.7 has the collection, and gets the attributes
+                        // added to it since created on their own.
+                        $existed = $this->dbForProject->findCollection($id) !== null;
                         $this->createCollection($id);
+                        if ($existed && $id === 'reviews') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }
