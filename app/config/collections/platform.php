@@ -257,6 +257,9 @@ $platformCollections = [
             Attribute::double(key: 'peak', required: true, default: 0),
             Attribute::integer(key: 'notifications', required: true, default: 0, signed: false),
             Attribute::datetime(key: 'resolvedAt'),
+            Attribute::datetime(key: 'acknowledgedAt'),
+            Attribute::string(key: 'acknowledgedBy', default: ''),
+            Attribute::string(key: 'acknowledgedByName', size: 128, default: ''),
             Attribute::string(key: 'search', size: 2048),
         ],
         'indexes' => [
