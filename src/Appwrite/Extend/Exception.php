@@ -347,6 +347,7 @@ class Exception extends \Exception
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
     public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
+    public const string WEBHOOK_PRECONDITION_FAILED = 'webhook_precondition_failed';
 
     /** Monitors */
     public const string MONITOR_NOT_FOUND = 'monitor_not_found';

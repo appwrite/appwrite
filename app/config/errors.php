@@ -1337,6 +1337,11 @@ return [
         'code' => 502,
         'publish' => false,
     ],
+    Exception::WEBHOOK_PRECONDITION_FAILED => [
+        'name' => Exception::WEBHOOK_PRECONDITION_FAILED,
+        'description' => 'The webhook has been modified since it was read. Precondition check failed.',
+        'code' => 412,
+    ],
     Exception::MONITOR_NOT_FOUND => [
         'name' => Exception::MONITOR_NOT_FOUND,
         'description' => 'Monitor with the requested ID could not be found.',
