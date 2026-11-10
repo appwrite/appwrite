@@ -210,7 +210,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -3343,7 +3343,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -3406,7 +3406,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrating from Vercel to Appwrite Sites",
     "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/previews",

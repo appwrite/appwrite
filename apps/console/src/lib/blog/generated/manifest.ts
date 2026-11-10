@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-monorepo-support-for-sites",
+    "href": "/blog/post/announcing-monorepo-support-for-sites",
+    "title": "Announcing monorepo support in Appwrite Sites",
+    "description": "Deploy server-rendered apps straight from an npm, pnpm, or Bun workspace. Appwrite Sites ships your app with the workspace packages it uses and leaves your other apps out.",
+    "date": "2026-11-10",
+    "lastUpdated": "2026-11-10",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-monorepo-support-for-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-push-notifications-to-your-android-app",
     "href": "/blog/post/add-push-notifications-to-your-android-app",
     "title": "Add push notifications to your Android app without Firebase",

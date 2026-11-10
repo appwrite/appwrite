@@ -1,0 +1,96 @@
+---
+layout: post
+title: "Announcing monorepo support in Appwrite Sites"
+description: Deploy server-rendered apps straight from an npm, pnpm, or Bun workspace. Appwrite Sites ships your app with the workspace packages it uses and leaves your other apps out.
+date: 2026-11-10
+cover: /images/blog/announcing-monorepo-support-for-sites/cover.avif
+timeToRead: 4
+author: atharva
+category: announcements
+featured: false
+faqs:
+  - question: "Which package managers does monorepo support work with?"
+    answer: "npm, pnpm, and Bun workspaces. Yarn Plug'n'Play isn't supported, and neither is pnpm with `shared-workspace-lockfile=false`. See the [monorepo docs](/docs/products/sites/deploy-from-git#monorepos) for the full list."
+  - question: "Which frameworks can I deploy from a monorepo?"
+    answer: "Every JavaScript framework Appwrite Sites renders on the server: Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog."
+  - question: "What should I set as the root directory?"
+    answer: "The root of the repository, `./`, where your lockfile and workspace config live. Then point the output directory at your app's build output, such as `./apps/web/.next`."
+  - question: "Does Appwrite deploy my whole monorepo?"
+    answer: "No. Appwrite installs and builds from the repo root, then packs your app's build output with the installed dependencies and copies in the workspace packages your app uses. The code of your other apps isn't included."
+  - question: "Can I deploy several apps from the same repository?"
+    answer: "Yes. Create one site per app with the same repository and root directory, and give each its own build command and output directory. Add [path filters](/docs/products/sites/deploy-from-git#build-triggers) to each site so it only rebuilds when its own app, the shared packages, or the lockfile change."
+  - question: "Does this work on self-hosted Appwrite?"
+    answer: "Yes. The change is in the Open Runtimes build images, so pull the latest image for the runtime your sites build with, for example `docker pull openruntimes/node:v5-22`, then redeploy."
+---
+
+If your site lives in `apps/web` and imports a shared UI kit or API client from `packages/`, Appwrite Sites couldn't deploy it as a server-rendered app until now. With the root directory set to `apps/web`, the build couldn't see the lockfile or the shared packages at the repo root. With the root directory set to the repo root, Next.js builds failed with `mv: can't rename '/usr/local/build/next.config.*'`, and frameworks such as Nuxt and Astro deployed but returned 500 errors once a page loaded a dependency at runtime.
+
+Today, Appwrite Sites deploys server-rendered apps straight from **npm, pnpm, and Bun workspaces**. Build from the repo root, set the output directory to your app's build output, and Appwrite ships that app with its dependencies and the workspace packages it imports, without your other apps.
+
+# What's new
+
+- **Every JavaScript SSR framework.** Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog all deploy from a workspace.
+- **Next.js standalone output.** When Next.js traces a monorepo app from the repo root, it nests the server under `.next/standalone/apps/web`. Appwrite finds it there.
+- **A fix for single-app pnpm repos.** Nuxt and Remix apps installed with pnpm deploy correctly now, even outside a monorepo.
+
+# Deploy an app from your monorepo
+
+Take a pnpm workspace with a Next.js app in `apps/web` that imports a shared `@acme/ui` package:
+
+```txt
+acme/
+├── apps/
+│   ├── web/          # the Next.js app you deploy
+│   └── docs/
+├── packages/
+│   └── ui/           # imported by apps/web as @acme/ui
+├── package.json
+├── pnpm-lock.yaml
+└── pnpm-workspace.yaml
+```
+
+Create a site from the repository, or open the settings of an existing site, and set:
+
+- **Root directory:** `./`, the repo root, where the lockfile and workspace config live.
+- **Framework:** select Next.js yourself. Detection looks at the `package.json` and config files in the root directory, and in a monorepo those belong to the workspace, not your app.
+- **Install command:** `pnpm install`
+- **Build command:** `pnpm --filter web build`, where `web` is the `name` in `apps/web/package.json`.
+- **Output directory:** `./apps/web/.next`, the framework's usual output directory with the app's path in front.
+
+For npm and Bun workspaces, only the install and build commands change:
+
+| Package manager | Install command | Build command |
+| --- | --- | --- |
+| npm | `npm install` | `npm run build --workspace web` |
+| pnpm | `pnpm install` | `pnpm --filter web build` |
+| Bun | `bun install` | `bun run --filter web build` |
+
+If your shared packages have a build step of their own, build them in the same command. With pnpm, `pnpm --filter web... build` builds `web` and every workspace package it depends on. If you use Turborepo, run `pnpm exec turbo run build --filter=web`. With `"dependsOn": ["^build"]` on the `build` task in `turbo.json`, Turborepo builds the app's workspace dependencies first.
+
+# Deploy several apps from one repo
+
+Create one site per app. Each site uses the same repository and root directory, with its own build command and output directory.
+
+Without path filters, a push to a branch that matches a site's build triggers deploys that site, whatever files changed. For the `web` site, add these [path filters](/docs/products/sites/deploy-from-git#build-triggers) so it only rebuilds when its own code, the shared packages, or the dependencies change:
+
+```txt
+apps/web/**
+packages/**
+pnpm-lock.yaml
+```
+
+To narrow it further, list the individual packages the app uses instead of `packages/**`.
+
+# What isn't supported
+
+- **Yarn Plug'n'Play**, and pnpm with `shared-workspace-lockfile=false`.
+- **Raw TypeScript in workspace packages that Node.js loads at runtime.** Compile those packages in your build command, or have your framework bundle them, for example with `transpilePackages` in Next.js. Node.js doesn't strip types from files in `node_modules`.
+
+# Get started
+
+Monorepo support is live on [Appwrite Cloud](https://cloud.appwrite.io) for new and existing sites. On self-hosted Appwrite, pull the latest image for your build runtime, such as `docker pull openruntimes/node:v5-22`, and redeploy.
+
+- [Deploy from a monorepo](/docs/products/sites/deploy-from-git#monorepos)
+- [Build triggers](/docs/products/sites/deploy-from-git#build-triggers)
+- [Supported frameworks](/docs/products/sites/frameworks)
+- [Migrate from Vercel to Appwrite Sites](/docs/products/sites/migrations/vercel)

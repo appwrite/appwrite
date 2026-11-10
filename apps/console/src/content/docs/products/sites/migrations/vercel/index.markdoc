@@ -140,13 +140,15 @@ Learn more about domain rule types
 After setting up your project and domain, you'll need to configure your build settings to match your Vercel configuration.
 
 {% section id="build-settings" step=1 title="Set up build configuration" %}
-Navigate to your site > **Settings** > **Build settings** and configure the following:
+If your app is part of an npm, pnpm, or Bun workspace, use the [monorepo build settings](/docs/products/sites/deploy-from-git#monorepos) instead: set the root directory to `./`, even if Vercel uses a subdirectory, and set the output directory relative to the repo root.
+
+For other repositories, navigate to your site > **Settings** > **Build settings** and configure the following:
 
 - **Framework:** Appwrite will attempt to automatically detect your framework. Verify and ensure it is the same framework as in Vercel.
 - **Install command:** Enter the same install command from Vercel
 - **Build command:** Enter the same build command from Vercel
 - **Output directory:** Enter the same output directory from Vercel
-- **Root directory:** If your app is in a monorepo subdirectory, specify the path
+- **Root directory:** If your app is in a subdirectory, specify the path
 - **Rendering:** Select the appropriate rendering mode (Static or SSR)
 
 {% only_dark %}
