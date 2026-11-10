@@ -836,6 +836,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '次から請求先住所を削除してもよろしいですか',
   'Auto renewal is available for domains registered with Appwrite.':
     '自動更新は Appwrite で登録したドメインで利用できます。',
+  'Registered with another registrar': '別のレジストラで登録されています',
+  'Renew this domain with its current registrar.':
+    'このドメインは現在のレジストラで更新してください。',
   'Billing address has been created and set for your organization':
     '請求先住所を作成し、組織に設定しました',
   'Billing, team, cross-project. One key for the whole org.':
