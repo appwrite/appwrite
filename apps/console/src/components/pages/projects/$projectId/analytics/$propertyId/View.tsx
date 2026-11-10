@@ -711,6 +711,7 @@ export function View({
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
+                      type={resolvedType}
                     />
                   </div>
                 ) : null}

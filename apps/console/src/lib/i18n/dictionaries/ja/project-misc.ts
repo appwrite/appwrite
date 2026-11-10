@@ -809,6 +809,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
+  'What visitors are using': '訪問者の利用デバイス',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
