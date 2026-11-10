@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-monorepo-support-for-sites",
+    "href": "/blog/post/announcing-monorepo-support-for-sites",
+    "title": "Announcing monorepo support in Appwrite Sites",
+    "description": "Appwrite Sites now deploys server-rendered apps straight from npm, pnpm, and Bun workspaces, with the shared packages they import and without the rest of the repo.",
+    "date": "2026-11-10",
+    "lastUpdated": "2026-11-10",
+    "timeToRead": 4,
+    "author": "harsh-mahajan",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-monorepo-support-for-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-streaming-responses",
     "href": "/blog/post/announcing-streaming-responses",
     "title": "Announcing streamed responses for Appwrite Sites and Functions",
