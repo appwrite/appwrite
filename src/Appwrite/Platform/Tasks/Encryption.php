@@ -11,17 +11,20 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 /**
  * Re-encrypts values stored under an older `_APP_OPENSSL_KEY_V{version}` with
  * the current one, so the old key can be retired. Covers the platform
- * database, every project database in this region, and the columns users
- * created with encryption. Each value is read raw to see its version, so a
- * second run only touches what the first missed.
+ * database, every project database in this region, the columns users
+ * created with encryption, and encrypted storage files. Each value is read
+ * raw to see its version, so a second run only touches what the first missed.
  */
 class Encryption extends Action
 {
@@ -37,6 +40,7 @@ class Encryption extends Action
             ->param('commit', false, new Boolean(true), 'Write the re-encrypted values. Without it, only count them.', true)
             ->param('after', '', new Text(36, 0), 'Resume after this project ID, the last one a previous run reported done.', true)
             ->param('batch', 100, new Range(1, 1000), 'Documents read per query.', true)
+            ->param('only', '', new WhiteList(['', 'documents', 'files'], true), 'Re-encrypt only stored documents or only storage files.', true)
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('databaseFactory')
@@ -45,9 +49,13 @@ class Encryption extends Action
 
     /**
      * @param callable(Document): Database $getProjectDB
+     * @param (callable(Document): Device)|null $getDeviceForFiles
      */
-    public function action(bool|string $commit, string $after, int|string $batch, Database $dbForPlatform, callable $getProjectDB, Provisioner $databaseFactory): void
+    public function action(bool|string $commit, string $after, int|string $batch, string $only, Database $dbForPlatform, callable $getProjectDB, Provisioner $databaseFactory, ?callable $getDeviceForFiles = null): void
     {
+        $documents = $only !== 'files';
+        $files = $only !== 'documents';
+        $getDeviceForFiles ??= fn (Document $project): Device => getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
         $commit = \strval($commit) === 'true' || $commit === true;
         $batch = (int) $batch;
         $version = EncryptionKey::version();
@@ -64,8 +72,14 @@ class Encryption extends Action
         $total = 0;
 
         if ($after === '') {
-            foreach (\array_keys($collections['console'] ?? []) as $collection) {
-                $total += $this->collection($dbForPlatform, $collection, $version, $commit, $batch);
+            if ($documents) {
+                foreach (\array_keys($collections['console'] ?? []) as $collection) {
+                    $total += $this->collection($dbForPlatform, $collection, $version, $commit, $batch);
+                }
+            }
+            // The console keeps buckets of its own, such as `default` for files uploaded to the console
+            if ($files) {
+                $total += $this->files($dbForPlatform, $getDeviceForFiles(new Document(['$id' => 'console'])), $version, $commit, $batch);
             }
             Console::log('Project console done');
         }
@@ -88,6 +102,16 @@ class Encryption extends Action
         foreach ($dbForPlatform->cursor('projects', $queries, batchSize: $batch) as $project) {
             $dbForProject = $getProjectDB($project);
             $count = 0;
+
+            if ($files) {
+                $count += $this->files($dbForProject, $getDeviceForFiles($project), $version, $commit, $batch);
+            }
+
+            if (!$documents) {
+                $total += $count;
+                Console::log('Project ' . $project->getId() . ' done, ' . $count . ' documents');
+                continue;
+            }
 
             foreach (\array_keys($collections['projects'] ?? []) as $collection) {
                 $count += $this->collection($dbForProject, $collection, $version, $commit, $batch);
@@ -198,6 +222,88 @@ class Encryption extends Action
 
         if ($count > 0) {
             Console::log('  ' . $collection . ': ' . $count);
+        }
+
+        return $count;
+    }
+
+    /**
+     * Re-encrypt every file in the project's buckets stored under an older key version, returning how many there were.
+     */
+    private function files(Database $dbForProject, Device $device, string $version, bool $commit, int $batch): int
+    {
+        $count = 0;
+
+        foreach ($dbForProject->cursor('buckets', batchSize: $batch) as $bucket) {
+            $collection = 'bucket_' . $bucket->getSequence();
+            if ($dbForProject->findCollection($collection) === null) {
+                continue;
+            }
+
+            $stale = [Query::isNotNull('openSSLCipher'), Query::notEqual('openSSLVersion', $version)];
+
+            foreach ($dbForProject->cursor($collection, $stale, batchSize: $batch) as $file) {
+                if ($file->getAttribute('openSSLCipher', '') === '') {
+                    continue;
+                }
+
+                if (!$commit) {
+                    $count++;
+                    continue;
+                }
+
+                $old = (string) $file->getAttribute('path', '');
+
+                try {
+                    $plain = OpenSSL::decrypt(
+                        (string) $device->read($old),
+                        $file->getAttribute('openSSLCipher'),
+                        EncryptionKey::get((string) $file->getAttribute('openSSLVersion')),
+                        0,
+                        (string) \hex2bin($file->getAttribute('openSSLIV', '')),
+                        (string) \hex2bin($file->getAttribute('openSSLTag', '')),
+                    );
+                } catch (\Throwable $error) {
+                    Console::warning('  ' . $collection . '/' . $file->getId() . ': ' . $error->getMessage() . ', skipped');
+                    continue;
+                }
+
+                if ($plain === false) {
+                    Console::warning('  ' . $collection . '/' . $file->getId() . ': does not decrypt with its recorded key version, skipped');
+                    continue;
+                }
+
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $tag = null;
+                $data = OpenSSL::encrypt($plain, OpenSSL::CIPHER_AES_128_GCM, EncryptionKey::current(), 0, $iv, $tag);
+
+                // Written beside the old object, not over it: until the document points here, a reader still
+                // holds the old IV and tag, and those only decrypt the old bytes. The extension stays, previews read it.
+                $info = \pathinfo($old);
+                $path = $info['dirname'] . '/' . \preg_replace('/-v\d+$/', '', $info['filename']) . '-v' . $version . (isset($info['extension']) ? '.' . $info['extension'] : '');
+                $device->write($path, new Stream($data), (string) $file->getAttribute('mimeType', ''));
+
+                $updated = $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document([
+                    'path' => $path,
+                    'openSSLVersion' => $version,
+                    'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+                    'openSSLTag' => \bin2hex($tag ?? ''),
+                    'openSSLIV' => \bin2hex($iv),
+                ])));
+
+                // Deleted while it was being rewritten: the new object is the only thing left of it
+                if ($updated->isEmpty()) {
+                    $device->delete($path);
+                    continue;
+                }
+
+                $device->delete($old);
+                $count++;
+            }
+        }
+
+        if ($count > 0) {
+            Console::log('  files: ' . $count);
         }
 
         return $count;
