@@ -18,6 +18,7 @@ use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\Push\Mock as PushMock;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Bird;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
@@ -53,6 +54,7 @@ class Provider
     public function sms(Document $provider): ?SMSAdapter
     {
         $credentials = $provider->getAttribute('credentials');
+        $options = $provider->getAttribute('options', []);
 
         $adapter = match ($provider->getAttribute('provider')) {
             'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
@@ -89,6 +91,10 @@ class Provider
                 $credentials['senderId'] ?? '',
                 $credentials['apiKey'] ?? '',
             ),
+            'bird' => !empty($credentials['apiKey']) ? new Bird(
+                $credentials['apiKey'],
+                $options['from'] ?? null
+            ) : null,
             default => null
         };
 
