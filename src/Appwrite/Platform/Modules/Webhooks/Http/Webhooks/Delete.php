@@ -78,7 +78,7 @@ class Delete extends Action
         Event $queueForEvents,
         Authorization $authorization
     ) {
-        $precondition = $ifUpdatedAt ?: ($request->getHeader('x-appwrite-if-updated-at', '') ?: null);
+        $precondition = $ifUpdatedAt ?: ($request->getHeaderLine('x-appwrite-if-updated-at', '') ?: null);
 
         $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
