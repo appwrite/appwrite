@@ -95,7 +95,8 @@ class Get extends Action
         // Access is granted either to a privileged caller (console/CLI via
         // session or API key) or to a valid presigned token bound to this
         // deployment + artifact type (used by the jobs-service).
-        $isPrivileged = $user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles());
+        $isPrivileged = $user->isPrivileged($authorization->getRoles())
+            || ($user->isKey($authorization->getRoles()) && \in_array('sites.read', $request->getScopes(), true));
         if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type)) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
