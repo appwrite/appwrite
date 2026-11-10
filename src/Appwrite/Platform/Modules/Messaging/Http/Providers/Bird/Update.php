@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -74,40 +75,40 @@ class Update extends Action
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
+        $updates = [];
+
         if (!empty($name)) {
-            $provider->setAttribute('name', $name);
+            $updates['name'] = $name;
         }
 
+        $options = $provider->getAttribute('options', []);
         if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
+            $options['from'] = $from;
+            $updates['options'] = $options;
         }
 
-        $credentials = $provider->getAttribute('credentials');
-
+        $credentials = $provider->getAttribute('credentials', []);
         if (!empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
+            $updates['credentials'] = $credentials;
         }
-
-        $provider->setAttribute('credentials', $credentials);
 
         if (!\is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $credentials) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('from', $options)
                 ) {
-                    $provider->setAttribute('enabled', true);
+                    $updates['enabled'] = true;
                 } else {
                     throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
                 }
             } else {
-                $provider->setAttribute('enabled', false);
+                $updates['enabled'] = false;
             }
         }
 
-        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), new Document($updates));
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
