@@ -583,7 +583,8 @@ class V25 extends Migration
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
                     // Created before monitors could be critical, or alerts acknowledged.
-                    foreach (['critical', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] as $attribute) {
+                    $attributes = $id === 'monitorAlerts' ? ['critical', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['critical'];
+                    foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Duplicate) {
