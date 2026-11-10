@@ -9,9 +9,8 @@ tags: sites, functions
 Appwrite Sites and Functions now stream their responses. Each chunk your code writes reaches the browser as soon as it is produced, so server-rendered pages show their ready parts first and AI output appears while the model is still writing.
 
 - Server-rendered sites stream with no configuration. Frameworks that stream HTML, such as Next.js with Suspense, send the page shell first and fill in slower sections as their data loads.
-- Functions stream through their domain when they return `res.sendStream()`, which is available in every runtime except Rust. In Node.js, Bun, and Deno, returning a Fetch API `Response` with a `ReadableStream` body streams too.
+- Functions stream their response when they return `res.sendStream()`.
 - Streamed responses are still compressed with gzip or Brotli when the browser supports it.
-- On self-hosted Appwrite, streaming ships in the next release and is on by default. Set `_APP_COMPUTE_STREAMING` to `disabled` to turn it off.
 
 {% arrow_link href="/blog/post/announcing-streaming-responses" %}
 Read the announcement
