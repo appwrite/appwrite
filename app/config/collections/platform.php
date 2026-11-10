@@ -424,6 +424,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
+            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

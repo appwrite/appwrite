@@ -20,6 +20,9 @@ export type ReviewTrigger =
   | 'retry'
   | 'mention'
 
+/** How hard a repository's pull requests are reviewed, and what each review costs. */
+export type ReviewStrength = 'basic' | 'normal' | 'expert'
+
 export type ReviewFindingSeverity = 'info' | 'minor' | 'major' | 'critical'
 
 /**
@@ -117,6 +120,10 @@ export type Review = {
    */
   trigger: ReviewTrigger
   /**
+   * Strength the review runs and is billed at: the repository's when it was queued.
+   */
+  strength: ReviewStrength
+  /**
    * Review status.
    */
   status: ReviewStatus
@@ -208,6 +215,10 @@ export type ReviewRepository = {
    * VCS repository ID.
    */
   providerRepositoryId: string
+  /**
+   * How hard pull requests are reviewed.
+   */
+  strength: ReviewStrength
 }
 
 /**

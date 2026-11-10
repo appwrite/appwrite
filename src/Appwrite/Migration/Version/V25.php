@@ -177,6 +177,17 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'repositories':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'webhooks':
                     // The encrypted password is about 1.4x its plaintext plus a 121-char wrapper, so the 255-char column
                     // only fit passwords of up to about 99 chars, well below the 2048 the API accepts.

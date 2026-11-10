@@ -621,6 +621,8 @@ return [
             // Why a review was skipped or failed, shown to the project's users.
             Attribute::string(key: 'reason', size: 2048),
             Attribute::string(key: 'providerReviewId'),
+            // The repository's strength when the review was queued: what it runs and is billed at.
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
             Attribute::datetime(key: 'startedAt'),
             Attribute::datetime(key: 'completedAt'),
         ],

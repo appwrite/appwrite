@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Reviews\Http\Repositories;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission;
+use Appwrite\Reviews\Strength;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -17,9 +18,11 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
@@ -50,7 +53,7 @@ class Create extends Action
                 group: 'repositories',
                 name: 'createRepository',
                 description: <<<EOT
-                Turn on code review for a GitHub repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. Each project turns on review for a repository once; several projects may review the same repository.
+                Turn on code review for a GitHub repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. Each project turns on review for a repository once; several projects may review the same repository. The strength sets how hard its pull requests are reviewed, and what each review costs.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -64,6 +67,7 @@ class Create extends Action
             ))
             ->param('installationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Appwrite installation ID the repository is connected through.', false, ['dbForPlatform'])
             ->param('providerRepositoryId', '', new Text(20), 'GitHub repository ID.')
+            ->param('strength', Strength::Normal->value, new WhiteList(Strength::values(), true), 'How hard pull requests are reviewed. basic reviews with cheaper models and reads the code only, normal is the default, expert reviews with stronger models and subagents.', true, enum: new Enum(name: 'ReviewStrength'))
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -75,6 +79,7 @@ class Create extends Action
     public function action(
         string $installationId,
         string $providerRepositoryId,
+        string $strength,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -140,6 +145,7 @@ class Create extends Action
                 'resourceInternalId' => $project->getSequence(),
                 'resourceType' => RESOURCE_TYPE_REVIEWS,
                 'providerPullRequestIds' => [],
+                'strength' => $strength,
             ])));
         } catch (DuplicateException) {
             throw new Exception(Exception::REVIEW_REPOSITORY_ALREADY_EXISTS);

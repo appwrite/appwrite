@@ -23,6 +23,7 @@ import type {
   ReviewList,
   ReviewRepository,
   ReviewRepositoryList,
+  ReviewStrength,
 } from '@/lib/appwrite/reviews'
 import { DEFAULT_STALE_TIME } from './constants'
 import { fetchRepositories } from './vcs'
@@ -435,6 +436,25 @@ export function useCreateAllReviewRepositories(
       return outcome
     },
     onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['review-repositories', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Changes how hard a repository's pull requests are reviewed.
+ */
+export function useUpdateReviewRepositoryStrength(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: { repositoryId: string; strength: ReviewStrength }) =>
+      sdk.forProject(projectId!).reviews.updateRepositoryStrength(params),
+    onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
       })
