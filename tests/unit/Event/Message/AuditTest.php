@@ -64,6 +64,7 @@ final class AuditTest extends TestCase
             hostname: 'cloud.appwrite.io',
             sdk: 'web',
             sdkVersion: '18.0.0',
+            reason: 'Reported as spam by 25 users',
             event: 'user.update',
             resource: 'user/user-id',
             payload: ['$id' => 'user-id', 'password' => 'response-body', 'secret' => 'response-secret'],
@@ -131,6 +132,7 @@ final class AuditTest extends TestCase
         $this->assertSame('cloud.appwrite.io', $message->hostname);
         $this->assertSame('web', $message->sdk);
         $this->assertSame('18.0.0', $message->sdkVersion);
+        $this->assertSame('Reported as spam by 25 users', $message->reason);
         $this->assertSame([], $message->payload);
     }
 
@@ -159,6 +161,7 @@ final class AuditTest extends TestCase
         $this->assertTrue($message->impersonatorUser->isEmpty());
         $this->assertSame('', $message->sdk);
         $this->assertSame('', $message->sdkVersion);
+        $this->assertSame('', $message->reason);
 
         // Re-publishing (retry, dead-letter replay) must not carry the legacy secrets forward.
         $data = $message->toArray();

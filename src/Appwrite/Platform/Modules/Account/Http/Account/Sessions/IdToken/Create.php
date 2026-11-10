@@ -2,12 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
@@ -86,9 +89,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-reset', [201])
+            ->label('abuse', [Limit::failures(['projectId', 'url', 'ip'], 10)])
             ->param('provider', '', new WhiteList($idTokenProviders, true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $documentedProviders) . '.', enum: new Enum(name: 'IdTokenProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)
@@ -115,6 +116,8 @@ class Create extends Action
             ->inject('clientForOAuth2')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -145,6 +148,8 @@ class Create extends Action
         Client $clientForOAuth2,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -276,6 +281,9 @@ class Create extends Action
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => $provider,
                 'providerUid' => $sub,
                 'providerAccessToken' => $accessToken,
@@ -348,11 +356,19 @@ class Create extends Action
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        // The session joins the account switching device and becomes its active one, before the
+        // response goes out so the device reads consistently on the client's next request
+        if ($authDevice !== null) {
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+        }
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('secret', $encoded)
         ;
 
@@ -436,7 +452,7 @@ class Create extends Action
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
                 if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
                     $dbForProject->purgeCachedDocument('users', $user->getId());
 
                     try {

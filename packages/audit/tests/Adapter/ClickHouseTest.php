@@ -171,6 +171,35 @@ final class ClickHouseTest extends TestCase
         return $this->fields($request->getHeaderLine('Content-Type'), (string) $request->getBody())['query'];
     }
 
+    public function testBatchInsertWritesTheReason(): void
+    {
+        $this->client->respond(200);
+
+        $this->adapter->createBatch([[
+            'userId' => 'user1',
+            'event' => 'users.update.status',
+            'resource' => 'user/user1',
+            'userAgent' => 'AppwriteMCP/1.0',
+            'ip' => '127.0.0.1',
+            'time' => '2026-01-01 00:00:00.000',
+            'data' => [],
+            'actorType' => 'keyProject',
+            'resourceType' => 'user',
+            'resourceId' => 'user1',
+            'projectId' => 'project1',
+            'projectInternalId' => '1',
+            'teamId' => 'team1',
+            'teamInternalId' => '1',
+            'hostname' => 'example.org',
+            'reason' => 'Reported as spam by 25 users',
+        ]]);
+
+        $row = json_decode((string) $this->client->last()->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertIsArray($row);
+        $this->assertSame('Reported as spam by 25 users', $row['reason']);
+        $this->assertSame('[]', $row['data']);
+    }
+
     public function testBatchInsertSendsRowsAsBody(): void
     {
         $this->client->respond(200);

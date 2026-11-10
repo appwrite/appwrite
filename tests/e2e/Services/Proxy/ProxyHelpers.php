@@ -99,6 +99,41 @@ trait ProxyHelpers
         return $rule;
     }
 
+    protected function updateSiteRule(string $ruleId, string $siteId, string $branch = ''): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'siteId' => $siteId,
+            'branch' => $branch,
+        ]);
+    }
+
+    protected function updateFunctionRule(string $ruleId, string $functionId, string $branch = ''): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/function', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => $functionId,
+            'branch' => $branch,
+        ]);
+    }
+
+    protected function updateRedirectRule(string $ruleId, string $url, int $statusCode, string $resourceType, string $resourceId): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/redirect', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'url' => $url,
+            'statusCode' => $statusCode,
+            'resourceType' => $resourceType,
+            'resourceId' => $resourceId,
+        ]);
+    }
+
     protected function deleteRule(string $ruleId): mixed
     {
         $rule = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, array_merge([

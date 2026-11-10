@@ -56,10 +56,11 @@ return [
         'queueEnv' => '_APP_JOBS_QUEUE_NAME',
         'coroutines' => 8,
     ],
+    // Each job captures light and dark together, so 4 jobs keep the browser at 8 captures.
     'screenshots' => [
         'queue' => Event::SCREENSHOTS_QUEUE_NAME,
         'queueEnv' => '_APP_SCREENSHOTS_QUEUE_NAME',
-        'coroutines' => 8,
+        'coroutines' => 4,
     ],
     'certificates' => [
         'queue' => Event::CERTIFICATES_QUEUE_NAME,
@@ -85,6 +86,12 @@ return [
         'queue' => Event::NOTIFICATIONS_QUEUE_NAME,
         'queueEnv' => '_APP_NOTIFICATIONS_QUEUE_NAME',
         'coroutines' => 1,
+    ],
+    // Each job reads one rule's usage and publishes at most one notification.
+    'alerts' => [
+        'queue' => Event::ALERTS_QUEUE_NAME,
+        'queueEnv' => '_APP_ALERTS_QUEUE_NAME',
+        'coroutines' => 8,
     ],
     'messaging' => [
         'queue' => Event::MESSAGING_QUEUE_NAME,

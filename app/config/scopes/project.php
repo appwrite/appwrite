@@ -407,6 +407,18 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
+        'category' => 'Other',
+    ],
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
@@ -473,6 +485,15 @@ return [
     'reports.write' => [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
+    ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
     ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',

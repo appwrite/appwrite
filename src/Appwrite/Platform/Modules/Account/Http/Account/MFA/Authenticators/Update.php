@@ -115,15 +115,22 @@ class Update extends Action
             throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
         }
 
-        $success = Challenge\TOTP::verify($user, $otp);
+        $step = Challenge\TOTP::step($user, $otp);
 
-        if (!$success) {
+        if ($step === null) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $authenticator->setAttribute('verified', true);
+        // Spend the enrolment code so it cannot also complete an MFA challenge within its step
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $authenticator, $step) {
+            if (!Challenge\TOTP::spend($dbForProject, $user, $step)) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
 
-        $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document(['verified' => true]));
+            $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document(['verified' => true]));
+        });
+
+        $authenticator->setAttribute('verified', true);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);

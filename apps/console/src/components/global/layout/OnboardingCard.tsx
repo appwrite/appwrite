@@ -14,11 +14,15 @@ interface OnboardingCardProps {
   collapsed?: boolean
 }
 
-/** Visual shell shared by expanded (link) and collapsed layouts. */
-const CARD_BASE = 'rounded-md border border-border bg-card/50 overflow-visible'
+/**
+ * Visual shell shared by expanded (link) and collapsed layouts. The background is
+ * an opaque blend of card over background, so decorations behind the nav don't show through.
+ */
+const CARD_BASE =
+  'rounded-md border border-border bg-[color-mix(in_oklab,var(--card)_50%,var(--background))] overflow-visible'
 
 const EXPANDED_LINK =
-  'block w-full text-start transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+  'block w-full text-start transition-colors hover:bg-[color-mix(in_oklab,var(--muted)_30%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
 export function OnboardingCard({
   projectId,

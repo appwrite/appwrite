@@ -60,11 +60,11 @@ final class Distributed implements Lock
             return true;
         }
 
-        if ($timeout <= 0.0) {
+        if ($timeout === 0.0) {
             return false;
         }
 
-        $deadline = microtime(true) + $timeout;
+        $deadline = $timeout < 0.0 ? INF : microtime(true) + $timeout;
         $delay = self::BACKOFF_MIN;
 
         while (microtime(true) < $deadline) {

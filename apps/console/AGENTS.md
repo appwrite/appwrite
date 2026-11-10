@@ -503,6 +503,7 @@ Checklist (in this order):
 - **Service avatars**: Always neutral (`bg-muted text-muted-foreground`), never colored
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
+- **Wizard headers are title-only**: Never pass a description, subtitle, or helper line to `WizardLayout`. The header is the title (and close/back). Put explanation in the page body, on a field, or omit it.
 
 ### Date and time (Appwrite datetimes)
 
@@ -575,6 +576,7 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `users` - User management, identities, sessions, MFA → `services/users.ts`
 - `messaging` - Email, push, SMS, providers, topics → `services/messaging.ts`
 - `sites`, `migrations`, `proxy`, `tokens`, `graphql`, `realtime`, `health`, `locale`, `project` → See service files
+- `reviews` - AI code review of GitHub pull requests: reviews with their findings, and the repositories they run for → **not** from the SDK yet. `sdk.forProject(id).reviews` is the hand-written client in `@/lib/appwrite/reviews`. Keep it in step with `src/Appwrite/Platform/Modules/Reviews`, and delete it for the generated service once a Console SDK release carries it. The Review section shows only when `features.reviews` is on and console variables report `_APP_REVIEWS_ENABLED` (`isReviewsEnabled`), because self-hosted instances run the review service only when they opt in.
 
 **Usage**: Always check service files for exact method signatures. Methods support object/positional args. List methods support `queries`, `search`, `total`.
 
@@ -1380,6 +1382,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Error Shown`
 - `Wizard Opened`
 - `Wizard Option Selected`
+- `Overview Quick Start Clicked`, `Overview Resource Create Clicked`, `Overview Resource Opened`, `Overview Resource View All Clicked`: project dashboard cards. Props: `resource` (service id), `placement` (`header`, `filler`, `empty-card`), `action`, `option` (quick start id such as `postgres`, `git-import`, `node`)
 
 If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 

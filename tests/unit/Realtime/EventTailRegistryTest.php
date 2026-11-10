@@ -629,6 +629,19 @@ final class EventTailRegistryTest extends TestCase
         ], $delivered, 'Only the viewer who can read the project after the transfer keeps its tail.');
     }
 
+    public function testReauthorizeProjectWithNoReadRolesDetachesEveryTail(): void
+    {
+        // The handler fails closed this way when it cannot verify a project.
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner']);
+        $registry->add(2, 'y', 'projB', $this->compile([]), 0.0, ['team:teamA/owner']);
+
+        $registry->reauthorizeProject('projA', [], fn (int $connection): array => []);
+
+        $this->assertFalse($registry->isTailed('projA'));
+        $this->assertTrue($registry->isTailed('projB'));
+    }
+
     public function testReauthorizeProjectKeepsTheNewRolesForRevalidation(): void
     {
         $registry = new EventTailRegistry(rate: 100);

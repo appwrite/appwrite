@@ -113,6 +113,10 @@ import {
   wellKnownChangePasswordResponse,
 } from './src/lib/seo/change-password-url.ts'
 import {
+  APPLE_APP_SITE_ASSOCIATION_WELL_KNOWN_PATH,
+  wellKnownAppleAppSiteAssociationResponse,
+} from './src/lib/seo/apple-app-site-association.ts'
+import {
   SECURITY_TXT_WELL_KNOWN_PATH,
   wellKnownSecurityTxtResponse,
 } from './src/lib/seo/security-txt.ts'
@@ -908,6 +912,9 @@ async function initializeServer() {
         new Response('Not Found', { status: 404 }),
       [SECURITY_TXT_WELL_KNOWN_PATH]: (req: Request) =>
         wellKnownSecurityTxtResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [APPLE_APP_SITE_ASSOCIATION_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownAppleAppSiteAssociationResponse(req) ??
         new Response('Not Found', { status: 404 }),
 
       // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,

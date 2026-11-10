@@ -222,6 +222,24 @@ abstract class Base extends TestCase
         }
     }
 
+    public function testReleaseGivesBackOneHit(): void
+    {
+        $adapter = $this->getAdapter('release-test-{{ip}}', 2, 600)
+            ->withParams(['{{ip}}' => \uniqid()]);
+        $this->waitForWindowStart(1);
+
+        $adapter->release();
+        $this->assertSame(1, $adapter->peek()->remaining, 'Releasing an empty window does not go below zero');
+
+        $this->assertFalse($adapter->check()->limited);
+        $this->assertFalse($adapter->check()->limited);
+        $this->assertTrue($adapter->check()->limited);
+
+        $adapter->release();
+        $this->assertFalse($adapter->check()->limited, 'A released hit can be taken again');
+        $this->assertTrue($adapter->check()->limited);
+    }
+
     private function waitForWindowStart(int $seconds): int
     {
         $now = \time();

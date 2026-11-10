@@ -10,6 +10,8 @@ describe('isStartPromoBannerCountry', () => {
     expect(isStartPromoBannerCountry('np')).toBe(true)
     expect(isStartPromoBannerCountry('NG')).toBe(true)
     expect(isStartPromoBannerCountry('pk')).toBe(true)
+    expect(isStartPromoBannerCountry('BD')).toBe(true)
+    expect(isStartPromoBannerCountry('tz')).toBe(true)
   })
 
   it('rejects other countries', () => {

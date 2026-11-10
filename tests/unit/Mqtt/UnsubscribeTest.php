@@ -8,6 +8,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Mqtt\Fakes\Accounts;
+use Tests\Unit\Mqtt\Fakes\InterleavingDatabase;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -51,7 +52,7 @@ final class UnsubscribeTest extends TestCase
 
     private Handler $handler;
 
-    private Database $database;
+    private InterleavingDatabase $database;
 
     private string|false $previousAbuseOption = false;
 
@@ -63,7 +64,7 @@ final class UnsubscribeTest extends TestCase
         $authorization = new Authorization();
         $authorization->addRole(Role::any()->toString());
 
-        $this->database = new Database(new Memory(), new Cache(new NoCache()));
+        $this->database = new InterleavingDatabase(new Memory(), new Cache(new NoCache()));
         $this->database
             ->setAuthorization($authorization)
             ->setDatabase('mqttTests')
@@ -187,6 +188,33 @@ final class UnsubscribeTest extends TestCase
     public function testUnsubscribeWithoutConnectionsDoesNothing(): void
     {
         $this->assertSame(0, $this->handler->unsubscribe($this->server, self::PROJECT, 'ghost', 'scores'));
+    }
+
+    public function testDropRemovesSubscriptionWithoutMembershipCheck(): void
+    {
+        $topicInternalId = $this->seedTopic('scores');
+        $this->subscribe($topicInternalId, 'member'); // still subscribed: a drop does not check
+        $this->connect(1, 'member', 'scores', 'news');
+
+        $dropped = $this->handler->drop($this->server, self::PROJECT, 'member', 'scores');
+
+        $this->assertSame(1, $dropped);
+        $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'scores'));
+        $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'news'), 'an unrelated subscription was dropped');
+        $this->assertSame([], $this->network->disconnects(1), 'the connection was disconnected rather than unsubscribed');
+    }
+
+    public function testUnsubscribeSkipsConnectionsExpelledDuringItsCheck(): void
+    {
+        $this->seedTopic('scores');
+        $this->connect(1, 'member', 'scores');
+        // The membership check yields on the subscribers query; an expel lands meanwhile.
+        $this->database->interleave('subscribers', 1, function (): void {
+            $this->handler->expel(self::PROJECT, 'member');
+        });
+
+        $this->assertSame(0, $this->handler->unsubscribe($this->server, self::PROJECT, 'member', 'scores'));
+        $this->assertSame([1], $this->network->closed);
     }
 
     public function testFailsClosedWhenMembershipCannotBeChecked(): void

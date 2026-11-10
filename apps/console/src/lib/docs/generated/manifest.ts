@@ -182,7 +182,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/security/authentication",
@@ -210,7 +210,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 24
+    "readingTimeMinutes": 26
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -497,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "apis",
@@ -3014,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 11
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3029,6 +3029,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "layout": "article",
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/functions/environment-variables",
@@ -3098,7 +3105,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 8
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "layout": "article",
+    "readingTimeMinutes": 17
   },
   {
     "slug": "products/messaging/fcm",
@@ -3154,7 +3168,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/messaging/send-sms-messages",
@@ -3210,7 +3224,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/twilio",
@@ -3350,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Sites",
     "description": "Master site development with Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/domains",
@@ -3917,7 +3931,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/arena",
@@ -3966,7 +3980,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite MCP server",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
@@ -4260,7 +4274,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Commands",
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "tooling/command-line/functions",
@@ -4281,7 +4295,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "tooling/command-line/non-interactive",
@@ -5044,7 +5058,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
     "layout": "tutorial",
     "readingTimeMinutes": 2,

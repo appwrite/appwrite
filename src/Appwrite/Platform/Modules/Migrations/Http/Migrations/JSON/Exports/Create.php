@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -63,6 +64,7 @@ class Create extends Action
             ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('notify', true, new Boolean(), 'Set to true to receive an email when the export is complete. Default is true.', true)
             ->inject('user')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -82,6 +84,7 @@ class Create extends Action
         array $queries,
         bool $notify,
         Document $user,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -120,6 +123,14 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        $scopes = $this->authorize($request, [], [
+            match ($databaseType) {
+                DATABASE_TYPE_DOCUMENTSDB => ['documentsdb.documents.read'],
+                DATABASE_TYPE_VECTORSDB => ['vectorsdb.documents.read'],
+                default => ['rows.read', 'documents.read'],
+            },
+        ]);
+
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
@@ -146,6 +157,7 @@ class Create extends Action
                 'queries' => $queries,
                 'notify' => $notify,
                 'userInternalId' => $user->getSequence(),
+                'scopes' => $scopes,
             ],
         ]));
 

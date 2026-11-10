@@ -325,7 +325,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…",
+    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket…",
     "breadcrumbs": [
       "Security",
       "Measures",
@@ -930,7 +930,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - Content-Type: application/json - required…",
+    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - X-Appwrite-Environment: [ENVIRONMENT-ID] - optional…",
     "breadcrumbs": [
       "APIs",
       "Protocols",
@@ -1958,7 +1958,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/rest",
     "title": "Send events over REST",
     "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
-    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite responds with . An event named counts as a pageview. Any other…",
+    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite responds with . An event named or counts as a pageview. Any…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -4725,6 +4725,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "excerpt": "An email trigger executes your function when an email arrives at one of the function's addresses. Each function has a built-in address, and you can also connect a custom domain. Appwrite receives the email and executes your function with the email and its attachments in the request body. Your function can save the email to a table, reply to the sender, or send the content to another service. Email triggers are available on Appwrite Cloud, and they only receive email.…",
+    "breadcrumbs": [
+      "Functions",
+      "Guides",
+      "Email triggers"
+    ]
+  },
+  {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
@@ -4749,7 +4760,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/functions/execute",
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
-    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…",
+    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events, schedules, and incoming email. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request…",
     "breadcrumbs": [
       "Functions",
       "Guides",
@@ -4826,11 +4837,22 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
+    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. One-click setup with the CLI The Appwrite CLI sets up APNs for an iOS app in one command. Run…",
     "breadcrumbs": [
       "Messaging",
       "Providers",
       "Push with APNs"
+    ]
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "excerpt": "Appwrite Push is Appwrite's own push provider. With the Appwrite SDK, your app connects to Appwrite's push broker, an MQTT server that relays messages to connected devices. Messages you send with Appwrite Messaging arrive over that connection, so you can reach a signed-in user without setting up Firebase or collecting device tokens. Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs. On Android, it keeps delivering after your users leave the app. On iOS, apps built…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Push with Appwrite"
     ]
   },
   {
@@ -4881,7 +4903,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/providers",
     "title": "Providers",
     "description": "Learn the different providers that you can use to send messages with Appwrite.",
-    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Send push notifications to apps on Apple devices through Apple…",
+    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Deliver push notifications from Appwrite to apps built with the…",
     "breadcrumbs": [
       "Messaging",
       "Concepts",
@@ -4914,7 +4936,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-push-notifications",
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
-    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…",
+    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. You send push notifications through a provider, the service that delivers them to devices. Appwrite Push delivers messages straight from Appwrite to apps built with the Appwrite SDKs, with no credentials to configure. Apple Push Notification service (APNs) and Firebase Cloud Messaging (FCM) are…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -6085,7 +6107,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/ai-in-functions",
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
+    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI, and how to stream the text to the client as the model writes…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
@@ -7665,7 +7687,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-1",
     "title": "Add app subscriptions with Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "As you app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A GitHub account and working knowledge with GitHub 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions.",
+    "excerpt": "As your app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions.",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7674,9 +7696,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see Stripe Dashboard. This quick start will use test mode, but the same steps will also work for live mode. API key In the header, you can switch to the **Developers** page, where you can head to the **API Keys** section. On this page, reveal and copy the **Secret key**. Note it down, as you will need it later when setting the environment variable. Webhooks Go to the…",
+    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see the Stripe Dashboard. This tutorial uses a sandbox, Stripe's isolated test environment, so no real money moves. To switch to one, open the account picker in the Dashboard and select **Sandboxes**. The same steps also work in live mode when you're ready to accept real payments. API key Open the API keys page while viewing your sandbox. Under **Standard keys**, reveal and copy the **Secret key**, which…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7687,7 +7709,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-3",
     "title": "Create function",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Create a new function Once inside your project overview, switch to the **Functions** page from the left sidebar. Under the **Templates** section, use the search bar and look for . You will find the **Subscriptions with Stripe** template, which you can use by clicking the **Create function** button. Create a…",
+    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Find the template Once inside your project, switch to the **Functions** page from the left sidebar and open the **Templates** tab. Use the search bar to look for , and you will find the **Subscriptions with Stripe** template. Click the template card, then click **Create from template**. Configure function Under…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7698,7 +7720,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-4",
     "title": "Configure web platform",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add Function's domain as a trusted web platform. Head to your project's **Overview** page in Apwrite Console, and scroll down to the **Integrations** section. Click the **Add platform** button and select **Web App** from the dropdown. Set **Name** to and **Hostname** to your Function's domain. You can find your function's domain under the **Domains** tab. Click the…",
+    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add the function's domain as a trusted web app. You can find your function's domain under the function's **Domains** tab. Head to your project's **Overview** page in the Appwrite Console, and click **Add app** in the **Apps** section. Select **Web** as the platform and **No framework** as the web framework, then click **Continue**. Set **Name** to and…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7709,7 +7731,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-5",
     "title": "All set",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit our Function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…",
+    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit your function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…",
     "breadcrumbs": [
       "Stripe",
       "Steps",

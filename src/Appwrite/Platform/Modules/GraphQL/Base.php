@@ -1,0 +1,194 @@
+<?php
+
+namespace Appwrite\Platform\Modules\GraphQL;
+
+use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Promises\Adapter;
+use Appwrite\Platform\Action;
+use Appwrite\Utopia\Request;
+use GraphQL\Error\DebugFlag;
+use GraphQL\Error\SyntaxError;
+use GraphQL\GraphQL;
+use GraphQL\Language\Parser;
+use GraphQL\Language\Source;
+use GraphQL\Type\Schema as GQLSchema;
+use GraphQL\Utils\AST;
+use GraphQL\Validator\Rules\DisableIntrospection;
+use GraphQL\Validator\Rules\QueryComplexity;
+use GraphQL\Validator\Rules\QueryDepth;
+use Swoole\Coroutine\WaitGroup;
+use Utopia\Http\Http;
+use Utopia\System\System;
+
+abstract class Base extends Action
+{
+    /**
+     * Execute a GraphQL request
+     *
+     * @param GQLSchema $schema
+     * @param Adapter $promiseAdapter
+     * @param array $query
+     * @param bool $readOnly
+     * @return array
+     * @throws Exception
+     */
+    protected function execute(
+        GQLSchema $schema,
+        Adapter $promiseAdapter,
+        array $query,
+        bool $readOnly = false
+    ): array {
+        $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+        $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+        $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+
+        if (!empty($query) && !isset($query[0])) {
+            $query = [$query];
+        }
+        if (empty($query)) {
+            throw new Exception(Exception::GRAPHQL_NO_QUERY);
+        }
+        if (\count($query) > $maxBatchSize) {
+            throw new Exception(Exception::GRAPHQL_TOO_MANY_QUERIES);
+        }
+        foreach ($query as $item) {
+            if (empty($item['query'])) {
+                throw new Exception(Exception::GRAPHQL_NO_QUERY);
+            }
+        }
+
+        $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+        $validations = GraphQL::getStandardValidationRules();
+
+        if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
+            $validations[] = new DisableIntrospection(DisableIntrospection::ENABLED);
+        }
+
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+            $validations[] = new QueryComplexity($maxComplexity);
+            $validations[] = new QueryDepth($maxDepth);
+        }
+        if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
+            $flags = DebugFlag::NONE;
+        }
+
+        $promises = [];
+        foreach ($query as $indexed) {
+            $source = $indexed['query'];
+
+            if ($readOnly) {
+                try {
+                    $document = Parser::parse(new Source($source, 'GraphQL'));
+                    $operation = AST::getOperationAST($document, $indexed['operationName'] ?? null);
+
+                    if ($operation !== null && $operation->operation !== 'query') {
+                        throw new Exception(Exception::GRAPHQL_METHOD_UNSUPPORTED);
+                    }
+
+                    $source = $document;
+                } catch (SyntaxError) {
+                    // Let the executor preserve the existing GraphQL error response.
+                }
+            }
+
+            // JSON `{}` is decoded as stdClass; GraphQL requires ?array.
+            $variableValues = $indexed['variables'] ?? null;
+            if ($variableValues instanceof \stdClass) {
+                $variableValues = \get_object_vars($variableValues);
+            }
+
+            $promises[] = GraphQL::promiseToExecute(
+                $promiseAdapter,
+                $schema,
+                $source,
+                variableValues: $variableValues,
+                operationName: $indexed['operationName'] ?? null,
+                validationRules: $validations
+            );
+        }
+
+        $output = [];
+        $wg = new WaitGroup();
+        $wg->add();
+        $promiseAdapter->all($promises)->then(
+            function (array $results) use (&$output, &$wg, $flags) {
+                try {
+                    $output = $this->processResult($results, $flags);
+                } finally {
+                    $wg->done();
+                }
+            }
+        );
+        $wg->wait();
+
+        return $output;
+    }
+
+    /**
+     * Parse an "application/graphql" type request
+     *
+     * @param Request $request
+     * @return array
+     */
+    protected function parseGraphql(Request $request): array
+    {
+        return ['query' => $request->getRawPayload()];
+    }
+
+    /**
+     * Parse an "multipart/form-data" type request
+     *
+     * @param array $query
+     * @param Request $request
+     * @return array
+     */
+    protected function parseMultipart(array $query, Request $request): array
+    {
+        $operations = \json_decode($query['operations'], true);
+        $map = \json_decode($query['map'], true);
+
+        foreach ($map as $fileKey => $locations) {
+            foreach ($locations as $location) {
+                $items = &$operations;
+                foreach (\explode('.', $location) as $key) {
+                    if (!isset($items[$key]) || !\is_array($items[$key])) {
+                        $items[$key] = [];
+                    }
+                    $items = &$items[$key];
+                }
+                $items = $request->getFiles($fileKey);
+            }
+        }
+
+        $query['query'] = $operations['query'];
+        $query['variables'] = $operations['variables'];
+
+        unset($query['operations']);
+        unset($query['map']);
+
+        return $query;
+    }
+
+    /**
+     * Process an array of results for output.
+     *
+     * @param $result
+     * @param $debugFlags
+     * @return array
+     */
+    private function processResult($result, $debugFlags): array
+    {
+        // Only one query, return the result
+        if (!isset($result[1])) {
+            return $result[0]->toArray($debugFlags);
+        }
+
+        // Batched queries, return an array of results
+        return \array_map(
+            static function ($item) use ($debugFlags) {
+                return $item->toArray($debugFlags);
+            },
+            $result
+        );
+    }
+}

@@ -10,6 +10,10 @@ import { useQuery, queryOptions, keepPreviousData } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  getLogRetentionFloor,
+  USAGE_LOG_RETENTION_API_BUFFER_MS,
+} from '@/lib/date-range-retention'
 import { ACTIVITY_DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
   queryParamToMap,
@@ -142,8 +146,11 @@ export function activitiesQueryOptions(params: {
       filterQueryKey ?? null,
     ],
     queryFn: () => {
+      // The API refuses a `time` lower bound older than its own retention floor,
+      // so sitting exactly on the floor fails whenever the browser clock trails it.
       const planSinceIso = new Date(
-        Date.now() - planRetentionHours * 60 * 60 * 1000,
+        getLogRetentionFloor(planRetentionHours).getTime() +
+          USAGE_LOG_RETENTION_API_BUFFER_MS,
       ).toISOString()
       const filterMap = queryParamToMap(filterQueryKey)
       const { mergedSince, until, extraQueries } = getActivityFilterQueryParts(

@@ -22,6 +22,51 @@ export const heDatabasesDictionary: Record<string, string> = {
     'Appwrite Start, תוכנית שנבנתה למפתחים בניגריה.',
   'Appwrite Start, a plan built for Pakistani developers.':
     'Appwrite Start, תוכנית שנבנתה למפתחים בפקיסטן.',
+  'Salaam Bangladesh': 'Salaam Bangladesh',
+  'Mabuhay Philippines': 'Mabuhay Philippines',
+  'Ahlan Egypt': 'Ahlan Egypt',
+  'Jambo Kenya': 'Jambo Kenya',
+  'Xin chào Vietnam': 'Xin chào Vietnam',
+  'Salam Algeria': 'Salam Algeria',
+  'Marhaba Morocco': 'Marhaba Morocco',
+  'Ayubowan Sri Lanka': 'Ayubowan Sri Lanka',
+  'Aslema Tunisia': 'Aslema Tunisia',
+  'Salom Uzbekistan': 'Salom Uzbekistan',
+  'Oli otya, Uganda': 'Oli otya, Uganda',
+  'Akwaaba Ghana': 'Akwaaba Ghana',
+  'Suostei Cambodia': 'Suostei Cambodia',
+  'Selam Ethiopia': 'Selam Ethiopia',
+  'Karibu Tanzania': 'Karibu Tanzania',
+  'Appwrite Start, a plan built for Bangladeshi developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בבנגלדש.',
+  'Appwrite Start, a plan built for Filipino developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בפיליפינים.',
+  'Appwrite Start, a plan built for Egyptian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים במצרים.',
+  'Appwrite Start, a plan built for Kenyan developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בקניה.',
+  'Appwrite Start, a plan built for Vietnamese developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בווייטנאם.',
+  'Appwrite Start, a plan built for Algerian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים באלג\'יריה.',
+  'Appwrite Start, a plan built for Moroccan developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים במרוקו.',
+  'Appwrite Start, a plan built for Sri Lankan developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בסרי לנקה.',
+  'Appwrite Start, a plan built for Tunisian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בתוניסיה.',
+  'Appwrite Start, a plan built for Uzbek developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים באוזבקיסטן.',
+  'Appwrite Start, a plan built for Ugandan developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים באוגנדה.',
+  'Appwrite Start, a plan built for Ghanaian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בגאנה.',
+  'Appwrite Start, a plan built for Cambodian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בקמבודיה.',
+  'Appwrite Start, a plan built for Ethiopian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים באתיופיה.',
+  'Appwrite Start, a plan built for Tanzanian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בטנזניה.',
   'New': 'חדש',
   'PostgreSQL announcement banner': 'באנר הודעה על PostgreSQL',
   'Read more': 'למידע נוסף',
@@ -1337,6 +1382,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'You don\'t have permission to perform this action.': 'אין לכם הרשאה לבצע פעולה זו.',
   'You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.': 'הגעתם למספר הרפליקות המרבי בשירות עצמי. פנו למכירות אם אתם זקוקים לתצורת זמינות גבוהה מותאמת אישית.',
   'Your plan only supports the daily preset policy. Upgrade to create custom policies.': 'התוכנית שלכם תומכת רק במדיניות היומית המוגדרת מראש. שדרגו כדי ליצור כללי מדיניות מותאמים אישית.',
+  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.': 'התוכנית שלכם כוללת את מדיניות הגיבוי היומית. תזמונים ותקופות שמירה מותאמים אישית זמינים בתוכנית Enterprise.',
   // Column drawer (tablesdb)
   'Key is required': 'יש להזין מפתח',
   'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _':

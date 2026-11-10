@@ -1,0 +1,63 @@
+---
+layout: integration
+title: OAuth with Zoho
+description: Authenticate users with an existing Zoho account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-zoho/cover.avif
+category: auth
+product:
+    vendor: Zoho
+    description: "Zoho is a suite of business apps, including Zoho CRM, Mail, Books, and Projects, that companies use to run sales, support, and operations."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Zoho is a suite of business apps that includes Zoho CRM, Mail, Books, and Projects. One Zoho account signs people in to all of them, and Zoho Accounts acts as an OAuth 2.0 provider so other apps can sign users in with that account.
+
+# How does the integration work?
+
+You can use the Zoho OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account, and it suits tools for teams that already work in Zoho.
+
+Appwrite signs users in through Zoho's accounts server at `accounts.zoho.com` and requests the `email` and `profile` scopes. It reads the user's name, email address, and profile picture from the ID token that Zoho returns, and marks the email as verified only when Zoho reports it as verified. The profile picture also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+# How to implement
+
+To implement the Zoho OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Register a client in the Zoho API Console
+
+First, sign in to the [Zoho API Console](https://api-console.zoho.com/) and add a client. Choose **Server-based Applications** as the client type, then enter a **Client Name** and a **Homepage URL**. The **Authorized Redirect URIs** field is required, so temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step. Click **Create**.
+
+Open the **Client Secret** tab of your client and save the **Client ID** and **Client Secret** for later use.
+
+## Step 2: Add the Zoho OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Zoho** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from Zoho. Optionally, set **Prompt** to `consent` to ask users to approve your app on every sign-in. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/zoho/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in the Zoho API Console, edit your client and replace the temporary URL in **Authorized Redirect URIs** with this URI.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Zoho` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Zoho and Appwrite Auth
+
+If you would like to learn more about Zoho and Appwrite Auth, we have some resources that you should visit:
+
+- [Register a client in the Zoho API Console](https://www.zoho.com/accounts/protocol/oauth-setup.html)
+- [Zoho OAuth 2.0 overview](https://www.zoho.com/developer/oauth/introduction.html)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)
