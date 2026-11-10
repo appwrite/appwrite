@@ -1153,7 +1153,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'installationId' => $installationId,
             'providerRepositoryId' => (string) $repository['body']['id'],
             'providerBranch' => 'main',
-            'providerBranches' => ['main'],
+            'providerBranches' => ['main', 'missing'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
         $functionId = $function['body']['$id'];
@@ -1223,6 +1223,18 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()));
         $this->assertEquals(200, $function['headers']['status-code'], \json_encode($function['body']));
         $this->assertSame($liveDeploymentId, $function['body']['deploymentId'], 'The forged delivery repointed the live deployment.');
+
+        // A delivery for a branch the provider does not have is acknowledged and builds nothing.
+        $known = $this->listDeploymentIdsHelper($functionId);
+        $payload['ref'] = 'refs/heads/missing';
+        $body = \json_encode($payload, JSON_THROW_ON_ERROR);
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/gitea/events', [
+            'content-type' => 'application/json',
+            'x-gitea-event' => 'push',
+            'x-gitea-signature' => \hash_hmac('sha256', $body, System::getEnv('_APP_VCS_GITEA_WEBHOOK_SECRET', '')),
+        ], $payload);
+        $this->assertSame(200, $event['headers']['status-code'], \json_encode($event['body']));
+        $this->assertSame($known, $this->listDeploymentIdsHelper($functionId));
     }
 
     public function testCreateInstallationWithoutState(): void
