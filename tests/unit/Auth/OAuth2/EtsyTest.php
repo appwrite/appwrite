@@ -114,6 +114,59 @@ final class EtsyTest extends TestCase
         $this->assertContains('Authorization: Bearer 98765.mock-token', $etsy->lastHeaders);
         $this->assertContains('x-api-key: test-keystring:test-shared-secret', $etsy->lastHeaders);
     }
+
+    public function testUserProfileExtraction(): void
+    {
+        $etsy = new FakeEtsy(
+            new Client(new CurlAdapter()),
+            'test-keystring',
+            'test-shared-secret',
+            'https://example.com/callback'
+        );
+
+        $this->assertSame('98765', $etsy->getUserID('98765.mock-token'));
+        $this->assertSame('user@example.com', $etsy->getUserEmail('98765.mock-token'));
+        $this->assertSame('etsyuser', $etsy->getUserName('98765.mock-token'));
+        $this->assertSame('https://i.etsystatic.com/profile.jpg', $etsy->getUserPhoto('98765.mock-token'));
+        $this->assertFalse($etsy->isEmailVerified('98765.mock-token'));
+    }
+
+    public function testUserProfileWithoutPhotoReturnsEmptyString(): void
+    {
+        $etsy = new FakeEtsy(
+            new Client(new CurlAdapter()),
+            'test-keystring',
+            'test-shared-secret',
+            'https://example.com/callback'
+        );
+        $etsy->mockUserData = [
+            'user_id' => 112233,
+            'primary_email' => 'nophoto@example.com',
+            'login_name' => 'nophotouser',
+        ];
+
+        $this->assertSame('', $etsy->getUserPhoto('112233.mock-token'));
+        $this->assertSame('nophoto@example.com', $etsy->getUserEmail('112233.mock-token'));
+        $this->assertSame('nophotouser', $etsy->getUserName('112233.mock-token'));
+    }
+
+    public function testUserResultCachedAcrossMultipleCalls(): void
+    {
+        $etsy = new FakeEtsy(
+            new Client(new CurlAdapter()),
+            'test-keystring',
+            'test-shared-secret',
+            'https://example.com/callback'
+        );
+
+        $this->assertSame(0, $etsy->requestCount);
+        $etsy->getUserEmail('98765.mock-token');
+        $this->assertSame(1, $etsy->requestCount);
+        $etsy->getUserName('98765.mock-token');
+        $this->assertSame(1, $etsy->requestCount);
+        $etsy->getUserPhoto('98765.mock-token');
+        $this->assertSame(1, $etsy->requestCount);
+    }
 }
 
 class FakeEtsy extends Etsy
@@ -122,9 +175,12 @@ class FakeEtsy extends Etsy
     public string $lastUrl = '';
     public array $lastHeaders = [];
     public string $lastPayload = '';
+    public int $requestCount = 0;
+    public ?array $mockUserData = null;
 
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
+        $this->requestCount++;
         $this->lastMethod = $method;
         $this->lastUrl = $url;
         $this->lastHeaders = $headers;
@@ -147,7 +203,7 @@ class FakeEtsy extends Etsy
         }
 
         if (\str_contains($url, '/v3/application/users/')) {
-            return \json_encode([
+            return \json_encode($this->mockUserData ?? [
                 'user_id' => 98765,
                 'primary_email' => 'user@example.com',
                 'login_name' => 'etsyuser',
