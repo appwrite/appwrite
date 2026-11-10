@@ -20,7 +20,7 @@ class Update extends Action
 {
     use HTTP;
 
-    public static function getName()
+    public static function getName(): string
     {
         return 'updateBirdProvider';
     }
