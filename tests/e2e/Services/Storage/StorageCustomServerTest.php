@@ -1138,6 +1138,52 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals('renamed.png', $file['body']['name']);
     }
 
+    public function testCreateFileRejectsDisallowedContent(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Content Bucket',
+            'allowedFileExtensions' => ['png', 'jpg'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), 'image/png', 'kitten.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $fileId = Id::unique();
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/document.pdf'), 'image/png', 'document.png'),
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
+    }
+
     public function testIdleChunkedUploadDeletedByMaintenance(): void
     {
         $bucketId = $this->setupBucket()['bucketId'];
