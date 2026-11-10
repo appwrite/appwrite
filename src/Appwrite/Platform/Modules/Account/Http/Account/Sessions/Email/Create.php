@@ -3,14 +3,17 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -100,6 +103,9 @@ class Create extends Action
             ->inject('cookieDomain')
             ->inject('authorization')
             ->inject('pwnedPasswords')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
@@ -125,6 +131,9 @@ class Create extends Action
         ?string $cookieDomain,
         Authorization $authorization,
         PasswordPwned $pwnedPasswords,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
+        Mqtt $mqtt,
     ): void {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -169,6 +178,9 @@ class Create extends Action
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
@@ -256,11 +268,19 @@ class Create extends Action
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        // The session joins the account switching device and becomes its active one, before the
+        // response goes out so the device reads consistently on the client's next request
+        if ($authDevice !== null) {
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+        }
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('secret', $encoded)
         ;
 

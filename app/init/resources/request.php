@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
@@ -53,7 +54,10 @@ use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Storage;
 use Utopia\Cache\Cache;
+use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -721,6 +725,80 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
+    $context->set('authDevice', function (Project $project, Request $request, Database $dbForProject, Token $proofForToken, $authorization): ?Document {
+        /**
+         * Resolves the account-switching device from the request, or null when there is none.
+         *
+         * Named `authDevice` to keep clear of the storage devices (`deviceForFiles` and friends).
+         *
+         * Mirrors the session cookie flow: the device secret arrives in the a_device_<projectId>
+         * cookie (or its _legacy twin), the x-appwrite-device header for SSR clients, or the
+         * x-fallback-cookies header for clients that block third-party cookies. The device
+         * document is looked up by id and gated by verifying the secret, like a session.
+         *
+         * Keyed and stored by the request's project, the same as the create/update/delete
+         * actions and the session endpoints that attach to it, so a device resolves in every
+         * mode (dbForProject already maps the console project to the platform database).
+         */
+        $authorization->setStatus(true);
+
+        $key = $project->getDeviceKey();
+
+        $store = new Store();
+        $store->setKey($key);
+
+        $store->decode(
+            $request->getCookie($key, $request->getCookie($key . '_legacy', ''))
+        );
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $deviceHeader = $request->getHeaderLine('x-appwrite-device', '');
+            if (! empty($deviceHeader)) {
+                $store->decode($deviceHeader);
+            }
+        }
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
+            $store->decode((\is_array($fallback) && isset($fallback[$key])) ? $fallback[$key] : '');
+        }
+
+        $deviceId = $store->getProperty('id', '');
+        $deviceSecret = $store->getProperty('secret', '');
+
+        if (empty($deviceId) || empty($deviceSecret)) {
+            return null;
+        }
+
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
+        if (
+            $device->isEmpty()
+            || ! $device->isSet('secret')
+            || ! $device->isSet('expire')
+            || ! $proofForToken->verify($deviceSecret, $device->getAttribute('secret'))
+            || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($device->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+        ) {
+            return null;
+        }
+
+        // The sessions a device holds come from a subquery cached with the device, but a session can
+        // be deleted by paths that never touch the device: another browser, the Users API, account
+        // deletion, the expired-session cleanup. Read the verified device again past the cache, so it
+        // never lists a session that is gone. Only the endpoints that inject authDevice pay for it.
+        $dbForProject->purgeCachedDocument('devices', $deviceId);
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
+        if ($device->isEmpty()) {
+            return null;
+        }
+
+        // The cookie value as received, so an endpoint that extends the device can re-issue it. Never persisted.
+        $device->setAttribute(AuthDevice::ATTRIBUTE_COOKIE, $store->encode());
+
+        return $device;
+    }, ['project', 'request', 'dbForProject', 'proofForToken', 'authorization']);
+
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
         $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
@@ -1179,6 +1257,21 @@ return function (Container $context): void {
     $context->set('deviceForMigrations', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
+
+    // Where a route's cached response lives: [the cache for this key, what to read on its miss].
+    // Without a connection, or at the default 0 percent, every key stays on the filesystem.
+    // The hash keeps a key on one side, so raising the percentage moves keys gradually.
+    $context->set('responseCache', fn (Document $project, HttpClientPool $cacheClient) => function (string $key) use ($project, $cacheClient): array {
+        $root = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId();
+        $filesystem = new Cache(new Filesystem($root));
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+
+        if ($connection === '' || \crc32($key) % 100 >= (int) System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0')) {
+            return [$filesystem, null];
+        }
+
+        return [new Cache(new Storage(getDevice($root, $connection, $cacheClient))), $filesystem];
+    }, ['project', 'cacheClient']);
 
     $context->set('embedder', fn () => new AppwriteAdapter(
         endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),

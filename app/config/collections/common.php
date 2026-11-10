@@ -165,6 +165,10 @@ return [
         'attributes' => [
             Attribute::string(key: 'userInternalId', required: true),
             Attribute::string(key: 'userId'),
+            // The account-switching device this session belongs to, when it was created
+            // while a device cookie was present. At most one device owns a session.
+            Attribute::string(key: 'deviceInternalId'),
+            Attribute::string(key: 'deviceId'),
             Attribute::string(key: 'provider', size: 128),
             Attribute::string(key: 'providerUid', size: 2048),
             Attribute::string(key: 'providerAccessToken', size: 16384, filters: ['encrypt']),
@@ -207,6 +211,43 @@ return [
         'indexes' => [
             Index::key(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_device', attributes: ['deviceInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+        ],
+    ],
+
+    'devices' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('devices'),
+        'name' => 'Devices',
+        'attributes' => [
+            // One way hash encryption to protect DB leak, mirroring sessions.secret
+            Attribute::string(key: 'secret', size: 512, filters: ['encrypt']),
+            // The session, out of the ones the device holds, that is currently active. The
+            // active session's secret is the one carried by the project's session cookie.
+            Attribute::string(key: 'activeSessionInternalId'),
+            Attribute::string(key: 'activeSessionId'),
+            // Sessions the device holds, resolved on read from the sessions collection
+            Attribute::string(key: 'sessions', size: 16384, filters: ['subQueryDeviceSessions']),
+            Attribute::string(key: 'userAgent', size: 16384),
+            // https://stackoverflow.com/a/166157/2299554
+            Attribute::string(key: 'ip', size: 45),
+            Attribute::string(key: 'osCode', size: 256),
+            Attribute::string(key: 'osName', size: 256),
+            Attribute::string(key: 'osVersion', size: 256),
+            Attribute::string(key: 'clientType', size: 256),
+            Attribute::string(key: 'clientCode', size: 256),
+            Attribute::string(key: 'clientName', size: 256),
+            Attribute::string(key: 'clientVersion', size: 256),
+            Attribute::string(key: 'clientEngine', size: 256),
+            Attribute::string(key: 'clientEngineVersion', size: 256),
+            Attribute::string(key: 'deviceName', size: 256),
+            Attribute::string(key: 'deviceBrand', size: 256),
+            Attribute::string(key: 'deviceModel', size: 256),
+            Attribute::string(key: 'countryCode', size: 2),
+            Attribute::datetime(key: 'expire', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_expire', attributes: ['expire'], orders: [OrderDirection::Asc]),
         ],
     ],
 

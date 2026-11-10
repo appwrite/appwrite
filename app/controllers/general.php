@@ -601,8 +601,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
                 }
 
-                // A failed response may be replaced by a branded page, which needs the whole body.
-                $streamed = $statusCode < 400;
+                // A runtime may send header names in any casing.
+                $headers = \array_change_key_case($headers);
+
+                // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
+                $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
 
                 if ($streamed) {
                     $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
@@ -617,8 +620,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                             continue;
                         }
 
-                        // Length and framing describe the buffered response, not the chunked one.
-                        if ($lowercased === 'content-length' || $lowercased === 'transfer-encoding') {
+                        // Framing describes the buffered response, not the chunked one.
+                        if ($lowercased === 'transfer-encoding') {
                             continue;
                         }
 
@@ -787,10 +790,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 } else {
                     $executionResponse['headers'][$key] = $value;
                 }
-            }
-
-            if ($streamed === true) {
-                unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
             }
 
             $headersFiltered = [];
@@ -1631,6 +1630,8 @@ Http::get('/robots.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
@@ -1665,6 +1666,8 @@ Http::get('/humans.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });

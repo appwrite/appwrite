@@ -252,37 +252,30 @@ export function useVerifyDomain(
       }
 
       if (getActiveProfileId() === 'cloud' && organizationDomainId) {
-        try {
-          await sdk.forConsole.domains.verifyNameservers({
-            domainId: organizationDomainId,
+        // Best-effort and not awaited: its NS lookup must not hold up the
+        // rule check. The organization domain can change either way.
+        void sdk.forConsole.domains
+          .verifyNameservers({ domainId: organizationDomainId })
+          .catch(() => {})
+          .finally(() => {
+            void queryClient.refetchQueries({
+              queryKey: ['domain', organizationDomainId],
+            })
+            void queryClient.refetchQueries({
+              queryKey: ['domains', 'organization'],
+            })
           })
-        } catch {
-          // Nameserver verification is best-effort before proxy rule
-          // verification, but should not block verification.
-        }
       }
 
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
-    onSuccess: async () => {
-      // Every proxy rule list of this project: project, site, function and deployment keys hold projectId third
+    // A failed check saves its logs too.
+    onSettled: async () => {
+      // Every proxy rule list of this project. Function deployment keys hold projectId fourth, the others third.
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
-        predicate: (query) => query.queryKey[2] === projectId,
-      })
-    },
-    // The nameserver check runs even when the rule check fails, so the
-    // organization domain can change either way.
-    onSettled: (_data, _error, input) => {
-      const organizationDomainId =
-        typeof input === 'string' ? undefined : input.organizationDomainId
-      if (!organizationDomainId) return
-      void queryClient.refetchQueries({
-        queryKey: ['domain', organizationDomainId],
-      })
-      void queryClient.refetchQueries({
-        queryKey: ['domains', 'organization'],
+        predicate: (query) => query.queryKey.includes(projectId),
       })
     },
   })

@@ -112,6 +112,22 @@ $logs = Command::appendStdout(
 
 Plain commands execute in argv mode. Composed, grouped, and redirected commands execute through shell syntax.
 
+### Ban commands built as strings
+
+The package ships two PHPStan checks that keep every command on `Command`. `DisallowRawShellExtension` reports `exec()`, `shell_exec()`, `system()`, `passthru()`, `popen()`, `escapeshellarg()` and `escapeshellcmd()`. `DisallowShellStringRule` reports `proc_open()` and `Console::execute()` given a string. `proc_open()` with an argv array stays allowed, for a child that needs the terminal.
+
+```neon
+rules:
+    - Utopia\Console\PHPStan\DisallowShellStringRule
+services:
+    -
+        class: Utopia\Console\PHPStan\DisallowRawShellExtension
+        tags:
+            - phpstan.restrictedFunctionUsageExtension
+```
+
+Their identifiers are `function.disallowedShell` and `staticMethod.disallowedShell`.
+
 ### Create a daemon
 
 Use `Console::loop()` to build daemons without tight loops. The helper sleeps between iterations and periodically triggers garbage collection.

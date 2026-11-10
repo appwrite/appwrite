@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': 'פירוט החשבונית אינו זמין.',
+  'Recorded charges; detailed pricing unavailable.':
+    'חיובים שנרשמו; פירוט המחירים אינו זמין.',
+  'No invoice yet.': 'עדיין אין חשבונית.',
+
   'A valid transfer price is required to continue.':
     'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
   "We couldn't load a transfer price. Try again to continue.":
@@ -719,7 +724,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
   'Appwrite nameservers': 'שרתי השמות של Appwrite',
   'External nameservers': 'שרתי שמות חיצוניים',
-  'External DNS': 'DNS חיצוני',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
@@ -1624,4 +1628,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
   'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Check nameservers': 'בדיקת שרתי שמות',
+  'Nameservers changed': 'שרתי השמות השתנו',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
 }

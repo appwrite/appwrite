@@ -4,12 +4,14 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirec
 
 use Ahc\Jwt\JWT;
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
@@ -97,6 +99,8 @@ class Get extends Base
             ->inject('clientForOAuth2')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -126,6 +130,8 @@ class Get extends Base
         Client $clientForOAuth2,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
@@ -804,6 +810,9 @@ class Get extends Base
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
@@ -835,7 +844,9 @@ class Get extends Base
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-            $session->setAttribute('expire', $expire);
+            $session
+                ->setAttribute('expire', $expire)
+                ->setAttribute('userName', $user->getAttribute('name', ''));
 
             $encoded = $store
                 ->setProperty('id', $user->getId())
@@ -864,6 +875,13 @@ class Get extends Base
             $response
                 ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
                 ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+
+            // The session joins the account switching device and becomes its active one, before the
+            // redirect goes out so the device reads consistently on the client's next request
+            if ($authDevice !== null) {
+                $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+                AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+            }
         }
 
         if (isset($sessionUpgrade) && isset($session)) {

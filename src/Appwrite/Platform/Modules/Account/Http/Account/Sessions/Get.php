@@ -78,6 +78,7 @@ class Get extends Action
                 $session
                     ->setAttribute('current', $session->getId() === $current?->getId())
                     ->setAttribute('countryName', $countryName)
+                    ->setAttribute('userName', $targetUser->getAttribute('name', ''))
                     ->setAttribute('secret', $session->getAttribute('secret', ''))
                 ;
 

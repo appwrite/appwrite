@@ -1069,6 +1069,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No identified users in this range':
     'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
+  'Models and tools': 'מודלים וכלים',
+  'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
+  'No calls in this range': 'אין קריאות בטווח הזה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',
@@ -1168,6 +1171,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'What visitors are using': 'במה המבקרים משתמשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -2411,8 +2415,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
   'Are you sure you want to disconnect this git installation?':
@@ -3879,11 +3881,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
   'Saving...': 'שומר...',
+  // Firewall rule schedules
+  'Times are in your local time zone:': 'השעות לפי אזור הזמן המקומי שלכם:',
+  'Times follow the time zone this schedule was created in:':
+    'השעות לפי אזור הזמן שבו נוצר התזמון:',
+  'Your local time zone:': 'אזור הזמן המקומי שלכם:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'לכלל הזה יש תזמון שגרסה זו של הקונסולה לא יכולה להציג. הוא נשמר אלא אם תסירו אותו או תגדירו תזמון חדש.',
+  'Remove schedule': 'הסרת התזמון',
+  'The schedule will be removed when you save.': 'התזמון יוסר כשתשמרו.',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    'החלת הכלל רק בימים או בשעות מסוימים. כשהאפשרות כבויה, הכלל פעיל תמיד.',
+  Repeat: 'חזרה',
+  'Selected days every week': 'ימים נבחרים בכל שבוע',
+  'Selected days every other week': 'ימים נבחרים כל שבועיים',
+  'Weekends (Sat and Sun)': 'סופי שבוע (שבת וראשון)',
+  'Every few days': 'כל כמה ימים',
+  'Days of the week': 'ימים בשבוע',
+  'Select at least one day.': 'בחרו לפחות יום אחד.',
+  'Repeat every (days)': 'חזרה כל (ימים)',
+  'Starting on': 'תאריך התחלה',
+  'The week of this date is the first active week.':
+    'השבוע של התאריך הזה הוא השבוע הפעיל הראשון.',
+  'The first active day. The rule is never active before it.':
+    'היום הפעיל הראשון. לפניו הכלל אינו פעיל.',
+  'All day': 'כל היום',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    'שעת ההתחלה ושעת הסיום חייבות להיות שונות. לכל היום, הפעילו את "כל היום".',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'חלון הזמן חוצה את חצות: הוא מתחיל בכל יום נבחר ומסתיים למחרת בבוקר.',
 
   // Project dashboard: resources, apps and API keys
   'Your resources': 'המשאבים שלכם',
   'View all databases': 'צפייה בכל מסדי הנתונים',
   'View all sites': 'צפייה בכל האתרים',
+  'Files up to': 'קבצים עד',
   'View all functions': 'צפייה בכל הפונקציות',
   'View all buckets': 'צפייה בכל הבאקטים',
   'View all users': 'צפייה בכל המשתמשים',

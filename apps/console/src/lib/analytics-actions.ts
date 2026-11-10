@@ -265,6 +265,7 @@ export const ANALYTICS_ACTIONS = {
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
+  'mcp1-launch-banner-try': 'MCP1 Launch Banner Try Clicked',
   'init-recap-promo-banner-view-recap':
     'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':

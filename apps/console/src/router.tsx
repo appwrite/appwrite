@@ -18,6 +18,7 @@ import {
   getDefaultRouterPreload,
   ROUTER_PRELOAD_DELAY_MS,
 } from '@/lib/router-preload'
+import { parseSearch, stringifySearch } from '@/lib/router-search'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
@@ -56,6 +57,8 @@ async function buildRouter() {
   const router = createRouter({
     routeTree,
     context: { ...rqContext },
+    parseSearch,
+    stringifySearch,
     defaultPreload: getDefaultRouterPreload(),
     // Touchstart used to start preload in ~50ms and steal the tap's next paint.
     defaultPreloadDelay: ROUTER_PRELOAD_DELAY_MS,

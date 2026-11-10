@@ -1,0 +1,78 @@
+---
+layout: integration
+title: Storage with Backblaze B2
+description: Store files from your self-hosted Appwrite instance in Backblaze B2
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/storage-backblaze/cover.avif
+category: storage
+product:
+    vendor: Backblaze
+    description: "Backblaze B2 is S3-compatible cloud object storage from Backblaze."
+platform:
+    - 'Self-hosted'
+---
+
+[Backblaze B2](https://www.backblaze.com/cloud-storage) is S3-compatible cloud object storage from Backblaze. Every bucket has an S3 endpoint, such as `s3.us-west-004.backblazeb2.com`, whose middle part names the region the bucket lives in.
+
+# How does the integration work?
+
+By default, self-hosted Appwrite Storage keeps uploaded files on your server's local disk. The `backblaze` storage adapter stores them in a B2 bucket instead, so file storage scales separately from your server and survives a server rebuild. Appwrite builds the bucket address, `<bucket>.s3.<region>.backblazeb2.com`, from the bucket name and region you configure.
+
+{% info title="Self-hosted only" %}
+Storage adapters configure a self-hosted Appwrite instance. Appwrite Cloud manages file storage for you.
+{% /info %}
+
+# How to implement
+
+To store Appwrite files in Backblaze B2, there are several steps you must complete:
+
+## Step 1: Create a bucket and an application key
+
+In your Backblaze account, create a private B2 bucket. Note the bucket name and the region from its **Endpoint**, for example `us-west-004` from `s3.us-west-004.backblazeb2.com`.
+
+Then create an application key that can read and write the bucket. Save the **keyID**, which Appwrite uses as the access key, and the **applicationKey**, which Appwrite uses as the secret. Backblaze shows the application key only once.
+
+## Step 2: Configure the Backblaze adapter in Appwrite
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and set the storage variables:
+
+```env
+_APP_STORAGE_DEVICE=backblaze
+_APP_STORAGE_S3_ACCESS_KEY=<KEY_ID>
+_APP_STORAGE_S3_SECRET=<APPLICATION_KEY>
+_APP_STORAGE_S3_REGION=us-west-004
+_APP_STORAGE_S3_BUCKET=<BUCKET_NAME>
+```
+
+`_APP_STORAGE_DEVICE=backblaze` selects the Backblaze adapter, and the `_APP_STORAGE_S3_*` variables hold its credentials, region, and bucket.
+
+{% info title="Upgrading an older configuration" %}
+Older installations set `_APP_STORAGE_BACKBLAZE_ACCESS_KEY`, `_APP_STORAGE_BACKBLAZE_SECRET`, `_APP_STORAGE_BACKBLAZE_REGION`, and `_APP_STORAGE_BACKBLAZE_BUCKET`. Appwrite 2.0 and later still read them as a fallback when `_APP_STORAGE_S3_ACCESS_KEY`, `_APP_STORAGE_S3_SECRET`, and `_APP_STORAGE_S3_BUCKET` are not all set, but they are deprecated, and the Open Runtimes orchestrator that builds Functions and Sites doesn't read them. Move the values to the `_APP_STORAGE_S3_*` variables.
+{% /info %}
+
+Recreate the containers and check that the variables are applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+Changing the storage device doesn't move files Appwrite has already stored, so configure it before you store production files.
+
+## Step 3: Test the adapter
+
+Open your project in the Appwrite Console, go to **Storage**, create a bucket, and upload a file. The file then appears in your B2 bucket in the Backblaze web UI.
+
+# Read more about Backblaze B2 and Appwrite Storage
+
+If you would like to learn more about Backblaze B2 and Appwrite Storage, we have some resources that you should visit:
+
+- [Storage configuration for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/storage)
+- [Storage environment variables](/docs/advanced/self-hosting/configuration/environment-variables#storage)
+- [Appwrite Storage](/docs/products/storage)
+- [Backblaze B2 S3-compatible API](https://www.backblaze.com/docs/cloud-storage-s3-compatible-api)

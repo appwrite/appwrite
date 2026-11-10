@@ -102,6 +102,8 @@ type MockOptions = {
   /** User IDs present in the data (sent by a server with an API key). */
   hasUsers?: boolean
   type?: AnalyticsPropertyType
+  /** Prop keys an agent sends with its model_called and tool_called events. */
+  agentProps?: boolean
 }
 
 type Mock = { metrics: URL[]; patches: Request[] }
@@ -152,6 +154,16 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
     const propKey = url.searchParams.get('propKey')
     if (propKey === 'plan') return [row('pro', 40), row('team', 12)]
     if (propKey === 'source') return [row('ads', 9)]
+    // Ranked by visitors, as the API does; events disagree with that order.
+    if (propKey === 'model')
+      return options.agentProps
+        ? [
+            row('gpt-5', 2, { events: 40 }),
+            row('claude-sonnet-5-5', 1, { events: 900 }),
+          ]
+        : []
+    if (propKey === 'tool') return []
+    if (options.agentProps) return [row('model', 3), row('plan', 2)]
     return [row('plan', 52), row('source', 9)]
   }
   if (dimension === 'userId') {
@@ -406,6 +418,25 @@ test.describe('analytics property (mocked API)', () => {
     ])
   })
 
+  test('drops browser tabs from a mobile Technology card', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const technology = card(page, 'Technology')
+    await expect(technology.getByText('What visitors are using')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(technology.getByRole('tab')).toHaveText([
+      'Operating systems',
+      'Devices',
+      'Screen sizes',
+      'OS versions',
+    ])
+    await expect(
+      technology.getByRole('button', { name: /Versions/ }),
+    ).toHaveCount(0)
+  })
+
   test('leads with events on an agent property', async ({ page }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
     await openProperty(page)
@@ -415,6 +446,35 @@ test.describe('analytics property (mocked API)', () => {
     await expect(metrics.first()).toHaveAttribute('aria-pressed', 'true')
     await expect(metrics).toHaveText([/^Events/, /^Visits/, /^Visit duration/])
     await attachScreenshot(page, 'property-agent-metrics')
+  })
+
+  test('ranks agent models by calls', async ({ page }) => {
+    await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Agent,
+      agentProps: true,
+    })
+    await openProperty(page)
+
+    const models = card(page, 'Models and tools')
+    await expect(models).toBeVisible({ timeout: 30_000 })
+    // Only keys that arrived get a tab, and a single tab shows no tab bar.
+    await expect(models.getByRole('tab')).toHaveCount(0)
+    await expect(models.getByText(/^(gpt-5|claude-sonnet-5-5)$/)).toHaveText([
+      'claude-sonnet-5-5',
+      'gpt-5',
+    ])
+    await expect(models).toContainText('900')
+    await attachScreenshot(page, 'property-agent-models')
+  })
+
+  test('hides models and tools without agent props', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
+    await openProperty(page)
+
+    await expect(card(page, 'Event properties')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(cardHeading(page, 'Models and tools')).toHaveCount(0)
   })
 
   test('turns user identification on', async ({ page }) => {
