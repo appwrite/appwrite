@@ -1702,6 +1702,11 @@ return [
         'description' => 'Review with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::REVIEW_LEARNING_NOT_FOUND => [
+        'name' => Exception::REVIEW_LEARNING_NOT_FOUND,
+        'description' => 'Learning with the requested ID could not be found.',
+        'code' => 404,
+    ],
     Exception::REVIEW_CHAT_NOT_FOUND => [
         'name' => Exception::REVIEW_CHAT_NOT_FOUND,
         'description' => 'No answer was queued for the requested comment on this repository and pull request.',

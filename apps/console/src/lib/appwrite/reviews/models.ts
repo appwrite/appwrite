@@ -1,6 +1,6 @@
 /**
- * Reviews response models, copied from `Review`, `ReviewFinding` and
- * `ReviewRepository` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * Reviews response models, copied from `Review`, `ReviewFinding`,
+ * `ReviewRepository` and `ReviewLearning` in `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
@@ -222,4 +222,49 @@ export type ReviewRepositoryList = {
    * List of repositories.
    */
   repositories: ReviewRepository[]
+}
+
+/**
+ * Review Learning: something the reviewer was asked to remember in a
+ * conversation on GitHub. Later reviews of the repository follow it.
+ */
+export type ReviewLearning = {
+  /**
+   * Learning ID.
+   */
+  $id: string
+  /**
+   * Learning creation date in ISO 8601 format.
+   */
+  $createdAt: string
+  /**
+   * ID of the repository whose reviews follow the learning.
+   */
+  repositoryId: string
+  /**
+   * What the reviewer was asked to remember.
+   */
+  body: string
+  /**
+   * GitHub login of who asked for it.
+   */
+  author: string
+  /**
+   * The comment it was asked in, if known.
+   */
+  sourceUrl: string
+}
+
+/**
+ * Review Learnings List
+ */
+export type ReviewLearningList = {
+  /**
+   * Total number of learnings that matched your query.
+   */
+  total: number
+  /**
+   * List of learnings.
+   */
+  learnings: ReviewLearning[]
 }

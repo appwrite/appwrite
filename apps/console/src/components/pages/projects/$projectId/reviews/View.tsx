@@ -9,6 +9,7 @@ import { canWriteReviewRepositories } from '@/lib/console-access-checks'
 import {
   useOrganizationScopes,
   useProject,
+  useReviewLearnings,
   useReviewRepositories,
   useReviews,
 } from '@/lib/react-query/hooks'
@@ -16,6 +17,7 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { Learnings } from './_components/Learnings'
 import { Repositories } from './_components/Repositories'
 import { ReviewsTable } from './_components/ReviewsTable'
 
@@ -25,9 +27,12 @@ export function View() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const activeTab = location.pathname.split('/').includes('repositories')
+  const segments = location.pathname.split('/')
+  const activeTab = segments.includes('repositories')
     ? 'repositories'
-    : 'reviews'
+    : segments.includes('learnings')
+      ? 'learnings'
+      : 'reviews'
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -63,6 +68,7 @@ export function View() {
 
   const { total: repositoriesTotal, isLoading: repositoriesLoading } =
     useReviewRepositories(projectId)
+  const { total: learningsTotal } = useReviewLearnings(projectId)
 
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
@@ -82,8 +88,15 @@ export function View() {
         to: '/projects/$projectId/reviews/repositories',
         params: { projectId },
       },
+      {
+        id: 'learnings',
+        label: t('Learnings'),
+        count: learningsTotal,
+        to: '/projects/$projectId/reviews/learnings',
+        params: { projectId },
+      },
     ],
-    [projectId, repositoriesTotal, t],
+    [projectId, repositoriesTotal, learningsTotal, t],
   )
 
   const showRepositories = () =>
@@ -116,12 +129,14 @@ export function View() {
               searchValue: search,
               onSearchChange: setSearch,
             }
-          : {
-              createLabel: t('Add repository'),
-              onCreate: showRepositories,
-              createDisabled: !canWrite,
-              createDisabledTooltip: writeTooltip,
-            })}
+          : activeTab === 'learnings'
+            ? {}
+            : {
+                createLabel: t('Add repository'),
+                onCreate: showRepositories,
+                createDisabled: !canWrite,
+                createDisabledTooltip: writeTooltip,
+              })}
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -145,6 +160,8 @@ export function View() {
               </Button>
             }
           />
+        ) : activeTab === 'learnings' ? (
+          <Learnings projectId={projectId} canWrite={canWrite} />
         ) : activeTab === 'repositories' ? (
           <Repositories
             projectId={projectId}

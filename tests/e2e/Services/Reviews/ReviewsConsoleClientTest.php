@@ -618,6 +618,86 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testLearnings(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        foreach (['Do not flag TODO comments.', 'Prefer early returns.'] as $body) {
+            $learning = $this->callService(Client::METHOD_POST, '/reviews/repositories/' . $repositoryId . '/learnings', [
+                'projectId' => $projectId,
+                'body' => $body,
+                'author' => 'appwrite-test',
+                'sourceUrl' => 'https://github.com/appwrite-test/svelte-starter/pull/1#issuecomment-1',
+            ]);
+            $this->assertSame(204, $learning['headers']['status-code']);
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // The project lists what its reviews were asked to remember
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [
+                Query::equal('repositoryId', [$repositoryId])->toString(),
+                Query::orderAsc('$createdAt')->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $learnings['headers']['status-code']);
+        $this->assertSame(2, $learnings['body']['total']);
+        $first = $learnings['body']['learnings'][0];
+        $this->assertSame('Do not flag TODO comments.', $first['body']);
+        $this->assertSame($repositoryId, $first['repositoryId']);
+        $this->assertSame('appwrite-test', $first['author']);
+        $this->assertSame('https://github.com/appwrite-test/svelte-starter/pull/1#issuecomment-1', $first['sourceUrl']);
+        $this->assertNotEmpty($first['$createdAt']);
+
+        // A deleted learning is no longer given to the review service
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/reviews/learnings/' . $first['$id'], $this->projectHeaders());
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [Query::equal('repositoryId', [$repositoryId])->toString()],
+        ]);
+        $this->assertSame(1, $learnings['body']['total']);
+        $this->assertSame('Prefer early returns.', $learnings['body']['learnings'][0]['body']);
+
+        $service = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/learnings', [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(['Prefer early returns.'], $service['body']['learnings']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/reviews/learnings/' . $first['$id'], $this->projectHeaders());
+        $this->assertSame(404, $deleted['headers']['status-code']);
+        $this->assertSame('review_learning_not_found', $deleted['body']['type']);
+
+        $invalid = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [Query::equal('body', ['Prefer early returns.'])->toString()],
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        // Another project sees none of them
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders($this->getProject(true)['$id']), [
+            'queries' => [Query::equal('repositoryId', [$repositoryId])->toString()],
+        ]);
+        $this->assertSame(200, $learnings['headers']['status-code']);
+        $this->assertSame(0, $learnings['body']['total']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
