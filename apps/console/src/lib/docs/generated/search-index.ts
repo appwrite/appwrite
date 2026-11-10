@@ -325,7 +325,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…",
+    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket…",
     "breadcrumbs": [
       "Security",
       "Measures",

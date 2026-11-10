@@ -25,7 +25,7 @@ Synchronous executions are created via:
 
 Synchronous executions:
 - Return response bodies and headers directly to the client
-- Have a **30-second hard timeout limit** to discourage slow API calls that cause poor user experience in apps
+- Have a hard timeout limit, **30 seconds** through the Create execution endpoint and **60 seconds** through a domain, to discourage slow API calls that cause poor user experience in apps
 - Are ideal for short-running operations where you need response data quickly
 
 ## Asynchronous executions {% #asynchronous-executions %}
