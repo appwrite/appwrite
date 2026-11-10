@@ -808,10 +808,6 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-
-                    if ($isToken && $resourceToken->getId() !== '') {
-                        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('resourceTokens', $resourceToken->getId(), 'uses', 1));
-                    }
                     Span::add('storage.bucket.id', $bucketId);
                     Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user

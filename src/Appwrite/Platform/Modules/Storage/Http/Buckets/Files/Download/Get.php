@@ -128,13 +128,6 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        if ($isToken && $resourceToken->getId() !== '') {
-            $rangeHeader = $request->getHeaderLine('range');
-            if (empty($rangeHeader) || $request->getRangeStart() === 0) {
-                $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('resourceTokens', $resourceToken->getId(), 'uses', 1));
-            }
-        }
-
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeaderLine('range');

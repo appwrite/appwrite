@@ -1155,20 +1155,46 @@ return function (Container $context): void {
                 }
             }
 
-            $maxUses = $token->getAttribute('maxUses');
-            $uses = $token->getAttribute('uses', 0);
-
-            if ($maxUses !== null && $uses >= $maxUses) {
-                return new Document([]);
-            }
-
             return match ($token->getAttribute('resourceType')) {
-                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization, $maxUses, $uses) {
+                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization, $request) {
                     $sequences = explode(':', $token->getAttribute('resourceInternalId'));
                     $ids = explode(':', $token->getAttribute('resourceId'));
 
                     if (count($sequences) !== 2 || count($ids) !== 2) {
                         return new Document([]);
+                    }
+
+                    $maxUses = $token->getAttribute('maxUses');
+                    $uses = $token->getAttribute('uses', 0);
+
+                    if ($maxUses !== null && $uses >= $maxUses) {
+                        return new Document([]);
+                    }
+
+                    $rangeHeader = $request->getHeaderLine('range');
+                    $isRangeContinuation = !empty($rangeHeader) && $request->getRangeStart() !== 0;
+
+                    if (!$isRangeContinuation) {
+                        if ($maxUses !== null) {
+                            try {
+                                $token = $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
+                                    'resourceTokens',
+                                    $token->getId(),
+                                    'uses',
+                                    1,
+                                    max: $maxUses
+                                ));
+                            } catch (\Utopia\Database\Exception\Limit) {
+                                return new Document([]);
+                            }
+                        } else {
+                            $token = $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
+                                'resourceTokens',
+                                $token->getId(),
+                                'uses',
+                                1
+                            ));
+                        }
                     }
 
                     $accessedAt = $token->getAttribute('accessedAt', 0);
@@ -1186,7 +1212,7 @@ return function (Container $context): void {
                         'bucketInternalId' => $sequences[0],
                         'fileInternalId' => $sequences[1],
                         'maxUses' => $maxUses,
-                        'uses' => $uses,
+                        'uses' => $token->getAttribute('uses', 0),
                     ]);
                 })(),
 

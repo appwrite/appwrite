@@ -417,6 +417,108 @@ trait TokensBase
                 $this->assertSame('PNG', $image->getImageFormat());
             }
         }
+    }
 
+    public function testFileTokenMaxUsesExhaustion(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        // Create a single-use token (maxUses = 1)
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'maxUses' => 1,
+            ]
+        );
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertSame(1, $token['body']['maxUses']);
+        $this->assertSame(0, $token['body']['uses']);
+
+        $jwtToken = $token['body']['secret'];
+
+        // 1st request succeeds (use 1 of 1)
+        $firstDownload = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(200, $firstDownload['headers']['status-code']);
+
+        // 2nd request fails with 401 Unauthorized because maxUses quota is exhausted
+        $secondDownload = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(401, $secondDownload['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $secondDownload['body']['type']);
+    }
+
+    public function testFileTokenMultiUseExhaustion(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        // Create a multi-use token (maxUses = 2)
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'maxUses' => 2,
+            ]
+        );
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertSame(2, $token['body']['maxUses']);
+        $this->assertSame(0, $token['body']['uses']);
+
+        $jwtToken = $token['body']['secret'];
+
+        // 1st use succeeds
+        $view1 = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(200, $view1['headers']['status-code']);
+
+        // 2nd use succeeds
+        $view2 = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(200, $view2['headers']['status-code']);
+
+        // 3rd use fails with 401 Unauthorized
+        $view3 = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(401, $view3['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $view3['body']['type']);
     }
 }

@@ -2,10 +2,18 @@
 
 namespace Tests\Unit\Tokens;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files\Create;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\ResourceToken;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Nullable;
 
 class FileTokenMaxUsesTest extends TestCase
@@ -23,6 +31,7 @@ class FileTokenMaxUsesTest extends TestCase
     {
         $_ENV['_APP_OPENSSL_KEY_V1'] = 'your-secret-key-1234567890123456';
         \putenv('_APP_OPENSSL_KEY_V1=your-secret-key-1234567890123456');
+        Config::setParam('errors', include __DIR__ . '/../../../app/config/errors.php');
     }
 
     public function testCreateActionHasMaxUsesParameter(): void
@@ -109,86 +118,75 @@ class FileTokenMaxUsesTest extends TestCase
         $this->assertSame(0, $filtered->getAttribute('uses'));
     }
 
-    public function testTokenExpirationOnMaxUsesExhaustion(): void
+    public function testCreateActionPersistsMaxUsesAndInitializesUses(): void
     {
-        $isTokenValid = function (Document $token): bool {
-            $maxUses = $token->getAttribute('maxUses');
-            $uses = $token->getAttribute('uses', 0);
+        $action = new Create();
+        $db = $this->createMock(Database::class);
+        $response = $this->createMock(Response::class);
+        $queueForEvents = $this->createMock(Event::class);
+        $authorization = new Authorization();
+        $user = new User(['$id' => 'user_1']);
 
-            if ($maxUses !== null && $uses >= $maxUses) {
-                return false;
-            }
-
-            return true;
-        };
-
-        // Single-use token unused
-        $token1 = new Document(['maxUses' => 1, 'uses' => 0]);
-        $this->assertTrue($isTokenValid($token1));
-
-        // Single-use token used once -> expired
-        $token1->setAttribute('uses', 1);
-        $this->assertFalse($isTokenValid($token1));
-
-        // Multi-use token (3 uses)
-        $token3 = new Document(['maxUses' => 3, 'uses' => 0]);
-        $this->assertTrue($isTokenValid($token3));
-
-        $token3->setAttribute('uses', 1);
-        $this->assertTrue($isTokenValid($token3));
-
-        $token3->setAttribute('uses', 2);
-        $this->assertTrue($isTokenValid($token3));
-
-        $token3->setAttribute('uses', 3);
-        $this->assertFalse($isTokenValid($token3));
-
-        $token3->setAttribute('uses', 4);
-        $this->assertFalse($isTokenValid($token3));
-    }
-
-    public function testTokenWithoutMaxUsesNeverExpiresFromUses(): void
-    {
-        $isTokenValid = function (Document $token): bool {
-            $maxUses = $token->getAttribute('maxUses');
-            $uses = $token->getAttribute('uses', 0);
-
-            if ($maxUses !== null && $uses >= $maxUses) {
-                return false;
-            }
-
-            return true;
-        };
-
-        $unlimitedToken = new Document(['maxUses' => null, 'uses' => 0]);
-        $this->assertTrue($isTokenValid($unlimitedToken));
-
-        $unlimitedToken->setAttribute('uses', 100);
-        $this->assertTrue($isTokenValid($unlimitedToken));
-
-        $unlimitedToken->setAttribute('uses', 1_000_000);
-        $this->assertTrue($isTokenValid($unlimitedToken));
-    }
-
-    public function testSequentialTokenUsageIncrement(): void
-    {
-        $token = new Document([
-            '$id' => 'token_seq',
-            'maxUses' => 2,
-            'uses' => 0,
+        $bucket = new Document([
+            '$id' => 'b1',
+            '$sequence' => '1',
+            'enabled' => true,
+            'fileSecurity' => false,
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
         ]);
 
-        $this->assertSame(0, $token->getAttribute('uses'));
-        $this->assertSame(2, $token->getAttribute('maxUses'));
+        $file = new Document([
+            '$id' => 'f1',
+            '$sequence' => '1',
+            'bucketInternalId' => '1',
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
 
-        // Simulate 1st use increment
-        $token->setAttribute('uses', $token->getAttribute('uses', 0) + 1);
-        $this->assertSame(1, $token->getAttribute('uses'));
-        $this->assertLessThan($token->getAttribute('maxUses'), $token->getAttribute('uses'));
+        $db->expects($this->exactly(2))
+            ->method('getDocument')
+            ->willReturnMap([
+                ['buckets', 'b1', [], $bucket],
+                ['bucket_1', 'f1', [], $file],
+            ]);
 
-        // Simulate 2nd use increment
-        $token->setAttribute('uses', $token->getAttribute('uses', 0) + 1);
-        $this->assertSame(2, $token->getAttribute('uses'));
-        $this->assertGreaterThanOrEqual($token->getAttribute('maxUses'), $token->getAttribute('uses'));
+        $db->expects($this->once())
+            ->method('createDocument')
+            ->with(
+                'resourceTokens',
+                $this->callback(function (Document $doc) {
+                    return $doc->getAttribute('maxUses') === 5
+                        && $doc->getAttribute('uses') === 0
+                        && $doc->getAttribute('resourceId') === 'b1:f1'
+                        && $doc->getAttribute('resourceType') === TOKENS_RESOURCE_TYPE_FILES;
+                })
+            )
+            ->willReturnCallback(function (string $collection, Document $doc) {
+                return $doc;
+            });
+
+        $queueForEvents->expects($this->exactly(3))
+            ->method('setParam')
+            ->willReturnSelf();
+
+        $queueForEvents->expects($this->once())
+            ->method('setContext')
+            ->willReturnSelf();
+
+        $response->expects($this->once())
+            ->method('setStatusCode')
+            ->with(201)
+            ->willReturnSelf();
+
+        $response->expects($this->once())
+            ->method('dynamic')
+            ->with($this->isInstanceOf(Document::class), Response::MODEL_RESOURCE_TOKEN);
+
+        $action->action('b1', 'f1', null, 5, $response, $user, $db, $queueForEvents, $authorization);
     }
 }
