@@ -11,6 +11,7 @@ import { DomainInput } from '@/components/global/shared/DomainInput'
 import {
   buildFunctionUpdateParams,
   createSmtpDomainRule,
+  functionDomainsQueryOptions,
   useFunctionDomains,
 } from '@/lib/react-query/hooks'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
@@ -70,7 +71,11 @@ export function FunctionEmailCard({
   const savedEnabled = isFunctionEmailEnabled(func)
   const [emailEnabled, setEmailEnabled] = useSyncStateFromServer(savedEnabled)
 
-  const { data: domainsData } = useFunctionDomains(
+  const {
+    data: domainsData,
+    isPlaceholderData,
+    isFetching: domainsFetching,
+  } = useFunctionDomains(
     projectId,
     functionId,
     0,
@@ -82,9 +87,11 @@ export function FunctionEmailCard({
     () => (domainsData?.rules ?? []).filter(isSmtpRule),
     [domainsData],
   )
-  // Only offer a new domain once the list is known to be empty.
-  const needsAddress =
-    !!emailDomain && domainsData !== undefined && addresses.length === 0
+  // Only offer a new domain once this function's list is known to be empty:
+  // not while it loads, nor from another function's list kept as placeholder.
+  const domainsKnown =
+    domainsData !== undefined && !isPlaceholderData && !domainsFetching
+  const needsAddress = !!emailDomain && domainsKnown && addresses.length === 0
 
   const suggestion = useMemo(
     () =>
@@ -124,7 +131,21 @@ export function FunctionEmailCard({
       // Cloud only stores an email domain for a function that takes mail,
       // so the trigger is saved first.
       if (nextEnabled && needsAddress) {
-        await createSmtpDomainRule(projectId, { domain, functionId })
+        // The list may have changed in another tab since it loaded.
+        const current = await queryClient.fetchQuery({
+          ...functionDomainsQueryOptions(
+            projectId,
+            functionId,
+            0,
+            ADDRESSES_LIMIT,
+            undefined,
+            SMTP_QUERIES,
+          ),
+          staleTime: 0,
+        })
+        if (current.rules.filter(isSmtpRule).length === 0) {
+          await createSmtpDomainRule(projectId, { domain, functionId })
+        }
       }
       return updated
     },

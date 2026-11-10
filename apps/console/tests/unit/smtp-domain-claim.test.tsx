@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import * as actualConsoleProfile from '../../src/hooks/use-console-profile.ts'
 import * as actualConsoleProfiles from '../../src/lib/console-profiles.ts'
 import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
+import * as actualConsoleVariables from '../../src/lib/react-query/hooks/console-variables.ts'
 import * as actualProxyDomains from '../../src/lib/utils/proxy-domains.ts'
 
 GlobalRegistrator.register()
@@ -19,6 +20,10 @@ const consoleRoot = join(import.meta.dir, '../..')
 const consoleProfilePath = join(consoleRoot, 'src/hooks/use-console-profile.ts')
 const consoleProfilesPath = join(consoleRoot, 'src/lib/console-profiles.ts')
 const hooksPath = join(consoleRoot, 'src/lib/react-query/hooks/index.ts')
+const consoleVariablesPath = join(
+  consoleRoot,
+  'src/lib/react-query/hooks/console-variables.ts',
+)
 const proxyDomainsPath = join(consoleRoot, 'src/lib/utils/proxy-domains.ts')
 // Copy the real module now: the namespace import is live and points at the mock once it is set.
 const realProxyDomains = { ...actualProxyDomains }
@@ -93,6 +98,11 @@ function installMocks() {
     useDeleteDomain: () => mutation(async () => ({})),
   }))
 
+  mock.module(consoleVariablesPath, () => ({
+    ...actualConsoleVariables,
+    useConsoleVariables: () => ({ emailDomain: 'appwrite.email' }),
+  }))
+
   mock.module(inputPath, () => ({ Input: FakeInput }))
 
   mock.module(docsRouteLinkPath, () => ({
@@ -120,6 +130,7 @@ describe('AddSmtpDomainWizard claim step', () => {
     const { AddSmtpDomainWizard } = await import(wizardPath)
     const view = render(createElement(AddSmtpDomainWizard))
 
+    fireEvent.click(view.getByText('Custom domain'))
     act(() => typeDomain('mail.example.com'))
     fireEvent.click(view.getByText('Add'))
 
