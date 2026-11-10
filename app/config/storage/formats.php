@@ -25,4 +25,24 @@ return [
         'war' => 'application/java-archive',
         'xpi' => 'application/x-xpinstall',
     ],
+    // Formats with a fixed signature. A file with one of these extensions must sniff as one of
+    // its types, unless sniffing is ambiguous. Text and container formats sniff unreliably, so
+    // they are left out and only their name is checked.
+    'signatures' => [
+        'avif' => ['image/avif'],
+        'bmp' => ['image/bmp', 'image/x-ms-bmp'],
+        'gif' => ['image/gif'],
+        'heic' => ['image/heic', 'image/heic-sequence', 'image/heif', 'image/heif-sequence'],
+        'heif' => ['image/heic', 'image/heic-sequence', 'image/heif', 'image/heif-sequence'],
+        'ico' => ['image/vnd.microsoft.icon', 'image/x-icon'],
+        'jfif' => ['image/jpeg'],
+        'jpe' => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'jpg' => ['image/jpeg'],
+        'pdf' => ['application/pdf'],
+        'png' => ['image/png', 'image/apng'],
+        'tif' => ['image/tiff'],
+        'tiff' => ['image/tiff'],
+        'webp' => ['image/webp'],
+    ],
 ];
