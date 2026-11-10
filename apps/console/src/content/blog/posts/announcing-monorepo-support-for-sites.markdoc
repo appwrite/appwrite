@@ -23,9 +23,9 @@ faqs:
     answer: "Yes. The change is in the Open Runtimes build images, so pull the latest image for the runtime your sites build with, for example `docker pull openruntimes/node:v5-22`, then redeploy."
 ---
 
-If your site lives in `apps/web` and imports a shared UI kit or API client from `packages/`, Appwrite Sites couldn't deploy it as a server-rendered app until now. With the root directory set to `apps/web`, the build couldn't see the lockfile or the shared packages at the repo root. With the root directory set to the repo root, Next.js builds failed with `mv: can't rename '/usr/local/build/next.config.*'`, and frameworks such as Nuxt and Astro deployed but returned 500 errors once a page loaded a dependency at runtime.
+Appwrite Sites now deploys server-rendered apps straight from **npm, pnpm, and Bun workspaces**. If your web app shares a monorepo with a docs site, an admin dashboard, and the UI kit or API client they all import, you can deploy it as it is, without moving it into a repository of its own.
 
-Today, Appwrite Sites deploys server-rendered apps straight from **npm, pnpm, and Bun workspaces**. Build from the repo root, set the output directory to your app's build output, and Appwrite ships that app with its dependencies and the workspace packages it imports, without your other apps.
+You build from the root of the repository and tell Appwrite where your app's build output is. Appwrite ships that app with its dependencies and the shared packages it imports, and leaves your other apps out.
 
 # What's new
 
