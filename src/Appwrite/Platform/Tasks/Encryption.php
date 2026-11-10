@@ -5,13 +5,16 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Database\Provisioner;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Storage\Encryption as FileEncryption;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
+use Utopia\Storage\Cipher;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -252,52 +255,61 @@ class Encryption extends Action
                     continue;
                 }
 
+                $metadata = $file->getAttribute('metadata', []);
                 $old = (string) $file->getAttribute('path', '');
+                $path = null;
 
                 try {
-                    $plain = OpenSSL::decrypt(
-                        (string) $device->read($old),
-                        $file->getAttribute('openSSLCipher'),
-                        EncryptionKey::get((string) $file->getAttribute('openSSLVersion')),
-                        0,
-                        (string) \hex2bin($file->getAttribute('openSSLIV', '')),
-                        (string) \hex2bin($file->getAttribute('openSSLTag', '')),
-                    );
+                    if ($file->getAttribute('openSSLCipher') === Cipher::NAME) {
+                        // Only the file's own key is under the old version: wrap it again, the stored bytes stay as they are
+                        $metadata['encryption'] = [
+                            'key' => \base64_encode(FileEncryption::cipher($metadata['encryption'] ?? throw new \RuntimeException('no file key'))->wrap(EncryptionKey::current())),
+                            'version' => $version,
+                        ];
+                        $updates = ['metadata' => $metadata, 'openSSLVersion' => $version];
+                    } else {
+                        // One envelope over the whole file: stored again the way uploads are stored now, under a key of
+                        // its own, so a later rotation only has to wrap that key again
+                        $metadata['encryption'] = FileEncryption::create();
+                        $data = FileEncryption::cipher($metadata['encryption'])->encrypt(new FileEncryption($file)->decrypt((string) $device->read($old)), 0, true);
+
+                        // Written beside the old object, not over it: until the document points here, a reader still
+                        // holds the old IV and tag, and those only decrypt the old bytes. The extension stays, previews read it.
+                        $extension = \pathinfo($old, PATHINFO_EXTENSION);
+                        $path = \dirname($old) . '/' . Id::unique() . ($extension === '' ? '' : '.' . $extension);
+                        $device->write($path, new Stream($data), (string) $file->getAttribute('mimeType', ''));
+
+                        $updates = [
+                            'path' => $path,
+                            'metadata' => $metadata,
+                            'sizeActual' => \strlen($data),
+                            'openSSLVersion' => $version,
+                            'openSSLCipher' => Cipher::NAME,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                        ];
+                    }
+
+                    $updated = $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document($updates)));
                 } catch (\Throwable $error) {
                     Console::warning('  ' . $collection . '/' . $file->getId() . ': ' . $error->getMessage() . ', skipped');
+                    if ($path !== null && $device->exists($path)) {
+                        $device->delete($path);
+                    }
                     continue;
                 }
-
-                if ($plain === false) {
-                    Console::warning('  ' . $collection . '/' . $file->getId() . ': does not decrypt with its recorded key version, skipped');
-                    continue;
-                }
-
-                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $tag = null;
-                $data = OpenSSL::encrypt($plain, OpenSSL::CIPHER_AES_128_GCM, EncryptionKey::current(), 0, $iv, $tag);
-
-                // Written beside the old object, not over it: until the document points here, a reader still
-                // holds the old IV and tag, and those only decrypt the old bytes. The extension stays, previews read it.
-                $info = \pathinfo($old);
-                $path = $info['dirname'] . '/' . \preg_replace('/-v\d+$/', '', $info['filename']) . '-v' . $version . (isset($info['extension']) ? '.' . $info['extension'] : '');
-                $device->write($path, new Stream($data), (string) $file->getAttribute('mimeType', ''));
-
-                $updated = $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document([
-                    'path' => $path,
-                    'openSSLVersion' => $version,
-                    'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-                    'openSSLTag' => \bin2hex($tag ?? ''),
-                    'openSSLIV' => \bin2hex($iv),
-                ])));
 
                 // Deleted while it was being rewritten: the new object is the only thing left of it
                 if ($updated->isEmpty()) {
-                    $device->delete($path);
+                    if ($path !== null) {
+                        $device->delete($path);
+                    }
                     continue;
                 }
 
-                $device->delete($old);
+                if ($path !== null) {
+                    $device->delete($old);
+                }
                 $count++;
             }
         }

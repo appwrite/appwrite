@@ -7,6 +7,7 @@ namespace Tests\Unit\Platform\Tasks;
 use Appwrite\Database\Provisioner;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Tasks\Encryption;
+use Appwrite\Storage\Encryption as FileEncryption;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Collection;
@@ -15,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\PermissionType;
 use Utopia\Psr7\Stream;
+use Utopia\Storage\Cipher;
 use Utopia\Storage\Device\Local;
 
 final class EncryptionTest extends TestCase
@@ -24,6 +26,10 @@ final class EncryptionTest extends TestCase
     /** @var array<string, string|false> */
     private array $environment = [];
 
+    private string $root;
+
+    private Local $device;
+
     protected function setUp(): void
     {
         foreach (self::VARIABLES as $name) {
@@ -32,10 +38,13 @@ final class EncryptionTest extends TestCase
         \putenv('_APP_OPENSSL_KEY_CURRENT=2');
         \putenv('_APP_OPENSSL_KEY_V1=first-key');
         \putenv('_APP_OPENSSL_KEY_V2=second-key');
+        $this->root = \sys_get_temp_dir() . '/encryption-test-' . \bin2hex(\random_bytes(4));
+        $this->device = new Local($this->root);
     }
 
     protected function tearDown(): void
     {
+        $this->device->delete($this->root, true);
         foreach ($this->environment as $name => $value) {
             \putenv($value === false ? $name : $name . '=' . $value);
         }
@@ -64,52 +73,103 @@ final class EncryptionTest extends TestCase
         $this->assertSame(['projects', 'databases', 'database_7'], $database->cursors);
     }
 
-    public function testFilesUnderAnOlderKeyAreReadableWithOnlyTheCurrentOne(): void
+    public function testWholeFileEnvelopesAreReadableWithOnlyTheCurrentKey(): void
     {
-        $root = \sys_get_temp_dir() . '/encryption-test-' . \bin2hex(\random_bytes(4));
-        $device = new Local($root);
-        $old = $root . '/bucket/photo.png';
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
-        $device->write($old, new Stream(OpenSSL::encrypt('pixels', OpenSSL::CIPHER_AES_128_GCM, 'first-key', 0, $iv, $tag)), 'image/png');
-
-        $file = new Document([
-            '$id' => 'photo',
-            '$sequence' => '1',
-            'path' => $old,
-            'mimeType' => 'image/png',
+        $this->device->write($this->root . '/bucket/photo.png', new Stream(OpenSSL::encrypt('pixels', OpenSSL::CIPHER_AES_128_GCM, 'first-key', 0, $iv, $tag)), 'image/png');
+        $database = $this->bucket([
+            'path' => $this->root . '/bucket/photo.png',
             'openSSLVersion' => '1',
             'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
             'openSSLTag' => \bin2hex($tag ?? ''),
             'openSSLIV' => \bin2hex($iv),
         ]);
-        $database = new CursorRecordingDatabase(
+
+        $this->reencrypt($database);
+
+        $this->assertSame('pixels', $this->download($database));
+        $this->assertSame('png', \pathinfo($database->stored['bucket_3']['photo']['path'], PATHINFO_EXTENSION));
+        $this->assertSame([$database->stored['bucket_3']['photo']['path']], $this->objects());
+    }
+
+    public function testSegmentedFilesKeepTheirBytesAndAreReadableWithOnlyTheCurrentKey(): void
+    {
+        \putenv('_APP_OPENSSL_KEY_CURRENT=1');
+        $envelope = FileEncryption::create();
+        \putenv('_APP_OPENSSL_KEY_CURRENT=2');
+        $this->device->write($this->root . '/bucket/photo.png', new Stream(FileEncryption::cipher($envelope)->encrypt('pixels', 0, true)), 'image/png');
+        $database = $this->bucket([
+            'path' => $this->root . '/bucket/photo.png',
+            'openSSLVersion' => '1',
+            'openSSLCipher' => Cipher::NAME,
+            'metadata' => ['content_type' => 'image/png', 'encryption' => $envelope],
+        ]);
+
+        $this->reencrypt($database);
+
+        $this->assertSame('pixels', $this->download($database));
+        $this->assertSame([$this->root . '/bucket/photo.png'], $this->objects());
+    }
+
+    public function testAFileDeletedMidRewriteLeavesNoNewObject(): void
+    {
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+        $this->device->write($this->root . '/bucket/photo.png', new Stream(OpenSSL::encrypt('pixels', OpenSSL::CIPHER_AES_128_GCM, 'first-key', 0, $iv, $tag)), 'image/png');
+        $database = $this->bucket([
+            'path' => $this->root . '/bucket/photo.png',
+            'openSSLVersion' => '1',
+            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+            'openSSLTag' => \bin2hex($tag ?? ''),
+            'openSSLIV' => \bin2hex($iv),
+        ]);
+        $database->deleted = ['photo'];
+
+        $this->reencrypt($database);
+
+        // The delete endpoint removes the object its document pointed at; nothing the task wrote is left behind
+        $this->assertSame([$this->root . '/bucket/photo.png'], $this->objects());
+    }
+
+    /**
+     * @param array<string, mixed> $file
+     */
+    private function bucket(array $file): CursorRecordingDatabase
+    {
+        return new CursorRecordingDatabase(
             rows: [
                 'projects' => [new Document(['$id' => 'project', '$sequence' => '1'])],
                 'buckets' => [new Document(['$id' => 'bucket', '$sequence' => '3'])],
-                'bucket_3' => [$file],
+                'bucket_3' => [new Document(['$id' => 'photo', '$sequence' => '1', 'mimeType' => 'image/png', 'sizeOriginal' => 6, ...$file])],
             ],
             collections: ['projects', 'buckets', 'bucket_3'],
         );
+    }
 
-        new Encryption()->action('true', '', 100, 'files', $database, fn () => $database, $this->createStub(Provisioner::class), fn () => $device);
-
-        // What a download does with the stored document, once the old key is gone
+    private function reencrypt(CursorRecordingDatabase $database): void
+    {
+        // The console and the project share this double, so the file is met twice: the second visit must change nothing
+        new Encryption()->action('true', '', 100, 'files', $database, fn () => $database, $this->createStub(Provisioner::class), fn () => $this->device);
         \putenv('_APP_OPENSSL_KEY_V1');
-        $stored = $database->stored['bucket_3']['photo'];
-        $plain = OpenSSL::decrypt(
-            (string) $device->read($stored['path']),
-            $stored['openSSLCipher'],
-            (string) \getenv('_APP_OPENSSL_KEY_V' . $stored['openSSLVersion']),
-            0,
-            (string) \hex2bin($stored['openSSLIV']),
-            (string) \hex2bin($stored['openSSLTag']),
-        );
+    }
 
-        $this->assertSame('pixels', $plain);
-        $this->assertSame('png', \pathinfo($stored['path'], PATHINFO_EXTENSION));
-        $this->assertFalse($device->exists($old));
-        $device->delete($root, true);
+    /**
+     * What a download does with the stored document, once the old key is gone.
+     */
+    private function download(CursorRecordingDatabase $database): string
+    {
+        $file = new Document($database->stored['bucket_3']['photo']);
+
+        return new FileEncryption($file)->decrypt((string) $this->device->read($file->getAttribute('path')));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function objects(): array
+    {
+        return \glob($this->root . '/bucket/*') ?: [];
     }
 }
 
@@ -135,12 +195,15 @@ final class CursorRecordingDatabase extends Database
     /** @var array<string, array<string, array<string, mixed>>> */
     public array $stored = [];
 
+    /** @var list<string> Ids deleted by another request once the task has read them */
+    public array $deleted = [];
+
     #[\Override]
     public function updateDocument(string $collection, string $id, Document $document): Document
     {
         foreach ($this->rows[$collection] ?? [] as $row) {
-            if ($row->getId() === $id) {
-                $this->stored[$collection][$id] = \array_merge($row->getArrayCopy(), $document->getArrayCopy());
+            if ($row->getId() === $id && !\in_array($id, $this->deleted, true)) {
+                $this->stored[$collection][$id] = \array_merge($this->stored[$collection][$id] ?? $row->getArrayCopy(), $document->getArrayCopy());
 
                 return new Document($this->stored[$collection][$id]);
             }
