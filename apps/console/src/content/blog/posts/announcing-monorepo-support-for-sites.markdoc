@@ -64,8 +64,6 @@ npm and Bun workspaces work the same way. Only the install and build commands ar
 | pnpm | `pnpm install` | `pnpm --filter web build` |
 | Bun | `bun install` | `bun run --filter web build` |
 
-Shared packages that have a build step of their own need to be built in the same command. With pnpm, `pnpm --filter web... build` (note the three dots) builds `web` along with every workspace package it depends on. On Turborepo, `pnpm exec turbo run build --filter=web` does the same, as long as the `build` task in `turbo.json` has `"dependsOn": ["^build"]`.
-
 # Deploy several apps from one repo
 
 Each app in the repository gets a site of its own. All of them share the same repository and root directory, and each one has its own build command and output directory.
