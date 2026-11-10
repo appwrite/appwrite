@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-streaming-responses",
+    "href": "/blog/post/announcing-streaming-responses",
+    "title": "Announcing streaming responses for Appwrite Sites and Functions",
+    "description": "Appwrite Sites and Functions now stream their responses, so server-rendered pages show up in parts as they render and AI output reaches your users while the model is still writing.",
+    "date": "2026-11-10",
+    "lastUpdated": "2026-11-10",
+    "timeToRead": 3,
+    "author": "harsh-mahajan",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-streaming-responses/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-push-notifications-to-your-android-app",
     "href": "/blog/post/add-push-notifications-to-your-android-app",
     "title": "Add push notifications to your Android app without Firebase",

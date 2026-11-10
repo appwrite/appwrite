@@ -6107,7 +6107,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/ai-in-functions",
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
+    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI, and how to stream the text to the client as the model writes…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
