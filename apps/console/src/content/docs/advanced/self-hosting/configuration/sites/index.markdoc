@@ -21,6 +21,16 @@ You can also configure the maximum timeout that can be set on individual Appwrit
 
 {% partial file="update-variables.md" /%}
 
+# Configure streaming responses {% #streaming %}
+
+Streaming is enabled by default, so a server-rendered site whose framework [streams HTML](/docs/products/sites/develop#streaming-responses) sends each chunk to the browser as soon as the chunk is ready. To send each response only once it is complete, set `_APP_COMPUTE_STREAMING` to `disabled`. The setting applies to both functions and sites.
+
+```bash
+_APP_COMPUTE_STREAMING=disabled
+```
+
+{% partial file="update-variables.md" /%}
+
 # Add an apex domain for sites {% #root-domain %}
 
 Appwrite allows you to add an apex domain to your instance's configuration that you can publicly expose your Site on.

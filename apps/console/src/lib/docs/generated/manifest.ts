@@ -210,7 +210,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -3931,7 +3931,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/arena",

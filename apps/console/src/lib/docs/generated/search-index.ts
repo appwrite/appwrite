@@ -325,7 +325,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…",
+    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket…",
     "breadcrumbs": [
       "Security",
       "Measures",
@@ -6107,7 +6107,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/ai-in-functions",
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
+    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI, and how to stream the text to the client as the model writes…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
