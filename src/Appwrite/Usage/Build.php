@@ -49,28 +49,21 @@ final class Build
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $usage
-                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, $buildDuration)
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per resource type
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), $buildDuration);
+                    ->addMetric(METRIC_BUILDS_SUCCESS, 1)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, $buildDuration);
                 break;
             case 'failed':
                 $usage
-                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, $buildDuration)
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per resource type
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), $buildDuration);
+                    ->addMetric(METRIC_BUILDS_FAILED, 1)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, $buildDuration);
                 break;
         }
 
         $usage
-            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS, 1)
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, $buildDuration)
             ->addMetric(METRIC_BUILDS_MB_SECONDS, $mbSeconds)
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS), 1) // per resource type
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), $buildDuration)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), $mbSeconds);
 
         if (! $usage->isEmpty()) {
