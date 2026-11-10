@@ -1155,8 +1155,15 @@ return function (Container $context): void {
                 }
             }
 
+            $maxUses = $token->getAttribute('maxUses');
+            $uses = $token->getAttribute('uses', 0);
+
+            if ($maxUses !== null && $uses >= $maxUses) {
+                return new Document([]);
+            }
+
             return match ($token->getAttribute('resourceType')) {
-                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization) {
+                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization, $maxUses, $uses) {
                     $sequences = explode(':', $token->getAttribute('resourceInternalId'));
                     $ids = explode(':', $token->getAttribute('resourceId'));
 
@@ -1173,10 +1180,13 @@ return function (Container $context): void {
                     }
 
                     return new Document([
+                        '$id' => $token->getId(),
                         'bucketId' => $ids[0],
                         'fileId' => $ids[1],
                         'bucketInternalId' => $sequences[0],
                         'fileInternalId' => $sequences[1],
+                        'maxUses' => $maxUses,
+                        'uses' => $uses,
                     ]);
                 })(),
 
