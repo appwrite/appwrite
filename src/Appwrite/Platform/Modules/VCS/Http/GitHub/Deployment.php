@@ -54,6 +54,7 @@ trait Deployment
         callable $deploymentsFactory,
     ) {
         $errors = [];
+        $heads = [];
         $provider = $vcs->getName();
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
@@ -174,7 +175,25 @@ trait Deployment
                 // branch and the commit are only trusted once the provider itself reports the
                 // commit as that branch's head, which a forged delivery cannot choose.
                 if (empty($providerPullRequestId) && !\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $vcs->getSupportedWebhookScopes(), true)) {
-                    $head = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+                    $key = "{$owner}/{$repositoryName}/{$providerBranch}";
+
+                    if (!\array_key_exists($key, $heads)) {
+                        try {
+                            $heads[$key] = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+                        } catch (\Throwable $e) {
+                            $heads[$key] = null;
+                            Console::warning("Failed to look up the head of branch '{$providerBranch}': {$e->getMessage()}");
+                        }
+                    }
+
+                    $head = $heads[$key];
+
+                    if ($head === null) {
+                        Span::add("{$logBase}.build.skipped.reason", 'branch head lookup failed');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': head of branch '{$providerBranch}' could not be verified");
+                        continue;
+                    }
 
                     if (empty($providerCommitHash) || $providerCommitHash !== $head) {
                         Span::add("{$logBase}.build.skipped.reason", 'commit is not the branch head');
