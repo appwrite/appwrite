@@ -80,7 +80,9 @@ For an even tighter filter, swap `packages/**` for the individual packages the a
 
 # Get started
 
-Monorepo support is live on [Appwrite Cloud](https://cloud.appwrite.io) today, for new and existing sites. On self-hosted Appwrite, pulling the latest image for your build runtime, such as `docker pull openruntimes/node:v5-22`, and redeploying is all it takes.
+Monorepos are how many teams keep their apps and the code they share in one place, and deploying one of those apps shouldn't mean pulling the repository apart. With workspace support in Appwrite Sites, the repo can stay exactly the way your team likes it, and every app in it can go live from the same place.
+
+We'd love to hear how it works for your team. Share what you're shipping, or anything that gets in the way, with us on [Discord](https://appwrite.io/discord).
 
 - [Deploy from a monorepo](/docs/products/sites/deploy-from-git#monorepos)
 - [Build triggers](/docs/products/sites/deploy-from-git#build-triggers)
