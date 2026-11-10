@@ -12,7 +12,6 @@ Appwrite Sites can now deploy server-rendered apps straight from a monorepo. The
 - It works with every JavaScript SSR framework: Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog.
 - Deployments include the workspace packages your app imports and leave the repo's other apps out.
 - Next.js standalone output works inside a monorepo too.
-- Nuxt and Remix apps installed with pnpm now deploy correctly in single-app repos as well.
 
 Self-hosted Appwrite picks this up after pulling the latest image for your build runtime, such as `openruntimes/node:v5-22`, and redeploying.
 

@@ -31,7 +31,6 @@ Appwrite installs and builds the workspace from the root of your repository, pic
 
 - **Every JavaScript SSR framework.** Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog all deploy from a workspace.
 - **Next.js standalone output.** When Next.js traces a monorepo app from the repo root, it nests the server under `.next/standalone/apps/web`, and Appwrite now looks for it there.
-- **A fix for single-app pnpm repos.** Nuxt and Remix apps installed with pnpm now deploy correctly, even when they aren't part of a monorepo.
 
 # Deploy an app from your monorepo
 
