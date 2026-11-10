@@ -109,6 +109,12 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -204,6 +210,10 @@ trait MessagingBase
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+            ],
+            'bird' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
             ],
             'fcm' => [
                 'name' => 'FCM2',
@@ -822,6 +832,12 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -1208,6 +1224,10 @@ trait MessagingBase
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+            ],
+            'bird' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
             ],
             'fcm' => [
                 'name' => 'FCM2',
