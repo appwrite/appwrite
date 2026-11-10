@@ -104,6 +104,9 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        $this->assertProviderType($message, MESSAGE_TYPE_SMS);
+        $this->requireAttachmentsScope($message, $request);
+
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
             if ($draft) {
                 $status = MessageStatus::DRAFT;
