@@ -6,14 +6,13 @@ cover: /images/blog/announcing-monorepo-support-for-sites/cover.avif
 tags: sites
 ---
 
-Appwrite Sites can now deploy server-rendered apps straight from a monorepo. The site's root directory stays at the root of the repository (`./`), the build command builds just your app, such as `pnpm --filter web build`, and the output directory points at that app's build output, such as `./apps/web/.next`.
+Appwrite Sites can now deploy server-rendered apps straight from a monorepo. Sites build from the root of the repository and deploy just the app they're set up for, together with the shared packages it imports, while the other apps in the repo stay out.
 
 - npm, pnpm, and Bun workspaces are all supported.
 - It works with every JavaScript SSR framework: Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog.
-- Deployments include the workspace packages your app imports and leave the repo's other apps out.
 - Next.js standalone output works inside a monorepo too.
 
-Self-hosted Appwrite picks this up after pulling the latest image for your build runtime, such as `openruntimes/node:v5-22`, and redeploying.
+Self-hosted Appwrite gets monorepo support after pulling the latest runtime build images and redeploying.
 
 {% arrow_link href="/blog/post/announcing-monorepo-support-for-sites" %}
 Read the announcement
