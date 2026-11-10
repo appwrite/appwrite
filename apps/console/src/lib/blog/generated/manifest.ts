@@ -10,7 +10,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-11-10",
     "lastUpdated": "2026-11-10",
     "timeToRead": 4,
-    "author": "atharva",
+    "author": "harsh-mahajan",
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-monorepo-support-for-sites/cover.avif",

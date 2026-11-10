@@ -5,7 +5,7 @@ description: Appwrite Sites now deploys server-rendered apps straight from npm, 
 date: 2026-11-10
 cover: /images/blog/announcing-monorepo-support-for-sites/cover.avif
 timeToRead: 4
-author: atharva
+author: harsh-mahajan
 category: announcements
 featured: false
 faqs:
@@ -77,11 +77,6 @@ pnpm-lock.yaml
 ```
 
 For an even tighter filter, swap `packages/**` for the individual packages the app imports.
-
-# What isn't supported
-
-- **Yarn Plug'n'Play**, and pnpm with `shared-workspace-lockfile=false`.
-- **Workspace packages that ship raw TypeScript and get loaded by Node.js at runtime.** Node.js doesn't strip types from files inside `node_modules`, so these packages need to be compiled in your build command or bundled by your framework, for example with `transpilePackages` in Next.js.
 
 # Get started
 
