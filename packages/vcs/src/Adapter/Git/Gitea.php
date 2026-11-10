@@ -995,7 +995,8 @@ class Gitea extends Git
             // Some versions answer a missing branch with a server error, so the branch itself is checked.
             $path = \implode('/', \array_map(\rawurlencode(...), \explode('/', $branch)));
             $lookup = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/branches/{$path}", ['Authorization' => "token $this->accessToken"]);
-            if (($lookup['headers']['status-code'] ?? 0) === 404) {
+            $lookupHeaders = $lookup['headers'] ?? [];
+            if (\is_array($lookupHeaders) && ($lookupHeaders['status-code'] ?? 0) === 404) {
                 throw new RepositoryNotFound("Branch not found: {$branch}");
             }
         }
