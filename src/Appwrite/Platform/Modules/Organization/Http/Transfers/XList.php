@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Queries\Transfers;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -41,7 +42,7 @@ class XList extends Action
                 group: 'transfers',
                 name: 'listProjectTransfers',
                 description: <<<EOT
-                Get a list of the pending transfers of projects in your organization, with their secrets so their links can be shared again.
+                Get a list of the pending transfers of projects in your organization. An owner of the organization also gets their secrets, so their links can be shared again.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -57,6 +58,7 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -71,6 +73,7 @@ class XList extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
     ) {
         try {
@@ -131,8 +134,14 @@ class XList extends Action
             }
         }
 
+        // The secret moves the project, so it stays with the owners who may move it
+        $isOwner = $targetUser->isOwner($dbForPlatform, $team->getSequence() ?? '');
+
         $organizations = $this->getOrganizations($transfers, $dbForPlatform, $authorization);
         foreach ($transfers as $transfer) {
+            if (!$isOwner) {
+                $transfer->setAttribute('secret', '');
+            }
             $this->present($transfer, $projects[$transfer->getAttribute('resourceInternalId')] ?? new Document(), $organizations);
         }
 
