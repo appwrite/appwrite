@@ -501,6 +501,21 @@ class Create extends Action
                 $mimeType = $cipher === null ? ($info->mimeType ?? $deviceForFiles->getFileMimeType($path)) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
 
+                // A name with an allowed extension can hide any content. When the extension has a
+                // signature, the content must be one of the formats the bucket allows.
+                $allowed = $bucket->getAttribute('allowedFileExtensions', []);
+                $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
+                $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));
+                if (!empty($allowed) && $signed && !\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
+                }
+
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
                 }
