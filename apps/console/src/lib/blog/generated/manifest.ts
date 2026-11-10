@@ -5,7 +5,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "announcing-streaming-responses",
     "href": "/blog/post/announcing-streaming-responses",
-    "title": "Announcing streaming responses for Appwrite Sites and Functions",
+    "title": "Announcing streamed responses for Appwrite Sites and Functions",
     "description": "Appwrite Sites and Functions now stream their responses, so server-rendered pages show up in parts as they render and AI output reaches your users while the model is still writing.",
     "date": "2026-11-10",
     "lastUpdated": "2026-11-10",
