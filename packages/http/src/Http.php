@@ -107,7 +107,10 @@ class Http
 
     protected int $compressionMinSize = Http::COMPRESSION_MIN_SIZE_DEFAULT;
 
-    protected mixed $compressionSupported = [];
+    /**
+     * @var array<mixed>
+     */
+    protected array $compressionSupported = [];
 
     private Histogram $requestDuration;
 
@@ -172,8 +175,10 @@ class Http
 
     /**
      * Set supported compression algorithms
+     *
+     * @param  array<mixed>  $compressionSupported
      */
-    public function setCompressionSupported(mixed $compressionSupported): void
+    public function setCompressionSupported(array $compressionSupported): void
     {
         $this->compressionSupported = $compressionSupported;
     }

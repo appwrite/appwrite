@@ -3,22 +3,24 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -125,10 +127,11 @@ class Update extends Action
             ->inject('publisherForMessaging')
             ->inject('response')
             ->inject('platform')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform, Request $request)
     {
         $data = $this->normalizeJsonObject($data);
 
@@ -137,6 +140,9 @@ class Update extends Action
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
+
+        $this->assertProviderType($message, MESSAGE_TYPE_PUSH);
+        $this->requireAttachmentsScope($message, $request);
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
             if ($draft) {
@@ -178,8 +184,21 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        // A draft's scheduledAt is only a suggestion until it is scheduled
+        if (
+            $message->getAttribute('status') !== MessageStatus::DRAFT
+            && !\is_null($currentScheduledAt)
+            && new \DateTime($currentScheduledAt) < new \DateTime()
+        ) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        // The update re-mints the image's signed URL below, which requires files.read. Check it
+        // here, before the schedule or message is mutated, so a refused request leaves no schedule
+        // a worker could act on. The image is the stored one unless the request replaces it.
+        $hasImage = !\is_null($image) || !empty($message->getAttribute('data', [])['image'] ?? null);
+        if ($hasImage && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
         }
 
         // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
@@ -317,10 +336,11 @@ class Update extends Action
 
         if (!empty($pushData['image'])) {
             // Reissue on every update so the token tracks the current delivery time.
+            // files.read for this image was already enforced before any mutation above.
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $pushData['image']['bucketId'],

@@ -96,14 +96,15 @@ export function canCreateProject(
 }
 
 /**
- * Send a project out of, or receive one into, an organization. Transfer routes
- * only honor organization-wide roles, so pass the access resolved without a project.
+ * Send a project out of, or receive one into, an organization. The API requires
+ * the owner role on both sides, and only honors organization-wide roles, so
+ * pass the access resolved without a project.
  */
 export function canTransferProject(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return whenOrgRoles(access, features, access.canWriteProjects)
+  return whenOrgRoles(access, features, access.isOwner)
 }
 
 export function canCreateDatabase(
@@ -158,6 +159,14 @@ export function canCreateVideo(
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
+/** Turn code review on or off for a repository (`reviews.write`). */
+export function canWriteReviewRepositories(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteReviews)
 }
 
 export function canShowVideoSettings(
@@ -326,6 +335,8 @@ export function canSeeProjectNavItem(
       return access.canWriteSites
     case 'videos':
       return access.canSeeVideos
+    case 'reviews':
+      return access.canSeeReviews
     case 'usage':
     case 'playground':
     case 'analytics':

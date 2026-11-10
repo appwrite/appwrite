@@ -11,7 +11,7 @@ class Workers extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_WORKER;
-        $this->addAction(StatsUsage::getName(), StatsUsage::class);
-        $this->addAction(StatsResources::getName(), StatsResources::class);
+        $this->addAction('stats-usage', StatsUsage::class);
+        $this->addAction('stats-resources', StatsResources::class);
     }
 }

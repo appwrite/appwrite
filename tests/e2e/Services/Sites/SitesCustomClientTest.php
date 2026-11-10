@@ -40,6 +40,7 @@ final class SitesCustomClientTest extends Scope
             $this->assertArrayHasKey('screenshotDark', $template);
             $this->assertArrayHasKey('screenshotLight', $template);
             $this->assertArrayHasKey('tagline', $template);
+            $this->assertIsArray($template['scopes']);
         }
 
         // List templates with pagination
@@ -171,6 +172,7 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
+        $this->assertIsArray($template['body']['scopes']);
         $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', (string) $template['body']['screenshotDark']);
         $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', (string) $template['body']['screenshotLight']);
 

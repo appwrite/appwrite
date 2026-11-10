@@ -8,6 +8,7 @@ use Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector;
 use Rector\Php74\Rector\If_\IfToNullCoalescingAssignRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php80\Rector\FuncCall\ClassOnObjectRector;
+use Rector\Php80\Rector\Ternary\TernaryToNullsafeCoalesceRector;
 use Rector\Php83\Rector\ClassConst\AddTypeToConstRector;
 use Rector\Php84\Rector\Foreach_\ForeachToArrayAnyRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
@@ -37,4 +38,5 @@ return RectorConfig::configure()
         ForeachToArrayAnyRector::class => [__DIR__ . '/src'],
         IfToNullCoalescingAssignRector::class => [__DIR__ . '/src'],
         TernaryToNullCoalescingRector::class => [__DIR__ . '/src'],
+        TernaryToNullsafeCoalesceRector::class => [__DIR__ . '/src'],
     ]);

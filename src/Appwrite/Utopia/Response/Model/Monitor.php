@@ -100,6 +100,12 @@ class Monitor extends Model
                 'example' => ['owner'],
                 'array' => true,
             ])
+            ->addRule('critical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Whether the monitor is firing, as of its last evaluation.',

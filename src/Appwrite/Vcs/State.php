@@ -52,9 +52,9 @@ readonly class State
     }
 
     /**
-     * The state signed with the key, or null when it is malformed or the signature does not match.
+     * The state signed with any of the keys, or null when it is malformed or no signature matches.
      */
-    public static function verify(string $state, string $key): ?self
+    public static function verify(string $state, string ...$keys): ?self
     {
         $decoded = \json_decode(self::decode($state), true);
 
@@ -81,7 +81,7 @@ readonly class State
             $decoded['nonce'],
         );
 
-        if (!\hash_equals($verified->signature($key), $decoded['signature'])) {
+        if (!\array_any($keys, fn (string $key) => $key !== '' && \hash_equals($verified->signature($key), $decoded['signature']))) {
             return null;
         }
 

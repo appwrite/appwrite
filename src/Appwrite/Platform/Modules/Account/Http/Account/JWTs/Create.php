@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\JWTs;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -16,7 +18,6 @@ use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -54,9 +55,7 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->label('abuse', [Limit::attempts(['url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->inject('request')
             ->inject('response')
             ->inject('user')
@@ -93,7 +92,7 @@ class Create extends Action
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

@@ -220,7 +220,7 @@ class Update extends Action
         }
 
         try {
-            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $email) {
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $email, $passwordUpdate) {
                 $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
                 if ($current->isEmpty()) {
                     throw new Exception(Exception::USER_NOT_FOUND);
@@ -257,6 +257,10 @@ class Update extends Action
                         Query::equal('userInternalId', [$sequence]),
                         Query::equal('confirm', [false]),
                     ]));
+                }
+
+                if (empty($passwordUpdate)) {
+                    $authorization->skip(fn () => User::deleteRecoveryTokens($dbForProject, $user));
                 }
 
                 return $user;

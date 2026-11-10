@@ -78,6 +78,47 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
+    public function testUnsubscribeLinkJoinsTheFooterOnlyForMailThatCarriesOne(): void
+    {
+        $template = __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl';
+        $send = function (array $variables) use ($template): string {
+            $adapter = new SpyMailAdapter();
+            $registry = new Registry();
+            $registry->set('smtp', static fn (): Pool => new Pool(new Stack(), 'smtp', 1, static fn (): SpyMailAdapter => $adapter, 1.0));
+            $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+            \putenv('_APP_SMTP_HOST=spy.smtp.test');
+            try {
+                (new Mails())->action(
+                    new Message(['pid' => 'pid', 'queue' => 'v1-mails', 'timestamp' => \time(), 'payload' => [
+                        'smtp' => [],
+                        'recipient' => 'owner@example.test',
+                        'name' => 'Owner',
+                        'subject' => 'Alert',
+                        'body' => 'Body',
+                        'bodyTemplate' => $template,
+                        'variables' => $variables,
+                    ]]),
+                    new Document(['$id' => 'console']),
+                    $registry,
+                    new None(),
+                    new PublicHostname(new PublicInternet(), new FixedLookup()),
+                );
+            } finally {
+                \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+            }
+
+            return (string) $adapter->captured?->getContent();
+        };
+
+        $html = $send(['unsubscribeUrl' => 'https://console.example/auth/alerts/unsubscribe?token=one&x=1']);
+        $this->assertMatchesRegularExpression('#>Privacy</a></td>\s*<td[^>]*><div[^>]*>\|</div></td><td><a href="https://console\.example/auth/alerts/unsubscribe\?token=one&amp;x=1">Unsubscribe</a></td>#', $html);
+
+        // Every other mail keeps the footer it had.
+        $html = $send([]);
+        $this->assertStringNotContainsString('Unsubscribe', $html);
+        $this->assertStringNotContainsString('{{unsubscribeLink}}', $html);
+    }
+
     public function testGlobalSmtpAdapterIsTakenFromThePoolPerMessage(): void
     {
         $adapters = [];

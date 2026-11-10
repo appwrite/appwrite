@@ -10,6 +10,7 @@ import { jaMarketingDictionary } from './marketing'
 import { jaProductPagesDictionary } from './product-pages'
 import { jaPricingDictionary } from './pricing'
 import { jaVideosDictionary } from './videos'
+import { jaReviewsDictionary } from './reviews'
 import { jaAlternativesDictionary } from './alternatives'
 import { jaEnterpriseDictionary } from './enterprise'
 import { jaSolutionsDictionary } from './solutions'
@@ -36,4 +37,5 @@ export const jaDictionary: Record<string, string> = {
   ...jaSitesDictionary,
   ...jaDatabasesDictionary,
   ...jaVideosDictionary,
+  ...jaReviewsDictionary,
 }

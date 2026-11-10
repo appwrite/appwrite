@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -76,7 +77,7 @@ class Create extends Action
                     ),
                 ]
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
@@ -289,6 +290,47 @@ class Create extends Action
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
+
+            foreach ([MESSAGE_TYPE_EMAIL => $email, MESSAGE_TYPE_SMS => $phone] as $providerType => $identifier) {
+                if (empty($identifier)) {
+                    continue;
+                }
+
+                try {
+                    $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($invitee->getId())),
+                            Permission::update(Role::user($invitee->getId())),
+                            Permission::delete(Role::user($invitee->getId())),
+                        ],
+                        'userId' => $invitee->getId(),
+                        'userInternalId' => $invitee->getSequence(),
+                        'providerType' => $providerType,
+                        'identifier' => $identifier,
+                    ])));
+                } catch (Duplicate) {
+                    // A deleted user's target lingers until the deletes worker removes it
+                    $existing = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                        Query::equal('identifier', [$identifier]),
+                    ]));
+                    $owner = $authorization->skip(fn () => $dbForProject->getDocument('users', $existing->getAttribute('userId', '')));
+
+                    if (!$existing->isEmpty() && $owner->isEmpty()) {
+                        $authorization->skip(fn () => $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($invitee->getId())),
+                                Permission::update(Role::user($invitee->getId())),
+                                Permission::delete(Role::user($invitee->getId())),
+                            ],
+                            'userId' => $invitee->getId(),
+                            'userInternalId' => $invitee->getSequence(),
+                            'providerType' => $providerType,
+                        ])));
+                    }
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         }
 
         $membership = $dbForProject->findOne('memberships', [
@@ -338,6 +380,9 @@ class Create extends Action
                         ], 1)
                     );
                     if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocuments('targets', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ]));
                         $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
                     }
                 }

@@ -3,6 +3,11 @@
  * Console keeps on a project itself, such as the order of its environments.
  * Cloud carries the routes first, so callers gate on the feature that needs
  * them and the query stays quiet (no retry) where the routes are absent.
+ *
+ * They are the production project's preferences even while the Console is in
+ * one of its environments (the switcher reads and rewrites the environment
+ * order from there), so every call passes `environment: null` to leave the
+ * environment header off.
  */
 
 import {
@@ -29,7 +34,10 @@ function projectPrefsQueryOptions(
 ) {
   return queryOptions({
     queryKey: projectPrefsQueryKey(projectId),
-    queryFn: () => getProjectPrefs(sdk.forProject(projectId!, region).client),
+    queryFn: () =>
+      getProjectPrefs(
+        sdk.forProject(projectId!, region, { environment: null }).client,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -80,7 +88,7 @@ export function useUpdateProjectPrefs(
       }
 
       return await updateProjectPrefs(
-        sdk.forProject(projectId, region).client,
+        sdk.forProject(projectId, region, { environment: null }).client,
         prefs,
       )
     },

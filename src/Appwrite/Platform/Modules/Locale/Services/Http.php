@@ -18,13 +18,13 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetLocale::getName(), GetLocale::class);
-        $this->addAction(ListCodes::getName(), ListCodes::class);
-        $this->addAction(ListCountries::getName(), ListCountries::class);
-        $this->addAction(ListCountriesEU::getName(), ListCountriesEU::class);
-        $this->addAction(ListCountriesPhones::getName(), ListCountriesPhones::class);
-        $this->addAction(ListContinents::getName(), ListContinents::class);
-        $this->addAction(ListCurrencies::getName(), ListCurrencies::class);
-        $this->addAction(ListLanguages::getName(), ListLanguages::class);
+        $this->addAction('get', GetLocale::class);
+        $this->addAction('listCodes', ListCodes::class);
+        $this->addAction('listCountries', ListCountries::class);
+        $this->addAction('listCountriesEU', ListCountriesEU::class);
+        $this->addAction('listCountriesPhones', ListCountriesPhones::class);
+        $this->addAction('listContinents', ListContinents::class);
+        $this->addAction('listCurrencies', ListCurrencies::class);
+        $this->addAction('listLanguages', ListLanguages::class);
     }
 }

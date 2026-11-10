@@ -883,6 +883,9 @@ There are several possible ways to send a response, explore them in the followin
 ---
 * `text`
 * Converts the body using UTF-8 encoding into a binary Buffer.
+---
+* `sendStream`
+* Sends the body in chunks as your function produces them. Learn more in [streaming responses](#streaming-responses).
 {% /table %}
 
 {% multicode %}
@@ -1063,14 +1066,14 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
     case "empty":
         return context.res.empty()
     case "json":
-        return context.res.text(["type": "This is a JSON response"])
+        return try context.res.json(["type": "This is a JSON response"])
     case "binary":
-        let fileContents = FileManager.default.contents(atPath: "file.png")
+        let fileContents = FileManager.default.contents(atPath: "file.png") ?? Data()
         return context.res.binary(fileContents)
     case "redirect":
-        return context.res.redirect("https://appwrite.io", 301)
+        return context.res.redirect("https://appwrite.io", statusCode: 301)
     case "html":
-        return context.res.text("<h1>This is an HTML response</h1>", 200, [
+        return context.res.text("<h1>This is an HTML response</h1>", statusCode: 200, headers: [
             "content-type": "text/html"
             ])
     default:
@@ -1224,6 +1227,378 @@ To get the different response types, set one of the following query parameters i
 | `redirect` | `/?type=redirect` | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=redirect` |
 | `html`     | `/?type=html`     | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=html`     |
 | `empty`    | `/`               | `https://64d4d22db370ae41a32e.fra.appwrite.run/`               |
+
+### Streaming responses {% #streaming-responses %}
+
+Return `res.sendStream()` to send the response body in chunks. Each chunk is sent to the client as your function produces it, instead of once the function has finished. Use it for output that is produced over time, such as tokens from an LLM, server-sent events, progress updates, or large exports. The other response methods still send the whole body at once.
+
+`sendStream()` takes the source of the chunks, then an optional status code and headers, in the same order as `text()`. The status code and headers are sent with the first chunk.
+
+| Runtime            | Call                             | Source of chunks                                                                  |
+|--------------------|----------------------------------|-----------------------------------------------------------------------------------|
+| Node.js, Bun, Deno | `res.sendStream()`               | An async iterable, such as an async generator, of strings or `Uint8Array`s        |
+| PHP                | `$context->res->sendStream()`    | An iterable, such as a generator, of strings                                      |
+| Python             | `context.res.sendStream()`       | A generator, an async generator, or another iterable, of strings or `bytes`       |
+| Ruby               | `context.res.send_stream()`      | An `Enumerator`, or another object that responds to `each`, of strings            |
+| Go                 | `Context.Res.SendStream()`       | An `iter.Seq2[[]byte, error]`                                                     |
+| Dart               | `context.res.sendStream()`       | A `Stream` of strings or `List<int>`                                              |
+| Swift              | `context.res.sendStream()`       | A `Sendable` `AsyncSequence`, such as an `AsyncStream`, of strings or `Data`      |
+| .NET               | `Context.Res.SendStream()`       | An `IAsyncEnumerable<object>` of strings or `byte[]`                              |
+| Kotlin             | `context.res.sendStream()`       | A `Flow` or a `Sequence` of strings or `ByteArray`s                               |
+| Java               | `context.getRes().sendStream()`  | An `Iterable` of strings or `byte[]`                                              |
+| C++                | `context.res.sendStream()`       | A function that returns the next chunk as a `std::optional<std::string>`, or `std::nullopt` to end the stream |
+
+The Rust runtime does not support streaming, and neither do the deprecated `node-14.5`, `dart-2.15` and `swift-5.5` runtimes. In Go, require `github.com/open-runtimes/types-for-go/v4` `v4.0.11` or later in your `go.mod`.
+
+This function streams three server-sent events, one second apart.
+
+{% multicode %}
+```server-nodejs
+export default async ({ res }) => {
+    async function* events() {
+        for (let i = 1; i <= 3; i++) {
+            if (i > 1) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+            yield `data: Message ${i}\n\n`;
+        }
+    }
+
+    return res.sendStream(events(), 200, {
+        'content-type': 'text/event-stream'
+    });
+};
+```
+```php
+<?php
+
+return function ($context) {
+    $events = (function () {
+        for ($i = 1; $i <= 3; $i++) {
+            if ($i > 1) {
+                sleep(1);
+            }
+            yield "data: Message {$i}\n\n";
+        }
+    })();
+
+    return $context->res->sendStream($events, 200, [
+        'content-type' => 'text/event-stream'
+    ]);
+};
+```
+```python
+import time
+
+def main(context):
+    def events():
+        for i in range(1, 4):
+            if i > 1:
+                time.sleep(1)
+            yield f"data: Message {i}\n\n"
+
+    return context.res.sendStream(events(), 200, {
+        "content-type": "text/event-stream"
+    })
+```
+```ruby
+def main(context)
+    events = Enumerator.new do |out|
+        (1..3).each do |i|
+            sleep 1 if i > 1
+            out << "data: Message #{i}\n\n"
+        end
+    end
+
+    return context.res.send_stream(events, 200, {
+        'content-type' => 'text/event-stream'
+    })
+end
+```
+```deno
+export default async ({ res }: any) => {
+    async function* events() {
+        for (let i = 1; i <= 3; i++) {
+            if (i > 1) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+            yield `data: Message ${i}\n\n`;
+        }
+    }
+
+    return res.sendStream(events(), 200, {
+        "content-type": "text/event-stream"
+    });
+};
+```
+```go
+package handler
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	events := func(yield func([]byte, error) bool) {
+		for i := 1; i <= 3; i++ {
+			if i > 1 {
+				time.Sleep(time.Second)
+			}
+			if !yield([]byte(fmt.Sprintf("data: Message %d\n\n", i)), nil) {
+				return
+			}
+		}
+	}
+
+	return Context.Res.SendStream(
+		events,
+		Context.Res.WithStatusCode(200),
+		Context.Res.WithHeaders(map[string]string{"content-type": "text/event-stream"}),
+	)
+}
+```
+```dart
+import 'dart:async';
+
+Future<dynamic> main(final context) async {
+    Stream<String> events() async* {
+        for (var i = 1; i <= 3; i++) {
+            if (i > 1) {
+                await Future.delayed(Duration(seconds: 1));
+            }
+            yield 'data: Message $i\n\n';
+        }
+    }
+
+    return context.res.sendStream(events(), 200, {
+        'content-type': 'text/event-stream'
+    });
+}
+```
+```swift
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    let events = AsyncStream<String> { continuation in
+        Task {
+            for i in 1...3 {
+                if i > 1 {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+                continuation.yield("data: Message \(i)\n\n")
+            }
+            continuation.finish()
+        }
+    }
+
+    return context.res.sendStream(events, statusCode: 200, headers: [
+        "content-type": "text/event-stream"
+    ])
+}
+```
+```csharp
+namespace DotNetRuntime;
+
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        async IAsyncEnumerable<object> Events()
+        {
+            for (var i = 1; i <= 3; i++)
+            {
+                if (i > 1)
+                {
+                    await Task.Delay(1000);
+                }
+                yield return $"data: Message {i}\n\n";
+            }
+        }
+
+        return Context.Res.SendStream(Events(), 200, new Dictionary<string, string>() {
+            { "content-type", "text/event-stream" }
+        });
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        val events = flow {
+            for (i in 1..3) {
+                if (i > 1) {
+                    delay(1000)
+                }
+                emit("data: Message $i\n\n")
+            }
+        }
+
+        return context.res.sendStream(events, 200, mapOf("content-type" to "text/event-stream"))
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        Iterable<String> events = () -> new Iterator<String>() {
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < 3;
+            }
+
+            @Override
+            public String next() {
+                if (i > 0) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                i++;
+                return "data: Message " + i + "\n\n";
+            }
+        };
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-type", "text/event-stream");
+
+        return context.getRes().sendStream(events, 200, headers);
+    }
+}
+```
+```cpp
+#include "../RuntimeResponse.h"
+#include "../RuntimeRequest.h"
+#include "../RuntimeOutput.h"
+#include "../RuntimeContext.h"
+
+#include <chrono>
+#include <optional>
+#include <string>
+#include <thread>
+
+namespace runtime {
+  class Handler {
+    public:
+      static RuntimeOutput main(RuntimeContext &context) {
+        Json::Value headers;
+        headers["content-type"] = "text/event-stream";
+
+        return context.res.sendStream([i = 0]() mutable -> std::optional<std::string> {
+          i++;
+          if (i > 3) {
+            return std::nullopt;
+          }
+          if (i > 1) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+          }
+          return "data: Message " + std::to_string(i) + "\n\n";
+        }, 200, headers);
+      }
+  };
+}
+```
+{% /multicode %}
+
+The Node.js example works the same on Bun. In Go, set the status code and headers with `Context.Res.WithStatusCode()` and `Context.Res.WithHeaders()`. In Swift, the status code and headers are the `statusCode:` and `headers:` arguments.
+
+In Node.js 18 and later, Bun, and Deno, a function can also return a Fetch API `Response`. In Dart, it can return a [shelf](https://pub.dev/packages/shelf) `Response`, after you add `shelf` to your `pubspec.yaml`. A streamed body in these responses is sent the same way as `sendStream()`.
+
+{% multicode %}
+```server-nodejs
+export default async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+        async start(controller) {
+            for (let i = 1; i <= 3; i++) {
+                if (i > 1) {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+                controller.enqueue(encoder.encode(`data: Message ${i}\n\n`));
+            }
+            controller.close();
+        }
+    });
+
+    return new Response(body, {
+        headers: { 'content-type': 'text/event-stream' }
+    });
+};
+```
+```deno
+export default async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+        async start(controller) {
+            for (let i = 1; i <= 3; i++) {
+                if (i > 1) {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+                controller.enqueue(encoder.encode(`data: Message ${i}\n\n`));
+            }
+            controller.close();
+        }
+    });
+
+    return new Response(body, {
+        headers: { "content-type": "text/event-stream" }
+    });
+};
+```
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:shelf/shelf.dart' as shelf;
+
+Future<dynamic> main(final context) async {
+    Stream<List<int>> events() async* {
+        for (var i = 1; i <= 3; i++) {
+            if (i > 1) {
+                await Future.delayed(Duration(seconds: 1));
+            }
+            yield utf8.encode('data: Message $i\n\n');
+        }
+    }
+
+    return shelf.Response.ok(events(), headers: {
+        'content-type': 'text/event-stream'
+    });
+}
+```
+{% /multicode %}
+
+These rules apply to streamed responses:
+
+- If the source fails before its first chunk, the client receives a `500` response, as when your function throws an error.
+- If the source fails after the first chunk, the status code and headers have already been sent, so the response ends early with only the chunks sent so far. If the client needs to know that a stream is complete, end it with a chunk of your own, such as a final event.
+- The execution lasts until the stream ends, not until your function returns. Your function's [timeout](/docs/products/functions/functions#timeout), 15 seconds by default, covers the whole stream, and a stream that is still running when the timeout is reached ends there. A request to a function domain is a [synchronous execution](/docs/products/functions/execute#synchronous-executions) limited to 60 seconds, so its stream also ends there, even if your function's timeout is longer.
+
+Executions created with the [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint, including through an SDK, do not stream. A synchronous one returns the whole body after the stream ends, and fails with a timeout error if the execution takes longer than 30 seconds.
+
+If you read the stream with the browser [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) API, close it when you receive your final event. Otherwise it reconnects when the response ends and runs your function again.
+
+Self-hosted Appwrite 2.7.1 and earlier do not stream responses.
 
 ## Logging {% #logging %}
 To protect user privacy, the request and response objects are not logged to the Appwrite Console by default.

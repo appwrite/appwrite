@@ -93,6 +93,8 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
+    public const string USER_DEVICE_NOT_FOUND = 'user_device_not_found';
+    public const string USER_DEVICE_SESSION_NOT_FOUND = 'user_device_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
     public const string USER_UNAUTHORIZED = 'user_unauthorized';
     public const string USER_AUTH_METHOD_UNSUPPORTED = 'user_auth_method_unsupported';
@@ -459,6 +461,12 @@ class Exception extends \Exception
     /** Reports */
     public const string REPORT_NOT_FOUND = 'report_not_found';
     public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
+
+    /** Reviews */
+    public const string REVIEW_NOT_FOUND = 'review_not_found';
+    public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
+    public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
 
     protected string $type = '';
     protected array $errors = [];

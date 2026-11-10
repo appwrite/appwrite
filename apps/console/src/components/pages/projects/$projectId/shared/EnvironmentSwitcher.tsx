@@ -1,6 +1,5 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   DndContext,
   PointerSensor,
@@ -42,6 +41,10 @@ import {
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/shared/RenameEnvironmentDialog'
+import {
+  setActiveEnvironment,
+  useActiveEnvironmentId,
+} from '@/lib/active-environment'
 import {
   projectEnvironmentDotClass,
   sortProjectEnvironments,
@@ -91,21 +94,29 @@ function EnvironmentDot({
   )
 }
 
-/** The row contents every option shares; the handle column stays so dots line up. */
+/**
+ * The row contents every option shares. The handle column is there only while
+ * the list can be reordered, on every row so the dots line up; with one
+ * environment or none there is nothing to reorder and the rows start at the dot.
+ */
 function EnvironmentRow({
   option,
   isActive,
+  reorderable,
   handle,
 }: {
   option: ProjectEnvironmentOption
   isActive: boolean
+  reorderable: boolean
   handle?: React.ReactNode
 }) {
   return (
     <>
-      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-        {handle}
-      </span>
+      {reorderable && (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+          {handle}
+        </span>
+      )}
       <span className="flex h-4 w-4 shrink-0 items-center justify-center">
         <EnvironmentDot environment={option} />
       </span>
@@ -130,6 +141,7 @@ function EnvironmentRow({
 function SortableEnvironmentItem({
   option,
   isActive,
+  reorderable,
   canReorder,
   someoneDragging,
   onSelect,
@@ -137,6 +149,7 @@ function SortableEnvironmentItem({
 }: {
   option: ProjectEnvironmentOption
   isActive: boolean
+  reorderable: boolean
   canReorder: boolean
   someoneDragging: boolean
   onSelect: () => void
@@ -180,6 +193,7 @@ function SortableEnvironmentItem({
         <EnvironmentRow
           option={option}
           isActive={isActive}
+          reorderable={reorderable}
           handle={
             canReorder ? (
               <button
@@ -218,29 +232,23 @@ export function EnvironmentSwitcher({
 }: EnvironmentSwitcherProps) {
   const t = useT()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const environmentsEnabled = features.projectEnvironments
-  // `projectId` is whichever project the Console is showing, which may be an
-  // environment. The switcher always lists from the parent, which is also the
-  // only project the environment routes accept.
-  const { project, projectData } = useProject(projectId)
-  const parentProjectId = projectData
-    ? projectData.parentId || projectData.$id
-    : undefined
+  // `projectId` is always the project itself: an environment has no project ID
+  // of its own, and the Console is in one when the active-environment store
+  // holds one for the project. The environments routes act on the project,
+  // never inside one of its environments.
+  const { project } = useProject(projectId)
+  const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const region = project?.region
   const { environments, error, refetch } = useProjectEnvironments(
-    parentProjectId,
+    projectId,
     region,
     environmentsEnabled,
   )
-  // The order members gave the list, kept in the parent's prefs
-  const { prefs } = useProjectPrefs(
-    parentProjectId,
-    region,
-    environmentsEnabled,
-  )
-  const updatePrefsMutation = useUpdateProjectPrefs(parentProjectId, region)
+  // The order members gave the list, kept in the project's prefs
+  const { prefs } = useProjectPrefs(projectId, region, environmentsEnabled)
+  const updatePrefsMutation = useUpdateProjectPrefs(projectId, region)
 
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -249,7 +257,7 @@ export function EnvironmentSwitcher({
   const [pendingOrder, setPendingOrder] = useState<string[] | null>(null)
 
   const deleteEnvironmentMutation = useDeleteProjectEnvironment(
-    parentProjectId,
+    projectId,
     region,
   )
 
@@ -257,19 +265,17 @@ export function EnvironmentSwitcher({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   )
 
-  // The parent is production. It has no environment document of its own, so it
-  // is never in the list endpoint; the switcher always labels it Production.
+  // The project itself is production. It has no environment document of its
+  // own, so it is never in the list endpoint; the switcher always labels it
+  // Production.
   const productionName = t('Production')
-  const production = useMemo<ProjectEnvironmentOption | null>(
-    () =>
-      parentProjectId
-        ? {
-            id: parentProjectId,
-            name: productionName,
-            isDefault: true,
-          }
-        : null,
-    [parentProjectId, productionName],
+  const production = useMemo<ProjectEnvironmentOption>(
+    () => ({
+      id: projectId,
+      name: productionName,
+      isDefault: true,
+    }),
+    [projectId, productionName],
   )
   const environmentOptions = useMemo<ProjectEnvironmentOption[]>(
     () =>
@@ -288,33 +294,40 @@ export function EnvironmentSwitcher({
     [environmentOptions],
   )
 
-  if (!environmentsEnabled || !project || !parentProjectId || !production) {
+  if (!environmentsEnabled || !project) {
     return null
   }
 
-  const selected: ProjectEnvironmentOption =
-    project.$id === parentProjectId
-      ? production
-      : {
-          id: project.$id,
-          name: project.name || project.$id,
-          isDefault: false,
-        }
+  // The project answers with the environment's name while the Console is in it
+  const selected: ProjectEnvironmentOption = activeEnvironmentId
+    ? {
+        id: activeEnvironmentId,
+        name:
+          environmentOptions.find((option) => option.id === activeEnvironmentId)
+            ?.name ??
+          project.name ??
+          activeEnvironmentId,
+        isDefault: false,
+      }
+    : production
 
-  // The update replaces the whole prefs object, so nothing is saved over
-  // prefs that never loaded; one environment has nothing to be ordered against
+  // One environment has nothing to be ordered against, so the rows only make
+  // room for a handle from the second one on. The update replaces the whole
+  // prefs object, so nothing is saved over prefs that never loaded.
+  const reorderable = environmentOptions.length > 1
   const canReorder =
-    prefs !== null &&
-    environmentOptions.length > 1 &&
-    !updatePrefsMutation.isPending
+    reorderable && prefs !== null && !updatePrefsMutation.isPending
 
-  const openProject = (nextProjectId: string) => {
-    // Opening the current project again would only leave the page for its root.
-    if (nextProjectId === selected.id) return
-    void navigate({
-      to: '/projects/$projectId',
-      params: { projectId: nextProjectId },
-    })
+  // An environment is a working context on the project's own routes, not a URL:
+  // the switcher sets it and opens the project root in it. Production is the
+  // project with none. Contexts are told apart by the active environment ID,
+  // never by row ID: an environment may share the project's ID, and production's
+  // row carries that ID too.
+  const openEnvironment = (environmentId: string | null) => {
+    // Opening the current one again would only leave the page for its root.
+    if (environmentId === activeEnvironmentId) return
+    setActiveEnvironment(projectId, environmentId)
+    void navigate({ to: '/projects/$projectId', params: { projectId } })
   }
 
   const saveOrder = (ids: string[]) => {
@@ -353,12 +366,10 @@ export function EnvironmentSwitcher({
     deleteEnvironmentMutation.mutate(selected.id, {
       onSuccess: async () => {
         toast.success(t('Environment deleted'))
-        await navigate({
-          to: '/projects/$projectId',
-          params: { projectId: parentProjectId },
-        })
-        // Only once its page is gone, or that page refetches a deleted project.
-        queryClient.removeQueries({ queryKey: ['project', selected.id] })
+        // Back to production. Leaving the environment already drops the
+        // project's cached queries, so the navigation loads production fresh.
+        setActiveEnvironment(projectId, null)
+        await navigate({ to: '/projects/$projectId', params: { projectId } })
       },
       onError: (deleteError: Error) => {
         toast.error(
@@ -435,14 +446,15 @@ export function EnvironmentSwitcher({
           <DropdownMenuItem
             className={cn(
               'gap-2',
-              production.id === selected.id && 'bg-accent/50',
+              selected.isDefault && 'bg-accent/50',
               dragging && 'pointer-events-none',
             )}
-            onSelect={() => openProject(production.id)}
+            onSelect={() => openEnvironment(null)}
           >
             <EnvironmentRow
               option={production}
-              isActive={production.id === selected.id}
+              isActive={selected.isDefault}
+              reorderable={reorderable}
             />
           </DropdownMenuItem>
           <DndContext
@@ -460,10 +472,11 @@ export function EnvironmentSwitcher({
                 <SortableEnvironmentItem
                   key={option.id}
                   option={option}
-                  isActive={option.id === selected.id}
+                  isActive={option.id === activeEnvironmentId}
+                  reorderable={reorderable}
                   canReorder={canReorder}
                   someoneDragging={dragging}
-                  onSelect={() => openProject(option.id)}
+                  onSelect={() => openEnvironment(option.id)}
                   onMove={(direction) => moveEnvironment(option.id, direction)}
                 />
               ))}
@@ -473,7 +486,8 @@ export function EnvironmentSwitcher({
           <DropdownMenuItem asChild className="text-[13px]">
             <Link
               to="/projects/$projectId/environments/create"
-              params={{ projectId: parentProjectId }}
+              params={{ projectId }}
+              onClick={() => setActiveEnvironment(projectId, null)}
             >
               <MenuItemContent icon={Plus}>
                 {t('Create environment')}
@@ -512,7 +526,7 @@ export function EnvironmentSwitcher({
       <RenameEnvironmentDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}
-        projectId={parentProjectId}
+        projectId={projectId}
         region={region}
         environment={selected.isDefault ? null : selected}
       />

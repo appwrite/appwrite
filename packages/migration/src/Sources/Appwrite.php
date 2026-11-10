@@ -79,6 +79,7 @@ use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
 use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
+use Utopia\Migration\Resources\Settings\Preferences;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
 use Utopia\Migration\Resources\Settings\Services as ServicesResource;
@@ -343,6 +344,7 @@ class Appwrite extends Source
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,
@@ -1878,6 +1880,11 @@ class Appwrite extends Source
             $report[Resource::TYPE_PROJECT_LABELS] = 1;
         }
 
+        if (\in_array(Resource::TYPE_PROJECT_PREFERENCES, $resources)) {
+            // Singleton; a source older than 2.7.0 has no project preferences.
+            $report[Resource::TYPE_PROJECT_PREFERENCES] = $this->project->get()->prefs === null ? 0 : 1;
+        }
+
         if (\in_array(Resource::TYPE_PROJECT_SERVICES, $resources)) {
             // Singleton — one services config per project.
             $report[Resource::TYPE_PROJECT_SERVICES] = 1;
@@ -1939,6 +1946,20 @@ class Appwrite extends Source
         } catch (\Throwable $e) {
             $this->addError(new Exception(
                 Resource::TYPE_PROJECT_LABELS,
+                Transfer::GROUP_PROJECTS,
+                message: $e->getMessage(),
+                code: (int) $e->getCode() ?: Exception::CODE_INTERNAL,
+                previous: $e
+            ));
+        }
+
+        try {
+            if (\in_array(Resource::TYPE_PROJECT_PREFERENCES, $resources)) {
+                $this->exportPreferences();
+            }
+        } catch (\Throwable $e) {
+            $this->addError(new Exception(
+                Resource::TYPE_PROJECT_PREFERENCES,
                 Transfer::GROUP_PROJECTS,
                 message: $e->getMessage(),
                 code: (int) $e->getCode() ?: Exception::CODE_INTERNAL,
@@ -2076,6 +2097,24 @@ class Appwrite extends Source
         );
 
         $this->callback([$labels]);
+    }
+
+    private function exportPreferences(): void
+    {
+        $project = $this->project->get();
+
+        if ($project->prefs === null) {
+            return;
+        }
+
+        $preferences = new Preferences(
+            $this->projectId,
+            $project->prefs->data,
+            createdAt: $project->createdAt,
+            updatedAt: $project->updatedAt,
+        );
+
+        $this->callback([$preferences]);
     }
 
     private function exportProtocols(): void

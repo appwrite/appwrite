@@ -1374,6 +1374,14 @@ final class FunctionsCustomServerTest extends Scope
             $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
             $this->assertSame(200, $source['headers']['status-code']);
             $this->assertStringStartsWith("\x1f\x8b", $source['body']);
+
+            // Every key holds the public scope, which is not enough to download a deployment.
+            $unscoped = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getNewKey(['users.read']),
+            ], ['type' => 'source']);
+            $this->assertSame(401, $unscoped['headers']['status-code']);
         } finally {
             $this->cleanupFunction($functionId);
         }
@@ -3290,6 +3298,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
+
+        // An API key holds no 'public' scope of its own, but must still reach public endpoints
+        $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertSame(200, $runtimes['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
+        $this->assertNotEmpty($runtimes['body']['runtimes']);
     }
 
     public function testListRuntimesAndSpecificationsTotal(): void

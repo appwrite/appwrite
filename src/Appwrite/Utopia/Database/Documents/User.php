@@ -259,6 +259,29 @@ class User extends Document
         return [];
     }
 
+    /**
+     * Is the user a confirmed owner of the organization?
+     *
+     * Reads the membership from the database rather than the user's own `memberships`,
+     * which is capped at a page and absent on a user loaded without it.
+     */
+    public function isOwner(Database $dbForPlatform, string $teamInternalId): bool
+    {
+        $sequence = $this->getSequence();
+
+        if (empty($sequence) || $teamInternalId === '') {
+            return false;
+        }
+
+        $membership = $dbForPlatform->findOne('memberships', [
+            Query::equal('teamInternalId', [$teamInternalId]),
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('confirm', [true]),
+        ]);
+
+        return \in_array(self::ROLE_OWNER, $membership->getAttribute('roles', []), true);
+    }
+
     private function getSession(string $sessionId): ?Document
     {
         return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);
@@ -283,6 +306,24 @@ class User extends Document
 
         $dbForProject->deleteDocuments('challenges', [
             Query::equal('userInternalId', [$sequence]),
+        ]);
+    }
+
+    /**
+     * Delete the user's pending recovery links and codes. Each was issued to reset the
+     * password as it stood, so once the password changes none of them is needed.
+     * The caller purges the cached user document, which lists the tokens.
+     */
+    public static function deleteRecoveryTokens(Database $dbForProject, Document $user): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('tokens', [
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('type', [TOKEN_TYPE_RECOVERY, TOKEN_TYPE_RECOVERY_OTP]),
         ]);
     }
 

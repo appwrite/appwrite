@@ -24,7 +24,7 @@ use Utopia\System\System;
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());
@@ -49,12 +49,7 @@ $container->set('authorization', function () {
 $container->set('project', fn () => new Document([]), []);
 
 $container->set('certificates', function () {
-    $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
-    if (empty($email)) {
-        throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
-    }
-
-    return new LetsEncrypt($email);
+    return new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', '')));
 }, []);
 
 $platform = new Appwrite();

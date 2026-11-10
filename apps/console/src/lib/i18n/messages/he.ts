@@ -244,6 +244,7 @@ export const heCatalog: EnCatalog = {
         functions: 'פונקציות',
         messaging: 'הודעות',
         videos: 'סרטונים',
+        reviews: 'סקירת קוד',
         sites: 'אתרים',
         distribution: 'הפצה',
         activity: 'פעילות',

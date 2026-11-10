@@ -11,7 +11,7 @@ export function openCreateOrganizationFlow(
   navigate: (opts: {
     to: '/organizations/$orgId' | '/' | '/upgrade'
     params?: { orgId: string }
-    search?: { createOrg: boolean }
+    search?: { createOrg: string } | { orgId: string }
   }) => void,
   options: {
     onCreateOrganization?: () => void
@@ -34,12 +34,12 @@ export function openCreateOrganizationFlow(
     navigate({
       to: '/organizations/$orgId',
       params: { orgId: options.orgId },
-      search: { createOrg: true },
+      search: { createOrg: 'true' },
     })
   } else {
     navigate({
       to: '/',
-      search: { createOrg: true },
+      search: { createOrg: 'true' },
     })
   }
 }

@@ -2,10 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Transfers;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -32,14 +34,15 @@ class Get extends Action
             ->desc('Get project transfer')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.read')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',
                 name: 'getProjectTransfer',
                 description: <<<EOT
                 Get a project transfer by its unique ID. The organization that owns the project can get it without a secret. Any other organization needs the transfer secret, so it can see which project it is about to claim and which organizations are involved.
+
+                Only an owner of the organization that owns the project reads the secret back.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -54,6 +57,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -64,6 +68,7 @@ class Get extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
     ) {
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
@@ -87,6 +92,9 @@ class Get extends Action
 
             // Any organization with the secret may see who can claim it; only claiming checks the recipient.
             // Only the sender may read the secret back
+            $transfer->setAttribute('secret', '');
+        } elseif (!$targetUser->isOwner($dbForPlatform, $team->getSequence() ?? '')) {
+            // The secret moves the project, so it stays with the owners who may move it
             $transfer->setAttribute('secret', '');
         }
 

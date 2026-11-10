@@ -148,6 +148,32 @@ final class BranchPreviewRuleTest extends TestCase
         $this->activate($dbForPlatform, 'appwrite.network');
     }
 
+    public function testCommitDomainIsUniquePerProjectAndResource(): void
+    {
+        $projectA = new Document(['$id' => 'projectA']);
+        $projectB = new Document(['$id' => 'projectB']);
+        $siteOne = new Document(['$id' => 'siteOne']);
+        $siteTwo = new Document(['$id' => 'siteTwo']);
+        $commit = 'abcdef1234567890deadbeef';
+        $sitesDomain = 'appwrite.network';
+
+        $domain = Base::commitDomain($projectA, $siteOne, $commit, $sitesDomain);
+
+        // A lowercased commit host carrying the project-and-resource hash.
+        $this->assertStringStartsWith('commit-abcdef1234567890-', $domain);
+        $this->assertStringEndsWith('.appwrite.network', $domain);
+
+        // Same project, resource and commit always resolve to the same host.
+        $this->assertSame($domain, Base::commitDomain($projectA, $siteOne, $commit, $sitesDomain));
+
+        // A different project building the same commit must not collide on the host —
+        // the collision is what let one project's build be served under another's commit URL.
+        $this->assertNotSame($domain, Base::commitDomain($projectB, $siteOne, $commit, $sitesDomain));
+
+        // Two sites in one project building the same commit are distinct too.
+        $this->assertNotSame($domain, Base::commitDomain($projectA, $siteTwo, $commit, $sitesDomain));
+    }
+
     /**
      * @param array<string, string> $owner
      */

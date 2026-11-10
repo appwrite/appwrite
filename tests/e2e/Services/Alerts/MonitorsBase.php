@@ -40,6 +40,7 @@ trait MonitorsBase
         $this->assertSame(1800, $monitor['body']['cooldown']);
         $this->assertTrue($monitor['body']['enabled']);
         $this->assertSame(['owner'], $monitor['body']['notify']);
+        $this->assertFalse($monitor['body']['critical']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
         $this->assertNull($monitor['body']['evaluatedAt']);
@@ -151,6 +152,7 @@ trait MonitorsBase
             'rules' => [Query::lessThanEqual('files.storage', 42)->toString()],
             'enabled' => false,
             'notify' => ['owner', 'developer'],
+            'critical' => true,
         ]);
 
         /**
@@ -162,6 +164,7 @@ trait MonitorsBase
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
         $this->assertFalse($monitor['body']['enabled']);
         $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertTrue($monitor['body']['critical']);
         $this->assertSame('Before', $monitor['body']['name']);
         $this->assertSame(900, $monitor['body']['cooldown']);
 
@@ -170,9 +173,16 @@ trait MonitorsBase
         // Rules left out are kept.
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $renamed['body']['rules']);
         $this->assertSame(['owner', 'developer'], $renamed['body']['notify']);
+        $this->assertTrue($renamed['body']['critical']);
 
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));
+        $this->assertTrue($found['body']['monitors'][0]['critical']);
+        $critical = $this->listMonitors([
+            Query::search('search', 'After ' . $monitorId)->toString(),
+            Query::equal('critical', [false])->toString(),
+        ]);
+        $this->assertSame([], $critical['body']['monitors']);
 
         /**
          * Test for FAILURE

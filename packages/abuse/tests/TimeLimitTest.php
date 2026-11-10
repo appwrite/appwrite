@@ -90,6 +90,26 @@ final class TimeLimitTest extends TestCase
         $this->assertTrue($adapter->check()->limited);
     }
 
+    public function testReleaseGivesBackOneHitWithoutGoingNegative(): void
+    {
+        $adapter = new Memory('ip:{ip}', 2, 60, $this->store)->withParam('{ip}', '127.0.0.1');
+
+        $adapter->release();
+        $adapter->check();
+        $adapter->check();
+        $this->assertTrue($adapter->check()->limited);
+
+        $adapter->release();
+        $this->assertFalse($adapter->check()->limited);
+    }
+
+    public function testReleaseOnZeroLimitTouchesNoStorage(): void
+    {
+        new Memory('ip:{ip}', 0, 60, $this->store)->release();
+
+        $this->assertSame(0, $this->store->calls);
+    }
+
     public function testSecondsMustBePositive(): void
     {
         $this->expectException(\InvalidArgumentException::class);

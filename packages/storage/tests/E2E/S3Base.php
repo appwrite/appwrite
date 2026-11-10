@@ -11,6 +11,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 
 abstract class S3Base extends TestCase
 {
@@ -91,6 +92,28 @@ abstract class S3Base extends TestCase
     protected function tearDown(): void
     {
         $this->removeTestFiles();
+    }
+
+    public function testReadSinceATimeIsOneConditionalGet(): void
+    {
+        $path = $this->object->getPath('testing/modified-since.txt');
+        $this->object->write($path, new Stream('Hello'), 'text/plain');
+
+        try {
+            $this->assertSame('Hello', (string) $this->object->read($path, modifiedSince: new \DateTimeImmutable('-1 hour')));
+
+            try {
+                $this->object->read($path, modifiedSince: $this->object->getFileInfo($path)->modifiedAt);
+                $this->fail('An object not modified after the time must not be read');
+            } catch (NotModifiedException) {
+                $this->assertTrue($this->object->exists($path));
+            }
+        } finally {
+            $this->object->delete($path);
+        }
+
+        $this->expectException(NotFoundException::class);
+        $this->object->read($path, modifiedSince: new \DateTimeImmutable('-1 hour'));
     }
 
     public function testListFiles(): void

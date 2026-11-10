@@ -291,6 +291,16 @@ return [
         'description' => 'The current user session could not be found.',
         'code' => 404,
     ],
+    Exception::USER_DEVICE_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_NOT_FOUND,
+        'description' => 'The requested account switching device could not be found. Create one with the create device endpoint first.',
+        'code' => 404,
+    ],
+    Exception::USER_DEVICE_SESSION_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_SESSION_NOT_FOUND,
+        'description' => 'The requested session is not held by this account switching device.',
+        'code' => 404,
+    ],
     Exception::USER_IDENTITY_NOT_FOUND => [
         'name' => Exception::USER_IDENTITY_NOT_FOUND,
         'description' => 'The identity could not be found. Please sign in with OAuth provider to create identity first.',
@@ -1683,6 +1693,28 @@ return [
     Exception::REPORT_ALREADY_EXISTS => [
         'name' => Exception::REPORT_ALREADY_EXISTS,
         'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reviews */
+    Exception::REVIEW_NOT_FOUND => [
+        'name' => Exception::REVIEW_NOT_FOUND,
+        'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_CHAT_NOT_FOUND => [
+        'name' => Exception::REVIEW_CHAT_NOT_FOUND,
+        'description' => 'No answer was queued for the requested comment on this repository and pull request.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_STATUS_INVALID => [
+        'name' => Exception::REVIEW_STATUS_INVALID,
+        'description' => 'The review has already ended and its status can no longer change.',
+        'code' => 409,
+    ],
+    Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
+        'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
+        'description' => 'Code review is already on for this repository in this project.',
         'code' => 409,
     ],
 ];

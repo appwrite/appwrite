@@ -37,44 +37,44 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
         // Sites
-        $this->addAction(CreateSite::getName(), CreateSite::class);
-        $this->addAction(GetSite::getName(), GetSite::class);
-        $this->addAction(ListSites::getName(), ListSites::class);
-        $this->addAction(UpdateSite::getName(), UpdateSite::class);
-        $this->addAction(DeleteSite::getName(), DeleteSite::class);
+        $this->addAction('createSite', CreateSite::class);
+        $this->addAction('getSite', GetSite::class);
+        $this->addAction('listSites', ListSites::class);
+        $this->addAction('updateSite', UpdateSite::class);
+        $this->addAction('deleteSite', DeleteSite::class);
 
         // Frameworks
-        $this->addAction(ListFrameworks::getName(), ListFrameworks::class);
+        $this->addAction('listFrameworks', ListFrameworks::class);
 
 
         // Deployments
-        $this->addAction(CreateDeployment::getName(), CreateDeployment::class);
-        $this->addAction(CreateTemplateDeployment::getName(), CreateTemplateDeployment::class);
-        $this->addAction(CreateVcsDeployment::getName(), CreateVcsDeployment::class);
-        $this->addAction(GetDeployment::getName(), GetDeployment::class);
-        $this->addAction(ListDeployments::getName(), ListDeployments::class);
-        $this->addAction(UpdateSiteDeployment::getName(), UpdateSiteDeployment::class);
-        $this->addAction(DeleteDeployment::getName(), DeleteDeployment::class);
-        $this->addAction(DownloadDeployment::getName(), DownloadDeployment::class);
-        $this->addAction(CreateDuplicateDeployment::getName(), CreateDuplicateDeployment::class);
-        $this->addAction(UpdateDeploymentStatus::getName(), UpdateDeploymentStatus::class);
+        $this->addAction('createDeployment', CreateDeployment::class);
+        $this->addAction('createTemplateDeployment', CreateTemplateDeployment::class);
+        $this->addAction('createVcsDeployment', CreateVcsDeployment::class);
+        $this->addAction('getDeployment', GetDeployment::class);
+        $this->addAction('listDeployments', ListDeployments::class);
+        $this->addAction('updateSiteDeployment', UpdateSiteDeployment::class);
+        $this->addAction('deleteDeployment', DeleteDeployment::class);
+        $this->addAction('getDeploymentDownload', DownloadDeployment::class);
+        $this->addAction('createDuplicateDeployment', CreateDuplicateDeployment::class);
+        $this->addAction('updateDeploymentStatus', UpdateDeploymentStatus::class);
 
         // Logs
-        $this->addAction(GetLog::getName(), GetLog::class);
-        $this->addAction(ListLogs::getName(), ListLogs::class);
-        $this->addAction(DeleteLog::getName(), DeleteLog::class);
+        $this->addAction('getLog', GetLog::class);
+        $this->addAction('listLogs', ListLogs::class);
+        $this->addAction('deleteLog', DeleteLog::class);
 
         // Variables
-        $this->addAction(CreateVariable::getName(), CreateVariable::class);
-        $this->addAction(GetVariable::getName(), GetVariable::class);
-        $this->addAction(ListVariables::getName(), ListVariables::class);
-        $this->addAction(UpdateVariable::getName(), UpdateVariable::class);
-        $this->addAction(DeleteVariable::getName(), DeleteVariable::class);
+        $this->addAction('createVariable', CreateVariable::class);
+        $this->addAction('getVariable', GetVariable::class);
+        $this->addAction('listVariables', ListVariables::class);
+        $this->addAction('updateVariable', UpdateVariable::class);
+        $this->addAction('deleteVariable', DeleteVariable::class);
 
         // Templates
-        $this->addAction(ListTemplates::getName(), ListTemplates::class);
-        $this->addAction(GetTemplate::getName(), GetTemplate::class);
+        $this->addAction('listTemplates', ListTemplates::class);
+        $this->addAction('getTemplate', GetTemplate::class);
 
-        $this->addAction(ListSpecifications::getName(), ListSpecifications::class);
+        $this->addAction('listSpecifications', ListSpecifications::class);
     }
 }

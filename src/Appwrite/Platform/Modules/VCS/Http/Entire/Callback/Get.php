@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Entire\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Database\Documents\User;
@@ -62,18 +63,13 @@ class Get extends Action
         array $platform,
         VcsFactory $vcsFactory,
     ) {
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
-
         // A customer who cancels on Entire comes back with an error and the
         // state instead of a receipt. Nothing else authenticates that request,
         // so the state must carry this server's signature before its failure
         // URL is trusted as a redirect. Nothing is granted on this path, so it
         // asks for no more than that signature.
         if (!empty($error) && empty($receipt)) {
-            $cancelled = $this->verifiedState($state, $signingKey);
+            $cancelled = $this->verifiedState($state);
             $this->failure($response, $cancelled->failure, $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
             return;
         }
@@ -107,7 +103,7 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
         }
 
-        $state = $this->verifiedState(!empty($receiptState) ? $receiptState : $state, $signingKey);
+        $state = $this->verifiedState(!empty($receiptState) ? $receiptState : $state);
 
         $projectId = $state->projectId;
         $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
@@ -209,15 +205,15 @@ class Get extends Action
 
     /**
      * The state the Authorize action signed. Throws when it is missing, or was
-     * not signed by this server with the current key.
+     * not signed by this server with an accepted key.
      */
-    private function verifiedState(string $state, string $signingKey): State
+    private function verifiedState(string $state): State
     {
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $verified = State::verify($state, $signingKey);
+        $verified = State::verify($state, ...EncryptionKey::accepted());
 
         if ($verified === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');

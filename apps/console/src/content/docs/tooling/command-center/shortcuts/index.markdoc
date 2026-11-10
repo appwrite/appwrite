@@ -18,7 +18,6 @@ Developers can also utilize global shortcuts anywhere in the Appwrite Console, a
 |----|----|
 |`T` then `L`|Set theme to light|
 |`T` then `D`|Set theme to dark|
-|`T` then `A`|Set theme to dark|
 |`C` then `O`|Create organization|
 
 ## Command center

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\UniqueId;
 use Utopia\Cache\Cache;
@@ -105,6 +106,16 @@ class Factory implements Provisioner
         );
     }
 
+    public function overlayLiveDedicatedDsn(
+        Document $databaseDocument,
+        Document $project,
+        int $timeout = 0,
+        int $maxQueryValues = 0,
+        bool $cache = true,
+    ): Document {
+        return $databaseDocument;
+    }
+
     /**
      * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
      * the schema is theirs, so dropping one would silently discard data they sent.
@@ -201,7 +212,9 @@ class Factory implements Provisioner
 
     protected function configureDocumentTypes(Database $database): Database
     {
-        return $database->setDocumentType('users', User::class);
+        return $database
+            ->setDocumentType('users', User::class)
+            ->setDocumentType('projects', Project::class);
     }
 
     protected function destinationFor(DSN $dsn): ?Database

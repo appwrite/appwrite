@@ -681,7 +681,7 @@ export function BucketSettings() {
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
               {t(
-                "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.",
+                'Encrypt files stored in this bucket. This change will only apply to new files uploaded after the update.',
               )}
             </p>
           </div>

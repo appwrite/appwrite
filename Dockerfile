@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.7 AS base
+FROM appwrite/base:2.2.10 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -75,6 +75,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/encryption && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
@@ -133,7 +134,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.7-xdebug AS xdebug
+FROM appwrite/base:2.2.10-xdebug AS xdebug
 
 FROM base AS development
 
@@ -143,7 +144,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.7 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.10 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

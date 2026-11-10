@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Password;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordPwned;
@@ -24,6 +25,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\Text;
@@ -64,7 +66,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
             ->param('oldPassword', '', new PasswordFormat(new Text(256, 0)), 'Current user password. Max length: 256 chars.', true)
             ->inject('response')
@@ -77,6 +79,7 @@ class Update extends Action
             ->inject('pwnedPasswords')
             ->inject('session')
             ->inject('mqtt')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -93,6 +96,7 @@ class Update extends Action
         PasswordPwned $pwnedPasswords,
         ?Document $current,
         Mqtt $mqtt,
+        Authorization $authorization,
     ): void {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
@@ -146,7 +150,14 @@ class Update extends Action
             User::invalidateAuthentication($dbForProject, $user, $current->getId());
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        // Under the user lock that recovery requests take, so none lands between the delete and the new password
+        $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            $authorization->skip(fn () => User::deleteRecoveryTokens($dbForProject, $user));
+
+            return $dbForProject->updateDocument('users', $user->getId(), $user);
+        });
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         try {
             $mqtt->revoke($project->getId(), $user->getId());

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -65,8 +66,10 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},userId:{userId}', 'url:{url},ip:{ip}'])
+            ->label('abuse', [
+                Limit::attempts(['url', 'userId'], 10),
+                Limit::attempts(['url', 'ip'], 10),
+            ])
             ->inject('request')
             ->inject('response')
             ->inject('user')

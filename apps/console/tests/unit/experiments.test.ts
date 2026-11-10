@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { isRedirect } from '@tanstack/react-router'
-import { CONSOLE_PROFILES } from '@/lib/console-profiles'
 import {
-  EXPERIMENTS,
-  hasQualityLabel,
-  setExperimentEnabled,
-} from '@/lib/experiments'
+  CONSOLE_PROFILES,
+  setDebugProfileFeatureOverride,
+} from '@/lib/console-profiles'
+import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
 import { Route as AlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
 import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.usage.monitors'
 
@@ -21,30 +20,33 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, project transfers, and usage alerts', () => {
+  test('lists Appwrite Analytics, project environments and project transfers', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'projectTransfers',
-      'alerts',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Project transfers')
-    expect(EXPERIMENTS[3]?.name).toBe('Usage alerts')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
   })
 
-  test('usage alerts are off in every profile until a preview turns them on', () => {
+  test('usage alerts are off in every profile and only the debug menu turns them on', () => {
+    expect(
+      EXPERIMENTS.some(
+        (experiment) => experiment.flag === ('alerts' as string),
+      ),
+    ).toBe(false)
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
   })
 })
 
-describe('usage alerts preview', () => {
+describe('usage alerts flag', () => {
   const globals = globalThis as { window?: unknown; localStorage?: unknown }
   const originalWindow = globals.window
   const originalLocalStorage = globals.localStorage
@@ -84,7 +86,7 @@ describe('usage alerts preview', () => {
     }
   }
 
-  test('a deep link to alerts or monitors lands on usage while the preview is off', () => {
+  test('a deep link to alerts or monitors lands on usage while the flag is off', () => {
     for (const route of [AlertsRoute, MonitorsRoute]) {
       const thrown = enter(route)
       expect(isRedirect(thrown)).toBe(true)
@@ -94,12 +96,12 @@ describe('usage alerts preview', () => {
     }
   })
 
-  test('the pages open once the preview is turned on', () => {
-    setExperimentEnabled('alerts', true)
+  test('the pages open once the debug menu turns the flag on', () => {
+    setDebugProfileFeatureOverride('alerts', true)
     expect(enter(AlertsRoute)).toBeNull()
     expect(enter(MonitorsRoute)).toBeNull()
 
-    setExperimentEnabled('alerts', false)
+    setDebugProfileFeatureOverride('alerts', false)
     expect(isRedirect(enter(MonitorsRoute))).toBe(true)
   })
 })

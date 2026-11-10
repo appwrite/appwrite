@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Database\Documents\User;
@@ -102,12 +103,7 @@ class Get extends Action
         // The receipt authenticates Cursor, and this signature the Appwrite
         // Console session that started the flow -- without it anyone could
         // attach an installation to an arbitrary projectId.
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
-
-        $state = State::verify($state, $signingKey);
+        $state = State::verify($state, ...EncryptionKey::accepted());
 
         if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');

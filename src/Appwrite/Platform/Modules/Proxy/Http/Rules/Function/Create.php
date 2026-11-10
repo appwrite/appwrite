@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
@@ -62,9 +63,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)

@@ -11,7 +11,9 @@ namespace Appwrite\Alert;
 readonly class Wording
 {
     /**
+     * @param ?string $status the status pill's label; an empty string leaves the pill out
      * @param ?string $tone `warning` shows the status in amber instead of red or green
+     * @param bool $monitor false leaves out the row naming the monitor, for alerts whose heading already says it
      */
     public function __construct(
         public ?string $subject = null,
@@ -26,6 +28,7 @@ readonly class Wording
         public ?string $action = null,
         public ?string $link = null,
         public ?string $linkUrl = null,
+        public bool $monitor = true,
     ) {
     }
 }

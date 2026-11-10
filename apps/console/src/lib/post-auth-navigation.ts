@@ -16,6 +16,9 @@ import {
   rewriteLegacyConsolePath,
 } from '@/lib/legacy-console-path'
 import { isZeroAccount } from '@/lib/zero/session'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
+
+export { isValidRelativeRedirect }
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
@@ -46,30 +49,6 @@ const AUTH_PAGE_PATHS = [
   '/verify-email',
   '/auth/magic-url',
 ] as const
-
-export function isValidRelativeRedirect(value: string): boolean {
-  if (
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    /[\\\u0000-\u001f\u007f]/.test(value)
-  ) {
-    return false
-  }
-  try {
-    // Validate destination structure, not URLs embedded in query values.
-    // Callers must retain the original bytes rather than the normalized URL.
-    const origin = 'https://console.invalid'
-    const destination = new URL(value, origin)
-    const pathname = decodeURIComponent(destination.pathname)
-    return (
-      destination.origin === origin &&
-      !pathname.startsWith('//') &&
-      !/[\\\u0000-\u001f\u007f]/.test(pathname)
-    )
-  } catch {
-    return false
-  }
-}
 
 function normalizeRedirectPathname(redirect: string): string {
   const pathname = redirect.split('?')[0]?.split('#')[0] ?? redirect

@@ -212,6 +212,7 @@ $platformCollections = [
             Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
             Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
             Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
+            Attribute::boolean(key: 'critical', default: false),
             Attribute::boolean(key: 'enabled', required: true, default: true),
             Attribute::string(key: 'status', size: 16, required: true, default: 'ok'),
             Attribute::double(key: 'value'),
@@ -245,6 +246,7 @@ $platformCollections = [
             Attribute::string(key: 'region', size: 16, default: ''),
             Attribute::string(key: 'status', size: 16, required: true, default: 'firing'),
             Attribute::string(key: 'rules', size: 1024, default: [], array: true),
+            Attribute::boolean(key: 'critical', default: false),
             Attribute::string(key: 'type', size: 32, required: true, default: ''),
             Attribute::string(key: 'resourceType', size: 32, required: true, default: ''),
             Attribute::string(key: 'resourceId', required: true, default: ''),
@@ -316,6 +318,9 @@ $platformCollections = [
             Attribute::integer(key: 'attempts'),
             Attribute::string(key: 'logs', size: 1000000),
             Attribute::datetime(key: 'updated'),
+            Attribute::datetime(key: 'expireDate'),
+            // Last state the certificate provider reported, or failed once generation gave up; a Utopia\Cdn\Certificates\Status value
+            Attribute::string(key: 'status', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [OrderDirection::Asc]),

@@ -133,6 +133,123 @@ Server libraries for integrating with Appwrite to build server side integrations
 
 If you would like to help us extend our platforms and SDKs stack, you are more than welcome to contact us or contribute to the [Appwrite SDK Generator](https://github.com/appwrite/sdk-generator) project GitHub repository and read our contribution guide.
 
+# Project environments {% #environments %}
+
+On Appwrite Cloud, a project can have environments, such as `staging`, each with its own resources and users. An environment has no project ID of its own. To act in one, keep the ID of the project it belongs to in `setProject` and add the environment's ID with `setEnvironment`. Leave `setEnvironment` out to act in the project itself.
+
+{% tabs %}
+{% tabsitem #environments-client title="Client SDKs" %}
+{% multicode %}
+```client-web
+import { Client } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>');
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>');
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+```
+```client-android-kotlin
+import io.appwrite.Client
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+```
+{% /multicode %}
+{% /tabsitem %}
+
+{% tabsitem #environments-server title="Server SDKs" %}
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>')
+    .setKey('<API_KEY>');
+```
+```server-python
+from appwrite.client import Client
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_environment('<ENVIRONMENT_ID>')
+client.set_key('<API_KEY>')
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setEnvironment('<ENVIRONMENT_ID>')
+    ->setKey('<API_KEY>');
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_environment('<ENVIRONMENT_ID>')
+    .set_key('<API_KEY>')
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>')
+    .setKey('<API_KEY>');
+```
+```server-dotnet
+using Appwrite;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetEnvironment("<ENVIRONMENT_ID>")
+    .SetKey("<API_KEY>");
+```
+```server-kotlin
+import io.appwrite.Client
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+    .setKey("<API_KEY>")
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+
+The client sends the environment's ID in the `X-Appwrite-Environment` header with every request. Realtime connections and the URLs the SDK builds, such as file previews and avatars, carry it as the `environment` query parameter. An environment has its own users and API keys, so authenticate with a session or an API key created in that environment.
+
 # Protocols {% #protocols %}
 We are always looking to add new SDKs to our platform. If the SDK you are looking for is still missing, labeled as beta or experimental, or you simply do not want to integrate with an SDK, you can always integrate with Appwrite directly using any standard HTTP, GraphQL, or WebSocket clients and the relevant Appwrite protocol.
 

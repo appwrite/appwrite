@@ -40,50 +40,50 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // GitHub Authorization & Callback
-        $this->addAction(GetGitHubAuthorize::getName(), GetGitHubAuthorize::class);
-        $this->addAction(GetGitHubCallback::getName(), GetGitHubCallback::class);
-        $this->addAction(UpdateExternalDeployment::getName(), UpdateExternalDeployment::class);
+        $this->addAction('getVCSGitHubAuthorize', GetGitHubAuthorize::class);
+        $this->addAction('getVCSGitHubCallback', GetGitHubCallback::class);
+        $this->addAction('updateExternalDeployment', UpdateExternalDeployment::class);
 
         // Gitea Authorization & Callback
-        $this->addAction(GetGiteaAuthorize::getName(), GetGiteaAuthorize::class);
-        $this->addAction(GetGiteaCallback::getName(), GetGiteaCallback::class);
+        $this->addAction('getVCSGiteaAuthorize', GetGiteaAuthorize::class);
+        $this->addAction('getVCSGiteaCallback', GetGiteaCallback::class);
 
         // GitLab Authorization & Callback
-        $this->addAction(GetGitlabAuthorize::getName(), GetGitlabAuthorize::class);
-        $this->addAction(GetGitlabCallback::getName(), GetGitlabCallback::class);
+        $this->addAction('getVCSGitlabAuthorize', GetGitlabAuthorize::class);
+        $this->addAction('getVCSGitlabCallback', GetGitlabCallback::class);
 
         // Bitbucket Authorization & Callback
-        $this->addAction(GetBitbucketAuthorize::getName(), GetBitbucketAuthorize::class);
-        $this->addAction(GetBitbucketCallback::getName(), GetBitbucketCallback::class);
+        $this->addAction('getVCSBitbucketAuthorize', GetBitbucketAuthorize::class);
+        $this->addAction('getVCSBitbucketCallback', GetBitbucketCallback::class);
 
         // Origin Authorization & Callback
-        $this->addAction(GetOriginAuthorize::getName(), GetOriginAuthorize::class);
-        $this->addAction(GetOriginCallback::getName(), GetOriginCallback::class);
+        $this->addAction('getVCSOriginAuthorize', GetOriginAuthorize::class);
+        $this->addAction('getVCSOriginCallback', GetOriginCallback::class);
 
         // Entire Authorization & Callback
-        $this->addAction(GetEntireAuthorize::getName(), GetEntireAuthorize::class);
-        $this->addAction(GetEntireCallback::getName(), GetEntireCallback::class);
+        $this->addAction('getVCSEntireAuthorize', GetEntireAuthorize::class);
+        $this->addAction('getVCSEntireCallback', GetEntireCallback::class);
 
         // Installations
-        $this->addAction(GetInstallation::getName(), GetInstallation::class);
-        $this->addAction(ListInstallations::getName(), ListInstallations::class);
-        $this->addAction(DeleteInstallation::getName(), DeleteInstallation::class);
-        $this->addAction(ListNamespaces::getName(), ListNamespaces::class);
+        $this->addAction('getInstallation', GetInstallation::class);
+        $this->addAction('listInstallations', ListInstallations::class);
+        $this->addAction('deleteInstallation', DeleteInstallation::class);
+        $this->addAction('listNamespaces', ListNamespaces::class);
 
         // Repositories
-        $this->addAction(CreateRepository::getName(), CreateRepository::class);
-        $this->addAction(GetRepository::getName(), GetRepository::class);
-        $this->addAction(ListRepositories::getName(), ListRepositories::class);
-        $this->addAction(ListRepositoryBranches::getName(), ListRepositoryBranches::class);
-        $this->addAction(GetRepositoryContents::getName(), GetRepositoryContents::class);
-        $this->addAction(CreateRepositoryDetections::getName(), CreateRepositoryDetections::class);
+        $this->addAction('createRepository', CreateRepository::class);
+        $this->addAction('getRepository', GetRepository::class);
+        $this->addAction('listRepositories', ListRepositories::class);
+        $this->addAction('listRepositoryBranches', ListRepositoryBranches::class);
+        $this->addAction('getRepositoryContents', GetRepositoryContents::class);
+        $this->addAction('createRepositoryDetection', CreateRepositoryDetections::class);
 
         // Events
-        $this->addAction(CreateGitHubEvent::getName(), CreateGitHubEvent::class);
-        $this->addAction(CreateGiteaEvent::getName(), CreateGiteaEvent::class);
-        $this->addAction(CreateGitlabEvent::getName(), CreateGitlabEvent::class);
-        $this->addAction(CreateBitbucketEvent::getName(), CreateBitbucketEvent::class);
-        $this->addAction(CreateOriginEvent::getName(), CreateOriginEvent::class);
-        $this->addAction(CreateEntireEvent::getName(), CreateEntireEvent::class);
+        $this->addAction('createVCSGitHubEvent', CreateGitHubEvent::class);
+        $this->addAction('createVCSGiteaEvent', CreateGiteaEvent::class);
+        $this->addAction('createVCSGitlabEvent', CreateGitlabEvent::class);
+        $this->addAction('createVCSBitbucketEvent', CreateBitbucketEvent::class);
+        $this->addAction('createVCSOriginEvent', CreateOriginEvent::class);
+        $this->addAction('createVCSEntireEvent', CreateEntireEvent::class);
     }
 }

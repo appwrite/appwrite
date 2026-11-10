@@ -224,12 +224,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   // Completion content (when status === 'ready'): screenshot URL and primary domain
   const isDark = useMemo(() => {
     if (typeof window === 'undefined') return true
-    return (
-      resolvedTheme === 'dark' ||
-      (resolvedTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-      theme === 'dark'
-    )
+    return (resolvedTheme ?? theme ?? 'dark') !== 'light'
   }, [theme, resolvedTheme])
 
   const avifSupported = useAvifSupport()
