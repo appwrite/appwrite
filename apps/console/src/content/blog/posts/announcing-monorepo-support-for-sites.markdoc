@@ -19,8 +19,6 @@ faqs:
     answer: "No. Appwrite installs and builds the workspace from the root of the repository, then deploys your app's build output with its dependencies and the workspace packages it imports. Code from the other apps in the repo isn't included."
   - question: "Can several apps be deployed from the same repository?"
     answer: "Yes. Each app gets a site of its own, with the same repository and root directory but its own build command and output directory. [Path filters](/docs/products/sites/deploy-from-git#build-triggers) on each site keep it from rebuilding unless its own app, the shared packages, or the lockfile change."
-  - question: "Does this work on self-hosted Appwrite?"
-    answer: "Yes. The change ships in the Open Runtimes build images, so pulling the latest image for your build runtime, for example `docker pull openruntimes/node:v5-22`, and redeploying is all it takes."
 ---
 
 Appwrite Sites can now deploy server-rendered apps straight out of an **npm, pnpm, or Bun workspace**. If your web app lives in a monorepo next to a docs site, an admin dashboard, and the UI kit or API client they all share, there's no need to split it into a repository of its own anymore.
