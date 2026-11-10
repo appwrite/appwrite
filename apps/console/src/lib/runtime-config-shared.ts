@@ -17,6 +17,9 @@ export interface RuntimeConfig {
   stripePublishableKey: string
   sentryDsn: string
   plausibleScriptSrc: string
+  appwriteAnalyticsEndpoint: string
+  appwriteAnalyticsProjectId: string
+  appwriteAnalyticsPropertyId: string
   /** Override for the profile's userVerification feature ('' = profile default). */
   userVerification: string
   /** Override for the profile's cookieBanner feature ('' = profile default). */
@@ -125,6 +128,9 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     stripePublishableKey: read('VITE_STRIPE_PUBLISHABLE_KEY'),
     sentryDsn: read('VITE_SENTRY_DSN'),
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
+    appwriteAnalyticsEndpoint: read('VITE_APPWRITE_ANALYTICS_ENDPOINT'),
+    appwriteAnalyticsProjectId: read('VITE_APPWRITE_ANALYTICS_PROJECT_ID'),
+    appwriteAnalyticsPropertyId: read('VITE_APPWRITE_ANALYTICS_PROPERTY_ID'),
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     browserApi: read('VITE_CONSOLE_BROWSER_API'),
