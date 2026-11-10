@@ -2867,6 +2867,116 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent reset must be rejected: ' . json_encode($statuses));
     }
 
+    #[Retry(count: 1)]
+    public function testUpdateEmailVerificationConcurrently(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'concurrent-verification@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $sessionHeaders = $this->createVerifiableAccount($email, $headers);
+
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verifications/email', $sessionHeaders, [
+            'url' => 'http://localhost/verification',
+        ]);
+        $this->assertEquals(201, $verification['headers']['status-code']);
+        $userId = $verification['body']['userId'];
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Account Verification', (string) $mail['subject']);
+        });
+        $secret = $this->extractQueryParamsFromEmailLink((string) $mail['html'])['secret'] ?? '';
+        $this->assertNotEmpty($secret);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 8, [
+            Client::METHOD_PUT,
+            '/account/verifications/email',
+            $sessionHeaders,
+            [
+                'userId' => $userId,
+                'secret' => $secret,
+            ],
+        ]));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the verification token: ' . json_encode($statuses));
+        $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+    }
+
+    #[Retry(count: 1)]
+    public function testUpdateEmailVerificationOTPConcurrently(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'concurrent-verification-otp@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $sessionHeaders = $this->createVerifiableAccount($email, $headers);
+
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', $sessionHeaders);
+        $this->assertEquals(201, $verification['headers']['status-code']);
+        $userId = $verification['body']['userId'];
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Verify your email', (string) $mail['subject']);
+        });
+        $code = $this->extractEmailCode((string) $mail['text']);
+        $this->assertNotEmpty($code);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 8, [
+            Client::METHOD_PUT,
+            '/account/verifications/email/otp',
+            $sessionHeaders,
+            [
+                'userId' => $userId,
+                'secret' => $code,
+            ],
+        ]));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the verification code: ' . json_encode($statuses));
+        $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+    }
+
+    /**
+     * Register an unverified account for the address and return headers carrying its session.
+     *
+     * @param array<string, string> $headers
+     * @return array<string, string>
+     */
+    private function createVerifiableAccount(string $email, array $headers): array
+    {
+        $password = 'password';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return array_merge($headers, [
+            'cookie' => 'a_session_' . $headers['x-appwrite-project'] . '=' . $session['cookies']['a_session_' . $headers['x-appwrite-project']],
+        ]);
+    }
+
     public function testSessionAlert(): void
     {
         $email = uniqid() . 'session-alert@appwrite.io';

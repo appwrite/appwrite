@@ -2066,10 +2066,14 @@ class Deletes extends Action
         });
 
         /**
-         * Request executor to delete all deployment containers
+         * Request executor to delete the deployment container
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+        try {
+            $executor->deleteRuntime($project->getId(), $deploymentId);
+        } catch (Throwable $th) {
+            Console::warning("Runtime for deployment {$deploymentId} skipped: " . $th->getMessage());
+        }
     }
 
     /**

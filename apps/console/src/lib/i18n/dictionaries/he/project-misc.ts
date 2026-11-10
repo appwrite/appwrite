@@ -1166,6 +1166,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'What visitors are using': 'במה המבקרים משתמשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -2409,8 +2410,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
   'Are you sure you want to disconnect this git installation?':
@@ -3623,8 +3622,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
   'The project already belongs to this organization.':
     'הפרויקט כבר שייך לארגון זה.',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים של הארגון יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
   'No permission': 'אין הרשאה',
   "You don't have permission to transfer projects in this organization.":
     'אין לכם הרשאה להעביר פרויקטים בארגון זה.',

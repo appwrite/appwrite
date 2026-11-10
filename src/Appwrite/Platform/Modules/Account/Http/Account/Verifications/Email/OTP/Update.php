@@ -92,13 +92,20 @@ class Update extends Action
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
-
-        $user->setAttributes($profile->getArrayCopy());
-
         $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        // Claim the code under the user row lock an email change takes, which deletes codes sent to the old address
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

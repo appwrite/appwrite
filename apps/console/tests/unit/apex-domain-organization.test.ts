@@ -51,9 +51,7 @@ describe('ensureApexDomainInOrganization', () => {
 
   test('does not register a zone Appwrite serves', async () => {
     const created = mockCloud()
-    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.network', {
-      skipForSites: true,
-    })
+    await ensureApexDomainInOrganization('team1', 'myapp.appwrite.network')
     await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run')
     expect(created).toEqual([])
   })

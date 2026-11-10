@@ -297,11 +297,7 @@ export function TemplateConfigView({
         functionId: finalFunctionId,
         name: functionName.trim(),
         runtime: runtime as Runtime,
-        execute: isPublic
-          ? ['any']
-          : template.permissions?.length
-            ? template.permissions
-            : [],
+        execute: isPublic ? ['any'] : [],
         events: template.events?.length ? template.events : undefined,
         schedule: template.cron || undefined,
         timeout: template.timeout ?? undefined,

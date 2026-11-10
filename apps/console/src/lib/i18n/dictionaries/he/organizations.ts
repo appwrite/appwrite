@@ -173,6 +173,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Auto renewal is available for domains registered with Appwrite.':
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
+  'Registered with another registrar': 'רשום אצל רשם אחר',
+  'Renew this domain with its current registrar.':
+    'חדשו את הדומיין אצל הרשם הנוכחי שלו.',
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
@@ -724,7 +727,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
   'Appwrite nameservers': 'שרתי השמות של Appwrite',
   'External nameservers': 'שרתי שמות חיצוניים',
-  'External DNS': 'DNS חיצוני',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
@@ -1629,4 +1631,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
   'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Check nameservers': 'בדיקת שרתי שמות',
+  'Nameservers changed': 'שרתי השמות השתנו',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
 }
