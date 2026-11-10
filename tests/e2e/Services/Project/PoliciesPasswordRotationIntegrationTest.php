@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 
 final class PoliciesPasswordRotationIntegrationTest extends Scope
@@ -26,8 +26,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $this->assertFalse($policy['body']['enabled']);
         $this->assertSame(31536000, $policy['body']['maxAge']);
 
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
         $this->setPasswordUpdate($userId, DateTime::format(new \DateTime('-366 days')));
 
@@ -41,8 +41,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
 
     public function testCreateSession(): void
     {
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
 
         try {
@@ -104,8 +104,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
 
     public function testCreateSessionAfterRecovery(): void
     {
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
         $this->setPasswordUpdate($userId, DateTime::format(new \DateTime('-2 days')));
 
@@ -127,7 +127,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
                 $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
             });
             $secret = $this->extractQueryParamsFromEmailLink($mail['html'])['secret'];
-            $password = 'Reset-' . ID::unique();
+            $password = 'Reset-' . Id::unique();
 
             $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $this->clientHeaders(), [
                 'userId' => $userId,
@@ -153,7 +153,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
     private function createUser(string $email, string $password): string
     {
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);

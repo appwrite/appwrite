@@ -100,7 +100,7 @@ type Segment = {
  * couldn't tell), everything else is automated.
  */
 function classifyTrafficType(
-  value: string | undefined,
+  value: string | null | undefined,
 ): 'human' | 'bot' | 'unclassified' {
   const normalized = value?.trim().toLowerCase() ?? ''
   if (!normalized) return 'unclassified'

@@ -55,7 +55,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
+            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
             ->param('applicationId', '', new Text(256, requireNonBlank: true), 'Android application ID. Max length: 256 chars.')
             ->param('fingerprints', null, new Nullable(new ArrayList(new Fingerprint(), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'SHA-256 fingerprints of the certificates your app is signed with, such as "14:6D:E9:...:2B:6A". Passkeys created in the app are accepted when its signature matches one. Find them under App signing in Play Console, or with `./gradlew signingReport`. Omit to keep the current list, or pass an empty array to clear it.', optional: true)

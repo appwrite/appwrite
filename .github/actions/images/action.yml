@@ -1,5 +1,5 @@
 name: Images
-description: Pull the CI Appwrite image and the compose service images.
+description: Pull (or, on GitHub-hosted runners, load) the CI Appwrite image and the compose service images.
 
 inputs:
   username:
@@ -21,11 +21,25 @@ runs:
         username: ${{ inputs.username }}
         password: ${{ inputs.token }}
 
+    # Fork pull requests run on GitHub-hosted runners, which have no gcrunner
+    # registry; the build job uploads the image as an artifact for them instead.
+    - name: Download Appwrite image
+      if: runner.environment == 'github-hosted'
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: appwrite-image
+        path: ${{ runner.temp }}/appwrite-image
+
     - name: Pull images
       shell: bash
       run: |
-        image="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
-        docker pull --quiet "$image" &
+        if [ "$RUNNER_ENVIRONMENT" = github-hosted ]; then
+          image="$IMAGE"
+          docker load --quiet --input "${RUNNER_TEMP}/appwrite-image/appwrite.tar" &
+        else
+          image="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+          docker pull --quiet "$image" &
+        fi
         pull=$!
 
         # Docker Hub registry timeouts are a common transient CI failure, so retry

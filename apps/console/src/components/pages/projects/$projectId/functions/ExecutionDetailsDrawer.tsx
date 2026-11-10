@@ -105,6 +105,18 @@ function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+/** Labels for execution.trigger (incl. Edge SMTP `email`). */
+function formatExecutionTrigger(trigger: string): string {
+  const labels: Record<string, string> = {
+    http: 'HTTP',
+    schedule: 'Schedule',
+    event: 'Event',
+    manual: 'Manual',
+    email: 'Email',
+  }
+  return labels[trigger.toLowerCase()] ?? capitalizeFirst(trigger)
+}
+
 type ExecutionRequestContextFields = {
   requestHost?: string
   clientIp?: string
@@ -709,7 +721,7 @@ export function ExecutionDetailsDrawer({
                       </p>
                       <p className="text-[14px] text-foreground">
                         {execution.trigger
-                          ? t(capitalizeFirst(execution.trigger))
+                          ? t(formatExecutionTrigger(execution.trigger))
                           : 'N/A'}
                       </p>
                     </div>

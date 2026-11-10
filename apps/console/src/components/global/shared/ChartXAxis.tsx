@@ -48,7 +48,10 @@ export function UsageChartXAxis({
   dy = CHART_X_AXIS_DEFAULT_DY,
 }: UsageChartXAxisProps) {
   const resolvedInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
+    () =>
+      resolveUsageChartIntervalForRange(chartInterval, dateRange, undefined, {
+        refine: false,
+      }),
     [chartInterval, dateRange],
   )
   const { from: rangeFrom, to: rangeTo } = useMemo(
@@ -138,9 +141,7 @@ export function UsageChartYAxis({
   tickFill = 'currentColor',
 }: UsageChartYAxisProps) {
   const tickProps =
-    typeof tick === 'object' && tick != null && !Array.isArray(tick)
-      ? tick
-      : {}
+    typeof tick === 'object' && tick != null && !Array.isArray(tick) ? tick : {}
 
   return (
     <YAxis

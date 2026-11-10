@@ -35,20 +35,20 @@ readonly class Index
         // Only ClickHouse data-skipping indexes require an unquoted identifier
         // for the name; other dialects emit the name backtick-quoted, so
         // hyphens, dots, and other characters are valid there.
-        if ($algorithm !== null && ! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name)) {
+        if ($algorithm !== null && ! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $name)) {
             throw new ValidationException('Invalid index name: ' . $name);
         }
         if ($columns === [] && $rawColumns === []) {
             throw new ValidationException('Index requires at least one column.');
         }
-        if ($method !== '' && ! \preg_match('/^[A-Za-z0-9_]+$/', $method)) {
+        if ($method !== '' && ! \preg_match('/^[A-Za-z0-9_]+$/D', $method)) {
             throw new ValidationException('Invalid index method: ' . $method);
         }
-        if ($operatorClass !== '' && ! \preg_match('/^[A-Za-z0-9_.]+$/', $operatorClass)) {
+        if ($operatorClass !== '' && ! \preg_match('/^[A-Za-z0-9_.]+$/D', $operatorClass)) {
             throw new ValidationException('Invalid operator class: ' . $operatorClass);
         }
         foreach ($collations as $collation) {
-            if (! \preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
+            if (! \preg_match('/^[A-Za-z0-9_]+$/D', $collation)) {
                 throw new ValidationException('Invalid collation: ' . $collation);
             }
         }

@@ -8,7 +8,7 @@ use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -84,7 +84,9 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+            // The lane runs one paratest process per CPU, each starting builds, so an SSR build
+            // that takes seconds alone takes over two minutes there; builds time out at 900s.
+        }, 300000, 500);
     }
 
     protected function waitDeploymentActivated(string $siteId, string $deploymentId): void
@@ -339,7 +341,7 @@ trait SitesBase
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
-        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $subdomain = $subdomain ? $subdomain : Id::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -437,7 +439,7 @@ trait SitesBase
         $framework = $template['body']['frameworks'][0];
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Template deployment access',
             'framework' => $framework['key'],
             'adapter' => $framework['adapter'],

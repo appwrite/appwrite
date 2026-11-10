@@ -16,7 +16,6 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
-use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
@@ -151,6 +150,10 @@ $register->set('pools', function () {
 
     $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);
 
+    // Bounds every Redis connect and reply, so an unresponsive Redis fails a request
+    // instead of holding it. Must stay above the 2 s a queue retry blocks on a pop.
+    $redisTimeout = (float) System::getEnv('_APP_REDIS_TIMEOUT', 3);
+
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
@@ -190,14 +193,7 @@ $register->set('pools', function () {
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ]);
+                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
@@ -210,22 +206,16 @@ $register->set('pools', function () {
                     }
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ));
+                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $redisTimeout) {
                     $redis = new \Redis();
-                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    @$redis->pconnect($dsnHost, (int)$dsnPort, $redisTimeout);
+                    // Not the pconnect argument: a socket reused from the persistent pool keeps its old read timeout
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $redisTimeout);
                     if ($dsnPass !== null && $dsnPass !== '') {
                         $redis->auth($dsnUser !== null && $dsnUser !== '' ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
-                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -233,12 +223,20 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
+            // A lock lease is held for as long as the work it guards, so every
+            // concurrent request that takes a lock needs its own connection. The
+            // size above is derived from the MySQL connection budget and floored by
+            // a worker-only setting, which leaves the API server with one: the
+            // second concurrent lock taker then fails to get a connection to wait
+            // with and 500s, instead of queueing on the lock it was willing to wait
+            // out. The pool creates connections on demand, so this is a ceiling.
             $connectionPoolSize = match ($type) {
                 'pubsub' => max(2, $poolSize),
+                'lock' => max(32, $poolSize),
                 default => $poolSize,
             };
 
-            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn, $redisTimeout) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -260,8 +258,8 @@ $register->set('pools', function () {
                     case 'publisher':
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
-                            'redis' => (function () use ($dsn) {
-                                $connection = Queue\Connection\Redis::fromDSN($dsn);
+                            'redis' => (function () use ($dsn, $redisTimeout) {
+                                $connection = Queue\Connection\Redis::fromDSN($dsn, $redisTimeout, $redisTimeout);
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
@@ -324,6 +322,7 @@ $register->set('db', function () {
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
     $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
+    $pdoAttributes = APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => true];
 
     switch ($dbAdapter) {
         case 'mongodb':
@@ -337,10 +336,10 @@ $register->set('db', function () {
         case 'mysql':
         case 'mariadb':
             $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }

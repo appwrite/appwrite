@@ -6,17 +6,19 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Encryption;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -24,19 +26,14 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Transfer;
-use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createCSVImport';
@@ -58,7 +55,7 @@ class Create extends Action
                 group: null,
                 name: 'createCSVImport',
                 description: '/docs/references/migrations/migration-csv-import.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -66,17 +63,19 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
-            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
+            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'File ID.', false, ['dbForProject'])
             ->param('databaseId', '', new UID(), 'Database ID containing the target collection.')
             ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
             ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('project')
+            ->inject('user')
             ->inject('platform')
             ->inject('deviceForFiles')
             ->inject('deviceForMigrations')
@@ -92,11 +91,13 @@ class Create extends Action
         string $collectionId,
         bool $internalFile,
         string $onDuplicate,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
         Authorization $authorization,
         Document $project,
+        Document $user,
         array $platform,
         Device $deviceForFiles,
         Device $deviceForMigrations,
@@ -115,7 +116,11 @@ class Create extends Action
         }
 
         $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        if ($file->isEmpty()) {
+        // An internal file is readable only by the project that exported it, or the console user who uploaded it
+        $metadata = $file->getAttribute('metadata', []);
+        $owned = ($metadata['projectInternalId'] ?? null) === $project->getSequence()
+            || (!$user->isEmpty() && ($metadata['uploaderId'] ?? null) === $user->getId());
+        if ($file->isEmpty() || ($internalFile && !$owned)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -124,26 +129,46 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        // No encryption or compression on files above 20MB.
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $databaseType = $database->getAttribute('type');
+
+        $scopes = $this->authorize($request, [], [
+            match ($databaseType) {
+                DATABASE_TYPE_DOCUMENTSDB => ['documentsdb.documents.write'],
+                DATABASE_TYPE_VECTORSDB => ['vectorsdb.documents.write'],
+                default => ['rows.write', 'documents.write'],
+            },
+            ...($internalFile ? [] : [['files.read']]),
+        ]);
+
+        if (!\in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
 
-        $migrationId = ID::unique();
+        $migrationId = Id::unique();
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
-        if ($hasEncryption || $hasCompression) {
+        $encryption = new Encryption($file);
+        if ($encryption->isSegmented()) {
+            $encryption->copy($deviceForFiles, $deviceForMigrations, $newPath, 'text/csv');
+        } elseif ($hasEncryption || $hasCompression) {
             $source = (string) $deviceForFiles->read($path);
 
             if ($hasEncryption) {
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $file->getAttribute('openSSLCipher'),
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    hex2bin($file->getAttribute('openSSLIV')),
-                    hex2bin($file->getAttribute('openSSLTag'))
-                );
+                $source = $encryption->decrypt($source);
             }
 
             if ($hasCompression) {
@@ -163,21 +188,6 @@ class Create extends Action
             }
         } elseif (!$deviceForFiles->copy($path, $newPath, $deviceForMigrations)) {
             throw new \Exception('Unable to copy file');
-        }
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $databaseType = $database->getAttribute('type');
-        if (!\in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
-            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
@@ -207,6 +217,7 @@ class Create extends Action
                 'path' => $newPath,
                 'size' => $fileSize,
                 'onDuplicate' => $onDuplicate,
+                'scopes' => $scopes,
             ],
         ]));
 
@@ -220,25 +231,5 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
-    }
-
-    private static function transferGroupForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_LEGACY,
-            DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
-            DATABASE_TYPE_VECTORSDB => Transfer::GROUP_DATABASES_VECTOR_DB,
-            DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB,
-            default => throw new \LogicException('Unknown database type: ' . $databaseType),
-        };
-    }
-
-    private static function resourceTypeForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_VECTORSDB => Resource::TYPE_DATABASE_VECTORSDB,
-            DATABASE_TYPE_DOCUMENTSDB => Resource::TYPE_DATABASE_DOCUMENTSDB,
-            default => Resource::TYPE_DATABASE,
-        };
     }
 }

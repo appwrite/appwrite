@@ -13,9 +13,7 @@ export type FirewallResourceType =
 export function isFirewallResourceType(
   value: unknown,
 ): value is FirewallResourceType {
-  return (
-    value === 'api' || value === 'functions' || value === 'sites'
-  )
+  return value === 'api' || value === 'functions' || value === 'sites'
 }
 
 export function parseFirewallResourceTypeSearch(
@@ -109,6 +107,13 @@ export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
       { value: 'os', label: 'Operating system' },
       { value: 'browser', label: 'Browser' },
       { value: 'userAgent', label: 'User agent' },
+    ],
+  },
+  {
+    label: 'Authentication',
+    attributes: [
+      { value: 'sessionAge', label: 'Session age' },
+      { value: 'mfaAge', label: 'MFA age' },
     ],
   },
   {
@@ -240,6 +245,10 @@ export const FIREWALL_CONDITION_OPERATORS = [
   { value: 'notContains', label: 'Does not contain' },
   { value: 'startsWith', label: 'Starts with' },
   { value: 'endsWith', label: 'Ends with' },
+  { value: 'greaterThan', label: 'Greater than' },
+  { value: 'greaterThanEqual', label: 'Greater than or equal' },
+  { value: 'lessThan', label: 'Less than' },
+  { value: 'lessThanEqual', label: 'Less than or equal' },
   { value: 'isNull', label: 'Is empty', noValue: true },
   { value: 'isNotNull', label: 'Is not empty', noValue: true },
 ] as const
@@ -267,7 +276,9 @@ const TEXT_MATCH_OPERATORS = new Set<FirewallConditionOperator>([
   'endsWith',
 ])
 
-export function isNoValueOperator(operator: FirewallConditionOperator): boolean {
+export function isNoValueOperator(
+  operator: FirewallConditionOperator,
+): boolean {
   return NO_VALUE_OPERATORS.has(operator)
 }
 
@@ -312,6 +323,46 @@ const EQUALITY_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
   'isNull',
   'isNotNull',
 ]
+
+/**
+ * Integer-seconds attributes. Null without a session (guests, API keys), and
+ * relational operators never match null, so presence checks are offered too.
+ */
+const SECONDS_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
+  'greaterThan',
+  'greaterThanEqual',
+  'lessThan',
+  'lessThanEqual',
+  'isNull',
+  'isNotNull',
+]
+
+const SECONDS_ATTRIBUTES = new Set<FirewallConditionAttribute>([
+  'sessionAge',
+  'mfaAge',
+])
+
+export function isSecondsAttribute(
+  attribute: FirewallConditionAttribute,
+): boolean {
+  return SECONDS_ATTRIBUTES.has(attribute)
+}
+
+/** Sites requests carry no user session, so session and MFA age never apply. */
+export function isAttributeAvailable(
+  attribute: FirewallConditionAttribute,
+  resourceType: FirewallResourceType,
+): boolean {
+  return !(resourceType === 'sites' && SECONDS_ATTRIBUTES.has(attribute))
+}
+
+/** Non-negative whole number of seconds, or null. */
+function parseSeconds(value: string): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const seconds = Number(trimmed)
+  return Number.isSafeInteger(seconds) && seconds >= 0 ? seconds : null
+}
 
 /**
  * Operators offered per attribute. All values also exist in usage `listEvents`
@@ -362,6 +413,8 @@ const OPERATORS_BY_ATTRIBUTE: Record<
   os: FREE_TEXT_OPERATORS,
   browser: FREE_TEXT_OPERATORS,
   userAgent: FREE_TEXT_OPERATORS,
+  sessionAge: SECONDS_OPERATORS,
+  mfaAge: SECONDS_OPERATORS,
   method: ['equal', 'notEqual', 'isNull', 'isNotNull'],
   country: ['equal', 'notEqual', 'contains', 'notContains'],
   continent: ['equal', 'notEqual', 'contains', 'notContains'],
@@ -380,6 +433,15 @@ export function isOperatorAllowedForAttribute(
   operator: FirewallConditionOperator,
 ): boolean {
   return getOperatorsForAttribute(attribute).some((op) => op.value === operator)
+}
+
+/** `equal` where allowed, else the attribute's first operator. */
+export function defaultOperatorForAttribute(
+  attribute: FirewallConditionAttribute,
+): FirewallConditionOperator {
+  return isOperatorAllowedForAttribute(attribute, 'equal')
+    ? 'equal'
+    : OPERATORS_BY_ATTRIBUTE[attribute][0]
 }
 
 export type FirewallConditionDraft = {
@@ -417,14 +479,26 @@ export function isConditionDraftComplete(
   draft: FirewallConditionDraft,
 ): boolean {
   if (resolveConditionAttribute(draft) == null) return false
-  return isNoValueOperator(draft.operator) || draft.value.trim().length > 0
+  if (isNoValueOperator(draft.operator)) return true
+  if (isSecondsAttribute(draft.attribute)) {
+    return parseSeconds(draft.value) != null
+  }
+  return draft.value.trim().length > 0
 }
 
-/** True when every condition would serialize (nothing gets silently dropped). */
+/**
+ * True when every condition would serialize (nothing gets silently dropped)
+ * and applies to the rule's resource type.
+ */
 export function areFirewallConditionsComplete(
   drafts: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
 ): boolean {
-  return drafts.every(isConditionDraftComplete)
+  return drafts.every(
+    (draft) =>
+      isConditionDraftComplete(draft) &&
+      isAttributeAvailable(draft.attribute, resourceType),
+  )
 }
 
 /** Attributes whose values are uppercase geo codes (US, EU, ...). */
@@ -441,6 +515,22 @@ function buildQueryString(draft: FirewallConditionDraft): string | null {
     return draft.operator === 'isNotNull'
       ? Query.isNotNull(attribute)
       : Query.isNull(attribute)
+  }
+
+  if (isSecondsAttribute(draft.attribute)) {
+    const seconds = parseSeconds(draft.value)
+    if (seconds == null) return null
+    switch (draft.operator) {
+      case 'greaterThanEqual':
+        return Query.greaterThanEqual(attribute, seconds)
+      case 'lessThan':
+        return Query.lessThan(attribute, seconds)
+      case 'lessThanEqual':
+        return Query.lessThanEqual(attribute, seconds)
+      case 'greaterThan':
+      default:
+        return Query.greaterThan(attribute, seconds)
+    }
   }
 
   const raw = draft.value.trim()
@@ -509,16 +599,20 @@ function coerceConditionValue(value: unknown): string {
 
 function coerceConditionValues(valuesRaw: unknown): string[] {
   if (Array.isArray(valuesRaw)) {
-    return valuesRaw.map(coerceConditionValue).filter((value) => value.length > 0)
+    return valuesRaw
+      .map(coerceConditionValue)
+      .filter((value) => value.length > 0)
   }
   if (valuesRaw == null) return []
   const value = coerceConditionValue(valuesRaw)
   return value ? [value] : []
 }
 
-function readConditionRecord(
-  item: object,
-): { method: string; attribute: string; valuesRaw: unknown } {
+function readConditionRecord(item: object): {
+  method: string
+  attribute: string
+  valuesRaw: unknown
+} {
   const record = item as Record<string, unknown>
   const method = coerceConditionValue(
     record.method ?? record.operator ?? 'equal',
@@ -620,9 +714,12 @@ export function draftsFromParsedConditions(
 
     const operator = (
       FIREWALL_CONDITION_OPERATORS.some((o) => o.value === item.operator) &&
-      isOperatorAllowedForAttribute(attribute, item.operator as FirewallConditionOperator)
+      isOperatorAllowedForAttribute(
+        attribute,
+        item.operator as FirewallConditionOperator,
+      )
         ? item.operator
-        : 'equal'
+        : defaultOperatorForAttribute(attribute)
     ) as FirewallConditionOperator
 
     const rawValue = item.values[0] ?? ''
@@ -648,7 +745,10 @@ function splitDynamicAttribute(
     DYNAMIC_KEY_PREFIXES,
   ) as Array<[FirewallDynamicKeyAttribute, string]>) {
     if (attribute.startsWith(prefix) && attribute.length > prefix.length) {
-      return { attribute: dynamicAttribute, key: attribute.slice(prefix.length) }
+      return {
+        attribute: dynamicAttribute,
+        key: attribute.slice(prefix.length),
+      }
     }
   }
   return null
@@ -660,9 +760,8 @@ export function formatConditionSummary(
   const dynamic = splitDynamicAttribute(condition.attribute)
   const attr = dynamic
     ? `${
-        FIREWALL_CONDITION_ATTRIBUTES.find(
-          (a) => a.value === dynamic.attribute,
-        )?.label ?? dynamic.attribute
+        FIREWALL_CONDITION_ATTRIBUTES.find((a) => a.value === dynamic.attribute)
+          ?.label ?? dynamic.attribute
       } "${dynamic.key}"`
     : (FIREWALL_CONDITION_ATTRIBUTES.find(
         (a) => a.value === condition.attribute,

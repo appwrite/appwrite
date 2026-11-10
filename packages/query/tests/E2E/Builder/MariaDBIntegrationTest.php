@@ -896,4 +896,74 @@ class MariaDBIntegrationTest extends IntegrationTestCase
         $names = array_column($rows, 'name');
         $this->assertSame(['Inside1', 'Inside2'], $names);
     }
+
+    public function testExactSearchFindsRowsCommittedOutOfOrder(): void
+    {
+        $this->createProfiles(['first', 'second']);
+
+        $first = $this->openMariadb();
+        $second = $this->openMariadb();
+        $first->beginTransaction();
+        $second->beginTransaction();
+        $first->exec("UPDATE `profiles` SET `search` = 'first users.service@updated.com Updated name' WHERE `id` = 1");
+        $second->exec("UPDATE `profiles` SET `search` = 'second users.service@updated.com Updated name' WHERE `id` = 2");
+        $second->commit();
+        $first->commit();
+
+        $this->assertSame(
+            ['first users.service@updated.com Updated name', 'second users.service@updated.com Updated name'],
+            $this->searchProfiles('"users.service@updated.com"'),
+        );
+    }
+
+    public function testExactSearchMatchesWholeWordsInOrder(): void
+    {
+        $this->createProfiles([
+            'A recipe with Fresh Tomatoes and basil',
+            'tomatoes fresh from the garden',
+            'freshtomatoes',
+            'refresh tomatoes',
+        ]);
+
+        $this->assertSame(['A recipe with Fresh Tomatoes and basil'], $this->searchProfiles('"fresh tomatoes"'));
+        $this->assertSame(['A recipe with Fresh Tomatoes and basil'], $this->searchProfiles('"FRESH tomatoes"'));
+        $this->assertSame(
+            ['tomatoes fresh from the garden', 'freshtomatoes', 'refresh tomatoes'],
+            $this->searchProfiles('"fresh tomatoes"', not: true),
+        );
+    }
+
+    /**
+     * @param  list<string>  $values
+     */
+    private function createProfiles(array $values): void
+    {
+        $this->trackMariadbTable('profiles');
+        $this->mariadbStatement('DROP TABLE IF EXISTS `profiles`');
+        $this->mariadbStatement('
+            CREATE TABLE `profiles` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `search` TEXT NOT NULL,
+                FULLTEXT KEY `ft_search` (`search`)
+            ) ENGINE=InnoDB
+        ');
+
+        $insert = $this->connectMariadb()->prepare('INSERT INTO `profiles` (`search`) VALUES (?)');
+        foreach ($values as $value) {
+            $insert->execute([$value]);
+        }
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function searchProfiles(string $term, bool $not = false): array
+    {
+        $builder = $this->fresh()->from('profiles')->select(['search']);
+        $builder = $not ? $builder->filterNotSearch('search', $term) : $builder->filterSearch('search', $term);
+
+        $rows = $this->executeOnMariadb($builder->sortAsc('id')->build());
+
+        return \array_column($rows, 'search');
+    }
 }

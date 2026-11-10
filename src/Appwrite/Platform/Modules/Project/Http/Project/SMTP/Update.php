@@ -3,12 +3,14 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\SMTP;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
+use InvalidArgumentException;
 use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -20,7 +22,11 @@ use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -79,6 +85,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -97,10 +104,19 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        PublicHostname $publicHostname
     ): void {
         // Fetch current configuration
         $smtp = $project->getAttribute('smtp', []);
+
+        // The stored password is write-only, so it is only reused for the server it was set for.
+        $serverChanged = (!\is_null($host) && $host !== ($smtp['host'] ?? ''))
+            || (!\is_null($port) && $port !== (int) ($smtp['port'] ?? 0))
+            || (!\is_null($secure) && $secure !== ($smtp['secure'] ?? ''));
+        if ($serverChanged && \is_null($password) && ($smtp['password'] ?? '') !== '') {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "password" is required when changing host, port or secure.');
+        }
 
         // Apply changes — null means "not provided, keep existing".
         // Empty string explicitly clears a previously-set value.
@@ -144,30 +160,53 @@ class Update extends Action
                     new Login($smtp['username'], $smtp['password'] ?? ''),
                 ];
 
-            $client = new Client(
-                new Native($smtp['host'] ?? '', (int) ($smtp['port'] ?? 0)),
-                \gethostname() ?: 'localhost',
-                $credentials,
-                $encryption,
-                new Timeouts(connect: 5.0, read: 5.0, write: 5.0),
-            );
+            $host = $smtp['host'] ?? '';
+            $port = (int) ($smtp['port'] ?? 0);
 
             try {
-                // Nothing is dialled until a session is needed, so asking what
-                // the server offers is what greets, upgrades and authenticates.
-                $client->capabilities();
-
-                // Auto-enable if configuration is valid
-                // Dont do this if specifically request to mark disabled
-                if (\is_null($enabled)) {
-                    $smtp['enabled'] = true;
-                }
-            } catch (Throwable $error) {
+                // Dial the address just checked, so DNS cannot answer differently; the certificate is still checked against the host.
+                $address = $publicHostname->address($host);
+                $transport = new Native(\str_contains($address, ':') ? "[{$address}]" : $address, $port, new Tls(peerName: $host));
+            } catch (InvalidArgumentException $error) {
                 if (($smtp['enabled'] ?? null) === true) {
                     throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
                 }
-            } finally {
-                $client->close();
+
+                $transport = null;
+            }
+
+            if ($transport !== null) {
+                $client = new Client(
+                    $transport,
+                    \gethostname() ?: 'localhost',
+                    $credentials,
+                    $encryption,
+                    new Timeouts(connect: 5.0, read: 5.0, write: 5.0),
+                );
+
+                try {
+                    // Nothing is dialled until a session is needed, so asking what
+                    // the server offers is what greets, upgrades and authenticates.
+                    $client->capabilities();
+
+                    // Auto-enable if configuration is valid
+                    // Dont do this if specifically request to mark disabled
+                    if (\is_null($enabled)) {
+                        $smtp['enabled'] = true;
+                    }
+                } catch (Throwable $error) {
+                    if (($smtp['enabled'] ?? null) === true) {
+                        // The server's own reply is not repeated: say which step failed instead.
+                        throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, match (true) {
+                            $error instanceof AuthenticationException => "SMTP server {$host}:{$port} refused authentication. Check the username and password.",
+                            $error instanceof CapabilityException => "SMTP server {$host}:{$port} does not support the requested encryption or authentication. Check the secure setting.",
+                            $error instanceof ConnectionException => "Could not connect to SMTP server {$host}:{$port}. Check the host, port and secure setting.",
+                            default => "SMTP server {$host}:{$port} refused the connection. Check the host, port, secure setting and credentials.",
+                        });
+                    }
+                } finally {
+                    $client->close();
+                }
             }
         }
 

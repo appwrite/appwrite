@@ -11,6 +11,7 @@ class Message
     protected int $timestamp;
     protected array $payload;
     protected int $attempts = 0;
+    protected ?int $maxAttempts = null;
     protected ?int $sequence = null;
     protected bool $terminal = false;
     protected ?int $size = null;
@@ -103,6 +104,29 @@ class Message
         $this->attempts = $attempts;
 
         return $this;
+    }
+
+    /**
+     * Deliveries the broker allows before it dead-letters a failure; null on a broker that doesn't say.
+     */
+    public function getMaxAttempts(): ?int
+    {
+        return $this->maxAttempts;
+    }
+
+    public function setMaxAttempts(?int $maxAttempts): self
+    {
+        $this->maxAttempts = $maxAttempts;
+
+        return $this;
+    }
+
+    /**
+     * Whether a failure on this delivery is dead-lettered. Always false on Redis.
+     */
+    public function isLastAttempt(): bool
+    {
+        return $this->maxAttempts !== null && $this->attempts + 1 >= $this->maxAttempts;
     }
 
     /**

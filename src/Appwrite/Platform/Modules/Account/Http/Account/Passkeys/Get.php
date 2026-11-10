@@ -48,7 +48,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
+            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Passkey ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')

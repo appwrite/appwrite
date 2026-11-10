@@ -12,7 +12,7 @@ Do exactly these steps in order. Confirm each step succeeds before continuing. I
 
 ## Step 2: Install Appwrite SDK
 
-- Run: `dart pub add dart_appwrite:16.0.0`
+- Run: `dart pub add dart_appwrite:30.0.0`
 
 ## Step 3: Create Appwrite project and API key
 

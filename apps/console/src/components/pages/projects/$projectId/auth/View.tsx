@@ -33,7 +33,6 @@ import {
   Mail,
   Phone,
   ShieldAlert,
-  ShieldCheck,
 } from 'lucide-react'
 import {
   useProjectUsers,
@@ -108,6 +107,7 @@ import { PoliciesLayout, type PoliciesSubTab } from './policies/Layout'
 import { UsersPolicies } from './policies/Users'
 import { SessionsPolicies } from './policies/Sessions'
 import { MembershipsPolicies } from './policies/Memberships'
+import { RealtimePolicies } from './policies/Realtime'
 import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
 import { PasskeysPolicies } from './policies/Passkeys'
@@ -265,6 +265,7 @@ export function View({
       if (subTab === 'memberships') return 'memberships'
       if (subTab === 'passwords') return 'passwords'
       if (subTab === 'passkeys') return 'passkeys'
+      if (subTab === 'realtime') return 'realtime'
       if (subTab === 'sessions') return 'sessions'
       return 'sessions'
     }
@@ -1804,36 +1805,22 @@ export function View({
                                       }}
                                       className="block"
                                     >
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="flex items-center justify-center">
-                                            {user.passwordPwned === true ? (
+                                      {user.passwordPwned === true ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center justify-center">
                                               <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                            ) : user.passwordPwned === false ? (
-                                              <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                            ) : (
-                                              <span className="text-[11px] text-muted-foreground">
-                                                -
-                                              </span>
-                                            )}
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p className="text-xs">
-                                            {user.passwordPwned === true
-                                              ? t(
-                                                  'Password found in a known data breach',
-                                                )
-                                              : user.passwordPwned === false
-                                                ? t(
-                                                    'Password not found in known data breaches',
-                                                  )
-                                                : t(
-                                                    'Password not checked against known data breaches',
-                                                  )}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs">
+                                              {t(
+                                                'Password found in a known data breach',
+                                              )}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : null}
                                     </Link>
                                   </div>
                                 </TableCell>
@@ -2300,6 +2287,8 @@ export function View({
               <PasswordsPolicies projectId={projectId} />
             ) : policiesSubTab === 'passkeys' ? (
               <PasskeysPolicies projectId={projectId} />
+            ) : policiesSubTab === 'realtime' ? (
+              <RealtimePolicies projectId={projectId} />
             ) : (
               <SessionsPolicies projectId={projectId} />
             )}

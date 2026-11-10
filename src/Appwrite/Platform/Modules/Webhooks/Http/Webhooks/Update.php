@@ -60,7 +60,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
             ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', example: 'https://example.com/webhook')
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', example: '["users.*.create"]')
@@ -68,6 +68,7 @@ class Update extends Action
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
             ->param('authUsername', '', new Text(255), 'Webhook HTTP user. Max length: 255 chars.', true)
             ->param('authPassword', null, new Nullable(new PasswordFormat(new Text(2048))), 'Webhook HTTP password. Max length: 2048 chars. Omit to keep the current password; it is cleared when the URL changes or TLS verification is disabled.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the webhook.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -85,6 +86,7 @@ class Update extends Action
         bool $tls,
         string $authUsername,
         ?string $authPassword,
+        ?string $description,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
@@ -118,6 +120,10 @@ class Update extends Action
 
         if ($enabled) {
             $updates->setAttribute('attempts', 0);
+        }
+
+        if (!\is_null($description)) {
+            $updates->setAttribute('description', $description);
         }
 
         $webhook = $authorization->skip(fn () => $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $updates));

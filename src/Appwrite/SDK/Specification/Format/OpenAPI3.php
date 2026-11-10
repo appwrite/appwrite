@@ -2,6 +2,10 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,14 +16,14 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -28,6 +32,12 @@ use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
+    private const array HASH_EXAMPLES = [
+        Argon2::class => '$argon2id$v=19$m=65536,t=4,p=1$NC8xaW1CVXlIZXFSQi9FRg$0bd4pLo1ytyqvCwl5NSijpm5OIe8J6CjZ1vFemKAg+o',
+        Bcrypt::class => '$2y$10$vBiMe4NOvlbYL1iJUNdqkO.QJy17fvslZQ5oiqKq1G4uwyRWvdrXC',
+        PHPass::class => '$P$BrOEFP1YR5W1yHpvvGuoeVUDPmw9ra/',
+    ];
+
     public function getName(): string
     {
         return 'Open API 3';
@@ -316,6 +326,18 @@ class OpenAPI3 extends Format
 
             $descContents = $this->getDescriptionContents($desc);
 
+            /** @var list<Limit> $limits */
+            // The spec states one limit and window for all of its keys, so list only the limits that share the first one's.
+            $limits = $route->getLabel('abuse', []);
+            $limits = \array_values(\array_filter($limits, fn (Limit $limit): bool => $limit->limit === $limits[0]->limit && $limit->seconds === $limits[0]->seconds));
+            // The spec has always described a key as `name:{placeholder}` pairs.
+            $rateKey = fn (Limit $limit): string => \implode(',', \array_map(
+                fn (string $part): string => \str_starts_with($part, 'param.')
+                    ? \substr($part, 6) . ':{param-' . \substr($part, 6) . '}'
+                    : $part . ':{' . $part . '}',
+                $limit->by,
+            ));
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($methodName),
@@ -326,9 +348,13 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
-                    'rate-limit' => $route->getLabel('abuse-limit', 0),
-                    'rate-time' => $route->getLabel('abuse-time', 3600),
-                    'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
+                    'rate-limit' => $limits[0]->limit ?? 0,
+                    'rate-time' => $limits[0]->seconds ?? 3600,
+                    'rate-key' => match (\count($limits)) {
+                        0 => 'url:{url},ip:{ip}',
+                        1 => $rateKey($limits[0]),
+                        default => \array_map($rateKey, $limits),
+                    },
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $sdk->isPackaging(),
@@ -644,8 +670,8 @@ class OpenAPI3 extends Format
 
                 // Every Queries validator serialises to an array of query strings, so
                 // normalise the whole hierarchy instead of enumerating each subclass.
-                if (\is_subclass_of($class, Queries::class)) {
-                    $class = Queries::class;
+                if (\is_subclass_of($class, Base::class)) {
+                    $class = Base::class;
                 }
 
                 $openEnum = false;
@@ -684,11 +710,12 @@ class OpenAPI3 extends Format
                     case \Appwrite\Utopia\Database\Validator\ProjectId::class:
                     case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
                     case \Utopia\Validator\Text::class:
+                    case \Appwrite\Vcs\Validator\Directory::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
-                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // BigInt validator reports ColumnType::BigInteger, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
@@ -731,18 +758,18 @@ class OpenAPI3 extends Format
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => [
+                            ColumnType::Point->value => [
                                 'type' => 'number',
                                 'format' => 'double',
                             ],
-                            Database::VAR_LINESTRING => [
+                            ColumnType::Linestring->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'number',
                                     'format' => 'double',
                                 ],
                             ],
-                            Database::VAR_POLYGON => [
+                            ColumnType::Polygon->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'array',
@@ -761,9 +788,9 @@ class OpenAPI3 extends Format
                             ],
                         };
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            ColumnType::Point->value => '[1, 2]',
+                            ColumnType::Linestring->value => '[[1, 2], [3, 4], [5, 6]]',
+                            ColumnType::Polygon->value => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                             default => '',
                         };
                         break;
@@ -812,7 +839,7 @@ class OpenAPI3 extends Format
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
-                    case Queries::class:
+                    case Base::class:
                         // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
                     case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
@@ -846,6 +873,13 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '["' . Role::any()->toString() . '"]';
+                        break;
+                    case Argon2::class:
+                    case Bcrypt::class:
+                    case PHPass::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : self::HASH_EXAMPLES[$validator::class];
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:

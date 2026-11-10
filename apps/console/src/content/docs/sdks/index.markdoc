@@ -32,7 +32,7 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React library `0.1.0`
+* React library `0.1.1`
 * [appwrite/sdk-for-react](https://github.com/appwrite/sdk-for-react)
 * `beta`
 ---
@@ -44,15 +44,20 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `20.2.0`
+* Apple SDK `21.1.1`
 * [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `29.2.0`
+* Android SDK `31.0.1`
 * [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)
 * 
+---
+* {% icon_image src="/icons/unity.svg" alt="Unity logo" size="m" /%}
+* Unity SDK `0.11.1`
+* [appwrite/sdk-for-unity](https://github.com/appwrite/sdk-for-unity)
+* `beta`
 {% /table %}
 
 # Server {% #server %}
@@ -73,7 +78,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `24.4.0`
+* Python SDK `27.0.0`
 * [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python)
 * 
 ---
@@ -127,6 +132,123 @@ Server libraries for integrating with Appwrite to build server side integrations
 {% /table %}
 
 If you would like to help us extend our platforms and SDKs stack, you are more than welcome to contact us or contribute to the [Appwrite SDK Generator](https://github.com/appwrite/sdk-generator) project GitHub repository and read our contribution guide.
+
+# Project environments {% #environments %}
+
+On Appwrite Cloud, a project can have environments, such as `staging`, each with its own resources and users. An environment has no project ID of its own. To act in one, keep the ID of the project it belongs to in `setProject` and add the environment's ID with `setEnvironment`. Leave `setEnvironment` out to act in the project itself.
+
+{% tabs %}
+{% tabsitem #environments-client title="Client SDKs" %}
+{% multicode %}
+```client-web
+import { Client } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>');
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>');
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+```
+```client-android-kotlin
+import io.appwrite.Client
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+```
+{% /multicode %}
+{% /tabsitem %}
+
+{% tabsitem #environments-server title="Server SDKs" %}
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>')
+    .setKey('<API_KEY>');
+```
+```server-python
+from appwrite.client import Client
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_environment('<ENVIRONMENT_ID>')
+client.set_key('<API_KEY>')
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setEnvironment('<ENVIRONMENT_ID>')
+    ->setKey('<API_KEY>');
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_environment('<ENVIRONMENT_ID>')
+    .set_key('<API_KEY>')
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setEnvironment('<ENVIRONMENT_ID>')
+    .setKey('<API_KEY>');
+```
+```server-dotnet
+using Appwrite;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetEnvironment("<ENVIRONMENT_ID>")
+    .SetKey("<API_KEY>");
+```
+```server-kotlin
+import io.appwrite.Client
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setEnvironment("<ENVIRONMENT_ID>")
+    .setKey("<API_KEY>")
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+
+The client sends the environment's ID in the `X-Appwrite-Environment` header with every request. Realtime connections and the URLs the SDK builds, such as file previews and avatars, carry it as the `environment` query parameter. An environment has its own users and API keys, so authenticate with a session or an API key created in that environment.
 
 # Protocols {% #protocols %}
 We are always looking to add new SDKs to our platform. If the SDK you are looking for is still missing, labeled as beta or experimental, or you simply do not want to integrate with an SDK, you can always integrate with Appwrite directly using any standard HTTP, GraphQL, or WebSocket clients and the relevant Appwrite protocol.
@@ -344,14 +466,14 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `20.2.0`
-* [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple/tree/dev/Sources/AppwriteEnums)
+* Apple SDK `21.1.1`
+* [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple/tree/21.1.1/Sources/AppwriteEnums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `29.2.0`
-* [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android/tree/dev/library/src/main/java/io/appwrite/enums)
+* Android SDK `31.0.1`
+* [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android/tree/31.0.1/library/src/main/java/io/appwrite/enums)
 *
 {% /table %}
 {% /tabsitem %}
@@ -373,8 +495,8 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `24.4.0`
-* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/dev/appwrite/enums)
+* Python SDK `27.0.0`
+* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/27.0.0/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}

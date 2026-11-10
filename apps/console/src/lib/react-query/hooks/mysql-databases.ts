@@ -155,7 +155,7 @@ import {
 } from '@/lib/databases/sql-api-statements'
 import { randomUUID } from '@/lib/random-uuid'
 
-function isMysqlEngine(engine: string | undefined): boolean {
+function isMysqlEngine(engine: string | null | undefined): boolean {
   return matchesNativeEngine(engine, 'mysql')
 }
 

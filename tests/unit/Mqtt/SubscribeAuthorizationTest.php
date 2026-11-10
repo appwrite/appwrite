@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Mqtt;
 
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Suback;
 
@@ -67,7 +67,7 @@ final class SubscribeAuthorizationTest extends ReplayTestCase
     {
         $this->seedTopic('news', 12, subscribed: false);
         $subscriber = $this->database->createDocument('subscribers', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'topicInternalId' => $this->topicSequence('news'),
             'userId' => self::USER,
         ]));
@@ -83,7 +83,7 @@ final class SubscribeAuthorizationTest extends ReplayTestCase
     {
         $this->seedTopic('news', 5, subscribed: false);
         $subscriber = $this->database->createDocument('subscribers', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'topicInternalId' => $this->topicSequence('news'),
             'userId' => self::USER,
         ]));

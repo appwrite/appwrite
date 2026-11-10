@@ -1,0 +1,106 @@
+---
+layout: integration
+title: Spring Boot with managed PostgreSQL and MySQL
+description: Connect Spring Boot, Spring Data JPA, and Flyway to an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-spring-boot/cover.avif
+category: databases
+product:
+    vendor: Spring
+    description: 'Spring Boot is an open-source Java framework for building production-ready applications with auto-configuration and Spring Data.'
+platform:
+    - 'Cloud'
+---
+
+[Spring Boot](https://spring.io/projects/spring-boot) is a Java framework for building production-ready applications. With Spring Data JPA and Hibernate, it maps entities to tables, manages a HikariCP connection pool, and runs Flyway or Liquibase migrations on startup.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Spring Boot connects to them through the PostgreSQL JDBC driver or MySQL Connector/J, so `spring.datasource`, Spring Data JPA, and your migration tool work with no Appwrite-specific runtime configuration.
+
+HikariCP is already a connection pool, so a long-running Spring Boot server connects to the direct engine port and keeps its pool small.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Spring Boot to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Add the dependencies
+
+Add `org.springframework.boot:spring-boot-starter-data-jpa`, which includes HikariCP, plus the driver for your engine: `org.postgresql:postgresql` or `com.mysql:mysql-connector-j`. For Flyway, also add the database module, `org.flywaydb:flyway-database-postgresql` or `org.flywaydb:flyway-mysql`.
+
+## Step 3: Configure the datasource
+
+Build the JDBC URL from the database host, require TLS, and read the password from the environment:
+
+{% tabs %}
+{% tabsitem #datasource-postgresql title="PostgreSQL" %}
+```yaml
+spring:
+    datasource:
+        url: jdbc:postgresql://db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require
+        username: admin
+        password: ${DB_PASSWORD}
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 2
+            max-lifetime: 1200000
+    jpa:
+        hibernate:
+            ddl-auto: validate
+```
+
+For host certificate validation, use `sslmode=verify-full` with a JVM trust configuration that trusts the certificate chain.
+{% /tabsitem %}
+
+{% tabsitem #datasource-mysql title="MySQL" %}
+```yaml
+spring:
+    datasource:
+        url: jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/default?sslMode=REQUIRED
+        username: admin.<hash>
+        password: ${DB_PASSWORD}
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 2
+            max-lifetime: 1200000
+    jpa:
+        hibernate:
+            ddl-auto: validate
+```
+
+For host certificate validation, use `sslMode=VERIFY_IDENTITY` with a JVM trust configuration that trusts the certificate chain.
+{% /tabsitem %}
+{% /tabs %}
+
+Each application replica opens its own pool, so keep `maximum-pool-size` times your instance count under your specification's connection budget.
+
+## Step 4: Run migrations
+
+Let Flyway or Liquibase own the schema and keep `ddl-auto: validate`, so Hibernate checks your mappings at startup without altering tables. Give the migration tool its own datasource on the direct port, `5432` or `3306`, for example with `spring.flyway.url`, `spring.flyway.user`, and `spring.flyway.password`. Spring Boot then runs pending scripts from `src/main/resources/db/migration` on boot. Run migrations as the primary user, `admin` or `admin.<hash>`.
+
+## Step 5: Test the integration
+
+Define a JPA entity and a `JpaRepository`, start the application, and call `save` and `findById` to confirm the round trip. If you put the connection pooler in front of the server, use session mode on port `6432` or `6033`, because the JDBC drivers rely on server-side prepared statements that transaction mode can't keep. To run migrations and `@DataJpaTest` tests on throwaway data in CI, point the datasource at a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Spring Boot and Appwrite Databases
+
+If you would like to learn more about Spring Boot and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Spring Boot with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/spring-boot)
+- [Use Spring Boot with a native MySQL database](/docs/products/databases/mysql/integrations/spring-boot)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Spring Boot data access documentation](https://docs.spring.io/spring-boot/how-to/data-access.html)

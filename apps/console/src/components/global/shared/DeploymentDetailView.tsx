@@ -100,6 +100,7 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -369,6 +370,7 @@ export function DeploymentDetailView({
   fallbackPath,
 }: DeploymentDetailViewConfig) {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -535,15 +537,7 @@ export function DeploymentDetailView({
     useState<'light' | 'dark' | null>(null)
 
   const defaultScreenshotTheme = useMemo((): 'light' | 'dark' => {
-    if (typeof window === 'undefined') return 'dark'
-    if (resolvedTheme === 'dark') return 'dark'
-    if (resolvedTheme === 'light') return 'light'
-    if (
-      resolvedTheme === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    )
-      return 'dark'
-    return 'light'
+    return resolvedTheme === 'light' ? 'light' : 'dark'
   }, [resolvedTheme])
 
   const sidebarScreenshotTheme =
@@ -747,7 +741,7 @@ export function DeploymentDetailView({
                       }}
                     >
                       <a
-                        href={domainUrl(domain)}
+                        href={visitUrl(domain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
@@ -1082,6 +1076,7 @@ export function DeploymentDetailView({
     parentResource?.framework,
     parentResource?.runtime,
     visitEntries,
+    visitUrl,
     vcsProvider,
     repositoryUrl,
     resolvedCommitUrl,

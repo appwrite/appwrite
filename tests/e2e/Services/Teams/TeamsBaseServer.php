@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -250,6 +250,34 @@ trait TeamsBaseServer
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCreateTeamMembershipTargets(): void
+    {
+        $teamUid = $this->createTeamHelper()['teamUid'];
+        $email = uniqid() . 'target@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['admin'],
+            'url' => 'http://localhost:5000/join-us',
+        ]);
+
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $membership['body']['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        $this->assertEquals($email, $targets['body']['targets'][0]['identifier']);
+    }
+
     public function testCreateTeamMembershipCustomId(): void
     {
         $teamData = $this->createTeamHelper();
@@ -263,7 +291,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => ID::custom($customId),
+            'membershipId' => Id::custom($customId),
             'email' => uniqid() . 'friend@localhost.test',
             'roles' => ['developer'],
         ]);
@@ -280,7 +308,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => ID::custom($customId),
+            'membershipId' => Id::custom($customId),
             'email' => $email,
             'roles' => ['developer'],
         ]);

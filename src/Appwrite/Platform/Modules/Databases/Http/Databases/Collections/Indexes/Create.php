@@ -15,17 +15,20 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -71,13 +74,14 @@ class Create extends Action
                     replaceWith: 'tablesDB.createIndex',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
-            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_TRIGRAM]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
-            ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
-            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Index Key.', false, ['dbForProject'])
+            ->param('type', null, new WhiteList([IndexType::Key->value, IndexType::Fulltext->value, IndexType::Unique->value, IndexType::Spatial->value, IndexType::Trigram->value]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
+            ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getMaxUidLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
+            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the index.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -87,7 +91,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -107,7 +111,7 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $dbForDatabases = $getDatabasesDB($db);
+        $dbForDatabases = $getDatabasesDB($db, $collection);
 
         $limit = $dbForDatabases->getLimitForIndexes();
 
@@ -122,7 +126,7 @@ class Create extends Action
 
         $oldAttributes[] = [
             'key' => '$id',
-            'type' => Database::VAR_STRING,
+            'type' => ColumnType::String->value,
             'status' => 'available',
             'required' => true,
             'array' => false,
@@ -131,7 +135,7 @@ class Create extends Action
         ];
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => Database::VAR_DATETIME,
+            'type' => ColumnType::Datetime->value,
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -141,7 +145,7 @@ class Create extends Action
         ];
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => Database::VAR_DATETIME,
+            'type' => ColumnType::Datetime->value,
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -151,7 +155,7 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+        if ($this->supportsDefinedAttributes($dbForDatabases->getAdapter())) {
             foreach ($attributes as $i => $attribute) {
                 // find attribute metadata in collection document
                 $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -164,11 +168,11 @@ class Create extends Action
                 $attributeType = $oldAttributes[$attributeIndex]['type'];
                 $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
-                if ($attributeType === Database::VAR_RELATIONSHIP) {
+                if ($attributeType === ColumnType::Relationship->value) {
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
-                if ($attributeStatus !== 'available') {
+                if ($attributeStatus !== 'available' && !$this->isAvailable($dbForProject, $db, $collection, $attribute)) {
                     throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
                 }
 
@@ -184,8 +188,9 @@ class Create extends Action
         }
 
         $index = new Document([
-            '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
+            'description' => $description,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'databaseInternalId' => $db->getSequence(),
             'databaseId' => $databaseId,
@@ -200,23 +205,7 @@ class Create extends Action
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $dbForDatabases->getAdapter()->getMaxIndexLength(),
-            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForDatabases->getAdapter()->getSupportForVectors(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObjectIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForTrigramIndex(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForIndex(),
-            $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
-            $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
-            $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject()
+            $dbForDatabases->profile()
         );
 
         if (!$validator->isValid($index)) {
@@ -253,5 +242,14 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
             ->dynamic($index, $this->getResponseModel());
+    }
+
+    /**
+     * The worker marks an attribute available before it purges the cached collection, so for that moment the
+     * collection still embeds the old status; the attribute document itself is authoritative.
+     */
+    private function isAvailable(Database $dbForProject, Document $database, Document $collection, string $key): bool
+    {
+        return $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $collection->getSequence() . '_' . $key)->getAttribute('status') === 'available';
     }
 }

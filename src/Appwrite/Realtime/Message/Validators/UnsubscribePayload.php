@@ -29,6 +29,10 @@ class UnsubscribePayload extends Validator
             $this->description = 'Payload is not valid.';
             return false;
         }
+        if (\count($value) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            $this->description = 'Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.';
+            return false;
+        }
 
         foreach ($value as $payload) {
             if (

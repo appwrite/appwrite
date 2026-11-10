@@ -12,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -19,6 +20,7 @@ use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 
 class Delete extends Action
 {
@@ -63,9 +65,9 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -96,7 +98,7 @@ class Delete extends Action
 
         $validator = new IndexDependencyValidator(
             $collection->getAttribute('indexes'),
-            $dbForDatabases->getAdapter()->getSupportForCastIndexArray(),
+            $dbForDatabases->getAdapter()->supports(Capability::IndexArrayCast),
         );
 
         if (!$validator->isValid($attribute)) {
@@ -111,7 +113,7 @@ class Delete extends Action
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
         $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
-        if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+        if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
             $options = $attribute->getAttribute('options');
             if ($options['twoWay']) {
                 $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection']);

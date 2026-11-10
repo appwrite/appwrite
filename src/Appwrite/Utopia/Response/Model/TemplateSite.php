@@ -92,6 +92,13 @@ class TemplateSite extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ])
         ;
     }
 

@@ -1,6 +1,7 @@
 import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import { resolveChangelogAssetUrl } from './assets'
 import { parseChangelogFrontmatter } from './frontmatter'
+import { compareChangelogEntries } from './order'
 import type { ChangelogEntry, ChangelogEntryMeta, ChangelogTag } from './types'
 
 const PER_PAGE = 5
@@ -49,7 +50,7 @@ function buildChangelogEntry(modulePath: string, raw: string): ChangelogEntry {
 function collectChangelogEntries(): ChangelogEntry[] {
   return Object.entries(entryLoaders)
     .map(([modulePath, raw]) => buildChangelogEntry(modulePath, raw))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort(compareChangelogEntries)
 }
 
 const allChangelogEntries = collectChangelogEntries()
@@ -99,7 +100,9 @@ export function getChangelogEntriesPage(
   }
 }
 
-export function toChangelogEntryMeta(entry: ChangelogEntry): ChangelogEntryMeta {
+export function toChangelogEntryMeta(
+  entry: ChangelogEntry,
+): ChangelogEntryMeta {
   return {
     slug: entry.slug,
     href: entry.href,

@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Databases\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -13,8 +15,14 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
+use Utopia\Database\Relationship;
+use Utopia\Database\SetType;
 use Utopia\Platform\Action;
+use Utopia\Query\OrderDirection;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 
@@ -87,6 +95,11 @@ class Databases extends Action
 
         Span::add('database.id', $database->getId());
 
+        if (\strval($type) === DATABASE_TYPE_DELETE_DATABASE) {
+            // Monitors scoped to the database go with it; their alert history stays.
+            (new Monitors($dbForPlatform))->deleteWatching($project, 'database', $database);
+        }
+
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
@@ -155,9 +168,9 @@ class Databases extends Action
         // Float/int/bool values may be converted to strings during serialization
         if ($default !== null) {
             $default = match ($type) {
-                Database::VAR_FLOAT => \floatval($default),
-                Database::VAR_INTEGER => \intval($default),
-                Database::VAR_BOOLEAN => \boolval($default),
+                ColumnType::Double->value => \floatval($default),
+                ColumnType::Integer->value => \intval($default),
+                ColumnType::Boolean->value => \boolval($default),
                 default => $default,
             };
         }
@@ -175,25 +188,20 @@ class Databases extends Action
 
         try {
             switch ($type) {
-                case Database::VAR_RELATIONSHIP:
+                case ColumnType::Relationship->value:
                     $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection']);
                     if ($relatedCollection->isEmpty()) {
                         throw new DatabaseException('Collection/Table not found');
                     }
 
-                    if (
-                        !$dbForDatabases->createRelationship(
-                            collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                            relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                            type: $options['relationType'],
-                            twoWay: $options['twoWay'],
-                            id: $key,
-                            twoWayKey: $options['twoWayKey'],
-                            onDelete: $options['onDelete'],
-                        )
-                    ) {
-                        throw new DatabaseException('Failed to create attribute/column');
-                    }
+                    $dbForDatabases->createRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Relationship::fromArray([
+                        'relatedCollection' => 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
+                        'relationType' => $options['relationType'],
+                        'twoWay' => $options['twoWay'],
+                        'key' => $key,
+                        'twoWayKey' => $options['twoWayKey'],
+                        'onDelete' => $options['onDelete'],
+                    ]));
 
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
@@ -201,9 +209,18 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                        throw new Exception('Failed to create attribute/column');
-                    }
+                    $dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
+                        'key' => $key,
+                        'type' => $type,
+                        'size' => $size,
+                        'required' => $required,
+                        'default' => $default,
+                        'signed' => $signed,
+                        'array' => $array,
+                        'format' => $format,
+                        'formatOptions' => $formatOptions,
+                        'filters' => $filters,
+                    ]));
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -285,7 +302,7 @@ class Databases extends Action
 
         try {
             try {
-                if ($type === Database::VAR_RELATIONSHIP) {
+                if ($type === ColumnType::Relationship->value) {
                     if ($options['twoWay']) {
                         $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection']);
                         if ($relatedCollection->isEmpty()) {
@@ -294,12 +311,9 @@ class Databases extends Action
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
-                        throw new DatabaseException('Failed to delete Relationship');
-                    }
-                } elseif (!$dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                    throw new DatabaseException('Failed to delete attribute/column');
+                    $dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+                } else {
+                    $dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
                 }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -368,9 +382,9 @@ class Databases extends Action
                         $dbForProject->deleteDocument('indexes', $index->getId());
                     } else {
                         $index
-                            ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
-                            ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
-                            ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
+                            ->setAttribute('attributes', $attributes, SetType::Assign)
+                            ->setAttribute('lengths', $lengths, SetType::Assign)
+                            ->setAttribute('orders', $orders, SetType::Assign);
 
                         $exists = false;
                         foreach ($indexes as $existing) {
@@ -441,13 +455,24 @@ class Databases extends Action
         $type = $index->getAttribute('type', '');
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
-        $orders = $index->getAttribute('orders', []);
+        // Stored as the 'ASC'/'DESC' strings the endpoint validates, while the
+        // index model takes Order cases and rejects anything else outright --
+        // and an InvalidArgumentException is not a DatabaseException, so the
+        // failure would be recorded with no message at all.
+        $orders = \array_map(
+            static fn (mixed $order): ?OrderDirection => OrderDirection::tryFrom(\is_string($order) ? \strtoupper($order) : ''),
+            $index->getAttribute('orders', []),
+        );
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $attributes, $lengths, $orders)) {
-                throw new DatabaseException('Failed to create Index');
-            }
+            $dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), IndexObject::fromArray([
+                'key' => $key,
+                'type' => IndexType::from($type),
+                'attributes' => $attributes,
+                'lengths' => $lengths,
+                'orders' => $orders,
+            ]));
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
@@ -499,8 +524,8 @@ class Databases extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                throw new DatabaseException('Failed to delete index');
+            if ($status !== 'failed') {
+                $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
@@ -571,9 +596,9 @@ class Databases extends Action
             'attributes',
             [
                 Query::equal('databaseInternalId', [$databaseInternalId]),
-                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::equal('type', [ColumnType::Relationship->value]),
                 Query::notEqual('collectionInternalId', $collectionInternalId),
-                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+                Query::containsAny('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],
             $dbForProject,
             function ($attribute) use ($dbForProject, $dbForDatabases, $databaseInternalId) {
@@ -610,7 +635,7 @@ class Databases extends Action
             $count = $database->deleteDocuments(
                 $collectionId,
                 $queries,
-                Database::DELETE_BATCH_SIZE,
+                Database::BATCH_SIZE,
                 $callback
             );
         } catch (\Throwable $th) {

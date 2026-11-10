@@ -1,13 +1,17 @@
 {
     "name": "utopia-php/agents",
-    "description": "A simple PHP AI agents library",
+    "description": "Provider-neutral LLM toolkit for PHP: agents with tools, structured output, streaming and embeddings",
     "type": "library",
     "keywords": [
         "php",
         "ai",
         "agents",
-        "automation",
-        "machine-learning"
+        "llm",
+        "openai",
+        "anthropic",
+        "gemini",
+        "tools",
+        "embeddings"
     ],
     "license": "MIT",
     "minimum-stability": "stable",

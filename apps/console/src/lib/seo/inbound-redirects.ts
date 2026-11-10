@@ -63,7 +63,6 @@ const DOCS_SLUG_ALIASES: Record<string, string> = {
   'server/tablesdb': 'references/cloud/server-nodejs/tablesDB',
   'server/tablesdbdb': 'references/cloud/server-nodejs/tablesDB',
   'products/authentication': 'products/auth',
-  'products/auth/passkeys': 'products/auth',
   'products/sites/quick-starts': 'products/sites/quick-start',
   'products/sites/domain': 'products/sites/domains',
   'products/sites/cdn': 'products/network/cdn',

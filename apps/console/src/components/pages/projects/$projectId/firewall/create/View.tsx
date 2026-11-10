@@ -22,6 +22,7 @@ import {
 import { ConditionsBuilder } from '../_components/ConditionsBuilder'
 import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
+import { RuleSchedule } from '../_components/RuleSchedule'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
@@ -51,7 +52,14 @@ import {
   type FirewallResourceSelection,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import {
+  defaultScheduleDraft,
+  isScheduleDraftComplete,
+  schedulePayload,
+  todayIn,
+} from '@/lib/firewall/schedule'
 import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
+import { getUserTimeZone } from '@/lib/timezones'
 import { queryParamToMap } from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -133,12 +141,16 @@ export function View() {
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
     initialConditionsFromSearch(initialQuery),
   )
+  const [schedule, setSchedule] = useState(() => {
+    const timeZone = getUserTimeZone()
+    return defaultScheduleDraft(timeZone, todayIn(timeZone))
+  })
 
   const needsResourceId = form.resourceType !== 'api'
   const canSubmit =
     form.name.trim().length > 0 &&
     (!needsResourceId || form.resourceId.trim().length > 0) &&
-    areFirewallConditionsComplete(conditions) &&
+    areFirewallConditionsComplete(conditions, form.resourceType) &&
     (form.action !== WafRuleAction.RateLimit ||
       (form.limit > 0 &&
         form.interval > 0 &&
@@ -151,7 +163,8 @@ export function View() {
         form.ttl >= CHALLENGE_TTL_MIN &&
         form.ttl <= CHALLENGE_TTL_MAX)) &&
     (form.action !== WafRuleAction.Redirect ||
-      (form.location.trim().length > 0 && form.statusCode > 0))
+      (form.location.trim().length > 0 && form.statusCode > 0)) &&
+    isScheduleDraftComplete(schedule)
 
   const navigateToRules = (
     resourceType: FirewallResourceType = 'api',
@@ -198,6 +211,7 @@ export function View() {
         ttl: form.ttl,
         location: form.location.trim(),
         statusCode: form.statusCode,
+        schedule: schedulePayload(schedule),
       })
       toast.success(t('Firewall rule created'))
       navigateToRules(
@@ -523,6 +537,8 @@ export function View() {
           <Label>{t('Rule ID')}</Label>
           <IdInput value={ruleId} onChange={setRuleId} />
         </div>
+
+        <RuleSchedule value={schedule} onChange={setSchedule} />
 
         <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
           <div>

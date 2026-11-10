@@ -319,6 +319,8 @@ class Gogs extends Gitea
     #[\Override]
     public function createFile(string $owner, string $repositoryName, string $filepath, string $content, string $message = 'Add file', string $branch = ''): array
     {
+        $filepath = $this->confinedPath($filepath);
+
         if ($branch !== '' && $branch !== '0') {
             // Check if branch is the default branch
             $url = "/repos/{$owner}/{$repositoryName}";
@@ -361,12 +363,7 @@ class Gogs extends Gitea
         $dir = $this->gitClone($owner, $repositoryName, $branch);
 
         try {
-            $fullPath = $dir . '/' . $filepath;
-            $dirPath = \dirname($fullPath);
-            if (!is_dir($dirPath)) {
-                mkdir($dirPath, 0777, true);
-            }
-            file_put_contents($fullPath, $content);
+            $this->writeCheckoutFile($dir, $filepath, $content);
 
             $this->exec($this->git($dir)->argument('add')->argument('--')->argument($filepath));
             $this->exec($this->git($dir)->argument('commit')->option('-m', $message));

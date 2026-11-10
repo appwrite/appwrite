@@ -1,0 +1,129 @@
+---
+layout: post
+title: Announcing the Appwrite Databases Hackathon
+description: Build something new with Appwrite Databases from October 19–31, compete for prizes, and show us what you can create.
+date: 2026-10-19
+cover: /images/blog/announcing-appwrite-databases-hackathon/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: hackathons
+featured: false
+faqs:
+  - question: When does the Appwrite Databases Hackathon take place?
+    answer: The hackathon runs from October 19 to October 31, 2026. All submissions must be in by October 31, 2026, at 11:59 PM PT.
+  - question: Can I participate as a team?
+    answer: No. The Appwrite Databases Hackathon is solo only, and it is open to developers of all experience levels.
+  - question: Is it free to participate?
+    answer: Yes, participation is free. Managed PostgreSQL and Managed MySQL run on dedicated infrastructure and may involve additional costs, so check Appwrite's pricing before choosing your database.
+  - question: Can I submit an existing project?
+    answer: No. Your project must be entirely new. Pre-existing projects or code written before October 19 aren't eligible, although you can use existing open-source libraries and frameworks as long as you list them in your tech stack.
+  - question: What do I need to submit?
+    answer: A link to your public code repository, a demo video of no more than 2–3 minutes, and an optional live demo link if your application is deployed.
+---
+There's always that one project you've been meaning to build. Maybe it's a developer tool that would make your workflow easier, an AI-powered app you've been experimenting with, or an idea that's been sitting in your backlog for months.
+
+With Hacktoberfest underway, we thought we'd give you another reason to start building.
+
+Today, we're announcing the [Appwrite Databases Hackathon](https://hackathon.appwrite.io), running from October 19 to October 31, 2026. We're inviting developers of all experience levels to build something new using one of Appwrite's five database types, share their projects with the community, and compete for prizes.
+
+# What is the Appwrite Databases Hackathon?
+
+The Appwrite Databases Hackathon is a solo coding challenge where developers can build a new project using any of the five database types available on Appwrite.
+
+You can choose from:
+
+- **TablesDB:** Build applications using structured data organized into tables, rows, and columns.
+- **DocumentsDB:** Work with flexible, document-based data structures.
+- **VectorsDB:** Build applications that work with vector embeddings, such as semantic search and AI-powered experiences.
+- **Managed PostgreSQL:** Build with a managed PostgreSQL database.
+- **Managed MySQL:** Use a managed MySQL database for your application.
+
+Whether you're building your first project or have years of development experience, you're welcome to participate.
+
+You can build anything you like, as long as your project uses at least one of these database types. The goal is to experiment, try something new, and show us what you can create.
+
+# When does the hackathon take place?
+
+The hackathon runs from **October 19 to October 31, 2026**.
+
+Here are the key details:
+
+- **Start date:** October 19, 2026 
+- **Submission deadline:** October 31, 2026, at 11:59 PM PT
+- **Participation:** Solo only
+- **Who can participate:** Developers of all experience levels
+- **Project requirements:** A new project using at least one Appwrite database type
+
+# What's up for grabs?
+
+We've got a few prizes lined up for the developers who impress us the most.
+
+**First place: Appwriter mechanical keyboard**
+
+The winning project will take home an Appwriter, our custom mechanical keyboard.
+
+**Second and third place: Appwrite Store merch**
+
+Both runners-up will receive merch from the Appwrite Store.
+
+We're looking forward to seeing the different ideas, approaches, and creative solutions developers come up with throughout the hackathon.
+
+# How will projects be judged?
+
+We'll evaluate submissions based on four criteria:
+
+1. **Idea and innovation:** How original and creative is your project? Does it approach a problem in an interesting way?
+2. **Technical execution:** How well is the application built? We'll look at the implementation and overall functionality.
+3. **Design and experience:** How intuitive, accessible, and enjoyable is the experience?
+4. **Usage of Appwrite Databases:** How effectively does your project use the Appwrite database type you've chosen?
+
+You don't need to build the most complicated application to stand out. A well-executed idea with a thoughtful user experience can be just as interesting as a technically ambitious project.
+
+# How to participate
+
+Getting started is straightforward.
+
+**1. Sign in to the hackathon website**
+
+Visit the [Appwrite Databases Hackathon](https://hackathon.appwrite.io) website and sign in with your GitHub account.
+
+**2. Choose your database and start building**
+
+Pick any of Appwrite's five database types and start working on your project from October 19.
+
+Your project must be entirely new. Pre-existing projects or code written before October 19 aren't eligible, although you're welcome to use existing open-source libraries and frameworks. Just make sure to include them in your project's tech stack.
+
+**3. Prepare your submission**
+
+Once your project is ready, you'll need:
+
+- A link to your public code repository.
+- A demo video of no more than 2–3 minutes showing what you've built.
+- An optional live demo link, if your application is deployed.
+
+**4. Submit your project**
+
+Sign in to your hackathon dashboard, click **Submit project**, and provide the required details.
+
+Make sure to submit everything before **October 31 at 11:59 PM PT**.
+
+# Ready to build something great?
+
+The Appwrite Databases Hackathon is an opportunity to experiment with new ideas, explore different databases, and turn something you've been thinking about into a working project.
+
+Whether you're building an AI application, a developer tool, or something entirely unexpected, we'd love to see what you come up with.
+
+You have 13 days, five database types to choose from, and plenty of room to get creative.
+
+We can't wait to see what you build! [Join the Appwrite Databases Hackathon.](https://hackathon.appwrite.io)
+
+# Resources to help you get started
+
+Not sure where to start? We've put together a few resources to help you explore Appwrite Databases and get your project up and running.
+
+- [TablesDB documentation](/docs/products/databases)
+- [DocumentsDB documentation](/docs) 
+- [VectorsDB documentation](/docs) 
+- [PostgreSQL documentation](/docs/products/databases/postgresql)
+- [MySQL documentation](/docs) 
+- [Join the Appwrite Discord community](https://appwrite.io/discord) 

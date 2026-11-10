@@ -30,6 +30,152 @@ type Diagnostic = {
   message: string
 }
 
+// tsc prints union members in the order their types were first created, so a
+// new literal anywhere can reorder a long union and change every message that
+// quotes it. Sort the members of every union in a quoted type, at any depth, so
+// a message only depends on what the union holds.
+export function canonical(message: string): string {
+  const quotes: number[] = []
+  for (let i = 0; i < message.length; i++) {
+    // An apostrophe inside a word, as in `can't`, does not quote a type.
+    if (
+      message[i] === "'" &&
+      !(isWord(message[i - 1]) && isWord(message[i + 1]))
+    ) {
+      quotes.push(i)
+    }
+  }
+  let result = ''
+  let last = 0
+  for (let q = 0; q + 1 < quotes.length; q += 2) {
+    result +=
+      message.slice(last, quotes[q] + 1) +
+      sortUnion(message.slice(quotes[q] + 1, quotes[q + 1]))
+    last = quotes[q + 1]
+  }
+  return result + message.slice(last)
+}
+
+function isWord(char: string | undefined): boolean {
+  return (
+    char !== undefined &&
+    ((char >= 'a' && char <= 'z') ||
+      (char >= 'A' && char <= 'Z') ||
+      (char >= '0' && char <= '9'))
+  )
+}
+
+function sortUnion(type: string): string {
+  // tsc parenthesizes a function inside a union, so a bare ` | ` after `=>` is the return type's.
+  const { parts: signature } = split(type, [' => '])
+  if (signature.length > 1) {
+    return signature.map(sortUnion).join(' => ')
+  }
+  const { parts: members } = split(type, [' | '])
+  if (members.length === 1) {
+    return sortBrackets(type)
+  }
+  const others = members
+    .filter((member) => !isPath(member))
+    .map(sortBrackets)
+  if (others.length < members.length) {
+    others.push(PATHS)
+  }
+  return others.sort().join(' | ')
+}
+
+// Sort the unions inside brackets: object members, parameters, type arguments.
+function sortBrackets(type: string): string {
+  let result = ''
+  let last = 0
+  let depth = 0
+  scan(type, (i) => {
+    if (isOpening(type, i) && depth++ === 0) {
+      result += type.slice(last, i + 1)
+      last = i + 1
+    } else if (isClosing(type, i) && --depth === 0) {
+      const { parts, separators } = split(type.slice(last, i), LIST_SEPARATORS)
+      result += parts
+        .map((part, index) => sortUnion(part) + (separators[index] ?? ''))
+        .join('')
+      last = i
+    }
+  })
+  return result + type.slice(last)
+}
+
+const LIST_SEPARATORS = ['; ', ', ', ': ']
+
+// Split on separators outside any bracket or string.
+function split(
+  type: string,
+  candidates: string[],
+): { parts: string[]; separators: string[] } {
+  const parts: string[] = []
+  const separators: string[] = []
+  let depth = 0
+  let start = 0
+  scan(type, (i) => {
+    if (isOpening(type, i)) {
+      depth++
+    } else if (isClosing(type, i)) {
+      depth--
+    } else if (depth === 0 && i >= start) {
+      const separator = candidates.find((value) => type.startsWith(value, i))
+      if (separator) {
+        parts.push(type.slice(start, i))
+        separators.push(separator)
+        start = i + separator.length
+      }
+    }
+  })
+  parts.push(type.slice(start))
+  return { parts, separators }
+}
+
+const isOpening = (type: string, i: number): boolean =>
+  '<({['.includes(type[i])
+
+// `=>` closes nothing.
+const isClosing = (type: string, i: number): boolean =>
+  '>)}]'.includes(type[i]) && type[i - 1] !== '='
+
+// Visit each character outside a string literal.
+function scan(type: string, visit: (index: number) => void): void {
+  let quoted = false
+  for (let i = 0; i < type.length; i++) {
+    if (quoted) {
+      if (type[i] === '\\') i++
+      else if (type[i] === '"') quoted = false
+    } else if (type[i] === '"') {
+      quoted = true
+    } else {
+      visit(i)
+    }
+  }
+}
+
+// Route path unions list every route, so adding one would change every
+// message that quotes them. Compare the paths in a union as one placeholder.
+const PATHS = '<paths>'
+
+function isPath(member: string): boolean {
+  return member === '"."' || member === '".."' || /^"\/[^"]*"$/.test(member)
+}
+
+// Baselines written before `canonical` keep tsc's member order.
+function normalize(baseline: Baseline): Baseline {
+  const result: Baseline = {}
+  for (const [file, messages] of Object.entries(baseline)) {
+    for (const [message, count] of Object.entries(messages)) {
+      const key = canonical(message)
+      result[file] ??= {}
+      result[file][key] = (result[file][key] ?? 0) + count
+    }
+  }
+  return result
+}
+
 // `src/a.tsx(12,5): error TS2339: Property 'x'...` -> `src/a.tsx`, `TS2339: Property 'x'...`
 function parse(line: string): Diagnostic | null {
   const start = line.indexOf(MARKER)
@@ -37,7 +183,9 @@ function parse(line: string): Diagnostic | null {
     return null
   }
   // Messages can quote absolute module paths, which differ between machines.
-  const message = line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, '')
+  const message = canonical(
+    line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, ''),
+  )
   if (start === 0) {
     return { file: GLOBAL, message }
   }
@@ -143,7 +291,8 @@ function against(baseline: Baseline): string[] {
     console.log(`No baseline at ${ref}, nothing to compare against.`)
     return []
   }
-  return compare(JSON.parse(result.stdout.toString()), baseline).added
+  return compare(normalize(JSON.parse(result.stdout.toString())), baseline)
+    .added
 }
 
 async function main() {
@@ -157,7 +306,7 @@ async function main() {
     return
   }
 
-  const baseline: Baseline = await Bun.file(BASELINE).json()
+  const baseline = normalize(await Bun.file(BASELINE).json())
   const { added, fixed } = compare(baseline, current)
   const grown = against(baseline)
 

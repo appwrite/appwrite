@@ -1,0 +1,112 @@
+---
+layout: integration
+title: dbt with managed PostgreSQL and MySQL
+description: Run dbt transformations against an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-dbt/cover.avif
+category: databases
+product:
+    vendor: dbt Labs
+    description: 'dbt is a SQL-first transformation framework that compiles models into tables and views and runs them in dependency order.'
+platform:
+    - 'Cloud'
+---
+
+[dbt](https://docs.getdbt.com/) is a SQL-first transformation framework from dbt Labs. It compiles your models into `CREATE TABLE` and `CREATE VIEW` statements and runs them in dependency order, building a transformed analytics layer inside a database you control.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. dbt connects to them through its regular adapters, [`dbt-postgres`](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup) and the community [`dbt-mysql`](https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup) adapter, so `dbt debug`, `dbt run`, and `dbt build` work as they do against any other warehouse.
+
+dbt runs DDL and relies on session state, so it connects to the engine port directly instead of the default transaction-mode pooler.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans. dbt Labs lists MySQL as a community adapter, and the published `dbt-mysql` package is experimental, so pin and test the version you deploy.
+{% /info %}
+
+# How to implement
+
+To run dbt against an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, user, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The MySQL username is `admin.<hash>` and the database name is always `default`.
+
+## Step 2: Install the adapter
+
+Install dbt Core with the adapter for your engine, for example `python -m pip install dbt-mysql` for MySQL, or `dbt-postgres` for PostgreSQL.
+
+## Step 3: Configure profiles.yml
+
+Point a target at the direct engine port and read the password from an environment variable:
+
+{% tabs %}
+{% tabsitem #profile-postgresql title="PostgreSQL" %}
+```yaml
+analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: db-<hash>.<region>.appwrite.center
+      port: 5432
+      user: admin
+      password: "{{ env_var('APPWRITE_DB_PASSWORD') }}"
+      dbname: <database>
+      schema: analytics
+      sslmode: require
+      threads: 4
+```
+
+Build into a schema reserved for dbt, such as `analytics`. The `admin` user owns the database and can create it.
+{% /tabsitem %}
+
+{% tabsitem #profile-mysql title="MySQL" %}
+```yaml
+analytics:
+  target: dev
+  outputs:
+    dev:
+      type: mysql
+      server: db-<hash>.<region>.appwrite.center
+      port: 3306
+      username: admin.<hash>
+      password: "{{ env_var('APPWRITE_DB_PASSWORD') }}"
+      schema: default
+      threads: 4
+      charset: utf8mb4
+      collation: utf8mb4_0900_ai_ci
+```
+
+In MySQL, dbt's `schema` is the database name, so set it to `default`. Prefix dbt models, for example `dbt_orders`, to keep them apart from application tables.
+{% /tabsitem %}
+{% /tabs %}
+
+dbt opens one connection per thread, so size `threads` to your specification's connection budget and leave headroom for application traffic. If you route dbt through the pooler (port `6432` for PostgreSQL, `6033` for MySQL), switch the pooler to `session` mode first.
+
+## Step 4: Test the connection and build
+
+Check the profile, then build your models:
+
+```bash
+dbt debug
+dbt build
+```
+
+`dbt debug` reports `Connection test: OK connection ok` when the host and credentials are correct. `dbt build` runs models, tests, seeds, and snapshots in DAG order. To validate changes in CI, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, point the target at it, run `dbt build`, and delete the branch when the job finishes.
+
+# Read more about dbt and Appwrite Databases
+
+If you would like to learn more about dbt and Appwrite Databases, we have some resources that you should visit:
+
+- [Run dbt against a native PostgreSQL database](/docs/products/databases/postgresql/integrations/dbt)
+- [Run dbt against a native MySQL database](/docs/products/databases/mysql/integrations/dbt)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [dbt Postgres setup](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup)
+- [dbt MySQL setup](https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup)

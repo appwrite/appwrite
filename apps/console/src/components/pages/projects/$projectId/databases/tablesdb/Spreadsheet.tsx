@@ -158,7 +158,9 @@ import {
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsMobile } from '@/hooks/use-mobile'
-import type { Models } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { parseNumericField } from '@/lib/numeric-field'
 import type { editor } from 'monaco-editor'
 import {
   dbNavLink,
@@ -729,8 +731,8 @@ function getRelationshipTableId(columnInfo?: unknown): string | undefined {
   return col?.relatedTableId || col?.relatedTable || undefined
 }
 
-function findRelationshipLabelColumn(columns: unknown[]): unknown {
-  return columns.find((column) => {
+function getRelationshipLabelKey(columns: unknown[]): string | null {
+  const labelColumn = columns.find((column) => {
     const col = column as { type?: string } | undefined
     const key = getTableColumnKey(column)
 
@@ -771,7 +773,14 @@ function getRelationshipRowLabel(
 ): string {
   const labelColumn = findRelationshipLabelColumn(columns)
 
-  const labelKey = labelColumn ? getTableColumnKey(labelColumn) : null
+  return labelColumn ? getTableColumnKey(labelColumn) : null
+}
+
+function getRelationshipRowLabel(
+  row: Record<string, unknown>,
+  columns: unknown[],
+): string {
+  const labelKey = getRelationshipLabelKey(columns)
   const labelValue =
     labelKey && typeof row[labelKey] === 'string' ? row[labelKey] : null
 
@@ -803,6 +812,8 @@ function RelationshipField({
   const databaseId = params.databaseId as string | undefined
   const relatedTableId = getRelationshipTableId(columnInfo)
   const isMulti = isMultiRelationship(columnInfo)
+  const [search, setSearch] = useState('')
+  const searchTerm = useDebouncedValue(search.trim(), 300)
 
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
@@ -849,6 +860,29 @@ function RelationshipField({
     searchQueries.length > 0 ? searchQueries : undefined,
   )
 
+  const labelKey = getRelationshipLabelKey(relatedColumns)
+  // Rows outside the first page are only found by asking the API for them
+  const { rows: searchedRows, isFetching: searchFetching } =
+    useProjectTableRows(
+      projectId,
+      databaseId,
+      searchTerm ? relatedTableId : undefined,
+      DB_KIND,
+      0,
+      100,
+      undefined,
+      'desc',
+      '$createdAt',
+      labelKey
+        ? [
+            Query.or([
+              Query.startsWith('$id', searchTerm),
+              Query.contains(labelKey, [searchTerm]),
+            ]),
+          ]
+        : [Query.startsWith('$id', searchTerm)],
+    )
+
   // Values arrive as populated rows: ids drive the selection, the rows label
   // entries that are outside the related table's first page.
   const currentItems = Array.isArray(currentValue)
@@ -870,8 +904,7 @@ function RelationshipField({
       label: getRelationshipRowLabel(row, relatedColumns),
     })
   }
-  const searchResults: { value: string; label: string }[] = []
-  for (const relatedRow of relatedRows) {
+  for (const relatedRow of [...relatedRows, ...searchedRows]) {
     const row = relatedRow as Record<string, unknown>
     if (typeof row.$id !== 'string') continue
     const option = {
@@ -882,12 +915,13 @@ function RelationshipField({
     labelCache.current.set(option.value, option.label)
     searchResults.push(option)
   }
-  // Labels for selected rows come from `options`; while searching, the list
-  // shows only what the server returned for the query.
-  const options = [...optionsById.values()]
-  const listOptions = isSearching ? searchResults : options
-  const getOptionLabel = (value: string) =>
-    optionsById.get(value)?.label ?? labelCache.current.get(value)
+  const query = search.trim().toLowerCase()
+  const options = [...optionsById.values()].filter(
+    (option) =>
+      !query ||
+      selectedValues.includes(option.value) ||
+      `${option.value} ${option.label}`.toLowerCase().includes(query),
+  )
 
   if (!relatedTableId) {
     return (
@@ -918,6 +952,8 @@ function RelationshipField({
             relatedRowsLoading ? t('Loading related rows…') : t('Add related row')
           }
           searchPlaceholder={t('Search related rows…')}
+          onSearchChange={setSearch}
+          isFetching={searchFetching}
           emptyMessage={
             relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
           }
@@ -992,6 +1028,8 @@ function RelationshipField({
           relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
         }
         searchPlaceholder={t('Search related rows…')}
+        onSearchChange={setSearch}
+        isFetching={searchFetching}
         emptyMessage={
           relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
         }
@@ -2121,11 +2159,15 @@ function RowEditDrawer({
                                                 return null
                                               }
                                             })()
-                                          : fieldType === 'integer'
-                                            ? parseInt(e.target.value, 10) ||
-                                              null
-                                            : parseFloat(e.target.value) ||
-                                              null
+                                          : (() => {
+                                              const parsed = parseNumericField(
+                                                e.target.value,
+                                              )
+                                              if (parsed === undefined) return null
+                                              return fieldType === 'integer'
+                                                ? Math.trunc(parsed)
+                                                : parsed
+                                            })()
                                     handleFieldChange(key, val)
                                   }}
                                   min={
@@ -2138,7 +2180,7 @@ function RowEditDrawer({
                                       ? undefined
                                       : columnInfo?.max
                                   }
-                                  step={fieldType === 'double' ? 0.1 : 1}
+                                  step={fieldType === 'double' ? 'any' : 1}
                                   placeholder={isRequired ? undefined : 'NULL'}
                                   className="h-9 text-[13px]"
                                 />
@@ -2320,7 +2362,7 @@ function RowEditDrawer({
                                                     step={
                                                       colType === 'double' ||
                                                         colType === 'float'
-                                                        ? 0.1
+                                                        ? 'any'
                                                         : 1
                                                     }
                                                     placeholder={`Item ${index + 1}`}
@@ -3399,6 +3441,21 @@ export function RowsSpreadsheet({
     [apiColumns],
   )
 
+  // A saved layout can still name a renamed or deleted column, and selecting it
+  // fails the whole list. Must match the rows route loader's filter (one query key).
+  const rowsSelectAttrKeys = useMemo(() => {
+    const availableColumnKeys = new Set(
+      apiColumns
+        .map((column) => column as { key?: unknown; status?: unknown })
+        .filter((c) => c.status === undefined || c.status === 'available')
+        .map((c) => c.key),
+    )
+    return (
+      rowsListSelectAttrKeys?.filter((key) => availableColumnKeys.has(key)) ??
+      null
+    )
+  }, [apiColumns, rowsListSelectAttrKeys])
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -3417,7 +3474,7 @@ export function RowsSpreadsheet({
     sortOrder,
     sortBy,
     effectiveFilterQueries,
-    rowsListSelectAttrKeys,
+    rowsSelectAttrKeys,
     relationshipKeys,
   )
 
@@ -3440,7 +3497,7 @@ export function RowsSpreadsheet({
     displayedSortOrder,
     displayedSortBy,
     effectiveDisplayedFilterQueries,
-    rowsListSelectAttrKeys,
+    rowsSelectAttrKeys,
     relationshipKeys,
   )
 

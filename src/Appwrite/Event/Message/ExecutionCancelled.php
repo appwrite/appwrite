@@ -12,6 +12,7 @@ final class ExecutionCancelled extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -21,6 +22,7 @@ final class ExecutionCancelled extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

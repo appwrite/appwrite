@@ -12,14 +12,17 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Index;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -67,13 +70,14 @@ class Create extends CollectionAction
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimension.', example: '4')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the collection.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -82,7 +86,7 @@ class Create extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -90,7 +94,7 @@ class Create extends CollectionAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
+        $collectionId = $collectionId === 'unique()' ? Id::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
@@ -111,8 +115,9 @@ class Create extends CollectionAction
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
+                'description' => $description,
                 'dimension' => $dimension,
-                'search' => \implode(' ', [$collectionId, $name]),
+                'search' => \implode(' ', [$collectionId, $name, $description]),
             ]));
 
         } catch (DuplicateException) {
@@ -123,18 +128,12 @@ class Create extends CollectionAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $attributes = [];
-        $indexes = [];
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
-        foreach ($collections['defaultAttributes'] as $attribute) {
-            if ($attribute['$id'] === 'embeddings') {
-                $attribute['size'] = $dimension;
-            }
-            $attributes[] = new Document($attribute);
-        }
-        foreach ($collections['defaultIndexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+        $attributes = [
+            Attribute::vector('embeddings', dimensions: $dimension, required: true),
+            ...$collections['defaultAttributes'],
+        ];
+        $indexes = $collections['defaultIndexes'];
         try {
             // Bootstrap the database metadata without a separate existence
             // check to avoid races when multiple first collections are created
@@ -143,10 +142,8 @@ class Create extends CollectionAction
                 try {
                     $dbForDatabases->create();
                     break;
-                } catch (DuplicateException) {
-                    break;
                 } catch (\Throwable $e) {
-                    if ($dbForDatabases->exists(null, Database::METADATA)) {
+                    if ($dbForDatabases->collectionExists(Database::METADATA, null)) {
                         break;
                     }
 
@@ -157,59 +154,56 @@ class Create extends CollectionAction
                     \usleep(100_000);
                 }
             }
-            $dbForDatabases->createCollection(
+            $dbForDatabases->createCollection(Collection::create(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
-                attributes:$attributes,
-                indexes:$indexes
-            );
-            // Create attribute and indexes metadata documents in the attributes and indexes collections
-            // needed for the get and list calls
-            $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {
-                $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string) $attributeConfig['$id'];
+            ));
+            $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
-                    'key' => $key,
+                    '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
+                    'key' => $attribute->key,
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $attributeConfig['type'],
+                    'type' => $attribute->type->value,
                     'status' => 'available',
-                    'size' => $dimension,
-                    'required' => $attributeConfig['required'] ?? false,
-                    'signed' => $attributeConfig['signed'] ?? false,
-                    'default' => $attributeConfig['default'] ?? null,
-                    'array' => $attributeConfig['array'] ?? false,
-                    'format' => $attributeConfig['format'] ?? '',
-                    'formatOptions' => $attributeConfig['formatOptions'] ?? [],
-                    'filters' => $attributeConfig['filters'] ?? [],
-                    'options' => $attributeConfig['options'] ?? [],
+                    'size' => $attribute->size ?? 0,
+                    'required' => $attribute->required,
+                    'signed' => $attribute->signed,
+                    'default' => $attribute->default,
+                    'array' => $attribute->array,
+                    'format' => $attribute->format->name ?? '',
+                    'formatOptions' => $attribute->format->options ?? [],
+                    'filters' => $attribute->filters,
+                    'options' => $attribute->toDocument()->getAttribute('options', []),
                 ]);
-            }, $collections['defaultAttributes']);
-            $dbForProject->createDocuments('attributes', $attributeDocs);
+            }, $attributes);
+            $dbForProject->createDocuments('attributes', $attributeDocuments);
 
-            $indexDocs = array_map(function ($indexConfig) use ($database, $collection, $databaseId, $collectionId) {
-                $key = \is_string($indexConfig['$id']) ? $indexConfig['$id'] : (string) $indexConfig['$id'];
+            $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {
+                $definition = $index->toDocument();
 
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
-                    'key' => $key,
+                    '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->key),
+                    'key' => $index->key,
                     'status' => 'available',
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $indexConfig['type'],
-                    'attributes' => $indexConfig['attributes'] ?? [],
-                    'lengths' => $indexConfig['lengths'] ?? [],
-                    'orders' => $indexConfig['orders'] ?? [],
+                    'type' => $index->type->value,
+                    'attributes' => $index->attributes,
+                    'lengths' => $definition->getAttribute('lengths', []),
+                    'orders' => $definition->getAttribute('orders', []),
                 ]);
             }, $collections['defaultIndexes']);
 
-            if (!empty($indexDocs)) {
-                $dbForProject->createDocuments('indexes', $indexDocs);
+            if (!empty($indexDocuments)) {
+                $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());

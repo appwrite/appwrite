@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
@@ -64,6 +64,7 @@ export function SalesWizardFullscreen() {
   const t = useT()
   const handleCancel = useSmartNavigation()
   const { account } = useAuth()
+  const { source, orgId: linkedOrgId } = useSearch({ from: '/_public/sales' })
   const preferredOrgId = useMemo(
     () =>
       preferredOrganizationId(
@@ -71,7 +72,7 @@ export function SalesWizardFullscreen() {
       ),
     [account?.prefs],
   )
-  const { organization } = useOrganizationById(preferredOrgId)
+  const { organization } = useOrganizationById(linkedOrgId ?? preferredOrgId)
   const { organizations } = useOrganizations()
 
   const formDefaults = useMemo(
@@ -125,7 +126,7 @@ export function SalesWizardFullscreen() {
         cloudEmail: account?.email,
       })
 
-      trackEvent('Form Submitted', { form: 'enterprise' })
+      trackEvent('Form Submitted', { form: 'enterprise', source })
       setSubmitted(true)
     } catch (error) {
       setSubmitError(true)

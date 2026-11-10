@@ -7,6 +7,7 @@
 
 import type { ReactElement } from 'react'
 import type { Models } from '@appwrite.io/console'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 
 export function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -52,6 +53,22 @@ export function OriginIcon({ className }: { className?: string }) {
   )
 }
 
+export function EntireIcon({ className }: { className?: string }) {
+  // Entire's mark, as served by entire.com's own favicon.svg
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M17.6.22c1.61-.43,3.33-.21,4.77.61l7.47,4.25c.31.18.25.64-.09.73l-16.75,4.49c-1.69.45-2.69,2.19-2.24,3.88l.82,3.06c.45,1.69,2.19,2.69,3.88,2.24l9.57-2.5,4.61,4.74c.89.89,1.39,2.1,1.39,3.36v2.54c0,1.65-1.27,3.03-2.92,3.16l-15.61,1.2c-1.85.14-3.67-.53-4.98-1.85l-5.11-5.14c-.88-.89-1.38-2.09-1.38-3.35v-2.55c0-1.65,1.5-3.08,3-3.08h2l-3.85-3.04c-.6-.43-1.04-1.05-1.23-1.76l-.81-3.03c-.45-1.69.55-3.43,2.24-3.88L17.6.22Z" />
+      <path d="M20.02,13.94c0,1.38-1.12,2.5-2.5,2.5s-2.5-1.12-2.5-2.5,1.12-2.5,2.5-2.5,2.5,1.12,2.5,2.5Z" />
+      <path d="M28.02,11.94c0,1.38-1.12,2.5-2.5,2.5s-2.5-1.12-2.5-2.5,1.12-2.5,2.5-2.5,2.5,1.12,2.5,2.5Z" />
+    </svg>
+  )
+}
+
 export function BitbucketIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -61,6 +78,23 @@ export function BitbucketIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <path d="M.778 1.213a.768.768 0 0 0-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.892zM14.52 15.53H9.522L8.17 8.466h7.561z" />
+    </svg>
+  )
+}
+
+export function GiteaIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M4.209 4.603c-.247 0-.525.02-.84.088-.333.07-1.28.283-2.054 1.027C-.403 7.25.035 9.685.089 10.052c.065.446.263 1.687 1.21 2.768 1.749 2.141 5.513 2.092 5.513 2.092s.462 1.103 1.168 2.119c.955 1.263 1.936 2.248 2.89 2.367 2.406 0 7.212-.004 7.212-.004s.458.004 1.08-.394c.535-.324 1.013-.893 1.013-.893s.492-.527 1.18-1.73c.21-.37.385-.729.538-1.068 0 0 2.107-4.471 2.107-8.823-.042-1.318-.367-1.55-.443-1.627-.156-.156-.366-.153-.366-.153s-4.475.252-6.792.306c-.508.011-1.012.023-1.512.027v4.474l-.634-.301c0-1.39-.004-4.17-.004-4.17-1.107.016-3.405-.084-3.405-.084s-5.399-.27-5.987-.324c-.187-.011-.401-.032-.648-.032zm.354 1.832h.111s.271 2.269.6 3.597C5.549 11.147 6.22 13 6.22 13s-.996-.119-1.641-.348c-.99-.324-1.409-.714-1.409-.714s-.73-.511-1.096-1.52C1.444 8.73 2.021 7.7 2.021 7.7s.32-.859 1.47-1.145c.395-.106.863-.12 1.072-.12zm8.33 2.554c.26.003.509.127.509.127l.868.422-.529 1.075a.686.686 0 0 0-.614.359.685.685 0 0 0 .072.756l-.939 1.924a.69.69 0 0 0-.66.527.687.687 0 0 0 .347.763.686.686 0 0 0 .867-.206.688.688 0 0 0-.069-.882l.916-1.874a.667.667 0 0 0 .237-.02.657.657 0 0 0 .271-.137 8.826 8.826 0 0 1 1.016.512.761.761 0 0 1 .286.282c.073.21-.073.569-.073.569-.087.29-.702 1.55-.702 1.55a.692.692 0 0 0-.676.477.681.681 0 1 0 1.157-.252c.073-.141.141-.282.214-.431.19-.397.515-1.16.515-1.16.035-.066.218-.394.103-.814-.095-.435-.48-.638-.48-.638-.467-.301-1.116-.58-1.116-.58s0-.156-.042-.27a.688.688 0 0 0-.148-.241l.516-1.062 2.89 1.401s.48.218.583.619c.073.282-.019.534-.069.657-.24.587-2.1 4.317-2.1 4.317s-.232.554-.748.588a1.065 1.065 0 0 1-.393-.045l-.202-.08-4.31-2.1s-.417-.218-.49-.596c-.083-.31.104-.691.104-.691l2.073-4.272s.183-.37.466-.497a.855.855 0 0 1 .35-.077z"
+      />
     </svg>
   )
 }
@@ -77,7 +111,13 @@ export const vcsProviderButtonIconClassName = 'size-4'
 /** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
 export { GitBranch as GitIcon } from 'lucide-react'
 
-export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
+export type VcsProviderId =
+  | 'github'
+  | 'gitlab'
+  | 'bitbucket'
+  | 'gitea'
+  | 'origin'
+  | 'entire'
 
 export interface VcsProviderMeta {
   id: VcsProviderId
@@ -88,13 +128,20 @@ export interface VcsProviderMeta {
 }
 
 // Key order is display order: every provider list in the UI renders GitHub
-// first, Origin second, then the rest.
+// first, Entire second, then the rest.
 export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   github: {
     id: 'github',
     label: 'GitHub',
     Icon: GitHubIcon,
     baseUrl: (organization) => `https://github.com/${organization}`,
+  },
+  entire: {
+    id: 'entire',
+    label: 'Entire',
+    Icon: EntireIcon,
+    baseUrl: (organization) =>
+      `https://entire.com/${entireOwnerPath(organization)}`,
   },
   origin: {
     id: 'origin',
@@ -115,32 +162,49 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     Icon: BitbucketIcon,
     baseUrl: (organization) => `https://bitbucket.org/${organization}`,
   },
+  gitea: {
+    id: 'gitea',
+    label: 'Gitea',
+    Icon: GiteaIcon,
+    baseUrl: (organization) => `https://gitea.com/${organization}`,
+  },
 }
 
 /** Fallback provider for display when a value is unknown or legacy. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
-/** Always available for Git connect, regardless of profile flags. */
-const ALWAYS_ENABLED_VCS_PROVIDERS = new Set<VcsProviderId>([
-  'github',
-  'gitlab',
-  'bitbucket',
-])
+type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'extraVcsOAuth'>
 
 /**
- * Connect/authorize providers shown in Git installation UI.
- * Existing installations of a hidden provider still render; only new OAuth
- * connect actions are filtered.
- *
- * `extraVcsOAuth` gates Origin; every other provider is always visible.
+ * The profile flag each provider's Git connect sits behind, or null when it is
+ * always available. A new provider has to pick one.
+ */
+const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
+  github: null,
+  entire: null,
+  origin: 'extraVcsOAuth',
+  gitlab: null,
+  bitbucket: null,
+  gitea: null,
+}
+
+/**
+ * Connect/authorize providers shown in Git installation UI: the ones the
+ * server has configured (`_APP_VCS_PROVIDERS`), since authorizing any other
+ * fails. Existing installations of a hidden provider still render; only new
+ * OAuth connect actions are filtered.
  */
 export function getVisibleVcsOAuthProviders(
-  extraVcsOAuth: boolean,
+  features: Pick<ConsoleProfileFeatures, VcsConnectFlag>,
+  configuredProviders: string[] | undefined,
 ): VcsProviderMeta[] {
-  return Object.values(VCS_PROVIDERS).filter(
-    (provider) =>
-      ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
-  )
+  return Object.values(VCS_PROVIDERS).filter((provider) => {
+    const flag = VCS_CONNECT_FLAGS[provider.id]
+    return (
+      (flag === null || features[flag]) &&
+      vcsProviderHasCapability(provider.id, configuredProviders)
+    )
+  })
 }
 
 /**
@@ -177,6 +241,29 @@ export function VcsIcon({
 export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
   const id = provider?.toLowerCase() as VcsProviderId | undefined
   return (id && VCS_PROVIDERS[id]) || null
+}
+
+/**
+ * Entire's web path for an owner. A repository belongs to a project, browsed
+ * under /et/<project>; a GitHub mirror's owner already names its forge, as
+ * gh/<owner>, and is browsed there.
+ */
+export function entireOwnerPath(owner: string): string {
+  return owner.startsWith('gh/') ? owner : `et/${owner}`
+}
+
+/**
+ * Whether a repository URL is hosted on Entire: on entire.com, or on
+ * entire.io, which older deployments recorded and which only redirects to
+ * entire.com. Compares the parsed host, so a URL that only mentions Entire in
+ * its path or another host is not one.
+ */
+export function isEntireRepositoryUrl(url: string): boolean {
+  try {
+    return ['entire.com', 'entire.io'].includes(new URL(url).hostname)
+  } catch {
+    return false
+  }
 }
 
 /** Older servers and the SDK types don't have `organizationUrl` yet. */
@@ -241,6 +328,12 @@ export function getProviderPullRequestUrl(params: {
       return `https://bitbucket.org/${owner}/${repo}/pull-requests/${id}`
     case 'origin':
       return `https://cursor.com/codebase/${owner}/${repo}/pull/${id}`
+    case 'entire':
+      // Entire's pull requests are trails
+      return `https://entire.com/${entireOwnerPath(owner)}/${repo}/trails/${id}`
+    case 'gitea':
+      // Gitea is self-hosted, and its host is not known here
+      return null
     default:
       return null
   }
@@ -248,7 +341,7 @@ export function getProviderPullRequestUrl(params: {
 
 /**
  * Whether a provider is in a capability list from console variables
- * (`_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION` /
+ * (`_APP_VCS_PROVIDERS` / `_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION` /
  * `_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES`). An undefined list means the
  * server did not report capabilities (still loading, or an older server), so
  * nothing is hidden; an empty list means no provider has the capability.

@@ -22,7 +22,7 @@ export type McpOAuthTokenSet = {
   expires_in?: number
   refresh_token?: string
   scope?: string
-  id_token?: string
+  id_token?: string | null
   authorization_details?: unknown
   [key: string]: unknown
 }

@@ -1,0 +1,64 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="faisalGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="faisal">
+<path d="M99 120H113V296H99Z"/>
+<path d="M95 110H117L113 120H99Z"/>
+<path d="M100.5 84H111.5V110H100.5Z"/>
+<path d="M100.5 84L106 44L111.5 84Z"/>
+<path d="M106 44V32"/>
+<path d="M369 120H383V296H369Z"/>
+<path d="M365 110H387L383 120H369Z"/>
+<path d="M370.5 84H381.5V110H370.5Z"/>
+<path d="M370.5 84L376 44L381.5 84Z"/>
+<path d="M376 44V32"/>
+<path d="M127 166H137V296H127Z"/>
+<path d="M123 156H141L137 166H127Z"/>
+<path d="M128.5 138H135.5V156H128.5Z"/>
+<path d="M128.5 138L132 98L135.5 138Z"/>
+<path d="M132 98V86"/>
+<path d="M345 166H355V296H345Z"/>
+<path d="M341 156H359L355 166H345Z"/>
+<path d="M346.5 138H353.5V156H346.5Z"/>
+<path d="M346.5 138L350 98L353.5 138Z"/>
+<path d="M350 98V86"/>
+<path d="M113 278H127V296H113Z"/>
+<path d="M355 278H369V296H355Z"/>
+<path d="M142 270H340V296H142Z"/>
+<path d="M148 296V284C148 279.5 150.5 277 153 275.5C155.5 277 158 279.5 158 284V296Z"/>
+<path d="M170 296V284C170 279.5 172.5 277 175 275.5C177.5 277 180 279.5 180 284V296Z"/>
+<path d="M192 296V284C192 279.5 194.5 277 197 275.5C199.5 277 202 279.5 202 284V296Z"/>
+<path d="M214 296V284C214 279.5 216.5 277 219 275.5C221.5 277 224 279.5 224 284V296Z"/>
+<path d="M236 296V284C236 279.5 238.5 277 241 275.5C243.5 277 246 279.5 246 284V296Z"/>
+<path d="M258 296V284C258 279.5 260.5 277 263 275.5C265.5 277 268 279.5 268 284V296Z"/>
+<path d="M280 296V284C280 279.5 282.5 277 285 275.5C287.5 277 290 279.5 290 284V296Z"/>
+<path d="M302 296V284C302 279.5 304.5 277 307 275.5C309.5 277 312 279.5 312 284V296Z"/>
+<path d="M324 296V284C324 279.5 326.5 277 329 275.5C331.5 277 334 279.5 334 284V296Z"/>
+<path d="M168 270L241 206L314 270Z"/>
+<path d="M205 240.6V270"/>
+<path d="M223 224.8V270"/>
+<path d="M241 209.0V270"/>
+<path d="M259 224.8V270"/>
+<path d="M277 240.6V270"/>
+<path d="M241 104C222 152 192 214 148 270L194 246Z"/>
+<path d="M241 104C260 152 290 214 334 270L288 246Z"/>
+<path d="M241 104C230 158 216 206 194 246L241 202Z"/>
+<path d="M241 104C252 158 266 206 288 246L241 202Z"/>
+<path d="M240.25 104V90H241.75V104Z"/>
+<path d="M241 90C239 90 238 88.5 238 87C238 85.5 239 84 241 84C243 84 244 85.5 244 87C244 88.5 243 90 241 90Z"/>
+<path d="M241 84V76"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#faisal" fill="#19191C"/>
+<use href="#faisal" fill="url(#faisalGrad)"/>
+<use href="#faisal" stroke="#FD366E" stroke-width="1.36239"/>
+</svg>
