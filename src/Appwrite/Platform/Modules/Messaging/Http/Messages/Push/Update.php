@@ -137,7 +137,7 @@ class Update extends Action
 
         $message = $dbForProject->getDocument('messages', $messageId);
 
-        if ($message->isEmpty()) {
+        if ($message->isEmpty() || $message->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 

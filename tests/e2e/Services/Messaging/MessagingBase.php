@@ -3717,6 +3717,22 @@ trait MessagingBase
 
         $this->assertEquals(201, $newEmail['headers']['status-code']);
 
+        $mismatched = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $newEmail['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(404, $mismatched['headers']['status-code']);
+
+        $mismatched = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $newEmail['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(404, $mismatched['headers']['status-code']);
+
         $updatedEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $newEmail['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4103,6 +4119,14 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $newSms['headers']['status-code']);
+
+        $mismatched = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $newSms['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(404, $mismatched['headers']['status-code']);
 
         $updatedSms = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $newSms['body']['$id'], [
             'content-type' => 'application/json',
