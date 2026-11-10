@@ -42,7 +42,7 @@ final class LimitTest extends TestCase
     public function testALimitForEveryoneCountsTrustedCallersToo(): void
     {
         // A key, or a console caller in admin mode, guessing the code on a verification confirmation route.
-        $limit = Limit::attempts(['url', 'param.userId'], 10, everyone: true);
+        $limit = Limit::attempts(['projectId', 'url', 'param.userId'], 10, everyone: true);
 
         $this->assertTrue($limit->everyone);
         $this->assertTrue($limit->counts(trusted: false));
