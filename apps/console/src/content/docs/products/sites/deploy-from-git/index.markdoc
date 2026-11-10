@@ -110,7 +110,7 @@ The install and build commands for each package manager look like this:
 | pnpm | `pnpm install` | `pnpm --filter web build` |
 | Bun | `bun install` | `bun run --filter web build` |
 
-Workspace packages that have their own build step need to be built in the same command. With pnpm, `pnpm --filter web... build` builds `web` and every workspace package it depends on. With Turborepo, `pnpm exec turbo run build --filter=web` does the same, as long as the `build` task in `turbo.json` sets `"dependsOn": ["^build"]`.
+Workspace packages that have their own build step need to be built in the same command.
 
 To deploy several apps from one repository, create one site per app, each with its own build command and output directory. [Path filters](#build-triggers) on each site keep it from deploying when only another app changes, for example `apps/web/**`, `packages/**`, and your lockfile. Listing the individual packages the app imports, instead of `packages/**`, narrows this further.
 
