@@ -180,18 +180,17 @@ trait Deployment
                     if (!\array_key_exists($key, $heads)) {
                         try {
                             $heads[$key] = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
-                        } catch (\Throwable $e) {
+                        } catch (RepositoryNotFound) {
                             $heads[$key] = null;
-                            Console::warning("Failed to look up the head of branch '{$providerBranch}': {$e->getMessage()}");
                         }
                     }
 
                     $head = $heads[$key];
 
                     if ($head === null) {
-                        Span::add("{$logBase}.build.skipped.reason", 'branch head lookup failed');
+                        Span::add("{$logBase}.build.skipped.reason", 'branch not found');
                         Span::add("{$logBase}.build.skipped", 'true');
-                        Console::warning("Skipping repository '{$repositoryId}': head of branch '{$providerBranch}' could not be verified");
+                        Console::warning("Skipping repository '{$repositoryId}': branch '{$providerBranch}' was not found");
                         continue;
                     }
 

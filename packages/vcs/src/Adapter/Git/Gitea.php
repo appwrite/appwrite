@@ -988,6 +988,9 @@ class Gitea extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $responseHeadersStatusCode = $responseHeaders['status-code'] ?? 0;
+        if ($responseHeadersStatusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
         if ($responseHeadersStatusCode >= 400) {
             throw new Exception("Latest commit response failed with status code {$responseHeadersStatusCode}", $responseHeadersStatusCode);
         }
