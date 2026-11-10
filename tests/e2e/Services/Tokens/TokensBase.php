@@ -558,12 +558,16 @@ trait TokensBase
         );
         $this->assertEquals(401, $mismatchedFileResponse['headers']['status-code']);
 
-        // 2. Request targeting an unrelated route returns 401 and must NOT consume the token's use
+        // 2. Request targeting an unrelated route even with query-string bucketId and fileId returns 401 and must NOT consume the token's use
         $unrelatedRouteResponse = $this->client->call(
             Client::METHOD_GET,
             '/storage/buckets',
             $guestHeaders,
-            ['token' => $jwtToken]
+            [
+                'token' => $jwtToken,
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+            ]
         );
         $this->assertEquals(401, $unrelatedRouteResponse['headers']['status-code']);
 

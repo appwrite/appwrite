@@ -1171,10 +1171,10 @@ return function (Container $context): void {
                     $method = ($method === Http::REQUEST_METHOD_HEAD) ? Http::REQUEST_METHOD_GET : $method;
                     $match = Router::match($method, $path);
 
-                    $requestedBucketId = $match?->params['bucketId'] ?? ($request->getParam('bucketId') ?: null);
-                    $requestedFileId = $match?->params['fileId'] ?? ($request->getParam('fileId') ?: null);
+                    $requestedBucketId = $match?->params['bucketId'] ?? null;
+                    $requestedFileId = $match?->params['fileId'] ?? null;
 
-                    if ($requestedBucketId !== $ids[0] || $requestedFileId !== $ids[1]) {
+                    if ($requestedBucketId === null || $requestedFileId === null || $requestedBucketId !== $ids[0] || $requestedFileId !== $ids[1]) {
                         return new Document([]);
                     }
 
