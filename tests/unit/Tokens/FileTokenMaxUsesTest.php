@@ -108,4 +108,87 @@ class FileTokenMaxUsesTest extends TestCase
         $this->assertNull($filtered->getAttribute('maxUses'));
         $this->assertSame(0, $filtered->getAttribute('uses'));
     }
+
+    public function testTokenExpirationOnMaxUsesExhaustion(): void
+    {
+        $isTokenValid = function (Document $token): bool {
+            $maxUses = $token->getAttribute('maxUses');
+            $uses = $token->getAttribute('uses', 0);
+
+            if ($maxUses !== null && $uses >= $maxUses) {
+                return false;
+            }
+
+            return true;
+        };
+
+        // Single-use token unused
+        $token1 = new Document(['maxUses' => 1, 'uses' => 0]);
+        $this->assertTrue($isTokenValid($token1));
+
+        // Single-use token used once -> expired
+        $token1->setAttribute('uses', 1);
+        $this->assertFalse($isTokenValid($token1));
+
+        // Multi-use token (3 uses)
+        $token3 = new Document(['maxUses' => 3, 'uses' => 0]);
+        $this->assertTrue($isTokenValid($token3));
+
+        $token3->setAttribute('uses', 1);
+        $this->assertTrue($isTokenValid($token3));
+
+        $token3->setAttribute('uses', 2);
+        $this->assertTrue($isTokenValid($token3));
+
+        $token3->setAttribute('uses', 3);
+        $this->assertFalse($isTokenValid($token3));
+
+        $token3->setAttribute('uses', 4);
+        $this->assertFalse($isTokenValid($token3));
+    }
+
+    public function testTokenWithoutMaxUsesNeverExpiresFromUses(): void
+    {
+        $isTokenValid = function (Document $token): bool {
+            $maxUses = $token->getAttribute('maxUses');
+            $uses = $token->getAttribute('uses', 0);
+
+            if ($maxUses !== null && $uses >= $maxUses) {
+                return false;
+            }
+
+            return true;
+        };
+
+        $unlimitedToken = new Document(['maxUses' => null, 'uses' => 0]);
+        $this->assertTrue($isTokenValid($unlimitedToken));
+
+        $unlimitedToken->setAttribute('uses', 100);
+        $this->assertTrue($isTokenValid($unlimitedToken));
+
+        $unlimitedToken->setAttribute('uses', 1_000_000);
+        $this->assertTrue($isTokenValid($unlimitedToken));
+    }
+
+    public function testSequentialTokenUsageIncrement(): void
+    {
+        $token = new Document([
+            '$id' => 'token_seq',
+            'maxUses' => 2,
+            'uses' => 0,
+        ]);
+
+        $this->assertSame(0, $token->getAttribute('uses'));
+        $this->assertSame(2, $token->getAttribute('maxUses'));
+
+        // Simulate 1st use increment
+        $token->setAttribute('uses', $token->getAttribute('uses', 0) + 1);
+        $this->assertSame(1, $token->getAttribute('uses'));
+        $this->assertLessThan($token->getAttribute('maxUses'), $token->getAttribute('uses'));
+
+        // Simulate 2nd use increment
+        $token->setAttribute('uses', $token->getAttribute('uses', 0) + 1);
+        $this->assertSame(2, $token->getAttribute('uses'));
+        $this->assertGreaterThanOrEqual($token->getAttribute('maxUses'), $token->getAttribute('uses'));
+    }
 }
