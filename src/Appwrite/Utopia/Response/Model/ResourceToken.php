@@ -54,7 +54,21 @@ class ResourceToken extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_RESOURCE_TOKEN_ACCESS / 60 / 60 . ' hours.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('maxUses', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum number of times token can be used.',
+                'default' => null,
+                'example' => 1,
+                'required' => false,
+            ])
+            ->addRule('uses', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times token has been used.',
+                'default' => 0,
+                'example' => 0,
+                'required' => false,
             ])
         ;
     }
