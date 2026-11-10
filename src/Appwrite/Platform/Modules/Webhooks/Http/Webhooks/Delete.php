@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
@@ -58,6 +59,7 @@ class Delete extends Action
             ))
             ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('ifUpdatedAt', null, new Nullable(new Text(0)), 'Webhook last update timestamp precondition in ISO 8601 format. If provided, the webhook will only be deleted if its $updatedAt matches this value. If the webhook has changed since, 412 Precondition Failed is thrown.', true, aliases: ['if-updated-at'])
+            ->inject('request')
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -69,12 +71,15 @@ class Delete extends Action
     public function action(
         string $webhookId,
         ?string $ifUpdatedAt,
+        Request $request,
         Document $project,
         Response $response,
         Database $dbForPlatform,
         Event $queueForEvents,
         Authorization $authorization
     ) {
+        $precondition = $ifUpdatedAt ?: ($request->getHeader('x-appwrite-if-updated-at', '') ?: null);
+
         $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
             Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
@@ -84,7 +89,7 @@ class Delete extends Action
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
-        if (!empty($ifUpdatedAt) && $webhook->getUpdatedAt() !== $ifUpdatedAt) {
+        if (!empty($precondition) && $webhook->getUpdatedAt() !== $precondition) {
             throw new Exception(Exception::WEBHOOK_PRECONDITION_FAILED);
         }
 
