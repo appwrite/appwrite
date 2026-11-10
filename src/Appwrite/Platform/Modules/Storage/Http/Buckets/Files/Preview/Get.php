@@ -177,6 +177,10 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        if ($isToken && $resourceToken->getId() !== '') {
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('resourceTokens', $resourceToken->getId(), 'uses', 1));
+        }
+
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
