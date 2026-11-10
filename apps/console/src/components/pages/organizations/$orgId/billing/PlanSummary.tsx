@@ -122,43 +122,45 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   )
   const lines = useMemo(() => invoice?.items ?? [], [invoice?.items])
   const {
-    projectBreakdowns,
-    organizationLinesByResource,
+    displayedBreakdowns,
+    totalProjects,
+    organizationLines,
     organizationUsageCategories,
     organizationItems,
   } = useMemo(() => {
-    const linesByProject = groupLines(lines, 'projectId')
-    const projects = new Map(
-      aggregation?.breakdown.map((project) => [project.$id, project]),
-    )
     const projectIds = [
       ...new Set([
-        ...projects.keys(),
-        ...Array.from(linesByProject.keys()).filter(Boolean),
+        ...(aggregation?.breakdown ?? []).map((project) => project.$id),
+        ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
       ]),
     ]
-    const projectBreakdowns = projectIds.map((projectId) => {
-      const project = projects.get(projectId)
-      const items = linesByProject.get(projectId) ?? []
-      return {
-        projectId,
-        projectName: project?.name || projectId,
-        items,
-        resources: project?.resources,
-        total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
-      }
-    })
-    const organizationLines = linesByProject.get('') ?? []
-    const organizationLinesByResource = groupLines(
-      organizationLines,
-      'resourceId',
-    )
+    const displayedBreakdowns = projectIds
+      .slice((displayedPage - 1) * pageLimit, displayedPage * pageLimit)
+      .map((projectId) => {
+        const project = aggregation?.breakdown.find(
+          (project) => project.$id === projectId,
+        )
+        const items = lines.filter((item) => item.projectId === projectId)
+        return {
+          projectId,
+          projectName: project?.name || projectId,
+          items,
+          categories: usageCategories(
+            project?.resources,
+            items,
+            plan,
+            dedicatedDbBillingSpecLookup,
+          ),
+          total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
+        }
+      })
+    const organizationLines = lines.filter((item) => !item.projectId)
     const organizationUsageCategories =
       plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
         ? []
         : usageCategories(
             aggregation?.resources,
-            organizationLinesByResource,
+            organizationLines,
             plan,
             dedicatedDbBillingSpecLookup,
           )
@@ -171,32 +173,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         ),
     )
     return {
-      projectBreakdowns,
-      organizationLinesByResource,
+      displayedBreakdowns,
+      totalProjects: projectIds.length,
+      organizationLines,
       organizationUsageCategories,
       organizationItems,
     }
-  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup])
-  const totalProjects = projectBreakdowns.length
-  const displayedBreakdowns = useMemo(
-    () =>
-      projectBreakdowns
-        .slice((displayedPage - 1) * pageLimit, displayedPage * pageLimit)
-        .map((project) => {
-          const linesByResource = groupLines(project.items, 'resourceId')
-          return {
-            ...project,
-            linesByResource,
-            categories: usageCategories(
-              project.resources,
-              linesByResource,
-              plan,
-              dedicatedDbBillingSpecLookup,
-            ),
-          }
-        }),
-    [projectBreakdowns, displayedPage, plan, dedicatedDbBillingSpecLookup],
-  )
+  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup, displayedPage])
   const toggleProject = (id: string) =>
     setExpandedProjects((previous) => {
       const next = new Set(previous)
@@ -399,7 +382,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                     <BillingProjectResourceCategorySection
                       key={category.id}
                       category={category}
-                      linesByResource={organizationLinesByResource}
+                      items={organizationLines}
                       currency={currency}
                       plan={plan}
                       dedicatedDbBillingSpecLookup={
@@ -412,7 +395,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </div>
             )}
             {/* Project Breakdown Section */}
-            {projectBreakdowns.length > 0 && (
+            {totalProjects > 0 && (
               <div className="space-y-3 border-t border-border pt-6 mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t('Project breakdown')}
@@ -456,7 +439,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               <BillingProjectResourceCategorySection
                                 key={category.id}
                                 category={category}
-                                linesByResource={project.linesByResource}
+                                items={project.items}
                                 currency={currency}
                                 plan={plan}
                                 dedicatedDbBillingSpecLookup={
@@ -602,10 +585,10 @@ function BillingProjectResourceCategorySection({
   plan,
   dedicatedDbBillingSpecLookup,
   onUpgrade,
-  linesByResource,
+  items,
   currency,
 }: {
-  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
+  items: readonly Models.InvoiceItem[]
   currency: string
   category: BillingProjectResourceCategoryGroup
   plan: Models.BillingPlan | null | undefined
@@ -632,7 +615,7 @@ function BillingProjectResourceCategorySection({
             <BillingDedicatedDbSpecGroup
               key={group.key}
               group={group}
-              linesByResource={linesByResource}
+              items={items}
               currency={currency}
             />
           ))}
@@ -640,7 +623,7 @@ function BillingProjectResourceCategorySection({
             <RecordedUsageRow
               key={resource.resourceId}
               resource={resource}
-              linesByResource={linesByResource}
+              items={items}
               currency={currency}
               onUpgrade={onUpgrade}
             />
@@ -660,7 +643,7 @@ function BillingProjectResourceCategorySection({
           <RecordedUsageRow
             key={resource.resourceId}
             resource={resource}
-            linesByResource={linesByResource}
+            items={items}
             currency={currency}
             onUpgrade={onUpgrade}
           />
@@ -672,10 +655,10 @@ function BillingProjectResourceCategorySection({
 
 function BillingDedicatedDbSpecGroup({
   group,
-  linesByResource,
+  items,
   currency,
 }: {
-  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
+  items: readonly Models.InvoiceItem[]
   currency: string
   group: DedicatedDbBillingSpecGroup
 }) {
@@ -691,8 +674,10 @@ function BillingDedicatedDbSpecGroup({
           {group.title}
         </span>
         <span className="text-[12px] font-semibold text-foreground shrink-0 tabular-nums">
-          {group.items.some((resource) =>
-            linesByResource.has(resource.resourceId),
+          {items.some((line) =>
+            group.items.some(
+              (resource) => resource.resourceId === line.resourceId,
+            ),
           )
             ? formatCurrency(group.totalCost, currency)
             : '-'}
@@ -714,17 +699,21 @@ function BillingDedicatedDbSpecGroup({
             <BillingDedicatedDbMetricRow
               item={item}
               currency={currency}
-              recorded={linesByResource.get(item.resourceId) ?? []}
+              recorded={items.filter(
+                (line) => line.resourceId === item.resourceId,
+              )}
             />
-            {(linesByResource.get(item.resourceId) ?? []).map((line, index) => (
-              <div
-                key={index}
-                className="px-3 pb-1 text-[11px] text-muted-foreground"
-              >
-                {line.description}
-                <LinePeriod item={line} />
-              </div>
-            ))}
+            {items
+              .filter((line) => line.resourceId === item.resourceId)
+              .map((line, index) => (
+                <div
+                  key={index}
+                  className="px-3 pb-1 text-[11px] text-muted-foreground"
+                >
+                  {line.description}
+                  <LinePeriod item={line} />
+                </div>
+              ))}
           </div>
         ))}
       </div>
@@ -947,23 +936,9 @@ function formatResourceLimit(
   return formatNumber(value)
 }
 
-function groupLines(
-  items: readonly Models.InvoiceItem[],
-  by: 'projectId' | 'resourceId',
-) {
-  const groups = new Map<string, Models.InvoiceItem[]>()
-  for (const item of items) {
-    const key = item[by] || ''
-    const group = groups.get(key)
-    if (group) group.push(item)
-    else groups.set(key, [item])
-  }
-  return groups
-}
-
 function usageCategories(
   resources: AggregationResourceLike[] | null | undefined,
-  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>,
+  items: readonly Models.InvoiceItem[],
   plan: Models.BillingPlan | null | undefined,
   specifications: ReturnType<typeof buildDedicatedDbBillingSpecLookup>,
 ): BillingProjectResourceCategoryGroup[] {
@@ -974,13 +949,13 @@ function usageCategories(
       ...usage.flatMap((resource) =>
         resource.resourceId ? [resource.resourceId] : [],
       ),
-      ...Array.from(linesByResource.keys()).filter(Boolean),
+      ...items.flatMap((item) => (item.resourceId ? [item.resourceId] : [])),
     ]),
   ]
   const rows: BillingProjectResourceItem[] = []
   for (const id of ids) {
     const resource = usage.find((resource) => resource.resourceId === id)
-    const recorded = linesByResource.get(id) ?? []
+    const recorded = items.filter((item) => item.resourceId === id)
     const mapping =
       resolveBillingProjectResourceMapping(id, plan, specifications) ??
       (id.startsWith('addon_')
@@ -1073,16 +1048,18 @@ function RecordedLine({
 
 function RecordedUsageRow({
   resource,
-  linesByResource,
+  items,
   currency,
   onUpgrade,
 }: {
   resource: BillingProjectResourceItem
-  linesByResource: ReadonlyMap<string, readonly Models.InvoiceItem[]>
+  items: readonly Models.InvoiceItem[]
   currency: string
   onUpgrade?: () => void
 }) {
-  const recorded = linesByResource.get(resource.resourceId) ?? []
+  const recorded = items.filter(
+    (item) => item.resourceId === resource.resourceId,
+  )
   if (recorded.length === 0)
     return (
       <BillingProjectResourceRow
