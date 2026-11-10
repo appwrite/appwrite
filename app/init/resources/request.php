@@ -69,6 +69,7 @@ use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Router;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Pools\Group;
@@ -1161,6 +1162,19 @@ return function (Container $context): void {
                     $ids = explode(':', $token->getAttribute('resourceId'));
 
                     if (count($sequences) !== 2 || count($ids) !== 2) {
+                        return new Document([]);
+                    }
+
+                    $path = parse_url($request->getURI(), PHP_URL_PATH);
+                    $path = \is_string($path) ? ($path === '' ? '/' : $path) : '/';
+                    $method = $request->getMethod();
+                    $method = ($method === Http::REQUEST_METHOD_HEAD) ? Http::REQUEST_METHOD_GET : $method;
+                    $match = Router::match($method, $path);
+
+                    $requestedBucketId = $match?->params['bucketId'] ?? ($request->getParam('bucketId') ?: null);
+                    $requestedFileId = $match?->params['fileId'] ?? ($request->getParam('fileId') ?: null);
+
+                    if ($requestedBucketId !== $ids[0] || $requestedFileId !== $ids[1]) {
                         return new Document([]);
                     }
 

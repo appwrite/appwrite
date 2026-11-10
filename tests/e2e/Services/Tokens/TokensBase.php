@@ -521,4 +521,69 @@ trait TokensBase
         $this->assertEquals(401, $view3['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $view3['body']['type']);
     }
+
+    public function testFileTokenDoesNotConsumeUseOnMismatchedFileOrRoute(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        // Create a single-use token (maxUses = 1)
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'maxUses' => 1,
+            ]
+        );
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertSame(1, $token['body']['maxUses']);
+        $this->assertSame(0, $token['body']['uses']);
+
+        $jwtToken = $token['body']['secret'];
+
+        // 1. Request targeting a different file returns 401 and must NOT consume the token's use
+        $mismatchedFileResponse = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/different-file-id/download',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(401, $mismatchedFileResponse['headers']['status-code']);
+
+        // 2. Request targeting an unrelated route returns 401 and must NOT consume the token's use
+        $unrelatedRouteResponse = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(401, $unrelatedRouteResponse['headers']['status-code']);
+
+        // 3. Now request targeting the valid matching file succeeds (1st valid use consumed)
+        $validDownload = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(200, $validDownload['headers']['status-code']);
+
+        // 4. Second request to the matching file fails because the 1 allowed use has now been exhausted
+        $exhaustedDownload = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
+            $guestHeaders,
+            ['token' => $jwtToken]
+        );
+        $this->assertEquals(401, $exhaustedDownload['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $exhaustedDownload['body']['type']);
+    }
 }
