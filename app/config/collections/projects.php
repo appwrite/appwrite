@@ -358,6 +358,8 @@ return [
             Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
             Attribute::datetime(key: 'expire'),
             Attribute::datetime(key: 'accessedAt'),
+            Attribute::integer(key: 'maxUses', signed: false),
+            Attribute::integer(key: 'uses', signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_expiry_date', attributes: ['expire'], orders: [OrderDirection::Asc]),
