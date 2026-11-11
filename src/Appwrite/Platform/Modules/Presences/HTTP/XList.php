@@ -119,9 +119,7 @@ class XList extends PlatformAction
                     $version
                 );
 
-                if ($cachedDocuments !== null &&
-                    $cachedDocuments !== false &&
-                    \is_array($cachedDocuments)) {
+                if (\is_array($cachedDocuments)) {
                     $documents = \array_map(function ($doc) {
                         return new Document($doc);
                     }, $cachedDocuments);
@@ -150,7 +148,7 @@ class XList extends PlatformAction
                         $ttl,
                         $version
                     );
-                    if ($cachedTotal !== null && $cachedTotal !== false) {
+                    if ($cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForProject->count('presenceLogs', [...$filterQueries, $expiryFilter], APP_LIMIT_COUNT);
