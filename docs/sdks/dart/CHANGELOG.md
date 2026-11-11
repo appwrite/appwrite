@@ -1,5 +1,76 @@
 # Change Log
 
+## 31.2.0
+
+* Updated: `project.listEnvironments`, `project.createEnvironment`, `project.getEnvironment`, `project.updateEnvironment` return `Environment` models instead of `Project`
+* Added: `account.createDevice`, `account.getDevice`, `account.deleteDevice` and `account.updateDeviceSession`, and the `Device` model
+* Added: `project.updateAccountDevicesPolicy`, `ProjectPolicyId.accountDevices` and the `PolicyAccountDevices` model
+* Added: `project.updateOAuth2Vipps`, `project.updateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.vipps` and `OAuthProvider.vippsSandbox`
+* Added: `proxy.updateFunctionRule`, `proxy.updateRedirectRule` and `proxy.updateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.getPrefs` and `project.updatePrefs` for project preferences
+* Added: `Client.setEnvironment` to act in a project environment
+* Added: `AppwriteMigrationResource.projectPreferences` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetNotify`, `budgetCritical` and `educationExpiresAt`
+* Added: `Project.environmentId`, `Session.userName` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireAt` and `certificateStatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 31.1.0
+
+* Updated: requests send response format `2.6.2`
+* Updated: redirects are no longer followed; a 3xx response throws `AppwriteException` naming its `Location`
+* Fixed: a `.` or `..` path parameter throws `AppwriteException` before the request is sent
+* Added: `migrations` service with `list`, `get`, `retry`, `delete`, Appwrite, Firebase, NHost and Supabase migrations, and CSV and JSON imports and exports
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Migration`, `MigrationList` and `MigrationReport` models
+* Added: `project.updateDenyRealtimeGuestsPolicy`, `ProjectPolicyId.denyRealtimeGuests` and the `PolicyDenyRealtimeGuests` model
+* Added: `project.deleteSessions` to sign out every session in the project
+* Added: `deploymentRetention`, `deploymentRetentionMax` and `deploymentsRetentionCount` on `BillingPlan`
+* Added: `python315`, `deno29`, `go127` and `rust199` on `Runtime` and `BuildRuntime`
+* Fixed: path parameters and upload IDs are percent-encoded as one segment, so `/`, `?` and `#` stay in the value
+
+## 31.0.0
+
+* Breaking: model constructors require the new `description`; `BillingPlan` requires `functionsAllowCron`, `Bucket` requires `stripMetadata`, and the password dictionary and personal data policy models require `denyList`
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `total` on list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `emails` on `messaging.createEmail` and `messaging.updateEmail`
+* Added: `denyList` on `project.updatePasswordDictionaryPolicy`, `updatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan.functionsAllowCron`
+* Added: `stripMetadata` on `storage.createBucket`, `updateBucket` and the `Bucket` model
+
+## 30.0.0
+
+* Breaking: removed `account.listLogs` and `users.listLogs`
+* Breaking: removed `organization.createKey`, `getKey`, `listKeys`, `updateKey` and `deleteKey`, and `OrganizationKeyScopes`; use `organization.listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey` instead
+* Breaking: removed the `Log`, `LogList` and `DevKey` models
+* Breaking: removed `Project.devKeys` and the unsent `Block` fields
+* Breaking: `listSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Client.setDevKey`
+* Breaking: removed `BillingPlanGroup.starter`; use `BillingPlanGroup.free`
+* Breaking: requests send response format `2.5.0`
+* Breaking: `resource` on the `oauth2` authorize, PAR, device and token methods is now `List<String>`
+* Breaking: `BackupRestoration.options` is now a `Map<String, dynamic>`
+* Breaking: billing, backup and dedicated database fields the server can omit are now nullable
+* Breaking: `providerIdToken`, `fingerprints`, OAuth2 `prompt` and native fields are now non-nullable
+* Breaking: `Client.chunkedUpload` takes a `responseType` parameter and `Client` adds `flatten`; custom `Client` implementations must add both
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promoteRestoration`, `restoreMode`, `targetName` and `autoPromote` on `createRestoration`, and `DedicatedDatabaseRestoration.restoreMode`
+* Added: `proxy.createSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `emailEnabled` on `functions.update` and `Func`, and `ExecutionTrigger.email`
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Updated: models fill documented defaults for fields missing from a response
+* Updated: empty required path parameters now throw `AppwriteException` before sending the request
+* Updated: examples import `models.dart` and use `models.` types
+* Fixed: required map fields missing from a response, such as `prefs`, default to an empty map
+* Fixed: OAuth2 models wrap a single `prompt` value in a list
+
 ## 29.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones
