@@ -19,6 +19,8 @@ final class WebSocketTransport implements Pollable, Transport
     /** @var resource|null */
     private $stream;
 
+    private ?Probe $probe = null;
+
     // Decoded (un-framed) NATS bytes not yet consumed by read()/readLine().
     private string $buffer = '';
 
@@ -57,6 +59,7 @@ final class WebSocketTransport implements Pollable, Transport
         stream_set_blocking($stream, true);
         $this->setTimeout($stream, $timeout);
         $this->stream = $stream;
+        $this->probe = new Probe($stream);
 
         $this->handshake($host, $port);
     }
@@ -116,20 +119,13 @@ final class WebSocketTransport implements Pollable, Transport
         if ($this->buffer !== '' || !\is_resource($this->stream)) {
             return true;
         }
-        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
-            return true;
-        }
 
-        stream_set_blocking($this->stream, false);
-        try {
-            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
-        } finally {
-            stream_set_blocking($this->stream, true);
-        }
+        return ($this->probe ??= new Probe($this->stream))->ready();
     }
 
     public function close(): void
     {
+        $this->probe = null;
         if ($this->stream !== null) {
             @fclose($this->stream);
             $this->stream = null;

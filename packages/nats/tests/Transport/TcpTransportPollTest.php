@@ -9,7 +9,9 @@ use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Runtime;
+use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Tests\Support\Wait;
 use Utopia\NATS\Transport\TcpTransport;
 
 /**
@@ -48,7 +50,7 @@ final class TcpTransportPollTest extends TestCase
         $transport = $this->connect();
         $this->send("PING\r\n");
 
-        $this->assertTrue($transport->poll());
+        $this->assertTrue(Wait::until($transport->poll(...)));
         $this->assertSame("PING\r\n", $transport->read(64, 1.0));
 
         $transport->close();
@@ -59,9 +61,24 @@ final class TcpTransportPollTest extends TestCase
         $transport = $this->connect();
         $this->closePeer();
 
-        $this->assertTrue($transport->poll());
+        $this->assertTrue(Wait::until($transport->poll(...)));
 
         $transport->close();
+    }
+
+    #[RequiresPhpExtension('sockets')]
+    public function testResetByThePeerIsReadable(): void
+    {
+        $transport = $this->connect();
+        $this->assertIsResource($this->peer);
+        $socket = socket_import_stream($this->peer);
+        $this->assertInstanceOf(\Socket::class, $socket);
+        socket_set_option($socket, SOL_SOCKET, SO_LINGER, ['l_onoff' => 1, 'l_linger' => 0]);
+        $this->closePeer();
+
+        $this->assertTrue(Wait::until($transport->poll(...)), 'A reset must read as ready, so the next read reports it');
+        $this->expectException(ConnectionException::class);
+        $transport->read(64, 1.0);
     }
 
     public function testDataAlreadyInThePhpBufferIsReadable(): void
@@ -100,7 +117,7 @@ final class TcpTransportPollTest extends TestCase
 
             $this->assertFalse($transport->poll(), 'An idle socket above FD_SETSIZE must not read as ready');
             $this->send("PING\r\n");
-            $this->assertTrue($transport->poll());
+            $this->assertTrue(Wait::until($transport->poll(...)));
 
             $transport->close();
         } finally {
@@ -136,10 +153,10 @@ final class TcpTransportPollTest extends TestCase
             $transport = $this->connect();
             $states['idle'] = $transport->poll();
             $this->send("PING\r\n");
-            $states['data'] = $transport->poll();
+            $states['data'] = Wait::until($transport->poll(...));
             $states['read'] = $transport->read(64, 1.0);
             $this->closePeer();
-            $states['closed'] = $transport->poll();
+            $states['closed'] = Wait::until($transport->poll(...));
             $transport->close();
         });
 
@@ -169,7 +186,6 @@ final class TcpTransportPollTest extends TestCase
     {
         $this->assertIsResource($this->peer);
         fwrite($this->peer, $data);
-        usleep(20_000);
     }
 
     private function closePeer(): void
@@ -177,6 +193,5 @@ final class TcpTransportPollTest extends TestCase
         $this->assertIsResource($this->peer);
         fclose($this->peer);
         $this->peer = null;
-        usleep(20_000);
     }
 }

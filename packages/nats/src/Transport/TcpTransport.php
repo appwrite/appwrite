@@ -13,6 +13,8 @@ final class TcpTransport implements Pollable, Transport
     /** @var resource|null */
     private $stream;
 
+    private ?Probe $probe = null;
+
     public function connect(string $host, int $port, float $timeout): void
     {
         $address = "tcp://{$host}:{$port}";
@@ -39,6 +41,7 @@ final class TcpTransport implements Pollable, Transport
         stream_set_blocking($stream, true);
         $this->setTimeout($stream, $timeout);
         $this->stream = $stream;
+        $this->probe = new Probe($stream);
     }
 
     public function write(string $data): int
@@ -170,22 +173,13 @@ final class TcpTransport implements Pollable, Transport
         if (!\is_resource($this->stream)) {
             return true;
         }
-        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
-            return true;
-        }
 
-        // A peek rather than stream_select(): select() fails outright on a
-        // descriptor numbered at or above FD_SETSIZE.
-        stream_set_blocking($this->stream, false);
-        try {
-            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
-        } finally {
-            stream_set_blocking($this->stream, true);
-        }
+        return ($this->probe ??= new Probe($this->stream))->ready();
     }
 
     public function close(): void
     {
+        $this->probe = null;
         if ($this->stream !== null) {
             @fclose($this->stream);
             $this->stream = null;

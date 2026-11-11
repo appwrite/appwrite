@@ -13,6 +13,8 @@ final class TlsTransport implements Pollable, Transport
     /** @var resource|null */
     private $stream;
 
+    private ?Probe $probe = null;
+
     public function __construct(
         private readonly array $tlsOptions = [],
     ) {
@@ -44,6 +46,7 @@ final class TlsTransport implements Pollable, Transport
         $seconds = (int) $timeout;
         $microseconds = (int) (($timeout - $seconds) * 1_000_000);
         stream_set_timeout($stream, $seconds, $microseconds);
+        $probe = new Probe($stream);
 
         error_clear_last();
         if (@stream_socket_enable_crypto($stream, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT) !== true) {
@@ -53,6 +56,7 @@ final class TlsTransport implements Pollable, Transport
         }
 
         $this->stream = $stream;
+        $this->probe = $probe;
     }
 
     public function write(string $data): int
@@ -154,22 +158,13 @@ final class TlsTransport implements Pollable, Transport
         if (!\is_resource($this->stream)) {
             return true;
         }
-        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
-            return true;
-        }
 
-        // A peek rather than stream_select(): select() fails outright on a
-        // descriptor numbered at or above FD_SETSIZE.
-        stream_set_blocking($this->stream, false);
-        try {
-            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
-        } finally {
-            stream_set_blocking($this->stream, true);
-        }
+        return ($this->probe ??= new Probe($this->stream))->ready();
     }
 
     public function close(): void
     {
+        $this->probe = null;
         if ($this->stream !== null) {
             @fclose($this->stream);
             $this->stream = null;
