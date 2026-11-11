@@ -20,7 +20,7 @@ faqs:
   - question: "What makes a reason valid?"
     answer: "A reason is one line of valid UTF-8 text of up to 256 characters. Line breaks, tabs, other control characters, and Unicode bidirectional override characters aren't allowed. A request with an invalid reason fails with `general_argument_invalid` before it runs, so nothing changes."
   - question: "Is a reason required?"
-    answer: "Not for your own requests or CLI commands; events without one show `-` in the **Reason** column. The Appwrite MCP server is the exception: it requires a reason for every write its tools make, and refuses a write without one before it reaches your project."
+    answer: "Not for your own requests or CLI commands; events without one show `-` in the **Reason** column. The Appwrite MCP server is the exception: its write tool requires a reason for every change an agent makes, and refuses a write without one before it reaches your project."
 ---
 
 AI agents and scripts now make a large share of the changes in many Appwrite projects. An agent cleans up test data, a CI job pushes new functions, a teammate runs a one-off migration from their terminal. The **Activity** tab already recorded who made each change and what it touched, but not the one thing a reviewer most wants to know: why it happened.
@@ -32,7 +32,7 @@ Today, we are announcing **reasons in Activity**. Every API request can now carr
 - **A Reason column in Activity.** Each event in your project's **Activity** tab shows the reason it was made, and the event's details show the full text.
 - **Reasons for every agent change.** The [Appwrite MCP server](/docs/tooling/ai/mcp-servers#reasons) asks the AI agent for a one-line reason with each write and refuses a write without one.
 - **Reasons from the CLI.** Any [Appwrite CLI](/docs/tooling/command-line/commands#reason) command takes a reason, from a flag or from an environment variable that covers a whole CI job.
-- **Reasons from any client.** Your own scripts and services can send a reason with any API request, so changes made by your own code are just as easy to trace.
+- **Reasons from any client.** Your own scripts and services can send a reason with any API request, so their changes are just as easy to trace.
 
 # Review what an AI agent changed
 
