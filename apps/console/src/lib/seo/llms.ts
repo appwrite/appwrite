@@ -183,7 +183,7 @@ export function buildProductsLlmsSection(origin: string): LlmsSection {
     links: [
       {
         title: 'Pricing',
-        url: `${origin}/pricing`,
+        url: `${origin}/pricing.md`,
         description: 'Appwrite Cloud plans and pricing.',
       },
       {

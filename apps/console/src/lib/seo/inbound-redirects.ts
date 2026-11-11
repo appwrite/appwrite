@@ -649,7 +649,11 @@ function exactAndPrefixRedirect(pathname: string): string | null {
     return '/init'
   }
   if (pathname === '/privacy.' || pathname === '/를') return pathname === '/를' ? '/' : '/privacy'
-  if (pathname.startsWith('/pricing') && pathname !== '/pricing') {
+  if (
+    pathname.startsWith('/pricing') &&
+    pathname !== '/pricing' &&
+    pathname !== '/pricing.md'
+  ) {
     const rest = pathname.slice('/pricing'.length)
     if (/^[^\w/]/.test(rest)) return '/pricing'
   }

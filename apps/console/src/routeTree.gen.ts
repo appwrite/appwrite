@@ -21,9 +21,11 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
 import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as IndexDotmdRouteImport } from './routes/index[.]md'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as PricingDotmdRouteImport } from './routes/pricing[.]md'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -543,6 +545,11 @@ const GeneratorRoute = GeneratorRouteImport.update({
   path: '/generator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexDotmdRoute = IndexDotmdRouteImport.update({
+  id: '/index.md',
+  path: '/index.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
   id: '/integrations.md',
   path: '/integrations.md',
@@ -556,6 +563,11 @@ const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: '/llms.txt',
   path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingDotmdRoute = PricingDotmdRouteImport.update({
+  id: '/pricing.md',
+  path: '/pricing.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -3465,9 +3477,11 @@ export interface FileRoutesByFullPath {
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -3938,9 +3952,11 @@ export interface FileRoutesByTo {
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -4365,9 +4381,11 @@ export interface FileRoutesById {
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -4843,9 +4861,11 @@ export interface FileRouteTypes {
     | '/docs.md'
     | '/for-agents.md'
     | '/generator'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -5316,9 +5336,11 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs.md'
     | '/for-agents.md'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -5742,9 +5764,11 @@ export interface FileRouteTypes {
     | '/docs.md'
     | '/for-agents.md'
     | '/generator'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -6222,9 +6246,11 @@ export interface RootRouteChildren {
   DocsDotmdRoute: typeof DocsDotmdRoute
   ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
+  IndexDotmdRoute: typeof IndexDotmdRoute
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  PricingDotmdRoute: typeof PricingDotmdRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -6344,6 +6370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/index.md': {
+      id: '/index.md'
+      path: '/index.md'
+      fullPath: '/index.md'
+      preLoaderRoute: typeof IndexDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/integrations.md': {
       id: '/integrations.md'
       path: '/integrations.md'
@@ -6363,6 +6396,13 @@ declare module '@tanstack/react-router' {
       path: '/llms.txt'
       fullPath: '/llms.txt'
       preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing.md': {
+      id: '/pricing.md'
+      path: '/pricing.md'
+      fullPath: '/pricing.md'
+      preLoaderRoute: typeof PricingDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -11622,9 +11662,11 @@ const rootRouteChildren: RootRouteChildren = {
   DocsDotmdRoute: DocsDotmdRoute,
   ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
+  IndexDotmdRoute: IndexDotmdRoute,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  PricingDotmdRoute: PricingDotmdRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
