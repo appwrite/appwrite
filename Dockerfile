@@ -151,7 +151,10 @@ FROM base AS extension-false
 FROM base AS extension-true
 
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
-RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+# libheif-x265 is libheif's HEVC encoder plugin: with it HEIC output works, for
+# the extension and for Imagick alike. x265 is GPL-2.0-or-later.
+RUN apk add --no-cache libheif-x265 && \
+    echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
 FROM extension-${UTOPIA_EXTENSION} AS runtime
 
