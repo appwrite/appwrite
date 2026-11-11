@@ -1623,9 +1623,6 @@
     "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; model: ZodString; }, $strip>>) => Promise<ApiReferenceModelData>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; model: ZodString; }, $strip>, Promise<ApiReferenceModelData>, true>'.": 1,
     "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>>) => Promise<ApiReferenceServiceData>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>, Promise<ApiReferenceServiceData>, true>'.": 1
   },
-  "src/server/middleware/agent-discovery.ts": {
-    "TS2304: Cannot find name 'DISCOVERY_CORS_HEADERS'.": 1
-  },
   "tests/connect-qa/android/templates/ionic/capacitor.config.ts": {
     "TS2307: Cannot find module '@capacitor/cli' or its corresponding type declarations.": 1
   },
